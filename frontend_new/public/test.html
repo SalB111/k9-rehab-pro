@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test</title>
+</head>
+<body>
+    <h1>If you see this, the server works!</h1>
+    <div id="root"></div>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script>
+        console.log('React loaded:', typeof React);
+        console.log('ReactDOM loaded:', typeof ReactDOM);
+        const root = document.getElementById('root');
+        console.log('Root element:', root);
+        if (React && ReactDOM && root) {
+            ReactDOM.render(
+                React.createElement('div', {}, 'React is working!'),
+                root
+            );
+        }
+    </script>
+</body>
+</html>

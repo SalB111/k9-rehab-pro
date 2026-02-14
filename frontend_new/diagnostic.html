@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>K9-REHAB-PRO | Diagnostic Mode</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .diagnostic {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="diagnostic">
+        <h1>🔍 K9-REHAB-PRO Diagnostic Mode</h1>
+        <p>Testing system components...</p>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        const results = document.getElementById('results');
+        
+        function addResult(type, message, details) {
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.innerHTML = `<strong>${message}</strong>`;
+            if (details) {
+                const pre = document.createElement('pre');
+                pre.textContent = JSON.stringify(details, null, 2);
+                div.appendChild(pre);
+            }
+            results.appendChild(div);
+        }
+
+        // Test 1: Check React
+        addResult('info', 'Test 1: Loading React...');
+        const script1 = document.createElement('script');
+        script1.src = 'https://unpkg.com/react@18/umd/react.production.min.js';
+        script1.crossOrigin = 'anonymous';
+        script1.onload = () => {
+            if (typeof React !== 'undefined') {
+                addResult('success', '✅ React loaded successfully', { version: React.version });
+                
+                // Test 2: Check ReactDOM
+                addResult('info', 'Test 2: Loading ReactDOM...');
+                const script2 = document.createElement('script');
+                script2.src = 'https://unpkg.com/react-dom@18/umd/react-dom.production.min.js';
+                script2.crossOrigin = 'anonymous';
+                script2.onload = () => {
+                    if (typeof ReactDOM !== 'undefined') {
+                        addResult('success', '✅ ReactDOM loaded successfully');
+                        
+                        // Test 3: Check Babel
+                        addResult('info', 'Test 3: Loading Babel...');
+                        const script3 = document.createElement('script');
+                        script3.src = 'https://unpkg.com/@babel/standalone/babel.min.js';
+                        script3.onload = () => {
+                            if (typeof Babel !== 'undefined') {
+                                addResult('success', '✅ Babel loaded successfully');
+                                
+                                // Test 4: Check Axios
+                                addResult('info', 'Test 4: Loading Axios...');
+                                const script4 = document.createElement('script');
+                                script4.src = 'https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js';
+                                script4.onload = () => {
+                                    if (typeof axios !== 'undefined') {
+                                        addResult('success', '✅ Axios loaded successfully');
+                                        
+                                        // Test 5: Check Backend API
+                                        addResult('info', 'Test 5: Testing Backend API...');
+                                        axios.get('http://localhost:3000/api/health')
+                                            .then(response => {
+                                                addResult('success', '✅ Backend API responding', response.data);
+                                                
+                                                // Test 6: Check conditions endpoint
+                                                addResult('info', 'Test 6: Testing /api/conditions...');
+                                                return axios.get('http://localhost:3000/api/conditions');
+                                            })
+                                            .then(response => {
+                                                addResult('success', '✅ Conditions API working', response.data);
+                                                addResult('success', '🎉 ALL TESTS PASSED! Your app should work.');
+                                            })
+                                            .catch(error => {
+                                                addResult('error', '❌ Backend API Error', {
+                                                    message: error.message,
+                                                    code: error.code,
+                                                    url: error.config?.url
+                                                });
+                                            });
+                                    } else {
+                                        addResult('error', '❌ Axios failed to load');
+                                    }
+                                };
+                                script4.onerror = () => addResult('error', '❌ Failed to load Axios');
+                                document.head.appendChild(script4);
+                            } else {
+                                addResult('error', '❌ Babel failed to load');
+                            }
+                        };
+                        script3.onerror = () => addResult('error', '❌ Failed to load Babel');
+                        document.head.appendChild(script3);
+                    } else {
+                        addResult('error', '❌ ReactDOM failed to load');
+                    }
+                };
+                script2.onerror = () => addResult('error', '❌ Failed to load ReactDOM');
+                document.head.appendChild(script2);
+            } else {
+                addResult('error', '❌ React failed to load');
+            }
+        };
+        script1.onerror = () => addResult('error', '❌ Failed to load React');
+        document.head.appendChild(script1);
+    </script>
+</body>
+</html>

@@ -1,0 +1,480 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║               K9-REHAB-PRO QUICK REFERENCE GUIDE                           ║
+║                    170 EXERCISES - CLINICAL LOOKUP                         ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+═══════════════════════════════════════════════════════════════════════════
+                     EXERCISES BY DIFFICULTY LEVEL
+═══════════════════════════════════════════════════════════════════════════
+
+✅ EASY (50 exercises) - Beginner/Geriatric/Early Recovery
+────────────────────────────────────────────────────────────────────────────
+PASSIVE_THERAPY (8):
+  • PROM_STIFLE, PROM_HIP, PROM_ELBOW, PROM_SHOULDER
+  • MASSAGE_THERA, COLD_THERAPY, HEAT_THERAPY, STRETCH_HAM
+
+ACTIVE_ASSISTED (10):
+  • COOKIE_STRETCH, DANCING, ASSISTED_STANDING, TAIL_PULL
+  • HEAD_TURN_LE, CHIN_REST, PLAY_BOW, SIT_TO_STAND, DOWN_TO_SIT
+  • ASSISTED_STAIR
+
+BALANCE_PROPRIOCEPTION (12):
+  • BALANCE_DISC, FOAM_PAD_STAND, CAVALETTI_RAILS, WEAVE_POLES
+  • SIDE_STEP, FIGURE_8, TACTILE_STIM, SURFACE_VAR, PIVOT_TURNS
+
+AQUATIC (3):
+  • WATER_WALK_SHALLOW
+
+FUNCTIONAL (5):
+  • GREETING_CONTROL, DOOR_CONTROL, FLOOR_TRANS, LOAD_UNLOAD, RECALL_WALK
+
+GERIATRIC (8):
+  • SENIOR_WALK, GENTLE_PROM, SENIOR_MASSAGE, SENIOR_BALANCE
+
+NEUROLOGICAL (4):
+  • NEURO_PROM, NEURO_TACTILE
+
+⚡ MODERATE (65 exercises) - Intermediate/Mid-Rehab/Conditioning
+────────────────────────────────────────────────────────────────────────────
+STRENGTHENING (6):
+  • SIT_TO_STAND_REP, HILL_CLIMB, BACKWARD_WALK, STAIR_CLIMB
+  • INCLINE_WALK, DOWN_STAND
+
+BALANCE_PROPRIOCEPTION (8):
+  • PERTURBATION, SLOW_PIVOT, LASER_CHASE, BALL_PUSH_UP
+  • BLINDFOLD_WALK
+
+AQUATIC (2):
+  • UWTT_FORWARD, WATER_RETRIEVE
+
+THERAPEUTIC_MODALITIES (10):
+  • JOINT_MOBIL, MYOFASC_ILIO, MYOFASC_BF, TRIGGER_POINT
+  • STRETCHING_PROTO, LASER_THERAPY, THERAPEUTIC_US, TENS
+  • COLD_COMPRESS, HEAT_PACK
+
+HYDROTHERAPY (10):
+  • POOL_SWIM, DEEP_WATER_TREAD, SHALLOW_WATER_WALK
+  • UWTT_BACKWARD, UNDERWATER_SIT, WATER_CAVALETTI
+
+GERIATRIC (7):
+  • SENIOR_HYDRO, SENIOR_STRENGTH, SENIOR_COORD
+
+NEUROLOGICAL (8):
+  • NEURO_COORD, NEURO_GAIT, VESTIB_TRAIN, VISION_LIMIT
+
+POST-SURGICAL (10):
+  • POST_TPLO_WEEK1, POST_FHO_EARLY, POST_CRUCIATE_WEEK2
+
+SPORT_CONDITIONING (4):
+  • AGILITY_PREP, BASIC_ENDURANCE
+
+🔥 ADVANCED (55 exercises) - High-Performance/Late-Stage/Sport
+────────────────────────────────────────────────────────────────────────────
+STRENGTHENING (6):
+  • WHEEL_BARREL, STAIR_RUN, RESIST_WALK, JUMP_BOARD, POLE_WEAVE
+  • TROT_CIRCLES, BACKWARD_HILL, INCLINE_RUN
+
+BALANCE_PROPRIOCEPTION (ALL ADVANCED):
+  • BOSU_STAND, WOBBLE_BOARD_ADV, PERTURBATION_TRAIN
+  • BLINDFOLD_BAL, DIAGONAL_LIFT, PLATFORM_TRANS
+
+AQUATIC:
+  • WATER_INTERVAL, SWIM_RESISTANCE
+
+SPORT_CONDITIONING (16):
+  • DISC_DOG, FLYBALL_COND, JUMP_GRIDS, AGILITY_WEAVE
+  • WEIGHT_PULL, SPRINT_INTERVAL, LURE_COURSING
+  • DOCK_DIVING, HERDING_PREP, SCHUTZHUND, FETCH_INTENSE
+  • RALLY_OBEDIENCE, NOSEWORK_COND, TRACKING_PREP, FIELD_TRIAL
+  • ENDURANCE_LONG
+
+HYDROTHERAPY (5):
+  • UWTT_INCLINE, DEEP_POOL_WORK, WAVE_RESISTANCE
+
+POST-SURGICAL (5):
+  • POST_TPLO_WEEK4, POST_FHO_LATE, POST_CRUCIATE_WEEK6
+
+COMPLEMENTARY (15):
+  • ACUPUNCTURE, CHIROPRACTIC, STEM_CELL, LASER_THERAPY
+  • MASSAGE_DEEP, STRETCHING_ADV, HERBAL_SUPPORT
+
+═══════════════════════════════════════════════════════════════════════════
+                     EXERCISES BY CLINICAL CONDITION
+═══════════════════════════════════════════════════════════════════════════
+
+🦴 ORTHOPEDIC CONDITIONS
+────────────────────────────────────────────────────────────────────────────
+Hip Dysplasia:
+  → Start: PROM_HIP, MASSAGE_THERA, HEAT_THERAPY
+  → Progress: WATER_WALK_SHALLOW, SIT_TO_STAND, CAVALETTI_RAILS
+  → Advanced: HILL_CLIMB, POOL_SWIM, BALANCE_DISC
+
+Cruciate Ligament (TPLO/TTA):
+  → Week 1-2: POST_TPLO_WEEK1, PROM_STIFLE, COLD_THERAPY
+  → Week 3-4: ASSISTED_STANDING, WATER_WALK_SHALLOW, GENTLE_PROM
+  → Week 5-8: SIT_TO_STAND, CAVALETTI_RAILS, POOL_SWIM
+  → Week 9+: POST_TPLO_WEEK4, HILL_CLIMB, AGILITY_PREP
+
+FHO (Femoral Head Ostectomy):
+  → Early: POST_FHO_EARLY, PROM_HIP, MASSAGE_THERA
+  → Mid: ASSISTED_STANDING, WATER_WALK, COOKIE_STRETCH
+  → Late: POST_FHO_LATE, BALANCE_DISC, STRENGTHENING
+
+Elbow Dysplasia:
+  → Conservative: PROM_ELBOW, COLD_THERAPY, LASER_THERAPY
+  → Rehab: ASSISTED_STANDING, WATER_WALK, CAVALETTI_RAILS
+  → Maintenance: BALANCE_DISC, POOL_SWIM
+
+Arthritis/DJD:
+  → Daily: HEAT_THERAPY, MASSAGE_THERA, GENTLE_PROM
+  → 3x/week: WATER_WALK, BALANCE_DISC, LASER_THERAPY
+  → As tolerated: CAVALETTI_RAILS, SLOW_PIVOT, POOL_SWIM
+
+🧠 NEUROLOGICAL CONDITIONS
+────────────────────────────────────────────────────────────────────────────
+IVDD (Intervertebral Disc Disease):
+  → Acute: NEURO_PROM, MASSAGE_THERA, COLD_THERAPY
+  → Recovery: ASSISTED_STANDING, NEURO_TACTILE, WATER_WALK
+  → Rehab: NEURO_COORD, CAVALETTI_RAILS, BALANCE_DISC
+  → Advanced: NEURO_GAIT, PERTURBATION, POOL_SWIM
+
+FCE (Fibrocartilaginous Embolism):
+  → Early: NEURO_PROM, NEURO_TACTILE, ASSISTED_STANDING
+  → Mid: NEURO_COORD, WATER_WALK, CAVALETTI_RAILS
+  → Late: VESTIB_TRAIN, BALANCE_DISC, POOL_SWIM
+
+Vestibular Disease:
+  → Acute support: NEURO_PROM, ASSISTED_STANDING, MASSAGE
+  → Balance work: VESTIB_TRAIN, BALANCE_DISC, SLOW_PIVOT
+  → Advanced: VISION_LIMIT, PERTURBATION
+
+Degenerative Myelopathy:
+  → Early: NEURO_PROM, WATER_WALK, ASSISTED_STANDING
+  → Mid: NEURO_COORD, UNDERWATER_SIT, CAVALETTI_RAILS
+  → Support: NEURO_GAIT, POOL_SWIM, BALANCE_DISC
+
+🏃 PERFORMANCE/SPORT CONDITIONS
+────────────────────────────────────────────────────────────────────────────
+Pre-Competition Conditioning:
+  → Strength: RESIST_WALK, HILL_CLIMB, JUMP_GRIDS
+  → Agility: AGILITY_PREP, POLE_WEAVE, CAVALETTI_RAILS
+  → Endurance: ENDURANCE_LONG, POOL_SWIM, SPRINT_INTERVAL
+  → Balance: WOBBLE_BOARD_ADV, BOSU_STAND, PERTURBATION_TRAIN
+
+Sport-Specific:
+  → Disc Dog: DISC_DOG, JUMP_BOARD, SPRINT_INTERVAL
+  → Flyball: FLYBALL_COND, JUMP_GRIDS, BACKWARD_WALK
+  → Agility: AGILITY_WEAVE, JUMP_GRIDS, POLE_WEAVE
+  → Weight Pull: WEIGHT_PULL, RESIST_WALK, HILL_CLIMB
+  → Dock Diving: DOCK_DIVING, POOL_SWIM, JUMP_BOARD
+  → Herding: HERDING_PREP, ENDURANCE_LONG, TROT_CIRCLES
+  → Tracking: TRACKING_PREP, ENDURANCE_LONG, NOSEWORK_COND
+
+👴 GERIATRIC CONDITIONS
+────────────────────────────────────────────────────────────────────────────
+General Geriatric Maintenance:
+  → Daily: SENIOR_WALK, GENTLE_PROM, SENIOR_MASSAGE
+  → 3x/week: HEAT_THERAPY, SENIOR_BALANCE, LASER_THERAPY
+  → 2x/week: SENIOR_HYDRO, ACUPUNCTURE
+
+Sarcopenia (Muscle Loss):
+  → Gentle: SENIOR_WALK, WATER_WALK, SENIOR_STRENGTH
+  → Progressive: CAVALETTI_RAILS, SIT_TO_STAND, POOL_SWIM
+
+Cognitive Decline:
+  → Stimulation: LASER_CHASE, NOSEWORK_COND, TACTILE_STIM
+  → Routine: SENIOR_WALK, SENIOR_COORD, BALANCE_DISC
+
+═══════════════════════════════════════════════════════════════════════════
+                     TREATMENT PLAN TEMPLATES
+═══════════════════════════════════════════════════════════════════════════
+
+📋 TEMPLATE 1: POST-SURGICAL TPLO (12-Week Protocol)
+────────────────────────────────────────────────────────────────────────────
+WEEK 1-2 (Easy only - 5-10 min sessions):
+  • POST_TPLO_WEEK1 (specific protocol)
+  • PROM_STIFLE (10 reps, 2x daily)
+  • COLD_THERAPY (15 min post-activity)
+  • LASER_THERAPY (3x week)
+WEEK 3-4 (Easy-Moderate - 10-15 min sessions):
+  • ASSISTED_STANDING (3 sets x 30 sec)
+  • WATER_WALK_SHALLOW (chest depth, 5 min)
+  • GENTLE_PROM (full range, no force)
+  • SIT_TO_STAND (5 reps, 2x daily)
+  • THERAPEUTIC_US (alternate with laser)
+
+WEEK 5-8 (Moderate - 15-20 min sessions):
+  • SIT_TO_STAND (10 reps, 2x daily)
+  • CAVALETTI_RAILS (5 passes, rail height 2-3")
+  • POOL_SWIM (5-7 min, controlled)
+  • BALANCE_DISC (30 sec holds, 3 reps)
+  • UNDERWATER_SIT (water support for joint)
+
+WEEK 9-12 (Moderate-Advanced - 20-30 min sessions):
+  • POST_TPLO_WEEK4 (advanced protocol)
+  • HILL_CLIMB (gentle slope, 100 feet)
+  • AGILITY_PREP (low jumps, basic weaves)
+  • POOL_SWIM (10-15 min intervals)
+  • PERTURBATION (balance challenges)
+
+────────────────────────────────────────────────────────────────────────────
+
+📋 TEMPLATE 2: GERIATRIC MOBILITY PROGRAM (Ongoing)
+────────────────────────────────────────────────────────────────────────────
+DAILY (5-10 min):
+  • SENIOR_WALK (flat surfaces, slow pace)
+  • GENTLE_PROM (all major joints)
+  • SENIOR_MASSAGE (focus on stiff areas)
+
+3X WEEK (10-15 min):
+  • HEAT_THERAPY (15 min pre-activity)
+  • CAVALETTI_RAILS (very low, 3 passes)
+  • BALANCE_DISC (assisted, 15 sec holds)
+  • WATER_WALK_SHALLOW (if available, 5 min)
+
+2X WEEK (Professional):
+  • ACUPUNCTURE (licensed vet only)
+  • LASER_THERAPY (Class IV, targeted)
+  • SENIOR_HYDRO (gentle pool work)
+
+────────────────────────────────────────────────────────────────────────────
+
+📋 TEMPLATE 3: SPORT DOG PRE-COMPETITION (8-Week Cycle)
+────────────────────────────────────────────────────────────────────────────
+PHASE 1 - BASE CONDITIONING (Weeks 1-3):
+  MON: ENDURANCE_LONG (30 min jog) + POOL_SWIM (15 min)
+  TUE: RESIST_WALK (10 min) + CAVALETTI_RAILS (10 passes)
+  WED: Rest or MASSAGE_THERA + GENTLE_PROM
+  THU: HILL_CLIMB (20 min) + BALANCE_DISC (5 min)
+  FRI: AGILITY_PREP (20 min) + STRETCHING_PROTO
+  SAT: POOL_SWIM (20 min) + LASER_THERAPY
+  SUN: Rest
+
+PHASE 2 - STRENGTH & POWER (Weeks 4-6):
+  MON: SPRINT_INTERVAL (8x30sec) + WEIGHT_PULL (light)
+  TUE: JUMP_GRIDS (15 min) + POLE_WEAVE (10 min)
+  WED: Active recovery - WATER_WALK + MASSAGE
+  THU: RESIST_WALK (15 min) + TROT_CIRCLES (10 min)
+  FRI: AGILITY_WEAVE (specific) + FLYBALL_COND
+  SAT: DISC_DOG drills + STRETCHING_ADV
+  SUN: Rest + CHIROPRACTIC (if needed)
+
+PHASE 3 - COMPETITION PEAK (Weeks 7-8):
+  MON: Light AGILITY_PREP (skill work only)
+  TUE: POOL_SWIM (recovery) + LASER_THERAPY
+  WED: Rest + MASSAGE_DEEP
+  THU: Brief skill work (10 min) + STRETCHING
+  FRI: Rest or very light movement
+  SAT: Competition
+  SUN: COLD_THERAPY + MASSAGE + Rest
+
+────────────────────────────────────────────────────────────────────────────
+
+📋 TEMPLATE 4: NEUROLOGICAL RECOVERY - IVDD (16-Week Protocol)
+────────────────────────────────────────────────────────────────────────────
+ACUTE PHASE - Weeks 1-2 (Medical management primary):
+  • NEURO_PROM (gentle, 2-3x daily)
+  • MASSAGE_THERA (light touch only)
+  • COLD_THERAPY (if inflammation present)
+  • No active exercise until vet clearance
+
+EARLY RECOVERY - Weeks 3-6:
+  • NEURO_PROM (full range, 3x daily)
+  • NEURO_TACTILE (sensory stimulation)
+  • ASSISTED_STANDING (3 sets x 20-30 sec)
+  • WATER_WALK_SHALLOW (buoyancy support, 3-5 min)
+  • LASER_THERAPY (nerve regeneration, 3x week)
+
+MID RECOVERY - Weeks 7-10:
+  • NEURO_COORD (coordination drills)
+  • CAVALETTI_RAILS (very low, proprioception)
+  • BALANCE_DISC (assisted, 30 sec holds)
+  • POOL_SWIM (controlled, 5-7 min)
+  • UNDERWATER_SIT (practice motor patterns)
+
+LATE RECOVERY - Weeks 11-16:
+  • NEURO_GAIT (advanced gait training)
+  • VESTIB_TRAIN (if balance affected)
+  • PERTURBATION (challenge stability)
+  • POOL_SWIM (10-15 min intervals)
+  • AGILITY_PREP (only if fully recovered)
+
+═══════════════════════════════════════════════════════════════════════════
+                     EQUIPMENT REFERENCE
+═══════════════════════════════════════════════════════════════════════════
+
+💰 BASIC SETUP (Under $200):
+  • Foam balance pads ($30)
+  • PVC cavaletti rails ($20)
+  • Resistance bands ($25)
+  • Therapy balls ($40)
+  • Hot/cold packs ($30)
+  • Non-slip mats ($50)
+
+💰💰 INTERMEDIATE SETUP ($200-$1,000):
+  + BOSU ball ($80)
+  + Wobble boards ($150)
+  + Dog treadmill ($400-800)
+  + Adjustable cavalettis ($100)
+  + Resistance harness ($60)
+  + Quality therapy table ($300)
+
+💰💰💰 PROFESSIONAL SETUP ($1,000+):
+  + Underwater treadmill ($10,000-30,000)
+  + Therapeutic laser ($8,000-15,000)
+  + Therapeutic ultrasound ($2,000-5,000)
+  + Hydraulic therapy table ($2,000)
+  + Complete hydrotherapy pool ($20,000+)
+  + Professional equipment suite
+
+═══════════════════════════════════════════════════════════════════════════
+                     CONTRAINDICATION QUICK CHECK
+═══════════════════════════════════════════════════════════════════════════
+
+⛔ ABSOLUTE CONTRAINDICATIONS (DO NOT PROCEED):
+  • Active infection
+  • Uncontrolled pain
+  • Unstable fracture
+  • Acute hemorrhage
+  • Severe cardiac disease (for intensive exercise)
+  • Fever > 102.5°F
+  • Open wounds (for water therapy)
+  • Severe respiratory distress
+
+⚠️  RELATIVE CONTRAINDICATIONS (Modify or Postpone):
+  • Recent surgery (timing depends on procedure)
+  • Acute inflammation
+  • Grade 4+ lameness
+  • Seizure activity
+  • Severe fear or aggression
+  • Extreme weakness
+  • Joint effusion
+  • Unhealed incisions
+
+✅ WHEN TO PROGRESS:
+  • Pain-free during current exercises
+  • Consistent good form
+  • No increased lameness post-exercise
+  • Veterinary approval obtained
+  • Owner compliance demonstrated
+  • Adequate recovery between sessions
+
+═══════════════════════════════════════════════════════════════════════════
+                     EXERCISE FREQUENCY GUIDELINES
+═══════════════════════════════════════════════════════════════════════════
+
+📅 PASSIVE THERAPY:
+  • Frequency: 2-3x daily
+  • Duration: 5-10 minutes per session
+  • Can be done at home by owner
+
+📅 ACTIVE ASSISTED:
+  • Frequency: 2-3x daily
+  • Duration: 5-15 minutes
+  • Requires initial supervision, then home exercise
+
+📅 STRENGTHENING:
+  • Frequency: 3-5x per week
+  • Duration: 15-30 minutes
+  • Allow 24-48 hours recovery between intense sessions
+
+📅 BALANCE/PROPRIOCEPTION:
+  • Frequency: 3-5x per week
+  • Duration: 10-20 minutes
+  • Can alternate with strengthening days
+
+📅 HYDROTHERAPY:
+  • Frequency: 2-3x per week
+  • Duration: 10-20 minutes in water
+  • Professional supervision required initially
+
+📅 THERAPEUTIC MODALITIES:
+  • Frequency: 2-3x per week
+  • Duration: 15-30 minutes
+  • Requires professional equipment/training
+
+📅 SPORT CONDITIONING:
+  • Frequency: 4-6x per week (competitive athletes)
+  • Duration: 30-60 minutes
+  • Include rest days
+
+═══════════════════════════════════════════════════════════════════════════
+                     RED FLAGS - STOP EXERCISE IMMEDIATELY
+═══════════════════════════════════════════════════════════════════════════
+
+🚨 STOP IF YOU SEE:
+  • Acute pain response (vocalizing, guarding)
+  • Sudden onset lameness
+  • Collapse or severe weakness
+  • Respiratory distress
+  • Aggressive behavior change
+  • Joint swelling within 2 hours post-exercise
+  • Vomiting or diarrhea during exercise
+  • Trembling or muscle cramping
+  • Disorientation or ataxia
+  • Refusal to bear weight
+
+📞 CONTACT VETERINARIAN IF:
+  • Red flags persist > 24 hours
+  • Swelling increases
+  • Lameness worsens
+  • Pain not controlled with prescribed medications
+  • New symptoms develop
+
+═══════════════════════════════════════════════════════════════════════════
+                     DOCUMENTATION & TRACKING
+═══════════════════════════════════════════════════════════════════════════
+
+📝 RECORD FOR EACH SESSION:
+  • Date and time
+  • Exercises performed (codes)
+  • Repetitions/duration
+  • Difficulty level
+  • Patient tolerance (1-10 scale)
+  • Any adverse reactions
+  • Progress notes
+  • Owner observations at home
+
+📊 WEEKLY ASSESSMENTS:
+  • Pain score (0-10)
+  • Lameness grade (0-5)
+  • Range of motion measurements
+  • Muscle girth measurements (affected limbs)
+  • Weight (geriatric and weight loss patients)
+  • Functional ability (stairs, jumping, etc.)
+
+📈 MONTHLY EVALUATION:
+  • Comprehensive physical exam
+  • Progress toward goals
+  • Treatment plan adjustments
+  • Client satisfaction
+  • Home exercise compliance
+
+═══════════════════════════════════════════════════════════════════════════
+                     BILLING & DOCUMENTATION CODES
+═══════════════════════════════════════════════════════════════════════════
+
+Common CPT-style codes for veterinary rehab billing:
+  • 97110 - Therapeutic exercise
+  • 97112 - Neuromuscular re-education
+  • 97116 - Gait training
+  • 97530 - Therapeutic activities
+  • 97535 - Self-care management training
+  • 97140 - Manual therapy techniques
+  • 97542 - Wheelchair/cart management
+  • 97750 - Physical performance test
+
+(Note: Adapt to your practice management system)
+
+═══════════════════════════════════════════════════════════════════════════
+
+╔════════════════════════════════════════════════════════════════════════════╗
+║                    QUICK REFERENCE GUIDE COMPLETE                          ║
+║                                                                            ║
+║         K9-REHAB-PRO v2.0.0 - 170 VET-APPROVED EXERCISES                  ║
+║                                                                            ║
+║           For full database documentation see:                             ║
+║           • DATABASE_FINALIZED.txt                                         ║
+║           • EXERCISE_DATABASE_COMPLETE.md                                  ║
+║           • Individual exercise files (exercises-part1.js through part8.js)║
+╚════════════════════════════════════════════════════════════════════════════╝

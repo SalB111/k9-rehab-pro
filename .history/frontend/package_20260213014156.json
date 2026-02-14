@@ -1,0 +1,26 @@
+{
+  "name": "k9-rehab-pro-frontend",
+  "version": "1.0.0",
+  "description": "K9-REHAB-PRO Patient Intake Form - Frontend Application",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx http-server -p 8080 -c-1",
+    "dev": "npx http-server -p 8080 -c-1 -o"
+  },
+  "keywords": [
+    "veterinary",
+    "rehabilitation",
+    "canine",
+    "physical-therapy"
+  ],
+  "author": "K9-REHAB-PRO",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.13.5",
+    "http-server": "^14.1.1",
+    "react-router-dom": "^7.13.0"
+  },
+  "devDependencies": {
+    "@types/react-router-dom": "^5.3.3"
+  }
+}

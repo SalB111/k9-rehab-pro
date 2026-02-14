@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>K9-Rehab-Pro: Clinical Intake Form</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.95;
+        }
+
+        .form-container {
+            padding: 40px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 12px;
+            margin-bottom: 24px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 20px;
+        }
+
+        .form-row.full {
+            grid-template-columns: 1fr;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        label .required {
+            color: #e74c3c;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        input[type="date"],
+        input[type="number"],
+        select,
+        textarea {
+            padding: 12px 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 40px;
+            justify-content: center;
+        }
+
+        button {
+            padding: 14px 32px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        button.submit {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            flex: 1;
+            max-width: 300px;
+        }
+
+        button.submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        button.reset {
+            background: #ecf0f1;
+            color: #333;
+            flex: 1;
+            max-width: 300px;
+        }
+
+        button.reset:hover {
+            background: #d5dbdb;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 16px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
+            border-left: 4px solid #28a745;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            .header h1 {
+                font-size: 22px;
+            }
+            .form-container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>K9-Rehab-Pro</h1>
+            <p>Clinical Canine Rehabilitation Intake Form</p>
+        </div>
+
+        <form id="intakeForm" class="form-container">
+            <div class="success-message" id="successMessage">
+                ✓ Form submitted successfully. Protocol generation pending.
+            </div>
+
+            <!-- SECTION 1: CLIENT INFORMATION -->
+            <div class="section">
+                <h2 class="section-title">Section 1: Client Information</h2>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Client Name <span class="required">*</span></label>
+                        <input type="text" name="clientName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email <span class="required">*</span></label>
+                        <input type="email" name="clientEmail" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Phone Number <span class="required">*</span></label>
+                        <input type="tel" name="clientPhone" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Address <span class="required">*</span></label>
+                        <input type="text" name="clientAddress" required>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 2: PATIENT INFORMATION -->
+            <div class="section">
+                <h2 class="section-title">Section 2: Patient Information</h2>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Patient Name <span class="required">*</span></label>
+                        <input type="text" name="patientName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Breed <span class="required">*</span></label>
+                        <input type="text" name="breed" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Age <span class="required">*</span></label>
+                        <input type="number" name="age" min="0" step="0.1" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Weight <span class="required">*</span></label>
+                        <input type="number" name="weight" min="0.1" step="0.1" required>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 3: CLINICAL DETAILS -->
+            <div class="section">
+                <h2 class="section-title">Section 3: Clinical & Surgical Details</h2>
+                <div class="form-row full">
+                    <div class="form-group">
+                        <label>Primary Diagnosis/Condition <span class="required">*</span></label>
+                        <select name="diagnosis" required>
+                            <option value="">-- Select Diagnosis --</option>
+                            <option value="TPLO">TPLO (Tibial Plateau Leveling Osteotomy)</option>
+                            <option value="TTA">TTA (Tibial Tuberosity Advancement)</option>
+                            <option value="CCL_TEAR">CCL Tear</option>
+                            <option value="HIP_DYSPLASIA">Hip Dysplasia</option>
+                            <option value="IVDD">IVDD (Intervertebral Disc Disease)</option>
+                            <option value="OA">Osteoarthritis</option>
+                            <option value="OTHER">Other</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Surgery Date <span class="required">*</span></label>
+                        <input type="date" name="surgeryDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Veterinary Clearance? <span class="required">*</span></label>
+                        <select name="vetClearance" required>
+                            <option value="">-- Select --</option>
+                            <option value="yes">Yes</option>
+                            <option value="pending">Pending</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 4: FUNCTIONAL STATUS -->
+            <div class="section">
+                <h2 class="section-title">Section 4: Functional Status</h2>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Mobility Level <span class="required">*</span></label>
+                        <select name="mobilityLevel" required>
+                            <option value="">-- Select --</option>
+                            <option value="non-weight-bearing">Non-weight-bearing</option>
+                            <option value="partial-wb">Partial weight-bearing</option>
+                            <option value="full-wb">Full weight-bearing</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Affected Limbs <span class="required">*</span></label>
+                        <input type="text" name="affectedLimbs" placeholder="e.g., Right hind" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Pain Level At Rest <span class="required">*</span></label>
+                        <input type="number" name="painAtRest" min="0" max="10" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Pain Level With Activity <span class="required">*</span></label>
+                        <input type="number" name="painWithActivity" min="0" max="10" required>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUBMIT BUTTON -->
+            <div class="button-group">
+                <button type="reset" class="reset">Clear Form</button>
+                <button type="submit" class="submit">Submit Intake Form</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        const form = document.getElementById('intakeForm');
+        
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData);
+            
+            const payload = {
+                clientName: data.clientName,
+                clientEmail: data.clientEmail,
+                clientPhone: data.clientPhone,
+                clientAddress: data.clientAddress,
+                patientName: data.patientName,
+                breed: data.breed,
+                age: parseFloat(data.age),
+                weight: parseFloat(data.weight),
+                diagnosis: data.diagnosis,
+                surgeryDate: data.surgeryDate,
+                vetClearance: data.vetClearance,
+                mobilityLevel: data.mobilityLevel,
+                affectedLimbs: data.affectedLimbs,
+                painAtRest: parseInt(data.painAtRest),
+                painWithActivity: parseInt(data.painWithActivity)
+            };
+
+            console.log('Sending to server:', payload);
+            
+            document.getElementById('successMessage').textContent = 'Generating protocol...';
+            document.getElementById('successMessage').classList.add('show');
+            
+            fetch('http://localhost:3000/api/generate-protocol', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.json())
+            .then(result => {
+                console.log('Protocol:', result);
+                document.getElementById('successMessage').textContent = '✓ Protocol Generated!';
+                document.getElementById('successMessage').style.background = '#d4edda';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('successMessage').textContent = '✗ Error: ' + error.message;
+                document.getElementById('successMessage').style.background = '#f8d7da';
+            });
+        });
+    </script>
+</body>
+</html>

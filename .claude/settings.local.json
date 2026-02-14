@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir:*)",
+      "Bash(powershell -NoProfile -Command:*)",
+      "Bash(npm install:*)",
+      "Bash(timeout:*)",
+      "Bash(curl:*)",
+      "Bash(ping:*)",
+      "Bash(taskkill:*)",
+      "Bash(npx http-server:*)",
+      "Bash(powershell -Command \"Start-Sleep -Seconds 3; Invoke-WebRequest -Uri http://localhost:3000/api/health -UseBasicParsing | Select-Object -ExpandProperty Content\")",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)"
+    ]
+  }
+}

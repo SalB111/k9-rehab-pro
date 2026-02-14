@@ -1,0 +1,19 @@
+{
+  "clientName": "Dr. Sarah Johnson",
+  "patientName": "Max",
+  "species": "Canine",
+  "breed": "Labrador Retriever",
+  "age": 5,
+  "weight": 75,
+  "diagnosis": "TPLO",
+  "surgeryDate": "2024-02-01",
+  "painWithActivity": 3,
+  "mobilityLevel": 6,
+  "contraindications": [],
+  "goals": [
+    "Restore full weight bearing",
+    "Increase ROM to 90+ degrees",
+    "Return to off-leash activity"
+  ],
+  "protocolLength": 8
+}

@@ -1,0 +1,560 @@
+,
+
+  // ============================================================================
+  // THERAPEUTIC MODALITIES (EX-300 series)
+  // ============================================================================
+
+  'EX-300': {
+    name: 'Cryotherapy (Ice Pack Application)',
+    category: 'Therapeutic Modalities',
+    primaryGoal: 'Reduce inflammation, manage acute pain',
+    targetRegion: 'Affected joint or soft tissue',
+    indications: ['ACUTE_POST_OP', 'ACUTE_INJURY', 'POST_EXERCISE_INFLAMMATION', 'TPLO', 'TTA', 'FRACTURE_REPAIR'],
+    contraindications: ['COLD_INTOLERANCE', 'PERIPHERAL_VASCULAR_DISEASE', 'OPEN_WOUNDS'],
+    equipment: ['Ice pack or cold compress', 'Towel barrier'],
+    dosage: {
+      ACUTE: '15-20 minutes × 3-4 times daily (within first 72 hours post-injury)',
+      SUBACUTE: '15 minutes × 2-3 times daily (post-exercise)',
+      CHRONIC: '10-15 minutes × 1-2 times daily (as needed for flare-ups)'
+    },
+    technique: 'Apply ice pack wrapped in thin towel to affected area. Monitor skin for excessive cold response. Remove if patient shows discomfort.',
+    evidenceLevel: 'HIGH',
+    references: 'Millis & Levine 2014 Chapter 16 - Cryotherapy protocols'
+  },
+
+  'EX-301': {
+    name: 'Therapeutic Heat (Warm Pack Application)',
+    category: 'Therapeutic Modalities',
+    primaryGoal: 'Increase tissue extensibility, reduce chronic stiffness',
+    targetRegion: 'Muscles, tendons, chronic joint stiffness',
+    indications: ['CHRONIC_ARTHRITIS', 'MUSCLE_CONTRACTURE', 'CHRONIC_PAIN', 'PRE_EXERCISE_WARMUP'],
+    contraindications: ['ACUTE_INFLAMMATION', 'ACUTE_INJURY_FIRST_48_HOURS', 'MALIGNANCY', 'BLEEDING_DISORDERS', 'IMPAIRED_SENSATION'],
+    equipment: ['Heating pad or warm compress', 'Towel barrier'],
+    dosage: {
+      CHRONIC: '15-20 minutes before exercise × 1-2 times daily',
+      SUBACUTE: '10-15 minutes before exercise (only after acute inflammation resolved)'
+    },
+    technique: 'Apply warm compress (not hot) over area. Monitor continuously. Always follow with gentle ROM or stretching while tissues are warm.',
+    evidenceLevel: 'MODERATE',
+    references: 'Millis & Levine 2014 Chapter 16 - Thermotherapy'
+  },
+
+  'EX-302': {
+    name: 'Therapeutic Ultrasound',
+    category: 'Therapeutic Modalities',
+    primaryGoal: 'Deep tissue heating, promote tissue healing',
+    targetRegion: 'Deep muscles, tendons, ligaments',
+    indications: ['TENDINOPATHY', 'MUSCLE_STRAIN', 'LIGAMENT_INJURY', 'CHRONIC_PAIN', 'SCAR_TISSUE'],
+    contraindications: ['PREGNANCY', 'MALIGNANCY', 'ACUTE_INFECTION', 'RECENT_FRACTURE_SITE', 'IMPLANTED_DEVICES'],
+    equipment: ['Therapeutic ultrasound unit', 'Coupling gel'],
+    dosage: {
+      CHRONIC: '1.0-2.0 W/cm² × 5-10 minutes × 3 times per week',
+      SUBACUTE: '0.5-1.0 W/cm² × 5 minutes × 2-3 times per week'
+    },
+    technique: 'Apply coupling gel. Move sound head continuously in circular motion over treatment area. Maintain skin contact.',
+    evidenceLevel: 'MODERATE',
+    references: 'Levine et al. 2008 - Therapeutic ultrasound in veterinary rehabilitation'
+  },
+
+  'EX-303': {
+    name: 'Transcutaneous Electrical Nerve Stimulation (TENS)',
+    category: 'Therapeutic Modalities',
+    primaryGoal: 'Pain management through electrical stimulation',
+    targetRegion: 'Areas of chronic pain or nerve dysfunction',
+    indications: ['CHRONIC_PAIN', 'NEUROPATHIC_PAIN', 'ARTHRITIS', 'POST_SURGICAL_PAIN'],
+    contraindications: ['PACEMAKERS', 'SEIZURE_DISORDERS', 'PREGNANCY', 'MALIGNANCY', 'SKIN_LESIONS_AT_ELECTRODE_SITE'],
+    equipment: ['TENS unit', 'Electrodes', 'Conductive gel'],
+    dosage: {
+      CHRONIC: '20-30 minutes × 1-2 times daily (frequency: 50-100 Hz for acute pain, 2-10 Hz for chronic)',
+      SUBACUTE: '15-20 minutes × 1 time daily'
+    },
+    technique: 'Place electrodes around painful area (not directly on spine). Start at low intensity, increase to patient comfort. Monitor for adverse reactions.',
+    evidenceLevel: 'MODERATE',
+    references: 'Millis & Levine 2014 Chapter 18 - TENS therapy protocols'
+  },
+
+  'EX-304': {
+    name: 'Low-Level Laser Therapy (LLLT) / Photobiomodulation',
+    category: 'Therapeutic Modalities',
+    primaryGoal: 'Reduce inflammation, accelerate wound healing, pain relief',
+    targetRegion: 'Surgical sites, wounds, inflamed joints, nerve pathways',
+    indications: ['POST_SURGICAL_INCISION', 'WOUND_HEALING', 'ARTHRITIS', 'TENDINOPATHY', 'NERVE_INJURY'],
+    contraindications: ['MALIGNANCY', 'PREGNANCY', 'DIRECT_EYE_EXPOSURE', 'ACTIVE_HEMORRHAGE'],
+    equipment: ['Class 3B or Class 4 therapeutic laser'],
+    dosage: {
+      ACUTE: '3-6 J/cm² × 3-5 times per week (wound healing)',
+      SUBACUTE: '4-8 J/cm² × 3 times per week (inflammation control)',
+      CHRONIC: '6-10 J/cm² × 2-3 times per week (chronic pain/arthritis)'
+    },
+    technique: 'Apply laser probe perpendicular to tissue surface. Treat in grid pattern over affected area. Protective eyewear required for Class 4 lasers.',
+    evidenceLevel: 'MODERATE',
+    references: 'Draper et al. 2015 - Photobiomodulation in veterinary medicine; Looney et al. 2018'
+  },
+
+  'EX-305': {
+    name: 'Neuromuscular Electrical Stimulation (NMES)',
+    category: 'Therapeutic Modalities',
+    primaryGoal: 'Muscle re-education, prevent atrophy, strengthen weak muscles',
+    targetRegion: 'Atrophied or weakened muscles (quadriceps, biceps femoris, triceps)',
+    indications: ['MUSCLE_ATROPHY', 'POST_SURGICAL_WEAKNESS', 'NEUROLOGIC_INJURY', 'DISUSE_ATROPHY'],
+    contraindications: ['SEIZURE_DISORDERS', 'PACEMAKERS', 'MALIGNANCY', 'PREGNANCY', 'DENERVATED_MUSCLE'],
+    equipment: ['NMES unit', 'Electrodes', 'Conductive gel'],
+    dosage: {
+      SUBACUTE: '15-20 contractions × 10 second holds × 1 time daily (initially)',
+      CHRONIC: '20-30 contractions × 10-15 second holds × 1-2 times daily',
+      RETURN_TO_FUNCTION: '30 contractions × 15 second holds × 1 time daily'
+    },
+    technique: 'Place electrodes over motor points of target muscle. Start at threshold, increase to visible contraction. Allow rest period between contractions (1:3 ratio).',
+    evidenceLevel: 'HIGH',
+    references: 'Millis & Levine 2014 Chapter 18; Pelizzari et al. 2013 - NMES for quadriceps atrophy'
+  },
+
+  // ============================================================================
+  // ADVANCED PROPRIOCEPTION & BALANCE (EX-310 series)
+  // ============================================================================
+
+  'EX-310': {
+    name: 'Rocker Board Exercise',
+    category: 'Proprioception & Balance',
+    primaryGoal: 'Advanced dynamic balance, multi-plane stability',
+    targetRegion: 'All limbs, core stabilizers, vestibular system',
+    indications: ['ADVANCED_REHAB', 'SPORT_DOG_CONDITIONING', 'BALANCE_DEFICITS', 'RETURN_TO_FUNCTION'],
+    contraindications: ['SEVERE_ATAXIA', 'ACUTE_VESTIBULAR_DISEASE', 'SEVERE_WEAKNESS', 'FEAR_OF_HEIGHTS'],
+    equipment: ['Rocker board (tilting platform)'],
+    dosage: {
+      CHRONIC: '15-30 seconds × 3-5 repetitions × 1 time daily',
+      RETURN_TO_FUNCTION: '30-60 seconds × 5-8 repetitions × 1-2 times daily'
+    },
+    technique: 'Place patient on rocker board. Gently tilt board in multiple directions. Progress from slow to faster movements. Spotter required.',
+    evidenceLevel: 'MODERATE',
+    references: 'Sims et al. 2015 - Proprioceptive training modalities'
+  },
+
+  'EX-311': {
+    name: 'BOSU Ball Standing',
+    category: 'Proprioception & Balance',
+    primaryGoal: 'Extreme instability training, sport-specific balance',
+    targetRegion: 'All limbs, core, deep stabilizers',
+    indications: ['RETURN_TO_SPORT', 'ADVANCED_CONDITIONING', 'AGILITY_DOG_TRAINING'],
+    contraindications: ['SEVERE_ATAXIA', 'ACUTE_INJURY', 'FEAR_OF_UNSTABLE_SURFACES'],
+    equipment: ['BOSU ball (half-dome balance trainer)'],
+    dosage: {
+      CHRONIC: '10-20 seconds × 3 repetitions × 1 time daily',
+      RETURN_TO_FUNCTION: '20-30 seconds × 5-8 repetitions × 1-2 times daily'
+    },
+    technique: 'Start with flat side up (easier). Progress to dome side up (harder). Support patient during initial attempts. Build duration gradually.',
+    evidenceLevel: 'LOW-MODERATE',
+    references: 'Sport-specific training protocols; McGonagle et al. 2020'
+  },
+
+  'EX-312': {
+    name: 'Controlled Ball Chase (Figure-8 Pattern)',
+    category: 'Proprioception & Balance',
+    primaryGoal: 'Agility, lateral movement control, proprioception',
+    targetRegion: 'All limbs, rotational core stability',
+    indications: ['RETURN_TO_SPORT', 'ADVANCED_CONDITIONING', 'LATERAL_MOVEMENT_TRAINING'],
+    contraindications: ['ACUTE_INJURY', 'SEVERE_JOINT_INSTABILITY', 'UNCONTROLLED_EXCITEMENT'],
+    equipment: ['Ball or toy', 'Marked figure-8 pattern', 'Leash for control'],
+    dosage: {
+      CHRONIC: '2-3 figure-8 patterns × slow speed × 1 time daily',
+      RETURN_TO_FUNCTION: '4-6 figure-8 patterns × moderate speed × 1 time daily'
+    },
+    technique: 'Set up two cones 10-15 feet apart. Guide patient in figure-8 pattern around cones. Maintain controlled speed. Focus on smooth turns.',
+    evidenceLevel: 'LOW-MODERATE',
+    references: 'Functional movement pattern training; Zink & Van Dyke 2013'
+  },
+
+  'EX-313': {
+    name: 'Single-Limb Weight Shifts',
+    category: 'Proprioception & Balance',
+    primaryGoal: 'Limb-specific weight bearing, improve weak limb use',
+    targetRegion: 'Individual limb proprioception, contralateral stabilizers',
+    indications: ['LIMB_WEAKNESS', 'WEIGHT_BEARING_ASYMMETRY', 'ADVANCED_REHAB'],
+    contraindications: ['ACUTE_PAIN', 'SEVERE_INSTABILITY', 'INABILITY_TO_WEIGHT_BEAR'],
+    equipment: ['Small foam pad or cushion'],
+    dosage: {
+      SUBACUTE: '5-10 second weight shifts × 5 repetitions per limb × 1 time daily',
+      CHRONIC: '10-15 second weight shifts × 8-10 repetitions per limb × 1 time daily',
+      RETURN_TO_FUNCTION: '15-20 second weight shifts × 10-12 repetitions per limb × 1-2 times daily'
+    },
+    technique: 'Place one limb on slightly elevated surface (1-2 inches). Encourage weight shift onto that limb. Hold position. Rotate through all limbs.',
+    evidenceLevel: 'MODERATE',
+    references: 'Weight-bearing asymmetry correction protocols; Millis & Levine 2014'
+  },
+
+  // ============================================================================
+  // ADVANCED STRENGTHENING (EX-320 series)
+  // ============================================================================
+
+  'EX-320': {
+    name: 'Weighted Vest Walking',
+    category: 'Strength & Activation',
+    primaryGoal: 'Increase resistance, build muscular endurance',
+    targetRegion: 'All limbs, core stabilizers, cardiovascular system',
+    indications: ['ADVANCED_CONDITIONING', 'RETURN_TO_SPORT', 'WORKING_DOG_TRAINING'],
+    contraindications: ['ACUTE_INJURY', 'SEVERE_ARTHRITIS', 'SPINAL_INSTABILITY', 'CARDIOVASCULAR_DISEASE'],
+    equipment: ['Weighted vest (start with 5-10% body weight)'],
+    dosage: {
+      CHRONIC: '5-10 minutes × slow walk × 3 times per week',
+      RETURN_TO_FUNCTION: '10-15 minutes × moderate walk × 3-4 times per week (gradually increase weight to 15% body weight)'
+    },
+    technique: 'Fit vest snugly. Start with minimal weight. Walk on level ground. Monitor for fatigue or gait changes. Remove vest if discomfort noted.',
+    evidenceLevel: 'LOW-MODERATE',
+    references: 'Resistance training principles; working dog conditioning programs'
+  },
+
+  'EX-321': {
+    name: 'Treadmill Incline Walking',
+    category: 'Strength & Activation',
+    primaryGoal: 'Gluteal and hamstring strengthening, hip extension',
+    targetRegion: 'Gluteals, hamstrings, quadriceps, core',
+    indications: ['HIP_WEAKNESS', 'ADVANCED_CONDITIONING', 'RETURN_TO_FUNCTION'],
+    contraindications: ['ACUTE_INJURY', 'SEVERE_ATAXIA', 'FEAR_OF_TREADMILL'],
+    equipment: ['Motorized treadmill with incline capability'],
+    dosage: {
+      CHRONIC: '5-10 minutes × 2-5% incline × 3 times per week',
+      RETURN_TO_FUNCTION: '10-15 minutes × 5-10% incline × 3-4 times per week'
+    },
+    technique: 'Start on flat surface to acclimate. Gradually increase incline. Monitor gait quality. Reduce incline if limping occurs.',
+    evidenceLevel: 'MODERATE',
+    references: 'Millis et al. 2004 - Treadmill training protocols; Bromiley 2007'
+  },
+
+  'EX-322': {
+    name: 'Side-Stepping Over Obstacles',
+    category: 'Strength & Activation',
+    primaryGoal: 'Lateral strength, abductor/adductor activation',
+    targetRegion: 'Hip abductors/adductors, lateral stabilizers',
+    indications: ['HIP_DYSPLASIA', 'LATERAL_WEAKNESS', 'ADVANCED_CONDITIONING'],
+    contraindications: ['ACUTE_HIP_INJURY', 'SEVERE_INSTABILITY'],
+    equipment: ['Low obstacles or poles (4-8 inches high)'],
+    dosage: {
+      CHRONIC: '10-15 steps over obstacles (each direction) × 2-3 sets × 3 times per week',
+      RETURN_TO_FUNCTION: '15-20 steps over obstacles (each direction) × 3-4 sets × 3-4 times per week'
+    },
+    technique: 'Guide patient to step laterally over low obstacles. Maintain control with leash. Progress obstacle height gradually. Work both directions equally.',
+    evidenceLevel: 'MODERATE',
+    references: 'Functional movement patterns; Zink & Van Dyke 2013'
+  },
+
+  'EX-323': {
+    name: 'Downhill Walking (Controlled Decline)',
+    category: 'Strength & Activation',
+    primaryGoal: 'Eccentric quadriceps strengthening, front limb control',
+    targetRegion: 'Quadriceps (eccentric), shoulder stabilizers, forelimb muscles',
+    indications: ['FORELIMB_STRENGTHENING', 'QUADRICEPS_WEAKNESS', 'ADVANCED_CONDITIONING'],
+    contraindications: ['ACUTE_FORELIMB_INJURY', 'SEVERE_ATAXIA', 'ELBOW_DYSPLASIA_FLARE'],
+    equipment: ['Hill or ramped surface'],
+    dosage: {
+      CHRONIC: '5-10 minutes × gentle decline × 2-3 times per week',
+      RETURN_TO_FUNCTION: '10-15 minutes × moderate decline × 3 times per week'
+    },
+    technique: 'Use controlled leash. Walk slowly down gentle slope. Monitor forelimb gait. Progress decline angle gradually.',
+    evidenceLevel: 'MODERATE',
+    references: 'Eccentric strengthening protocols; Millis & Levine 2014'
+  },
+
+  // ============================================================================
+  // MANUAL THERAPY TECHNIQUES (EX-330 series)
+  // ============================================================================
+
+  'EX-330': {
+    name: 'Massage - Effleurage (Light Stroking)',
+    category: 'Manual Therapy',
+    primaryGoal: 'Relaxation, increase circulation, reduce muscle tension',
+    targetRegion: 'All muscle groups',
+    indications: ['MUSCLE_TENSION', 'PRE_EXERCISE_WARMUP', 'POST_EXERCISE_COOLDOWN', 'ANXIETY_REDUCTION'],
+    contraindications: ['ACUTE_INJURY_SITE', 'OPEN_WOUNDS', 'SKIN_INFECTIONS', 'AGGRESSIVE_PATIENTS'],
+    equipment: [],
+    dosage: {
+      ACUTE: '5-10 minutes × light pressure × 2-3 times daily',
+      SUBACUTE: '10-15 minutes × light-moderate pressure × 1-2 times daily',
+      CHRONIC: '15-20 minutes × moderate pressure × 3-4 times per week'
+    },
+    technique: 'Use flat palm. Long, slow strokes along muscle fiber direction. Maintain consistent rhythm. Avoid bony prominences.',
+    evidenceLevel: 'MODERATE',
+    references: 'Millis & Levine 2014 Chapter 19 - Massage therapy; Knap et al. 2017'
+  },
+
+  'EX-331': {
+    name: 'Massage - Petrissage (Kneading)',
+    category: 'Manual Therapy',
+    primaryGoal: 'Deep tissue mobilization, break up adhesions',
+    targetRegion: 'Large muscle groups (gluteals, quadriceps, shoulders)',
+    indications: ['MUSCLE_CONTRACTURE', 'CHRONIC_TENSION', 'SCAR_TISSUE_MOBILIZATION'],
+    contraindications: ['ACUTE_INFLAMMATION', 'FRACTURE_SITES', 'SEVERE_PAIN', 'AGGRESSIVE_PATIENTS'],
+    equipment: [],
+    dosage: {
+      CHRONIC: '10-15 minutes × deep pressure × 3 times per week (after warmup)'
+    },
+    technique: 'Grasp and lift muscle tissue. Apply kneading motion. Work systematically through muscle group. Avoid excessive pressure over spine.',
+    evidenceLevel: 'MODERATE',
+    references: 'Millis & Levine 2014 Chapter 19'
+  },
+
+  'EX-332': {
+    name: 'Myofascial Release - Trigger Point Therapy',
+    category: 'Manual Therapy',
+    primaryGoal: 'Release myofascial trigger points, reduce referred pain',
+    targetRegion: 'Identified trigger points in muscles',
+    indications: ['CHRONIC_PAIN', 'MUSCLE_HYPERTONICITY', 'REFERRED_PAIN_PATTERNS'],
+    contraindications: ['ACUTE_INFLAMMATION', 'INFECTION', 'RECENT_TRAUMA'],
+    equipment: [],
+    dosage: {
+      CHRONIC: '30-60 seconds per trigger point × 2-3 times per week',
+      SUBACUTE: '15-30 seconds per trigger point × 2 times per week'
+    },
+    technique: 'Locate trigger point (taut band in muscle). Apply sustained pressure until release felt (tissue softening). Progress gradually.',
+    evidenceLevel: 'MODERATE',
+    references: 'Xie et al. 2014 - Acupressure and trigger point therapy in dogs'
+  },
+
+  'EX-333': {
+    name: 'Joint Mobilization - Grade I-II (Oscillatory)',
+    category: 'Manual Therapy',
+    primaryGoal: 'Pain relief, improve joint mobility',
+    targetRegion: 'Restricted joints (shoulder, hip, stifle)',
+    indications: ['JOINT_STIFFNESS', 'CHRONIC_ARTHRITIS', 'POST_SURGICAL_ROM_LIMITATION'],
+    contraindications: ['ACUTE_TRAUMA', 'FRACTURE', 'JOINT_INSTABILITY', 'SEVERE_PAIN'],
+    equipment: [],
+    dosage: {
+      SUBACUTE: '1-2 minutes × small amplitude oscillations × 3-5 times per week',
+      CHRONIC: '2-3 minutes × small-medium amplitude oscillations × 3-5 times per week'
+    },
+    technique: 'Stabilize proximal segment. Apply gentle rhythmic oscillatory movements to distal segment. Stay within patient comfort zone. Grade I = small amplitude, Grade II = larger amplitude.',
+    evidenceLevel: 'MODERATE',
+    references: 'Millis & Levine 2014 Chapter 20 - Joint mobilization techniques'
+  },
+
+  // ============================================================================
+  // NEUROLOGIC REHABILITATION (EX-340 series)
+  // ============================================================================
+
+  'EX-340': {
+    name: 'Assisted Walking with Sling Support',
+    category: 'Neurologic Rehabilitation',
+    primaryGoal: 'Maintain gait pattern, prevent learned non-use',
+    targetRegion: 'All limbs, spinal stabilizers',
+    indications: ['IVDD_POST_SURGERY', 'FCE', 'DEGENERATIVE_MYELOPATHY', 'SEVERE_WEAKNESS'],
+    contraindications: ['SPINAL_INSTABILITY', 'ACUTE_SPINAL_TRAUMA', 'SEVERE_PAIN'],
+    equipment: ['Rear-end support sling or harness'],
+    dosage: {
+      ACUTE: '3-5 minutes × 2-3 times daily (immediately post-surgery as cleared)',
+      SUBACUTE: '5-10 minutes × 3 times daily',
+      CHRONIC: '10-15 minutes × 2-3 times daily'
+    },
+    technique: 'Support hindquarters with sling. Allow forelimbs to bear weight naturally. Encourage stepping motion in rear limbs. Progress to less support as strength improves.',
+    evidenceLevel: 'HIGH',
+    references: 'Millis & Levine 2014 Chapter 27 - Neurologic rehabilitation; Olby et al. 2005'
+  },
+
+  'EX-341': {
+    name: 'Tickling/Sensory Stimulation (Paw Placement)',
+    category: 'Neurologic Rehabilitation',
+    primaryGoal: 'Improve proprioceptive awareness, stimulate motor response',
+    targetRegion: 'Affected limb(s) with proprioceptive deficits',
+    indications: ['PROPRIOCEPTIVE_DEFICITS', 'IVDD_RECOVERY', 'PERIPHERAL_NERVE_INJURY'],
+    contraindications: ['AGGRESSIVE_PATIENTS', 'OPEN_WOUNDS_ON_LIMBS'],
+    equipment: [],
+    dosage: {
+      SUBACUTE: '10-15 stimulations per limb × 3-4 times daily',
+      CHRONIC: '15-20 stimulations per limb × 2-3 times daily'
+    },
+    technique: 'Gently tickle hair between toes or on dorsum of paw. Observe for conscious response (paw withdrawal). Repeat until consistent response noted.',
+    evidenceLevel: 'MODERATE',
+    references: 'Proprioceptive re-education protocols; Levine et al. 2008'
+  },
+
+  'EX-342': {
+    name: 'Bicycling Motion (Passive-Assisted)',
+    category: 'Neurologic Rehabilitation',
+    primaryGoal: 'Maintain neural pathways, prevent contracture in non-ambulatory patients',
+    targetRegion: 'Hindlimbs (primarily)',
+    indications: ['PARALYSIS', 'NON_AMBULATORY_IVDD', 'SEVERE_ATROPHY'],
+    contraindications: ['UNSTABLE_FRACTURE', 'RECENT_SPINAL_SURGERY_FIRST_7_DAYS'],
+    equipment: [],
+    dosage: {
+      ACUTE: '10-15 repetitions per limb × 2 times daily',
+      SUBACUTE: '20-30 repetitions per limb × 2-3 times daily',
+      CHRONIC: '30-50 repetitions per limb × 2 times daily'
+    },
+    technique: 'With patient in lateral recumbency, grasp limb and move through normal gait cycle (flexion-extension pattern). Maintain smooth rhythm. Bilateral exercise.',
+    evidenceLevel: 'MODERATE',
+    references: 'Millis & Levine 2014 Chapter 27; neurologic patient protocols'
+  },
+
+  'EX-343': {
+    name: 'Standing Balance - Neurologic (Supported)',
+    category: 'Neurologic Rehabilitation',
+    primaryGoal: 'Re-establish standing ability, weight-bearing awareness',
+    targetRegion: 'Core stabilizers, all limbs',
+    indications: ['IVDD_RECOVERY', 'DEGENERATIVE_MYELOPATHY', 'RELEARNING_TO_STAND'],
+    contraindications: ['SPINAL_INSTABILITY', 'SEVERE_PAIN', 'ACUTE_TRAUMA'],
+    equipment: ['Support sling or therapist assistance'],
+    dosage: {
+      ACUTE: '30 seconds - 1 minute × 3-5 times daily',
+      SUBACUTE: '1-3 minutes × 3-4 times daily',
+      CHRONIC: '3-5 minutes × 2-3 times daily (progress to unsupported)'
+    },
+    technique: 'Support patient in standing position. Ensure all four limbs are positioned under body. Gradually reduce support as patient demonstrates ability to maintain position.',
+    evidenceLevel: 'HIGH',
+    references: 'Olby et al. 2005 - IVDD recovery protocols; Jeffery et al. 2011'
+  },
+
+  // ============================================================================
+  // GERIATRIC-SPECIFIC EXERCISES (EX-350 series)
+  // ============================================================================
+
+  'EX-350': {
+    name: 'Gentle Arthritis ROM - Low Repetition',
+    category: 'Geriatric Exercises',
+    primaryGoal: 'Maintain mobility in arthritic joints without overexertion',
+    targetRegion: 'All affected joints',
+    indications: ['GERIATRIC_ARTHRITIS', 'CHRONIC_DJD', 'REDUCED_MOBILITY_DUE_TO_AGE'],
+    contraindications: ['ACUTE_PAIN_FLARE', 'SEVERE_JOINT_EFFUSION'],
+    equipment: [],
+    dosage: {
+      CHRONIC: '5-8 repetitions per joint × 1-2 times daily (gentle, slow motion)'
+    },
+    technique: 'Very gentle ROM through comfortable range only. Do not force movement. Stop if resistance or pain noted. Perform after heat therapy if available.',
+    evidenceLevel: 'MODERATE',
+    references: 'Geriatric canine rehabilitation protocols; Millis & Levine 2014'
+  },
+
+  'EX-351': {
+    name: 'Short-Duration Walking (Geriatric)',
+    category: 'Geriatric Exercises',
+    primaryGoal: 'Maintain cardiovascular fitness, prevent muscle wasting',
+    targetRegion: 'All limbs, cardiovascular system',
+    indications: ['GERIATRIC_GENERAL_CONDITIONING', 'MILD_ARTHRITIS', 'CARDIAC_DISEASE_STABLE'],
+    contraindications: ['SEVERE_DYSPNEA', 'UNCONTROLLED_HEART_DISEASE', 'ACUTE_PAIN'],
+    equipment: [],
+    dosage: {
+      CHRONIC: '5-10 minutes × 2-3 times daily (very slow pace, frequent rest breaks)'
+    },
+    technique: 'Walk on level, non-slip surface. Allow frequent sniffing breaks. Monitor for labored breathing or fatigue. Shorten duration if needed.',
+    evidenceLevel: 'HIGH',
+    references: 'Geriatric exercise guidelines; Levine & Millis 2014'
+  },
+
+  'EX-352': {
+    name: 'Supported Sit-to-Stand (Geriatric)',
+    category: 'Geriatric Exercises',
+    primaryGoal: 'Maintain functional independence, prevent sarcopenia',
+    targetRegion: 'Hindlimb muscles, core',
+    indications: ['GERIATRIC_WEAKNESS', 'MILD_MUSCLE_ATROPHY', 'DIFFICULTY_RISING'],
+    contraindications: ['SEVERE_ARTHRITIS', 'ACUTE_PAIN'],
+    equipment: ['Non-slip mat', 'Rear support sling if needed'],
+    dosage: {
+      CHRONIC: '3-5 repetitions × 1-2 times daily (with support as needed)'
+    },
+    technique: 'Position patient on non-slip surface. Lure into standing position with treat. Provide rear support if needed. Allow rest between repetitions.',
+    evidenceLevel: 'MODERATE',
+    references: 'Geriatric functional exercises; Goldberg & Tomlinson 2014'
+  },
+
+  // ============================================================================
+  // ADVANCED AQUATIC THERAPY (EX-360 series)
+  // ============================================================================
+
+  'EX-360': {
+    name: 'Underwater Treadmill - Sprint Intervals',
+    category: 'Aquatic Therapy',
+    primaryGoal: 'Cardiovascular conditioning, explosive power',
+    targetRegion: 'All limbs, cardiovascular system',
+    indications: ['RETURN_TO_SPORT', 'ADVANCED_CONDITIONING', 'SPORT_DOG_TRAINING'],
+    contraindications: ['ACUTE_INJURY', 'CARDIAC_DISEASE', 'FEAR_OF_WATER'],
+    equipment: ['Underwater treadmill'],
+    dosage: {
+      RETURN_TO_FUNCTION: '30 seconds sprint × 90 seconds walk recovery × 5-8 intervals, 2-3 times per week (water at mid-chest level)'
+    },
+    technique: 'Warm up with 5 minutes walking. Alternate between high-speed sprint intervals and recovery walking. Monitor heart rate and respiratory effort. Cool down with 5 minutes slow walking.',
+    evidenceLevel: 'MODERATE',
+    references: 'Levine et al. 2010 - Underwater treadmill protocols; Preston et al. 2013'
+  },
+
+  'EX-361': {
+    name: 'Swimming - Endurance Protocol',
+    category: 'Aquatic Therapy',
+    primaryGoal: 'Cardiovascular endurance, full-body conditioning',
+    targetRegion: 'All muscle groups, cardiovascular system',
+    indications: ['ADVANCED_CONDITIONING', 'WEIGHT_MANAGEMENT', 'CROSS_TRAINING'],
+    contraindications: ['FEAR_OF_WATER', 'INADEQUATE_SWIMMING_ABILITY', 'CARDIAC_DISEASE', 'OPEN_WOUNDS'],
+    equipment: ['Pool', 'Life vest if needed', 'Exit ramp'],
+    dosage: {
+      CHRONIC: '5-10 minutes continuous × 2-3 times per week',
+      RETURN_TO_FUNCTION: '10-20 minutes continuous × 3-4 times per week'
+    },
+    technique: 'Ensure safety with life vest initially. Encourage continuous swimming. Monitor for fatigue. Provide rest periods if needed. Always supervise closely.',
+    evidenceLevel: 'HIGH',
+    references: 'Millis & Levine 2014 Chapter 21; Waining et al. 2011 - Swimming biomechanics'
+  },
+
+  'EX-362': {
+    name: 'Water Resistance Walking - Jet Resistance',
+    category: 'Aquatic Therapy',
+    primaryGoal: 'Increased resistance training, strengthening',
+    targetRegion: 'All limbs, core stabilizers',
+    indications: ['ADVANCED_STRENGTHENING', 'RETURN_TO_FUNCTION', 'SPORT_CONDITIONING'],
+    contraindications: ['ACUTE_INJURY', 'SEVERE_WEAKNESS', 'FEAR_OF_WATER'],
+    equipment: ['Underwater treadmill with jet resistance capability'],
+    dosage: {
+      CHRONIC: '5-10 minutes × low resistance × 2-3 times per week',
+      RETURN_TO_FUNCTION: '10-15 minutes × moderate-high resistance × 3 times per week'
+    },
+    technique: 'Start with jets off to acclimate. Gradually increase jet resistance. Patient walks against water current. Monitor gait quality and fatigue.',
+    evidenceLevel: 'MODERATE',
+    references: 'Levine et al. 2010; advanced aquatic protocols'
+  },
+
+  // ============================================================================
+  // SPORT-SPECIFIC CONDITIONING (EX-370 series)
+  // ============================================================================
+
+  'EX-370': {
+    name: 'Agility Ladder Drills',
+    category: 'Sport-Specific Conditioning',
+    primaryGoal: 'Foot speed, coordination, proprioception',
+    targetRegion: 'All limbs, neuromuscular coordination',
+    indications: ['RETURN_TO_AGILITY_SPORT', 'ADVANCED_CONDITIONING', 'COORDINATION_TRAINING'],
+    contraindications: ['ACUTE_INJURY', 'SEVERE_ATAXIA', 'UNCONTROLLED_EXCITEMENT'],
+    equipment: ['Agility ladder (flat rungs on ground)'],
+    dosage: {
+      RETURN_TO_FUNCTION: '2-3 passes through ladder × 3-5 patterns × 2-3 times per week'
+    },
+    technique: 'Guide patient through ladder with one foot in each square. Progress to faster speeds. Use treats to maintain focus. Vary patterns (lateral stepping, two feet per square).',
+    evidenceLevel: 'LOW-MODERATE',
+    references: 'Sport dog conditioning programs; Zink & Van Dyke 2013'
+  },
+
+  'EX-371': {
+    name: 'Jump Grid Training',
+    category: 'Sport-Specific Conditioning',
+    primaryGoal: 'Explosive power, landing mechanics, sport readiness',
+    targetRegion: 'All limbs, core, landing stabilizers',
+    indications: ['RETURN_TO_AGILITY', 'RETURN_TO_FLYBALL', 'LATE_STAGE_REHAB'],
+    contraindications: ['ACTIVE_JOINT_DISEASE', 'ACUTE_INJURY', 'INCOMPLETE_REHABILITATION'],
+    equipment: ['Low jump bars (4-12 inches)', 'Cones for spacing'],
+    dosage: {
+      RETURN_TO_FUNCTION: '3-5 jumps × 2-3 sets × 2 times per week (start at 4 inches, progress height and spacing gradually)'
+    },
+    technique: 'Set jumps low initially. Focus on clean takeoffs and landings. Gradually increase height only after form perfected. Monitor for limping after exercise.',
+    evidenceLevel: 'LOW-MODERATE',
+    references: 'Sport dog return-to-sport protocols; competitive agility conditioning'
+  },
+
+  'EX-372': {
+    name: 'Controlled Ball Retrieve (Variable Distances)',
+    category: 'Sport-Specific Conditioning',
+    primaryGoal: 'Sport-specific conditioning, acceleration/deceleration control',
+    targetRegion: 'All limbs, cardiovascular system',
+    indications: ['RETURN_TO_SPORT', 'WORKING_DOG_CONDITIONING', 'ADVANCED_REHAB'],
+    contraindications: ['UNCONTROLLED_EXCITEMENT', 'ACUTE_INJURY', 'INABILITY_TO_CONTROL_SPEED'],
+    equipment: ['Ball or toy', 'Long line (20-50 feet)'],
+    dosage: {
+      RETURN_TO_FUNCTION: '5-10 retrieves × short-medium distance × 2-3 times per week (gradually increase distance and speed)'
+    },
+    technique: 'Start with short throws (10-20 feet). Control speed with long line if needed. Build distance gradually. Focus on controlled returns (no spinning or jumping). Rest between retrieves.',
+    evidenceLevel: 'LOW-MODERATE',
+    references: 'Working dog conditioning; return-to-sport guidelines'
+  }
