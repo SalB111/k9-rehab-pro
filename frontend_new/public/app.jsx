@@ -320,55 +320,6 @@ const NavButton = ({ icon, label, active, onClick, primary }) => {
 };
 
 // ============================================================================
-// LASER VIDEO OVERLAY
-// ============================================================================
-
-/* COMMENTED OUT TEMPORARILY TO RESTORE WORKING STATE
-const LaserVideoOverlay = ({ onComplete, onSkip }) => {
-  const videoRef = useRef(null);
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (video) {
-      video.play();
-
-      // Auto-complete when video ends
-      const handleEnded = () => {
-        onComplete();
-      };
-
-      video.addEventListener('ended', handleEnded);
-      return () => video.removeEventListener('ended', handleEnded);
-    }
-  }, [onComplete]);
-
-  return (
-    <div className="fixed inset-0 z-50 bg-black flex items-center justify-center">
-      <video
-        ref={videoRef}
-        className="w-full h-full object-cover"
-        src="/loading-animation.mp4"
-        muted
-        playsInline
-      />
-
-      <button
-        onClick={onSkip}
-        className="absolute top-8 right-8 px-6 py-3 bg-white/10 hover:bg-white/20 text-white border border-white/30 rounded-lg font-semibold transition-all backdrop-blur-sm flex items-center gap-2"
-      >
-        <i className="fas fa-forward"></i> Skip Animation
-      </button>
-
-      <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 text-white text-center">
-        <div className="text-2xl font-bold mb-2">Generating Evidence-Based Protocol</div>
-        <div className="text-med-teal-300 text-sm">Analyzing clinical data...</div>
-      </div>
-    </div>
-  );
-};
-*/
-
-// ============================================================================
 // HOME VIEW
 // ============================================================================
 
@@ -452,123 +403,6 @@ const StatCard = ({ number, label, icon }) => {
 // LASER VIDEO OVERLAY - Protocol Activation Animation
 // ============================================================================
 
-const LaserVideoOverlay = ({ onComplete, onSkip }) => {
-  const videoRef = useRef(null);
-  const [showSkip, setShowSkip] = useState(false);
-
-  useEffect(() => {
-    // Show skip button after 2 seconds
-    const timer = setTimeout(() => setShowSkip(true), 2000);
-    return () => clearTimeout(timer);
-  }, []);
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (video) {
-      video.play().catch(err => {
-        console.log('Autoplay prevented:', err);
-      });
-    }
-  }, []);
-
-  const handleVideoEnd = () => {
-    onComplete();
-  };
-
-  const handleSkip = () => {
-    onSkip();
-  };
-
-  return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black">
-      {/* Video Background */}
-      <video
-        ref={videoRef}
-        className="absolute inset-0 w-full h-full object-cover"
-        onEnded={handleVideoEnd}
-        muted
-        playsInline
-      >
-        {/* Loading animation video */}
-        <source src="/loading-animation.mp4" type="video/mp4" />
-        {/* Fallback to animated gradient if video not available */}
-      </video>
-
-      {/* Fallback: Animated gradient background if video fails */}
-      <div className="absolute inset-0 bg-gradient-to-br from-med-blue-900 via-med-teal-600 to-med-blue-900 animate-pulse opacity-80"></div>
-
-      {/* Laser scanning effect overlay */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="laser-scan-line"></div>
-      </div>
-
-      {/* Center content */}
-      <div className="relative z-10 text-center text-white">
-        <div className="mb-8 animate-pulse">
-          <i className="fas fa-rocket text-8xl text-white drop-shadow-[0_0_30px_rgba(255,255,255,0.8)]"></i>
-        </div>
-        <h2 className="text-4xl font-bold mb-4 drop-shadow-[0_0_20px_rgba(255,255,255,0.6)]">
-          Activating Protocol
-        </h2>
-        <p className="text-xl text-teal-200 drop-shadow-[0_0_10px_rgba(255,255,255,0.4)]">
-          Generating evidence-based rehabilitation exercises...
-        </p>
-
-        {/* Loading dots */}
-        <div className="mt-6 flex justify-center gap-2">
-          <div className="w-3 h-3 bg-white rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
-          <div className="w-3 h-3 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-          <div className="w-3 h-3 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
-        </div>
-      </div>
-
-      {/* Skip button */}
-      {showSkip && (
-        <button
-          onClick={handleSkip}
-          className="absolute bottom-10 right-10 z-20 px-6 py-3 bg-white/20 backdrop-blur-sm text-white font-bold rounded-lg border-2 border-white/40 hover:bg-white/30 transition-all flex items-center gap-2"
-        >
-          Skip <i className="fas fa-forward"></i>
-        </button>
-      )}
-
-      <style jsx>{`
-        @keyframes scan {
-          0% {
-            top: 0;
-            opacity: 0;
-          }
-          10% {
-            opacity: 1;
-          }
-          90% {
-            opacity: 1;
-          }
-          100% {
-            top: 100%;
-            opacity: 0;
-          }
-        }
-
-        .laser-scan-line {
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          height: 3px;
-          background: linear-gradient(to bottom,
-            transparent,
-            rgba(14, 165, 233, 0.8),
-            transparent);
-          box-shadow: 0 0 20px rgba(14, 165, 233, 0.8),
-                      0 0 40px rgba(14, 165, 233, 0.6);
-          animation: scan 3s ease-in-out infinite;
-        }
-      `}</style>
-    </div>
-  );
-};
-
 // ============================================================================
 // INTAKE WIZARD
 // ============================================================================
@@ -625,7 +459,6 @@ const IntakeWizard = ({ setCurrentView, setProtocolData, setIsLoading, isLoading
     consentGiven: true
   });
   const [errors, setErrors] = useState({});
-  // const [showLaserVideo, setShowLaserVideo] = useState(false);
 
   const handleChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -681,12 +514,12 @@ const IntakeWizard = ({ setCurrentView, setProtocolData, setIsLoading, isLoading
             <button
               onClick={handleSubmit}
               disabled={isLoading}
-              className="px-10 py-3 accent-bar text-white font-bold text-lg rounded-lg activate-protocol-btn transition-all flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-10 py-3 accent-bar text-white font-bold text-lg rounded-lg transition-all flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <><div className="spinner"></div> Generating Protocol...</>
               ) : (
-                <><i className="fas fa-rocket"></i> Activate Protocol</>
+                <><i className="fas fa-file-medical-alt"></i> Generate Protocol</>
               )}
             </button>
           )}
@@ -694,12 +527,6 @@ const IntakeWizard = ({ setCurrentView, setProtocolData, setIsLoading, isLoading
       </div>
 
       {/* LASER VIDEO OVERLAY */}
-      {/* {showLaserVideo && (
-        <LaserVideoOverlay
-          onComplete={generateProtocolAfterVideo}
-          onSkip={generateProtocolAfterVideo}
-        />
-      )} */}
     </div>
   );
 };
@@ -1049,230 +876,6 @@ const Step1ClientPatientInfo = ({ formData, handleChange, errors }) => {
   );
 };
 
-// ============================================================================
-// STEP 1 (OLD): PATIENT INFO — KEPT FOR REFERENCE
-// ============================================================================
-
-const Step1PatientInfo = ({ formData, handleChange, errors }) => {
-  // Auto-calculate size category from weight
-  const getSizeCategory = (w) => {
-    const wt = parseFloat(w);
-    if (!wt) return '—';
-    if (wt < 10) return 'Toy';
-    if (wt <= 25) return 'Small';
-    if (wt <= 50) return 'Medium';
-    if (wt <= 100) return 'Large';
-    return 'Giant';
-  };
-
-  const weightDiff = formData.weight && formData.idealWeight
-    ? (parseFloat(formData.weight) - parseFloat(formData.idealWeight)).toFixed(1)
-    : null;
-
-  return (
-    <div className="space-y-6 animate-slide-up">
-      <div className="border-b border-slate-200 pb-4 mb-6">
-        <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
-          <i className="fas fa-dog text-med-teal-500"></i>
-          Patient Demographics
-        </h2>
-        <p className="text-slate-500 text-sm mt-1">Complete patient identification and physical parameters</p>
-      </div>
-
-      {/* IDENTIFICATION ROW */}
-      <div className="bg-slate-50 rounded-xl p-5 border border-slate-200">
-        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">
-          <i className="fas fa-id-card mr-2"></i>Identification
-        </h3>
-        <div className="grid md:grid-cols-3 gap-4">
-          <FormField label="Patient Name" required error={errors.patientName}>
-            <input type="text" value={formData.patientName} onChange={(e) => handleChange('patientName', e.target.value)}
-              className="w-full px-4 py-3 border border-slate-300 rounded-lg med-input bg-white text-slate-900" placeholder="e.g., Atlas" />
-          </FormField>
-          <FormField label="Case / Patient ID">
-            <input type="text" value={formData.patientId} onChange={(e) => handleChange('patientId', e.target.value)}
-              className="w-full px-4 py-3 border border-slate-300 rounded-lg med-input bg-white text-slate-900 font-mono text-sm" placeholder="K9R-2025-####" />
-          </FormField>
-          <FormField label="Microchip #">
-            <input type="text" value={formData.microchipId} onChange={(e) => handleChange('microchipId', e.target.value)}
-              className="w-full px-4 py-3 border border-slate-300 rounded-lg med-input bg-white text-slate-900 font-mono text-sm" placeholder="15-digit ISO" />
-          </FormField>
-        </div>
-      </div>
-
-      {/* BREED / AGE / DOB */}
-      <div className="grid md:grid-cols-3 gap-4">
-        <FormField label="Breed" required error={errors.breed}>
-          <select value={formData.breed} onChange={(e) => handleChange('breed', e.target.value)}
-            className="w-full px-4 py-3 border border-slate-300 rounded-lg med-input bg-white text-slate-900">
-            <option value="">Select breed</option>
-            {Object.entries(BREEDS_BY_SIZE).map(([category, breeds]) => (
-              <optgroup key={category} label={category}>
-                {breeds.map(breed => <option key={breed} value={breed}>{breed}</option>)}
-              </optgroup>
-            ))}
-          </select>
-        </FormField>
-        <FormField label="Date of Birth">
-          <input type="date" value={formData.dob} onChange={(e) => handleChange('dob', e.target.value)}
-            className="w-full px-4 py-3 border border-slate-300 rounded-lg med-input bg-white text-slate-900" />
-        </FormField>
-        <FormField label="Age (years)" required error={errors.age}>
-          <input type="number" value={formData.age} onChange={(e) => handleChange('age', e.target.value)}
-            className="w-full px-4 py-3 border border-slate-300 rounded-lg med-input bg-white text-slate-900" placeholder="0" min="0" step="0.5" />
-        </FormField>
-      </div>
-
-      {/* COAT / SEX */}
-      <div className="grid md:grid-cols-2 gap-6">
-        <FormField label="Coat Color / Markings">
-          <input type="text" value={formData.coatColor} onChange={(e) => handleChange('coatColor', e.target.value)}
-            className="w-full px-4 py-3 border border-slate-300 rounded-lg med-input bg-white text-slate-900" placeholder="e.g., Yellow, Black & Tan" />
-        </FormField>
-        <FormField label="Sex / Neuter Status">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-            {['Neutered Male', 'Intact Male', 'Spayed Female', 'Intact Female'].map(option => (
-              <button key={option} onClick={() => handleChange('sex', option)}
-                className={`px-3 py-2.5 rounded-lg font-medium text-xs transition-all duration-200 border ${
-                  formData.sex === option ? 'bg-med-blue-900 text-white border-med-blue-900' : 'bg-white text-slate-600 border-slate-300 hover:border-med-blue-400 hover:bg-med-blue-50'
-                }`}>
-                {option}
-              </button>
-            ))}
-          </div>
-        </FormField>
-      </div>
-
-      {/* WEIGHT MANAGEMENT PANEL */}
-      <div className="bg-gradient-to-r from-blue-50 to-teal-50 rounded-xl p-5 border border-blue-100">
-        <h3 className="text-xs font-bold text-med-blue-900 uppercase tracking-wider mb-4">
-          <i className="fas fa-weight-scale mr-2"></i>Weight & Body Composition
-        </h3>
-        <div className="grid md:grid-cols-2 gap-6 mb-4">
-          {/* CURRENT WEIGHT */}
-          <div>
-            <label className="block text-sm font-bold text-med-blue-900 mb-3">
-              Current Weight <span className="text-red-500">*</span>
-            </label>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs text-slate-500 font-semibold mb-2">Kilograms (kg)</label>
-                <input
-                  type="number"
-                  value={formData.weightKg || ''}
-                  onChange={(e) => {
-                    const kg = e.target.value;
-                    handleChange('weightKg', kg);
-                    if (kg) {
-                      const lbs = (parseFloat(kg) * 2.20462).toFixed(1);
-                      handleChange('weight', lbs);
-                    } else {
-                      handleChange('weight', '');
-                    }
-                  }}
-                  className="w-full px-4 py-3 border-2 border-med-blue-300 rounded-lg bg-white text-slate-900 text-lg font-bold focus:border-med-blue-500 focus:ring-0"
-                  placeholder="0.0"
-                  min="0"
-                  step="0.1"
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-slate-500 font-semibold mb-2">Pounds (lbs)</label>
-                <input
-                  type="number"
-                  value={formData.weight || ''}
-                  onChange={(e) => {
-                    const lbs = e.target.value;
-                    handleChange('weight', lbs);
-                    if (lbs) {
-                      const kg = (parseFloat(lbs) / 2.20462).toFixed(1);
-                      handleChange('weightKg', kg);
-                    } else {
-                      handleChange('weightKg', '');
-                    }
-                  }}
-                  className="w-full px-4 py-3 border-2 border-med-blue-300 rounded-lg bg-white text-slate-900 text-lg font-bold focus:border-med-blue-500 focus:ring-0"
-                  placeholder="0.0"
-                  min="0"
-                  step="0.1"
-                />
-              </div>
-            </div>
-            {errors.weight && <p className="text-red-500 text-xs mt-2 font-medium">{errors.weight}</p>}
-          </div>
-
-          {/* IDEAL WEIGHT */}
-          <div>
-            <label className="block text-sm font-bold text-med-green-900 mb-3">
-              Ideal Weight
-            </label>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs text-slate-500 font-semibold mb-2">Kilograms (kg)</label>
-                <input
-                  type="number"
-                  value={formData.idealWeightKg || ''}
-                  onChange={(e) => {
-                    const kg = e.target.value;
-                    handleChange('idealWeightKg', kg);
-                    if (kg) {
-                      const lbs = (parseFloat(kg) * 2.20462).toFixed(1);
-                      handleChange('idealWeight', lbs);
-                    } else {
-                      handleChange('idealWeight', '');
-                    }
-                  }}
-                  className="w-full px-4 py-3 border-2 border-med-green-300 rounded-lg bg-white text-slate-900 text-lg font-bold focus:border-med-green-500 focus:ring-0"
-                  placeholder="0.0"
-                  min="0"
-                  step="0.1"
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-slate-500 font-semibold mb-2">Pounds (lbs)</label>
-                <input
-                  type="number"
-                  value={formData.idealWeight || ''}
-                  onChange={(e) => {
-                    const lbs = e.target.value;
-                    handleChange('idealWeight', lbs);
-                    if (lbs) {
-                      const kg = (parseFloat(lbs) / 2.20462).toFixed(1);
-                      handleChange('idealWeightKg', kg);
-                    } else {
-                      handleChange('idealWeightKg', '');
-                    }
-                  }}
-                  className="w-full px-4 py-3 border-2 border-med-green-300 rounded-lg bg-white text-slate-900 text-lg font-bold focus:border-med-green-500 focus:ring-0"
-                  placeholder="0.0"
-                  min="0"
-                  step="0.1"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* SIZE & DELTA */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="text-center p-3 bg-white rounded-lg border border-slate-200">
-            <div className="text-xs text-slate-400 font-semibold uppercase mb-1">Size Category</div>
-            <div className="text-lg font-extrabold text-med-blue-900">{getSizeCategory(formData.weight)}</div>
-          </div>
-          <div className="text-center p-3 bg-white rounded-lg border border-slate-200">
-            <div className="text-xs text-slate-400 font-semibold uppercase mb-1">Weight Delta</div>
-            <div className={`text-lg font-extrabold ${weightDiff > 0 ? 'text-amber-600' : weightDiff < 0 ? 'text-blue-600' : 'text-med-green-500'}`}>
-              {weightDiff ? `${weightDiff > 0 ? '+' : ''}${weightDiff} lbs` : '—'}
-            </div>
-            {weightDiff > 0 && <div className="text-xs text-amber-500 font-medium">Over ideal</div>}
-            {weightDiff < 0 && <div className="text-xs text-blue-500 font-medium">Under ideal</div>}
-            {weightDiff == 0 && <div className="text-xs text-green-500 font-medium">At ideal</div>}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 const FormField = ({ label, required, error, children }) => {
   return (
@@ -1911,149 +1514,6 @@ const Step4ReviewAndAuth = ({ formData, handleChange, errors }) => {
 };
 
 // ============================================================================
-// STEP 4 (OLD): OWNER INFO — KEPT FOR REFERENCE
-// ============================================================================
-
-const Step4OwnerInfo = ({ formData, handleChange, errors }) => {
-  // Find diagnosis name
-  const allConditions = Object.values(CONDITIONS_GROUPED).flat();
-  const diagnosisObj = allConditions.find(c => c.code === formData.diagnosis);
-  const diagnosisName = diagnosisObj ? diagnosisObj.name : formData.diagnosis || '—';
-
-  const muscleDeficit = formData.muscleCircAffected && formData.muscleCircContralateral
-    ? ((parseFloat(formData.muscleCircContralateral) - parseFloat(formData.muscleCircAffected)) / parseFloat(formData.muscleCircContralateral) * 100).toFixed(1)
-    : null;
-
-  return (
-    <div className="space-y-6 animate-slide-up">
-      <div className="border-b border-slate-200 pb-4 mb-6">
-        <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
-          <i className="fas fa-user-md text-med-teal-500"></i>
-          Finalize & Generate
-        </h2>
-        <p className="text-slate-500 text-sm mt-1">Review clinical snapshot, enter client/vet details, and authorize protocol generation</p>
-      </div>
-
-      {/* CLIENT & VET INFO */}
-      <div className="grid md:grid-cols-2 gap-4">
-        <FormField label="Client / Owner Name">
-          <input type="text" value={formData.clientName} onChange={(e) => handleChange('clientName', e.target.value)}
-            className="w-full px-4 py-3 border border-slate-300 rounded-lg med-input bg-white text-slate-900" placeholder="Owner's name" />
-        </FormField>
-        <FormField label="Client Email">
-          <input type="email" value={formData.clientEmail} onChange={(e) => handleChange('clientEmail', e.target.value)}
-            className="w-full px-4 py-3 border border-slate-300 rounded-lg med-input bg-white text-slate-900" placeholder="email@example.com" />
-        </FormField>
-        <FormField label="Client Phone">
-          <input type="tel" value={formData.clientPhone} onChange={(e) => handleChange('clientPhone', e.target.value)}
-            className="w-full px-4 py-3 border border-slate-300 rounded-lg med-input bg-white text-slate-900" placeholder="(555) 123-4567" />
-        </FormField>
-        <FormField label="Emergency Contact">
-          <input type="tel" value={formData.emergencyContact} onChange={(e) => handleChange('emergencyContact', e.target.value)}
-            className="w-full px-4 py-3 border border-slate-300 rounded-lg med-input bg-white text-slate-900" placeholder="(555) 123-4567" />
-        </FormField>
-      </div>
-
-      <div className="grid md:grid-cols-2 gap-4">
-        <FormField label="Referring Veterinarian">
-          <input type="text" value={formData.referringVet} onChange={(e) => handleChange('referringVet', e.target.value)}
-            className="w-full px-4 py-3 border border-slate-300 rounded-lg med-input bg-white text-slate-900" placeholder="Dr. Smith, DVM, DACVS" />
-        </FormField>
-        <FormField label="Referring Clinic / Hospital">
-          <input type="text" value={formData.referringClinic} onChange={(e) => handleChange('referringClinic', e.target.value)}
-            className="w-full px-4 py-3 border border-slate-300 rounded-lg med-input bg-white text-slate-900" placeholder="Clinic name" />
-        </FormField>
-      </div>
-
-      {/* INSURANCE (OPTIONAL) */}
-      <div className="grid md:grid-cols-2 gap-4">
-        <FormField label="Insurance Provider (optional)">
-          <input type="text" value={formData.insuranceProvider} onChange={(e) => handleChange('insuranceProvider', e.target.value)}
-            className="w-full px-4 py-3 border border-slate-300 rounded-lg med-input bg-white text-slate-900" placeholder="e.g., Trupanion, Nationwide" />
-        </FormField>
-        <FormField label="Policy # (optional)">
-          <input type="text" value={formData.policyNumber} onChange={(e) => handleChange('policyNumber', e.target.value)}
-            className="w-full px-4 py-3 border border-slate-300 rounded-lg med-input bg-white text-slate-900 font-mono" placeholder="Policy number" />
-        </FormField>
-      </div>
-
-      {/* FULL CLINICAL SNAPSHOT */}
-      <div className="bg-med-blue-50 rounded-xl p-6 border border-med-blue-200">
-        <h3 className="text-sm font-bold text-med-blue-900 uppercase tracking-wider mb-5 flex items-center gap-2">
-          <i className="fas fa-file-medical"></i>Clinical Snapshot — Pre-Generation Summary
-        </h3>
-
-        {/* Patient Row */}
-        <div className="grid md:grid-cols-4 gap-4 mb-4">
-          <div className="bg-white rounded-lg p-3 border border-med-blue-100 text-center">
-            <div className="text-xs text-slate-400 font-semibold uppercase">Patient</div>
-            <div className="text-lg font-extrabold text-med-blue-900">{formData.patientName || '—'}</div>
-            <div className="text-xs text-slate-500">{formData.breed}, {formData.age}yr, {formData.weight}lbs</div>
-          </div>
-          <div className="bg-white rounded-lg p-3 border border-med-blue-100 text-center">
-            <div className="text-xs text-slate-400 font-semibold uppercase">Diagnosis</div>
-            <div className="text-sm font-bold text-med-blue-900">{diagnosisName}</div>
-            <div className="text-xs text-slate-500">{formData.affectedSide} {formData.affectedRegion?.replace('_', ' ')}</div>
-          </div>
-          <div className="bg-white rounded-lg p-3 border border-med-blue-100 text-center">
-            <div className="text-xs text-slate-400 font-semibold uppercase">Protocol</div>
-            <div className="text-2xl font-extrabold text-med-blue-900">{formData.protocolLength}</div>
-            <div className="text-xs text-slate-500">Weeks</div>
-          </div>
-          <div className="bg-white rounded-lg p-3 border border-med-blue-100 text-center">
-            <div className="text-xs text-slate-400 font-semibold uppercase">Goals</div>
-            <div className="text-2xl font-extrabold text-med-blue-900">{formData.goals.length}</div>
-            <div className="text-xs text-slate-500">Treatment Goals</div>
-          </div>
-        </div>
-
-        {/* Clinical Metrics Row */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          <div className="bg-white rounded-lg p-3 border border-med-blue-100 text-center">
-            <div className="text-xs text-slate-400 uppercase">Pain</div>
-            <div className={`text-xl font-extrabold ${formData.painLevel >= 7 ? 'text-red-600' : formData.painLevel >= 4 ? 'text-amber-600' : 'text-green-600'}`}>{formData.painLevel}/10</div>
-          </div>
-          <div className="bg-white rounded-lg p-3 border border-med-blue-100 text-center">
-            <div className="text-xs text-slate-400 uppercase">Mobility</div>
-            <div className={`text-xl font-extrabold ${formData.mobilityLevel <= 3 ? 'text-red-600' : formData.mobilityLevel <= 6 ? 'text-amber-600' : 'text-green-600'}`}>{formData.mobilityLevel}/10</div>
-          </div>
-          <div className="bg-white rounded-lg p-3 border border-med-blue-100 text-center">
-            <div className="text-xs text-slate-400 uppercase">Lameness</div>
-            <div className="text-xl font-extrabold text-med-blue-900">Gr {formData.lamenessGrade}</div>
-          </div>
-          <div className="bg-white rounded-lg p-3 border border-med-blue-100 text-center">
-            <div className="text-xs text-slate-400 uppercase">BCS</div>
-            <div className="text-xl font-extrabold text-med-blue-900">{formData.bodyConditionScore}/9</div>
-          </div>
-          <div className="bg-white rounded-lg p-3 border border-med-blue-100 text-center">
-            <div className="text-xs text-slate-400 uppercase">Muscle Δ</div>
-            <div className={`text-xl font-extrabold ${muscleDeficit > 15 ? 'text-red-600' : muscleDeficit > 10 ? 'text-amber-600' : 'text-green-600'}`}>
-              {muscleDeficit ? `${muscleDeficit}%` : '—'}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* CONSENT */}
-      <div className="bg-slate-50 rounded-xl p-5 border border-slate-200">
-        <label className="flex items-start gap-3 cursor-pointer" onClick={() => handleChange('consentGiven', !formData.consentGiven)}>
-          <div className={`w-6 h-6 rounded border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-all ${
-            formData.consentGiven ? 'bg-med-green-500 border-med-green-500 text-white' : 'border-slate-400 bg-white'
-          }`}>
-            {formData.consentGiven && <i className="fas fa-check text-xs"></i>}
-          </div>
-          <div>
-            <span className="text-sm font-semibold text-slate-700">Authorization & Consent</span>
-            <p className="text-xs text-slate-500 mt-1">
-              I confirm that the clinical data entered is accurate and authorize the generation of a rehabilitation protocol.
-              This protocol is intended as clinical guidance and must be reviewed by a licensed veterinary rehabilitation professional before implementation.
-            </p>
-          </div>
-        </label>
-      </div>
-    </div>
-  );
-};
 
 // ============================================================================
 // PROTOCOL VIEW — DUAL-PANEL (Client Home / Hospital Clinical)
@@ -3087,6 +2547,12 @@ const ExerciseCard = ({ exercise, expanded, onToggle }) => {
                       <div>
                         <span className="text-slate-600 font-medium">Quality Grade:</span>
                         <span className="ml-2 text-slate-900 font-bold">Grade {exercise.evidence_base.grade}</span>
+                        <span className="ml-2 text-xs text-slate-500">
+                          {exercise.evidence_base.grade === 'A' && '(Strong evidence from controlled trials)'}
+                          {exercise.evidence_base.grade === 'B' && '(Moderate evidence from clinical studies)'}
+                          {exercise.evidence_base.grade === 'C' && '(Limited evidence, expert consensus)'}
+                          {exercise.evidence_base.grade === 'EO' && '(Expert opinion)'}
+                        </span>
                       </div>
                     )}
                     {exercise.evidence_base.certification_required && (
@@ -3095,10 +2561,10 @@ const ExerciseCard = ({ exercise, expanded, onToggle }) => {
                         <span className="ml-2 text-slate-900">{exercise.evidence_base.certification_required}</span>
                       </div>
                     )}
-                    {exercise.evidence_base.references && exercise.evidence_base.references.length > 0 && (
-                      <div>
-                        <span className="text-slate-600 font-medium">References:</span>
-                        <span className="ml-2 text-slate-900">{exercise.evidence_base.references.length} peer-reviewed citation(s)</span>
+                    {exercise.evidence_base.key_findings && (
+                      <div className="mt-2">
+                        <span className="text-slate-600 font-medium">Key Finding:</span>
+                        <p className="ml-2 text-slate-700 text-xs italic mt-1">"{exercise.evidence_base.key_findings}"</p>
                       </div>
                     )}
                   </div>
@@ -3172,6 +2638,46 @@ const ExerciseCard = ({ exercise, expanded, onToggle }) => {
               )}
             </div>
           </div>
+
+          {/* Peer-Reviewed References - Full Width Bottom Section */}
+          {exercise.evidence_base && exercise.evidence_base.references && exercise.evidence_base.references.length > 0 && (
+            <div className="mt-6 pt-6 border-t border-slate-300">
+              <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-3 flex items-center gap-2">
+                <i className="fas fa-book-medical text-med-blue-500"></i>
+                Peer-Reviewed References ({exercise.evidence_base.references.length})
+              </h4>
+              <div className="space-y-3">
+                {exercise.evidence_base.references.map((ref, idx) => (
+                  <div key={idx} className="bg-white border border-slate-200 rounded-lg p-3">
+                    <div className="flex items-start gap-3">
+                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-med-blue-500 text-white flex items-center justify-center text-xs font-bold">
+                        {idx + 1}
+                      </span>
+                      <div className="flex-1">
+                        <p className="text-xs text-slate-700 leading-relaxed">
+                          {ref.citation || ref}
+                        </p>
+                        {ref.key_findings && (
+                          <p className="text-xs text-med-blue-600 italic mt-1.5 pl-3 border-l-2 border-med-blue-200">
+                            Key finding: {ref.key_findings}
+                          </p>
+                        )}
+                        {ref.evidence_grade && (
+                          <span className="inline-block mt-1.5 px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded text-xs font-bold">
+                            Grade {ref.evidence_grade}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-slate-500 mt-3 italic">
+                <i className="fas fa-info-circle mr-1"></i>
+                All references are from peer-reviewed veterinary rehabilitation research and leading clinical textbooks.
+              </p>
+            </div>
+          )}
         </div>
       )}
     </div>
