@@ -1182,6 +1182,129 @@ function SettingsView({ setBrand }) {
 }
 
 // ─────────────────────────────────────────────
+// WELCOME / SPLASH VIEW
+// ─────────────────────────────────────────────
+function WelcomeView({ onEnter }) {
+  const [hovering, setHovering] = React.useState(false);
+
+  return (
+    <div style={{
+      position: "fixed", inset: 0, zIndex: 1000,
+      backgroundImage: "url('/welcome-platform.png')",
+      backgroundSize: "cover", backgroundPosition: "center",
+      display: "flex", flexDirection: "column",
+      alignItems: "center", justifyContent: "center",
+    }}>
+      {/* Dark gradient overlay */}
+      <div style={{
+        position: "absolute", inset: 0,
+        background: "linear-gradient(to bottom, rgba(0,0,0,0.72) 0%, rgba(4,18,34,0.55) 45%, rgba(0,0,0,0.82) 100%)"
+      }} />
+
+      {/* Content */}
+      <div style={{ position: "relative", zIndex: 2, textAlign: "center", padding: "0 24px", maxWidth: 720 }}>
+
+        {/* Top badge */}
+        <div style={{
+          display: "inline-flex", alignItems: "center", gap: 8,
+          background: "rgba(14,165,233,0.12)", border: "1px solid rgba(14,165,233,0.35)",
+          borderRadius: 40, padding: "6px 20px", marginBottom: 32,
+          color: "#0EA5E9", fontSize: 12, fontWeight: 700, letterSpacing: "1.2px",
+          textTransform: "uppercase"
+        }}>
+          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#0EA5E9",
+            boxShadow: "0 0 8px #0EA5E9", display: "inline-block" }} />
+          Evidence-Based Canine Rehabilitation
+        </div>
+
+        {/* Main title */}
+        <h1 style={{
+          fontSize: 62, fontWeight: 900, margin: "0 0 8px",
+          color: "#fff", letterSpacing: "-1px", lineHeight: 1.05,
+          textShadow: "0 2px 40px rgba(14,165,233,0.4)"
+        }}>
+          K9 Rehab Pro
+        </h1>
+        <p style={{
+          fontSize: 18, color: "#94C8E8", fontWeight: 400,
+          margin: "0 0 48px", letterSpacing: "0.3px"
+        }}>
+          Clinical Rehabilitation Platform for Veterinary Professionals
+        </p>
+
+        {/* Stats row */}
+        <div style={{
+          display: "flex", justifyContent: "center", gap: 0,
+          marginBottom: 56, borderRadius: 12, overflow: "hidden",
+          border: "1px solid rgba(14,165,233,0.2)",
+          background: "rgba(4,18,34,0.7)", backdropFilter: "blur(12px)"
+        }}>
+          {[
+            { val: "195", label: "Exercises" },
+            { val: "30+", label: "Peer-Reviewed Citations" },
+            { val: "6",   label: "Condition Protocols" },
+            { val: "A",   label: "Grade Evidence" },
+          ].map((s, i) => (
+            <div key={i} style={{
+              flex: 1, padding: "20px 16px", borderRight: i < 3 ? "1px solid rgba(14,165,233,0.15)" : "none",
+              textAlign: "center"
+            }}>
+              <div style={{ fontSize: 28, fontWeight: 800, color: "#0EA5E9",
+                textShadow: "0 0 20px rgba(14,165,233,0.5)", lineHeight: 1 }}>
+                {s.val}
+              </div>
+              <div style={{ fontSize: 10, color: "#7FB3CC", marginTop: 5,
+                textTransform: "uppercase", letterSpacing: "0.8px", fontWeight: 600 }}>
+                {s.label}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* CTA Button */}
+        <button
+          onClick={onEnter}
+          onMouseEnter={() => setHovering(true)}
+          onMouseLeave={() => setHovering(false)}
+          style={{
+            background: hovering
+              ? "linear-gradient(135deg, #0EA5E9 0%, #0F4C81 100%)"
+              : "linear-gradient(135deg, #0F4C81 0%, #0c3a63 100%)",
+            border: "1px solid rgba(14,165,233,0.5)",
+            color: "#fff", fontSize: 16, fontWeight: 700,
+            padding: "16px 52px", borderRadius: 10, cursor: "pointer",
+            letterSpacing: "0.5px", transition: "all 0.2s",
+            boxShadow: hovering
+              ? "0 0 40px rgba(14,165,233,0.5), 0 8px 32px rgba(0,0,0,0.4)"
+              : "0 0 20px rgba(14,165,233,0.2), 0 4px 16px rgba(0,0,0,0.4)",
+            transform: hovering ? "translateY(-2px)" : "none",
+          }}
+        >
+          Enter Platform  →
+        </button>
+
+        {/* Bottom line */}
+        <p style={{ marginTop: 32, fontSize: 11, color: "#4a7a99", letterSpacing: "0.5px" }}>
+          CCRP · CCRT · DVM  ·  Built on Millis &amp; Levine standards
+        </p>
+      </div>
+
+      {/* Corner scan lines — decorative */}
+      {[["top","left"],["top","right"],["bottom","left"],["bottom","right"]].map(([v,h],i) => (
+        <div key={i} style={{
+          position: "absolute", [v]: 28, [h]: 28,
+          width: 40, height: 40,
+          borderTop: v === "top" ? "2px solid rgba(14,165,233,0.4)" : "none",
+          borderBottom: v === "bottom" ? "2px solid rgba(14,165,233,0.4)" : "none",
+          borderLeft: h === "left" ? "2px solid rgba(14,165,233,0.4)" : "none",
+          borderRight: h === "right" ? "2px solid rgba(14,165,233,0.4)" : "none",
+        }} />
+      ))}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
 // SIDEBAR NAV ITEM
 // ─────────────────────────────────────────────
 const NAV = [
@@ -1204,7 +1327,7 @@ const PAGE_TITLES = {
 // APP
 // ─────────────────────────────────────────────
 export default function App() {
-  const [view, setView] = useState("generator");
+  const [view, setView] = useState("welcome");
   const [brand, setBrand] = useState({ clinicName: "K9 Rehab Pro", accent: "#0F4C81" });
 
   const views = {
@@ -1214,6 +1337,10 @@ export default function App() {
     sessions:  <SessionsView />,
     settings:  <SettingsView brand={brand} setBrand={setBrand} />,
   };
+
+  if (view === "welcome") {
+    return <WelcomeView onEnter={() => setView("generator")} />;
+  }
 
   return (
     <div style={S.app}>
