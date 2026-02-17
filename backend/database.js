@@ -119,6 +119,125 @@ function initializeDatabase() {
         )
       `, (err) => {
         if (err) console.error('Error creating progress_assessments table:', err);
+      });
+
+      // ========================================================================
+      // EXERCISE LIBRARY TABLES - v2.0
+      // ========================================================================
+
+      // DOMAINS TABLE
+      db.run(`
+        CREATE TABLE IF NOT EXISTS domains (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          description TEXT
+        )
+      `, (err) => {
+        if (err) console.error('Error creating domains table:', err);
+      });
+
+      // PHASES TABLE
+      db.run(`
+        CREATE TABLE IF NOT EXISTS phases (
+          id INTEGER PRIMARY KEY,
+          name TEXT NOT NULL,
+          description TEXT
+        )
+      `, (err) => {
+        if (err) console.error('Error creating phases table:', err);
+      });
+
+      // TIERS TABLE
+      db.run(`
+        CREATE TABLE IF NOT EXISTS tiers (
+          id INTEGER PRIMARY KEY,
+          name TEXT NOT NULL,
+          description TEXT
+        )
+      `, (err) => {
+        if (err) console.error('Error creating tiers table:', err);
+      });
+
+      // EXERCISES_V2 TABLE
+      db.run(`
+        CREATE TABLE IF NOT EXISTS exercises_v2 (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          domain TEXT NOT NULL,
+          category TEXT NOT NULL,
+          description TEXT,
+          video_url TEXT,
+          FOREIGN KEY (domain) REFERENCES domains(id)
+        )
+      `, (err) => {
+        if (err) console.error('Error creating exercises_v2 table:', err);
+      });
+
+      // EXERCISE_PHASES_V2 JUNCTION TABLE
+      db.run(`
+        CREATE TABLE IF NOT EXISTS exercise_phases_v2 (
+          exercise_id TEXT NOT NULL,
+          phase_id INTEGER NOT NULL,
+          PRIMARY KEY (exercise_id, phase_id),
+          FOREIGN KEY (exercise_id) REFERENCES exercises_v2(id),
+          FOREIGN KEY (phase_id) REFERENCES phases(id)
+        )
+      `, (err) => {
+        if (err) console.error('Error creating exercise_phases_v2 table:', err);
+      });
+
+      // EXERCISE_TIERS_V2 JUNCTION TABLE
+      db.run(`
+        CREATE TABLE IF NOT EXISTS exercise_tiers_v2 (
+          exercise_id TEXT NOT NULL,
+          tier_id INTEGER NOT NULL,
+          PRIMARY KEY (exercise_id, tier_id),
+          FOREIGN KEY (exercise_id) REFERENCES exercises_v2(id),
+          FOREIGN KEY (tier_id) REFERENCES tiers(id)
+        )
+      `, (err) => {
+        if (err) console.error('Error creating exercise_tiers_v2 table:', err);
+      });
+
+      // SESSIONS TABLE
+      db.run(`
+        CREATE TABLE IF NOT EXISTS sessions (
+          session_id INTEGER PRIMARY KEY AUTOINCREMENT,
+          patient_id INTEGER NOT NULL,
+          protocol_id TEXT,
+          session_date DATE NOT NULL,
+          therapist_name TEXT,
+          pre_session_pain INTEGER,
+          post_session_pain INTEGER,
+          pre_session_lameness INTEGER,
+          post_session_lameness INTEGER,
+          session_notes TEXT,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (patient_id) REFERENCES patients(patient_id),
+          FOREIGN KEY (protocol_id) REFERENCES protocols(protocol_id)
+        )
+      `, (err) => {
+        if (err) console.error('Error creating sessions table:', err);
+      });
+
+      // SESSION_EXERCISES TABLE
+      db.run(`
+        CREATE TABLE IF NOT EXISTS session_exercises (
+          session_exercise_id INTEGER PRIMARY KEY AUTOINCREMENT,
+          session_id INTEGER NOT NULL,
+          exercise_id TEXT NOT NULL,
+          sets INTEGER,
+          repetitions INTEGER,
+          duration_seconds INTEGER,
+          assistance_level TEXT,
+          surface_type TEXT,
+          observed_compensations TEXT,
+          performance_notes TEXT,
+          FOREIGN KEY (session_id) REFERENCES sessions(session_id),
+          FOREIGN KEY (exercise_id) REFERENCES exercises_v2(id)
+        )
+      `, (err) => {
+        if (err) console.error('Error creating session_exercises table:', err);
         else {
           console.log('✅ Database schema initialized successfully');
           resolve();
@@ -474,14 +593,296 @@ const ProgressDB = {
 };
 
 // ============================================================================
+// SEED DATA - EXERCISE LIBRARY v2.0
+// ============================================================================
+
+function seedExerciseLibrary() {
+  return new Promise((resolve, reject) => {
+    db.serialize(() => {
+
+      // Check if already seeded
+      db.get('SELECT COUNT(*) as count FROM domains', (err, row) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+
+        if (row.count > 0) {
+          console.log('✅ Exercise library already seeded');
+          resolve();
+          return;
+        }
+
+        console.log('🌱 Seeding exercise library...');
+
+        // SEED DOMAINS
+        const domains = [
+          { id: 'MOB', name: 'Mobility and Range of Motion' },
+          { id: 'WB', name: 'Weight Bearing and Foundational Strength' },
+          { id: 'CORE', name: 'Core Stability and Postural Control' },
+          { id: 'BAL', name: 'Balance and Proprioception' },
+          { id: 'GAIT', name: 'Gait Retraining' },
+          { id: 'END', name: 'Endurance and Cardiovascular Conditioning' },
+          { id: 'FUNC', name: 'Functional Strength and Task Training' },
+          { id: 'ATH', name: 'Athletic Performance and Return to Sport' }
+        ];
+
+        const domainStmt = db.prepare('INSERT INTO domains (id, name) VALUES (?, ?)');
+        domains.forEach(d => domainStmt.run(d.id, d.name));
+        domainStmt.finalize();
+
+        // SEED PHASES
+        const phases = [
+          { id: 1, name: 'Protection and Mobility' },
+          { id: 2, name: 'Early Strength' },
+          { id: 3, name: 'Advanced Strength and Coordination' },
+          { id: 4, name: 'Functional Reintegration' },
+          { id: 5, name: 'Return to Sport or Maintenance' }
+        ];
+
+        const phaseStmt = db.prepare('INSERT INTO phases (id, name) VALUES (?, ?)');
+        phases.forEach(p => phaseStmt.run(p.id, p.name));
+        phaseStmt.finalize();
+
+        // SEED TIERS
+        const tiers = [
+          { id: 1, name: 'Passive or Fully Assisted' },
+          { id: 2, name: 'Low Load Active' },
+          { id: 3, name: 'Moderate Resistance or Coordination' },
+          { id: 4, name: 'Advanced Strength or Balance' },
+          { id: 5, name: 'Athletic or High Demand' }
+        ];
+
+        const tierStmt = db.prepare('INSERT INTO tiers (id, name) VALUES (?, ?)');
+        tiers.forEach(t => tierStmt.run(t.id, t.name));
+        tierStmt.finalize();
+
+        // SEED EXERCISES - CORE 50
+        const exercises = [
+          // MOBILITY (MOB)
+          { id: 'MOB-P1-01', name: 'Passive Range of Motion', domain: 'MOB', category: 'Passive Mobility', phases: [1], tiers: [1] },
+          { id: 'MOB-P1-02', name: 'Passive Cycling', domain: 'MOB', category: 'Passive Mobility', phases: [1], tiers: [1] },
+          { id: 'MOB-P1-03', name: 'Joint Approximation', domain: 'MOB', category: 'Passive Mobility', phases: [1], tiers: [1] },
+          { id: 'MOB-P1-04', name: 'Passive Stretching', domain: 'MOB', category: 'Passive Mobility', phases: [1,2], tiers: [1,2] },
+          { id: 'MOB-P1-05', name: 'Assisted Limb Placement', domain: 'MOB', category: 'Assisted Mobility', phases: [1,2], tiers: [1,2] },
+          { id: 'MOB-P1-06', name: 'Neurologic Toe Stimulation', domain: 'MOB', category: 'Assisted Mobility', phases: [1], tiers: [1] },
+
+          // WEIGHT BEARING (WB)
+          { id: 'WB-TS-01', name: 'Sit to Stand', domain: 'WB', category: 'Transitional Strength', phases: [2,3,4], tiers: [2,3,4] },
+          { id: 'WB-TS-02', name: 'Stand to Sit', domain: 'WB', category: 'Transitional Strength', phases: [2,3,4], tiers: [2,3,4] },
+          { id: 'WB-ST-03', name: 'Square Stand', domain: 'WB', category: 'Static Strength', phases: [1,2,3], tiers: [1,2] },
+          { id: 'WB-ST-04', name: 'Static Hold Stand', domain: 'WB', category: 'Static Strength', phases: [2,3], tiers: [2,3] },
+          { id: 'WB-ST-05', name: 'Three Legged Stand', domain: 'WB', category: 'Static Strength', phases: [3,4], tiers: [3,4] },
+          { id: 'WB-AS-06', name: 'Assisted Standing', domain: 'WB', category: 'Supported Stance', phases: [1,2], tiers: [1,2] },
+          { id: 'WB-WS-07', name: 'Lateral Weight Shift', domain: 'WB', category: 'Weight Shifting', phases: [2,3], tiers: [2,3] },
+          { id: 'WB-WS-08', name: 'Cranial Caudal Weight Shift', domain: 'WB', category: 'Weight Shifting', phases: [2,3], tiers: [2,3] },
+
+          // CORE STABILITY (CORE)
+          { id: 'CORE-ST-01', name: 'Peanut Ball Stand', domain: 'CORE', category: 'Static Core', phases: [2,3], tiers: [2,3] },
+          { id: 'CORE-ST-02', name: 'Forelimb Elevation', domain: 'CORE', category: 'Static Core', phases: [2,3], tiers: [2,3] },
+          { id: 'CORE-ST-03', name: 'Hindlimb Elevation', domain: 'CORE', category: 'Static Core', phases: [3,4], tiers: [3,4] },
+          { id: 'CORE-DY-04', name: 'Diagonal Limb Lift', domain: 'CORE', category: 'Dynamic Core', phases: [3,4], tiers: [3,4] },
+          { id: 'CORE-DY-05', name: 'Core Bracing Hold', domain: 'CORE', category: 'Dynamic Core', phases: [2,3], tiers: [2,3] },
+
+          // BALANCE (BAL)
+          { id: 'BAL-ST-01', name: 'Balance Disc Stand', domain: 'BAL', category: 'Static Balance', phases: [2,3], tiers: [2,3] },
+          { id: 'BAL-ST-02', name: 'Wobble Board Stand', domain: 'BAL', category: 'Static Balance', phases: [3,4], tiers: [3,4] },
+          { id: 'BAL-DY-03', name: 'Rocking Weight Shift', domain: 'BAL', category: 'Dynamic Balance', phases: [2,3], tiers: [2,3] },
+          { id: 'BAL-DY-04', name: 'Unstable Surface Stand', domain: 'BAL', category: 'Dynamic Balance', phases: [3,4], tiers: [3,4] },
+          { id: 'BAL-DY-05', name: 'Lateral Platform Step', domain: 'BAL', category: 'Dynamic Balance', phases: [3,4], tiers: [3,4] },
+
+          // GAIT (GAIT)
+          { id: 'GAIT-SL-01', name: 'Controlled Leash Walk', domain: 'GAIT', category: 'Straight Line', phases: [1,2,3,4], tiers: [1,2] },
+          { id: 'GAIT-SL-02', name: 'Treadmill Walk', domain: 'GAIT', category: 'Straight Line', phases: [2,3,4], tiers: [2,3] },
+          { id: 'GAIT-DIR-03', name: 'Figure 8 Walk', domain: 'GAIT', category: 'Directional', phases: [3,4], tiers: [3] },
+          { id: 'GAIT-DIR-04', name: 'Circle Walk', domain: 'GAIT', category: 'Directional', phases: [2,3,4], tiers: [2,3] },
+          { id: 'GAIT-DIR-05', name: 'Backward Walk', domain: 'GAIT', category: 'Directional', phases: [3,4], tiers: [3,4] },
+          { id: 'GAIT-DIR-06', name: 'Side Step', domain: 'GAIT', category: 'Directional', phases: [3,4], tiers: [3,4] },
+          { id: 'GAIT-OBS-07', name: 'Low Cavaletti', domain: 'GAIT', category: 'Obstacle', phases: [3,4], tiers: [3] },
+          { id: 'GAIT-OBS-08', name: 'Raised Cavaletti', domain: 'GAIT', category: 'Obstacle', phases: [4,5], tiers: [4] },
+          { id: 'GAIT-OBS-09', name: 'Obstacle Step', domain: 'GAIT', category: 'Obstacle', phases: [3,4], tiers: [3,4] },
+
+          // ENDURANCE (END)
+          { id: 'END-AQ-01', name: 'Underwater Treadmill', domain: 'END', category: 'Aquatic', phases: [2,3,4], tiers: [2,3] },
+          { id: 'END-AQ-02', name: 'Swimming', domain: 'END', category: 'Aquatic', phases: [3,4,5], tiers: [3,4] },
+          { id: 'END-LD-03', name: 'Hill Walking', domain: 'END', category: 'Land Endurance', phases: [3,4,5], tiers: [3,4] },
+          { id: 'END-LD-04', name: 'Incline Treadmill', domain: 'END', category: 'Land Endurance', phases: [3,4], tiers: [3,4] },
+          { id: 'END-LD-05', name: 'Stair Climbing', domain: 'END', category: 'Land Endurance', phases: [3,4,5], tiers: [3,4] },
+          { id: 'END-LD-06', name: 'Endurance Leash Walking', domain: 'END', category: 'Land Endurance', phases: [2,3,4], tiers: [2,3] },
+
+          // FUNCTIONAL (FUNC)
+          { id: 'FUNC-TR-01', name: 'Sit to Beg', domain: 'FUNC', category: 'Transitional Movements', phases: [3,4], tiers: [3,4] },
+          { id: 'FUNC-TR-02', name: 'Pivot Exercise', domain: 'FUNC', category: 'Transitional Movements', phases: [3,4], tiers: [3,4] },
+          { id: 'FUNC-TR-03', name: 'Tight Turns', domain: 'FUNC', category: 'Environmental Navigation', phases: [3,4], tiers: [3] },
+          { id: 'FUNC-TR-04', name: 'Platform Step', domain: 'FUNC', category: 'Environmental Navigation', phases: [3,4,5], tiers: [3,4] },
+          { id: 'FUNC-TR-05', name: 'Controlled Fetch', domain: 'FUNC', category: 'Task Specific', phases: [4,5], tiers: [4,5] },
+
+          // ATHLETIC (ATH)
+          { id: 'ATH-PL-01', name: 'Low Jump Grid', domain: 'ATH', category: 'Plyometric', phases: [4,5], tiers: [4,5] },
+          { id: 'ATH-PL-02', name: 'Sprint Intervals', domain: 'ATH', category: 'Sprint', phases: [5], tiers: [5] },
+          { id: 'ATH-PL-03', name: 'Direction Change Drill', domain: 'ATH', category: 'Agility', phases: [4,5], tiers: [4,5] },
+          { id: 'ATH-PL-04', name: 'Sport Obstacle Sequence', domain: 'ATH', category: 'Agility', phases: [5], tiers: [5] }
+        ];
+
+        const exerciseStmt = db.prepare('INSERT INTO exercises_v2 (id, name, domain, category) VALUES (?, ?, ?, ?)');
+        const phaseJunctionStmt = db.prepare('INSERT INTO exercise_phases_v2 (exercise_id, phase_id) VALUES (?, ?)');
+        const tierJunctionStmt = db.prepare('INSERT INTO exercise_tiers_v2 (exercise_id, tier_id) VALUES (?, ?)');
+
+        exercises.forEach(ex => {
+          exerciseStmt.run(ex.id, ex.name, ex.domain, ex.category);
+          ex.phases.forEach(phase => phaseJunctionStmt.run(ex.id, phase));
+          ex.tiers.forEach(tier => tierJunctionStmt.run(ex.id, tier));
+        });
+
+        exerciseStmt.finalize();
+        phaseJunctionStmt.finalize();
+        tierJunctionStmt.finalize(() => {
+          console.log('✅ Exercise library seeded: 8 domains, 5 phases, 5 tiers, 50 exercises');
+          resolve();
+        });
+      });
+    });
+  });
+}
+
+// ============================================================================
+// DATABASE OPERATIONS - EXERCISE LIBRARY v2.0
+// ============================================================================
+
+const ExerciseLibraryDB = {
+
+  // Get all exercises with phases and tiers
+  getAllExercises: (filters = {}) => {
+    return new Promise((resolve, reject) => {
+      let sql = `
+        SELECT DISTINCT
+          e.id,
+          e.name,
+          e.domain,
+          e.category,
+          d.name as domain_name,
+          GROUP_CONCAT(DISTINCT ep.phase_id) as phases,
+          GROUP_CONCAT(DISTINCT et.tier_id) as tiers
+        FROM exercises_v2 e
+        LEFT JOIN domains d ON e.domain = d.id
+        LEFT JOIN exercise_phases_v2 ep ON e.id = ep.exercise_id
+        LEFT JOIN exercise_tiers_v2 et ON e.id = et.exercise_id
+        WHERE 1=1
+      `;
+
+      const params = [];
+
+      if (filters.domain) {
+        sql += ' AND e.domain = ?';
+        params.push(filters.domain);
+      }
+
+      if (filters.phase) {
+        sql += ' AND e.id IN (SELECT exercise_id FROM exercise_phases_v2 WHERE phase_id = ?)';
+        params.push(parseInt(filters.phase));
+      }
+
+      if (filters.tier) {
+        sql += ' AND e.id IN (SELECT exercise_id FROM exercise_tiers_v2 WHERE tier_id = ?)';
+        params.push(parseInt(filters.tier));
+      }
+
+      sql += ' GROUP BY e.id ORDER BY e.domain, e.id';
+
+      db.all(sql, params, (err, rows) => {
+        if (err) {
+          reject(err);
+        } else {
+          // Parse comma-separated phases and tiers into arrays
+          const exercises = rows.map(row => ({
+            ...row,
+            phases: row.phases ? row.phases.split(',').map(Number) : [],
+            tiers: row.tiers ? row.tiers.split(',').map(Number) : []
+          }));
+          resolve(exercises);
+        }
+      });
+    });
+  },
+
+  // Get single exercise by ID
+  getExerciseById: (id) => {
+    return new Promise((resolve, reject) => {
+      const sql = `
+        SELECT
+          e.id,
+          e.name,
+          e.domain,
+          e.category,
+          d.name as domain_name,
+          GROUP_CONCAT(DISTINCT ep.phase_id) as phases,
+          GROUP_CONCAT(DISTINCT et.tier_id) as tiers
+        FROM exercises_v2 e
+        LEFT JOIN domains d ON e.domain = d.id
+        LEFT JOIN exercise_phases_v2 ep ON e.id = ep.exercise_id
+        LEFT JOIN exercise_tiers_v2 et ON e.id = et.exercise_id
+        WHERE e.id = ?
+        GROUP BY e.id
+      `;
+
+      db.get(sql, [id], (err, row) => {
+        if (err) {
+          reject(err);
+        } else if (!row) {
+          resolve(null);
+        } else {
+          resolve({
+            ...row,
+            phases: row.phases ? row.phases.split(',').map(Number) : [],
+            tiers: row.tiers ? row.tiers.split(',').map(Number) : []
+          });
+        }
+      });
+    });
+  },
+
+  // Get all domains
+  getDomains: () => {
+    return new Promise((resolve, reject) => {
+      db.all('SELECT * FROM domains ORDER BY id', (err, rows) => {
+        if (err) reject(err);
+        else resolve(rows);
+      });
+    });
+  },
+
+  // Get all phases
+  getPhases: () => {
+    return new Promise((resolve, reject) => {
+      db.all('SELECT * FROM phases ORDER BY id', (err, rows) => {
+        if (err) reject(err);
+        else resolve(rows);
+      });
+    });
+  },
+
+  // Get all tiers
+  getTiers: () => {
+    return new Promise((resolve, reject) => {
+      db.all('SELECT * FROM tiers ORDER BY id', (err, rows) => {
+        if (err) reject(err);
+        else resolve(rows);
+      });
+    });
+  }
+};
+
+// ============================================================================
 // EXPORTS
 // ============================================================================
 
 module.exports = {
   db,
   initializeDatabase,
+  seedExerciseLibrary,
   PatientDB,
   ProtocolDB,
   ExerciseLogDB,
-  ProgressDB
+  ProgressDB,
+  ExerciseLibraryDB
 };

@@ -10,6 +10,25 @@ const path = require('path');
 const { selectExercisesForWeek } = require('./protocol-generator-enhanced'); // ✅ Using enhanced evidence-based generator
 const { ALL_EXERCISES, getExerciseByCode, searchExercises } = require('./all-exercises');
 const { INTERVENTION_TYPES, REHAB_PHASES, PRIMARY_INDICATIONS } = require('./exercise-taxonomy');
+const {
+  VIDEO_LIBRARY,
+  INSTRUCTORS,
+  getVideosByExerciseCode,
+  getInstructorById,
+  getExercisesWithVideos,
+  getVideosByInstructor,
+  getVideoStats
+} = require('./video-references');
+const {
+  initializeDatabase: initDB,
+  seedExerciseLibrary,
+  ExerciseLibraryDB
+} = require('./database');
+const {
+  getExerciseSlugsForPhase,
+  getAvailableConditions,
+  getPhasesForCondition
+} = require('./protocol-rules');
 
 const app = express();
 const PORT = 3000;
@@ -25,6 +44,8 @@ const db = new sqlite3.Database('./database.db', (err) => {
   } else {
     console.log('✅ Connected to SQLite database');
     initializeDatabase();
+    // Initialize new exercise library v2.0
+    initDB().then(() => seedExerciseLibrary()).catch(err => console.error('❌ Exercise library initialization error:', err));
   }
 });
 
@@ -770,6 +791,219 @@ app.post('/api/generate-protocol', (req, res) => {
 });
 
 // ============================================================================
+// VIDEO DEMONSTRATION API ENDPOINTS
+// Medical-grade video library for exercise demonstrations
+// ============================================================================
+
+// Get video metadata for specific exercise
+app.get('/api/videos/:exerciseCode', (req, res) => {
+  try {
+    const { exerciseCode } = req.params;
+    console.log(`📹 Fetching video for exercise: ${exerciseCode}`);
+
+    const videoData = getVideosByExerciseCode(exerciseCode);
+
+    if (!videoData) {
+      return res.status(404).json({
+        success: false,
+        error: 'No video demonstration available for this exercise',
+        exerciseCode
+      });
+    }
+
+    res.json({
+      success: true,
+      data: videoData
+    });
+  } catch (error) {
+    console.error('❌ Error fetching video metadata:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Get all instructors
+app.get('/api/instructors', (req, res) => {
+  try {
+    console.log('👨‍⚕️ Fetching all instructors');
+    res.json({
+      success: true,
+      count: Object.keys(INSTRUCTORS).length,
+      data: Object.values(INSTRUCTORS)
+    });
+  } catch (error) {
+    console.error('❌ Error fetching instructors:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Get specific instructor by ID
+app.get('/api/instructors/:instructorId', (req, res) => {
+  try {
+    const { instructorId } = req.params;
+    console.log(`👨‍⚕️ Fetching instructor: ${instructorId}`);
+
+    const instructor = getInstructorById(instructorId);
+
+    if (!instructor) {
+      return res.status(404).json({
+        success: false,
+        error: 'Instructor not found',
+        instructorId
+      });
+    }
+
+    res.json({
+      success: true,
+      data: instructor
+    });
+  } catch (error) {
+    console.error('❌ Error fetching instructor:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Get transcript for exercise video
+app.get('/api/video-transcripts/:exerciseCode', (req, res) => {
+  try {
+    const { exerciseCode } = req.params;
+    const { mode } = req.query; // 'professional' or 'client'
+
+    console.log(`📝 Fetching transcript for ${exerciseCode}, mode: ${mode || 'professional'}`);
+
+    const videoData = getVideosByExerciseCode(exerciseCode);
+
+    if (!videoData || !videoData.transcript) {
+      return res.status(404).json({
+        success: false,
+        error: 'No transcript available for this exercise'
+      });
+    }
+
+    const transcript = mode === 'client'
+      ? videoData.transcript.client
+      : videoData.transcript.professional;
+
+    if (!transcript) {
+      return res.status(404).json({
+        success: false,
+        error: `No ${mode || 'professional'} transcript available`
+      });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        exerciseCode,
+        mode: mode || 'professional',
+        transcript,
+        instructor: videoData.instructor.name
+      }
+    });
+  } catch (error) {
+    console.error('❌ Error fetching transcript:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Get all exercises with video availability
+app.get('/api/exercises/with-videos', (req, res) => {
+  try {
+    console.log('📹 Fetching all exercises with video demonstrations');
+
+    const exerciseCodes = getExercisesWithVideos();
+    const exercisesWithVideos = exerciseCodes.map(code => {
+      const videoData = getVideosByExerciseCode(code);
+      const exercise = getExerciseByCode(code);
+
+      return {
+        exercise_code: code,
+        exercise_name: exercise ? exercise.name : 'Unknown',
+        video_count: videoData.angles ? videoData.angles.length : 0,
+        instructor: videoData.instructor.name,
+        certification_status: videoData.certification_status,
+        version: videoData.version,
+        ce_eligible: videoData.ce_credit_eligible || false,
+        ce_hours: videoData.ce_credit_hours || 0
+      };
+    });
+
+    res.json({
+      success: true,
+      count: exercisesWithVideos.length,
+      data: exercisesWithVideos
+    });
+  } catch (error) {
+    console.error('❌ Error fetching exercises with videos:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Get videos by instructor
+app.get('/api/videos/by-instructor/:instructorId', (req, res) => {
+  try {
+    const { instructorId } = req.params;
+    console.log(`📹 Fetching videos by instructor: ${instructorId}`);
+
+    const videos = getVideosByInstructor(instructorId);
+
+    if (!videos || videos.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'No videos found for this instructor',
+        instructorId
+      });
+    }
+
+    res.json({
+      success: true,
+      count: videos.length,
+      data: videos
+    });
+  } catch (error) {
+    console.error('❌ Error fetching videos by instructor:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Get video library statistics
+app.get('/api/videos/stats', (req, res) => {
+  try {
+    console.log('📊 Fetching video library statistics');
+
+    const stats = getVideoStats();
+
+    res.json({
+      success: true,
+      data: stats
+    });
+  } catch (error) {
+    console.error('❌ Error fetching video stats:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// ============================================================================
 // PROTOCOL GENERATION LOGIC
 // ============================================================================
 
@@ -819,6 +1053,133 @@ function generateProtocol(formData, patientId, callback) {
 }
 
 // selectExercisesForWeek is now imported from protocol-generator.js
+
+// ============================================================================
+// API v1 - EXERCISE LIBRARY ENDPOINTS
+// ============================================================================
+
+// GET /api/v1/exercises - Get all exercises with optional filters
+app.get('/api/v1/exercises', async (req, res) => {
+  try {
+    const { domain, phase, tier } = req.query;
+    const filters = {};
+
+    if (domain) filters.domain = domain;
+    if (phase) filters.phase = phase;
+    if (tier) filters.tier = tier;
+
+    const exercises = await ExerciseLibraryDB.getAllExercises(filters);
+    res.json({
+      success: true,
+      count: exercises.length,
+      filters: filters,
+      data: exercises
+    });
+  } catch (error) {
+    console.error('Error fetching exercises:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// GET /api/v1/exercises/:id - Get single exercise by ID
+app.get('/api/v1/exercises/:id', async (req, res) => {
+  try {
+    const exercise = await ExerciseLibraryDB.getExerciseById(req.params.id);
+    if (!exercise) {
+      return res.status(404).json({ success: false, error: 'Exercise not found' });
+    }
+    res.json({ success: true, data: exercise });
+  } catch (error) {
+    console.error('Error fetching exercise:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// GET /api/v1/domains - Get all therapeutic domains
+app.get('/api/v1/domains', async (req, res) => {
+  try {
+    const domains = await ExerciseLibraryDB.getDomains();
+    res.json({ success: true, count: domains.length, data: domains });
+  } catch (error) {
+    console.error('Error fetching domains:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// GET /api/v1/phases - Get all rehabilitation phases
+app.get('/api/v1/phases', async (req, res) => {
+  try {
+    const phases = await ExerciseLibraryDB.getPhases();
+    res.json({ success: true, count: phases.length, data: phases });
+  } catch (error) {
+    console.error('Error fetching phases:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// GET /api/v1/tiers - Get all difficulty tiers
+app.get('/api/v1/tiers', async (req, res) => {
+  try {
+    const tiers = await ExerciseLibraryDB.getTiers();
+    res.json({ success: true, count: tiers.length, data: tiers });
+  } catch (error) {
+    console.error('Error fetching tiers:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// POST /api/v1/programs/generate - Generate rehabilitation program
+// Body: { condition: "TPLO", phase: "early" | "mid" | "late" }
+app.post('/api/v1/programs/generate', async (req, res) => {
+  try {
+    const { condition, phase } = req.body;
+
+    if (!condition || !phase) {
+      return res.status(400).json({ success: false, error: 'condition and phase are required' });
+    }
+
+    // Look up exercise slugs from protocol rules
+    const ruleResult = getExerciseSlugsForPhase(condition, phase);
+    if (!ruleResult) {
+      return res.status(404).json({
+        success: false,
+        error: `No protocol rules found for condition="${condition}" phase="${phase}"`,
+        available_conditions: getAvailableConditions()
+      });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        id: `PROG-${Date.now()}`,
+        condition: ruleResult.condition,
+        phase: ruleResult.phase,
+        phase_label: ruleResult.label,
+        goals: ruleResult.goals,
+        exercise_slugs: ruleResult.slugs,
+        generated_at: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    console.error('Error generating program:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// GET /api/v1/programs/conditions - List all available conditions
+app.get('/api/v1/programs/conditions', (_req, res) => {
+  res.json({ success: true, data: getAvailableConditions() });
+});
+
+// GET /api/v1/programs/conditions/:condition/phases - List phases for a condition
+app.get('/api/v1/programs/conditions/:condition/phases', (req, res) => {
+  const phases = getPhasesForCondition(req.params.condition);
+  if (!phases) {
+    return res.status(404).json({ success: false, error: 'Condition not found' });
+  }
+  res.json({ success: true, data: phases });
+});
+
 
 // ============================================================================
 // START SERVER

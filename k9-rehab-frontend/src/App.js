@@ -2,91 +2,170 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import {
   FiUsers, FiActivity, FiBookOpen, FiClipboard,
-  FiSettings, FiLogOut, FiPlus, FiSearch, FiChevronRight,
-  FiX, FiAlertTriangle, FiCheckCircle, FiBook
+  FiSettings, FiSearch, FiChevronRight,
+  FiX, FiAlertTriangle, FiCheckCircle, FiBook, FiStar,
+  FiCalendar, FiFileText, FiHeart
 } from "react-icons/fi";
 
-const API = process.env.REACT_APP_API_URL || "http://localhost:3000";
+const API = process.env.REACT_APP_API_URL || "http://localhost:3000/api";
 
 // ─────────────────────────────────────────────
-// STYLES
+// MEDICAL-GRADE DESIGN SYSTEM
+// Inspired by clinical EHR platforms (eVetPractice, Shepherd, IDEXX Neo)
+// Typography: Inter for body, Exo 2 for brand accents
+// Palette: Clinical navy, diagnostic teal, sterile whites
 // ─────────────────────────────────────────────
+const C = {
+  navy:      "#0A2540",
+  navyMid:   "#0F3460",
+  navyLight: "#164E80",
+  teal:      "#0EA5E9",
+  tealDark:  "#0284C7",
+  tealLight: "#E0F2FE",
+  green:     "#059669",
+  greenBg:   "#ECFDF5",
+  amber:     "#D97706",
+  amberBg:   "#FFFBEB",
+  red:       "#DC2626",
+  redBg:     "#FEF2F2",
+  bg:        "#F8FAFC",
+  surface:   "#FFFFFF",
+  border:    "#E2E8F0",
+  borderLight: "#F1F5F9",
+  text:      "#0F172A",
+  textMid:   "#475569",
+  textLight: "#94A3B8",
+};
+
 const S = {
   app: {
-    display: "flex", height: "100vh", fontFamily: "'Inter', 'Segoe UI', sans-serif",
-    background: "#F0F4F8", color: "#1A202C"
+    display: "flex", flexDirection: "column", height: "100vh",
+    fontFamily: "'Inter', -apple-system, 'Segoe UI', sans-serif",
+    background: C.bg, color: C.text,
   },
-  sidebar: {
-    width: 240, background: "#0F4C81", display: "flex",
-    flexDirection: "column", flexShrink: 0
+  // ── TOP NAV ──
+  topNav: {
+    background: `linear-gradient(90deg, ${C.navy} 0%, ${C.navyMid} 100%)`,
+    display: "flex", alignItems: "center", justifyContent: "space-between",
+    padding: "0 24px", height: 56, flexShrink: 0,
+    borderBottom: `1px solid rgba(255,255,255,0.06)`,
   },
-  brand: {
-    padding: "28px 24px 20px", borderBottom: "1px solid rgba(255,255,255,0.1)"
+  topNavBrand: {
+    display: "flex", alignItems: "center", gap: 10,
+    color: "#fff", fontFamily: "'Exo 2', 'Inter', sans-serif",
+    fontSize: 15, fontWeight: 700, letterSpacing: "0.5px",
   },
-  brandTitle: {
-    color: "#fff", fontSize: 18, fontWeight: 700, margin: 0, letterSpacing: "-0.3px"
+  topNavLinks: {
+    display: "flex", alignItems: "center", gap: 4,
   },
-  brandSub: {
-    color: "rgba(255,255,255,0.5)", fontSize: 11, marginTop: 4, textTransform: "uppercase",
-    letterSpacing: "1px"
-  },
-  nav: { flex: 1, padding: "16px 12px" },
-  navItem: (active) => ({
-    display: "flex", alignItems: "center", gap: 10, padding: "10px 12px",
-    borderRadius: 8, cursor: "pointer", marginBottom: 2, fontSize: 14, fontWeight: 500,
+  topNavItem: (active) => ({
+    display: "flex", alignItems: "center", gap: 6,
+    padding: "8px 16px", borderRadius: 6, cursor: "pointer",
+    fontSize: 12, fontWeight: 600,
     color: active ? "#fff" : "rgba(255,255,255,0.6)",
-    background: active ? "rgba(255,255,255,0.15)" : "transparent",
-    transition: "all 0.15s"
+    background: active ? "rgba(14,165,233,0.22)" : "transparent",
+    borderBottom: active ? "2px solid #0EA5E9" : "2px solid transparent",
+    boxShadow: active ? "0 0 10px rgba(14,165,233,0.3)" : "none",
+    transition: "all 0.2s ease",
   }),
-  navBottom: { padding: "16px 12px", borderTop: "1px solid rgba(255,255,255,0.1)" },
+  // ── WIZARD ──
+  wizardProgress: {
+    display: "flex", alignItems: "center", justifyContent: "center",
+    gap: 0, padding: "8px 32px 8px",
+  },
+  wizardStep: (state) => ({
+    display: "flex", alignItems: "center", gap: 8,
+    padding: "6px 16px", fontSize: 12, fontWeight: 600,
+    color: state === "active" ? C.teal : state === "done" ? C.green : C.textLight,
+    cursor: state === "done" ? "pointer" : "default",
+  }),
+  wizardDot: (state) => ({
+    width: 32, height: 32, borderRadius: "50%",
+    display: "flex", alignItems: "center", justifyContent: "center",
+    fontSize: 13, fontWeight: 700,
+    background: state === "active" ? C.teal : state === "done" ? C.green : C.bg,
+    color: state === "active" || state === "done" ? "#fff" : C.textLight,
+    border: state === "pending" ? `2px solid ${C.border}` : "none",
+    boxShadow: state === "active" ? `0 0 12px rgba(14,165,233,0.5), 0 0 24px rgba(14,165,233,0.25)` : state === "done" ? `0 0 8px rgba(5,150,105,0.35)` : "none",
+    transition: "all 0.4s ease",
+  }),
+  wizardLine: (done) => ({
+    width: 60, height: 2,
+    background: done ? C.green : C.border,
+    margin: "0 4px",
+  }),
+  wizardNav: {
+    display: "flex", justifyContent: "space-between", alignItems: "center",
+    padding: "16px 0", marginTop: 16,
+    borderTop: `1px solid ${C.border}`,
+  },
+  // ── MAIN AREA ──
   main: { flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" },
   topbar: {
-    background: "#fff", padding: "16px 32px", borderBottom: "1px solid #E2E8F0",
-    display: "flex", alignItems: "center", justifyContent: "space-between"
+    background: C.surface, padding: "14px 32px",
+    borderBottom: `1px solid ${C.border}`,
+    display: "flex", alignItems: "center", justifyContent: "space-between",
+    minHeight: 56,
   },
-  pageTitle: { fontSize: 22, fontWeight: 700, margin: 0, color: "#0F4C81" },
-  pageSub: { fontSize: 13, color: "#718096", marginTop: 2 },
-  content: { flex: 1, overflow: "auto", padding: 32 },
+  pageTitle: { fontSize: 22, fontWeight: 800, margin: 0, color: C.navy, letterSpacing: "0.3px" },
+  pageSub: { fontSize: 12, color: C.text, marginTop: 2, fontWeight: 300 },
+  content: { flex: 1, overflow: "auto", padding: "24px 32px" },
+  // ── SHARED COMPONENTS ──
   card: {
-    background: "#fff", borderRadius: 12, padding: 24,
-    boxShadow: "0 1px 3px rgba(0,0,0,0.08)", marginBottom: 16
+    background: C.surface, borderRadius: 10, padding: 24,
+    border: `1px solid ${C.border}`,
+    boxShadow: "0 1px 3px rgba(0,0,0,0.04)", marginBottom: 16,
   },
+  sectionHeader: () => ({
+    display: "flex", alignItems: "center", gap: 8,
+    padding: "10px 0", marginBottom: 16,
+    borderBottom: "2px solid #1E3A5F",
+    fontSize: 13, fontWeight: 800, color: "#000",
+    textTransform: "uppercase", letterSpacing: "1.2px",
+  }),
   btn: (variant = "primary") => ({
     display: "inline-flex", alignItems: "center", gap: 6,
-    padding: "9px 18px", borderRadius: 8, border: "none",
+    padding: "10px 20px", borderRadius: 8, border: "none",
     fontSize: 13, fontWeight: 600, cursor: "pointer",
-    background: variant === "primary" ? "#0EA5E9" : variant === "dark" ? "#0F4C81" : "#F7FAFC",
-    color: variant === "primary" || variant === "dark" ? "#fff" : "#4A5568",
-    transition: "opacity 0.15s"
+    letterSpacing: "0.2px",
+    background: variant === "primary" ? C.teal : variant === "dark" ? C.navy
+      : variant === "success" ? C.green : variant === "danger" ? C.red : C.bg,
+    color: (variant === "primary" || variant === "dark" || variant === "success" || variant === "danger") ? "#fff" : C.textMid,
+    transition: "all 0.15s",
+    boxShadow: variant === "ghost" ? "none" : "0 1px 2px rgba(0,0,0,0.06)",
   }),
   badge: (color = "blue") => ({
-    display: "inline-block", padding: "2px 10px", borderRadius: 20, fontSize: 11,
-    fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px",
-    background: color === "blue" ? "#EBF8FF" : color === "green" ? "#F0FFF4" : "#FFFAF0",
-    color: color === "blue" ? "#2B6CB0" : color === "green" ? "#276749" : "#C05621"
+    display: "inline-block", padding: "2px 10px", borderRadius: 20, fontSize: 10,
+    fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px",
+    background: color === "blue" ? C.tealLight : color === "green" ? C.greenBg : C.amberBg,
+    color: color === "blue" ? C.tealDark : color === "green" ? C.green : C.amber,
   }),
   input: {
-    width: "100%", padding: "9px 12px", borderRadius: 8, fontSize: 13,
-    border: "1px solid #E2E8F0", outline: "none", boxSizing: "border-box",
-    background: "#F7FAFC"
+    width: "100%", padding: "10px 12px", borderRadius: 6, fontSize: 13,
+    border: `1px solid ${C.border}`, outline: "none", boxSizing: "border-box",
+    background: C.surface, color: C.text,
+    transition: "border-color 0.15s",
   },
   select: {
-    padding: "9px 12px", borderRadius: 8, fontSize: 13,
-    border: "1px solid #E2E8F0", outline: "none", background: "#F7FAFC",
-    cursor: "pointer"
+    padding: "10px 12px", borderRadius: 6, fontSize: 13,
+    border: `1px solid ${C.border}`, outline: "none",
+    background: C.surface, color: C.text, cursor: "pointer",
   },
   grid: (cols = 3) => ({
-    display: "grid", gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: 16
+    display: "grid", gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: 16,
   }),
-  label: { fontSize: 12, fontWeight: 600, color: "#718096", textTransform: "uppercase",
-    letterSpacing: "0.6px", marginBottom: 6, display: "block" },
+  label: {
+    fontSize: 11, fontWeight: 600, color: "#000",
+    textTransform: "uppercase", letterSpacing: "0.6px",
+    marginBottom: 6, display: "block",
+  },
   table: { width: "100%", borderCollapse: "collapse", fontSize: 13 },
   th: {
-    textAlign: "left", padding: "10px 14px", background: "#F7FAFC",
-    borderBottom: "2px solid #E2E8F0", fontSize: 11, fontWeight: 700,
-    textTransform: "uppercase", letterSpacing: "0.6px", color: "#718096"
+    textAlign: "left", padding: "10px 14px", background: C.bg,
+    borderBottom: `2px solid ${C.border}`, fontSize: 10, fontWeight: 700,
+    textTransform: "uppercase", letterSpacing: "0.8px", color: C.textLight,
   },
-  td: { padding: "12px 14px", borderBottom: "1px solid #F0F4F8", verticalAlign: "top" },
+  td: { padding: "12px 14px", borderBottom: `1px solid ${C.borderLight}`, verticalAlign: "top" },
 };
 
 // ─────────────────────────────────────────────
@@ -95,81 +174,146 @@ const S = {
 function ClientsView() {
   const [clients, setClients] = useState([]);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ owner_name: "", dog_name: "", breed: "", age: "", weight: "", condition: "" });
+  const [form, setForm] = useState({ name: "", breed: "", age: "", weight: "", sex: "Male", condition: "", client_name: "", client_email: "", client_phone: "" });
 
   useEffect(() => {
-    axios.get(`${API}/clients`).then(r => setClients(r.data)).catch(() => {});
+    axios.get(`${API}/patients`).then(r => setClients(r.data)).catch(() => {});
   }, []);
 
   const submit = async (e) => {
     e.preventDefault();
-    await axios.post(`${API}/clients`, { ...form, age: +form.age, weight: +form.weight });
+    await axios.post(`${API}/patients`, { ...form, age: +form.age, weight: +form.weight });
     setShowForm(false);
-    setForm({ owner_name: "", dog_name: "", breed: "", age: "", weight: "", condition: "" });
-    axios.get(`${API}/clients`).then(r => setClients(r.data));
+    setForm({ name: "", breed: "", age: "", weight: "", sex: "Male", condition: "", client_name: "", client_email: "", client_phone: "" });
+    axios.get(`${API}/patients`).then(r => setClients(r.data));
   };
+
+  const [search, setSearch] = useState("");
+  const filtered = clients.filter(c =>
+    !search || (c.name || "").toLowerCase().includes(search.toLowerCase()) ||
+    (c.breed || "").toLowerCase().includes(search.toLowerCase()) ||
+    (c.client_name || "").toLowerCase().includes(search.toLowerCase()) ||
+    (c.condition || "").toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-        <div style={{ fontSize: 15, color: "#718096" }}>{clients.length} registered patients</div>
+      {/* Summary bar */}
+      <div style={{ ...S.card, display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 24px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 8, background: C.tealLight, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <FiUsers size={16} style={{ color: C.teal }} />
+            </div>
+            <div>
+              <div style={{ fontSize: 18, fontWeight: 800, color: C.navy }}>{clients.length}</div>
+              <div style={{ fontSize: 10, color: C.textLight, textTransform: "uppercase", letterSpacing: "0.5px" }}>Total Patients</div>
+            </div>
+          </div>
+          <div style={{ position: "relative", minWidth: 260 }}>
+            <FiSearch size={13} style={{ position: "absolute", left: 10, top: 11, color: C.textLight }} />
+            <input style={{ ...S.input, paddingLeft: 32, fontSize: 12 }} placeholder="Search by name, breed, condition, owner..."
+              value={search} onChange={e => setSearch(e.target.value)} />
+          </div>
+        </div>
         <button style={S.btn("dark")} onClick={() => setShowForm(!showForm)}>
-          <FiPlus size={14} /> New Client
+          <span style={{ fontSize: 14 }}>⚕</span> Register Patient
         </button>
       </div>
 
       {showForm && (
         <div style={S.card}>
-          <h3 style={{ margin: "0 0 20px", fontSize: 16, color: "#0F4C81" }}>Register New Patient</h3>
+          <div style={S.sectionHeader(C.teal)}>
+            <FiHeart size={13} /> New Patient Registration
+          </div>
           <form onSubmit={submit}>
-            <div style={S.grid(2)}>
-              {[
-                ["owner_name", "Owner Name"], ["dog_name", "Dog Name"],
-                ["breed", "Breed"], ["condition", "Primary Condition"],
-                ["age", "Age (years)"], ["weight", "Weight (lbs)"]
-              ].map(([key, label]) => (
-                <div key={key}>
-                  <label style={S.label}>{label}</label>
-                  <input style={S.input} value={form[key]}
-                    onChange={e => setForm({ ...form, [key]: e.target.value })} required />
-                </div>
-              ))}
+            <div style={S.grid(3)}>
+              <div>
+                <label style={S.label}>Patient Name *</label>
+                <input style={S.input} value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required placeholder="Patient name" />
+              </div>
+              <div>
+                <label style={S.label}>Breed *</label>
+                <input style={S.input} value={form.breed} onChange={e => setForm({ ...form, breed: e.target.value })} required placeholder="e.g. Labrador Retriever" />
+              </div>
+              <div>
+                <label style={S.label}>Primary Condition *</label>
+                <input style={S.input} value={form.condition} onChange={e => setForm({ ...form, condition: e.target.value })} required placeholder="e.g. TPLO, Hip Dysplasia" />
+              </div>
+            </div>
+            <div style={{ ...S.grid(4), marginTop: 12 }}>
+              <div>
+                <label style={S.label}>Owner Name *</label>
+                <input style={S.input} value={form.client_name} onChange={e => setForm({ ...form, client_name: e.target.value })} required />
+              </div>
+              <div>
+                <label style={S.label}>Age (years)</label>
+                <input style={S.input} type="number" value={form.age} onChange={e => setForm({ ...form, age: e.target.value })} />
+              </div>
+              <div>
+                <label style={S.label}>Weight (lbs)</label>
+                <input style={S.input} type="number" value={form.weight} onChange={e => setForm({ ...form, weight: e.target.value })} />
+              </div>
+              <div>
+                <label style={S.label}>Sex</label>
+                <select style={{ ...S.select, width: "100%" }} value={form.sex} onChange={e => setForm({ ...form, sex: e.target.value })}>
+                  {["Male Intact", "Male Neutered", "Female Intact", "Female Spayed"].map(s => <option key={s}>{s}</option>)}
+                </select>
+              </div>
             </div>
             <div style={{ marginTop: 20, display: "flex", gap: 10 }}>
-              <button type="submit" style={S.btn("primary")}>Save Patient</button>
+              <button type="submit" style={S.btn("success")}>
+                <FiCheckCircle size={14} /> Save Patient Record
+              </button>
               <button type="button" style={S.btn("ghost")} onClick={() => setShowForm(false)}>Cancel</button>
             </div>
           </form>
         </div>
       )}
 
-      <div style={S.card}>
+      <div style={{ ...S.card, padding: 0, overflow: "hidden" }}>
         <table style={S.table}>
           <thead>
             <tr>
-              {["Patient", "Owner", "Breed", "Condition", ""].map(h => (
+              {["Patient", "Owner / Contact", "Signalment", "Condition", "Registered", ""].map(h => (
                 <th key={h} style={S.th}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {clients.length === 0 ? (
-              <tr><td colSpan={5} style={{ ...S.td, textAlign: "center", color: "#A0AEC0", padding: 40 }}>
-                No clients yet — add your first patient above
+            {filtered.length === 0 ? (
+              <tr><td colSpan={6} style={{ ...S.td, textAlign: "center", color: C.textLight, padding: 48 }}>
+                {search ? "No patients match your search" : "No patients registered — use the button above to add your first patient"}
               </td></tr>
-            ) : clients.map(c => (
-              <tr key={c.id}>
+            ) : filtered.map(c => (
+              <tr key={c.id} style={{ cursor: "pointer", transition: "background 0.1s" }}
+                onMouseEnter={e => e.currentTarget.style.background = C.bg}
+                onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
                 <td style={S.td}>
-                  <div style={{ fontWeight: 600 }}>{c.dog_name}</div>
-                  <div style={{ fontSize: 11, color: "#A0AEC0", marginTop: 2 }}>ID: {c.id?.slice(0, 8)}…</div>
+                  <div style={{ fontWeight: 600, color: C.navy }}>{c.name}</div>
+                  <div style={{ fontSize: 10, color: C.textLight, marginTop: 2 }}>ID: {c.id}</div>
                 </td>
-                <td style={S.td}>{c.owner_name}</td>
-                <td style={S.td}>{c.breed || "—"}</td>
+                <td style={S.td}>
+                  <div style={{ fontWeight: 500 }}>{c.client_name || "—"}</div>
+                  {c.client_email && <div style={{ fontSize: 11, color: C.textLight }}>{c.client_email}</div>}
+                </td>
+                <td style={S.td}>
+                  <div style={{ fontSize: 12 }}>{c.breed || "—"}</div>
+                  <div style={{ fontSize: 11, color: C.textLight }}>
+                    {c.age ? `${c.age}yr` : ""}{c.age && c.weight ? " · " : ""}{c.weight ? `${c.weight}lbs` : ""}
+                    {c.sex ? ` · ${c.sex}` : ""}
+                  </div>
+                </td>
                 <td style={S.td}>
                   {c.condition ? <span style={S.badge("blue")}>{c.condition}</span> : "—"}
                 </td>
                 <td style={S.td}>
-                  <FiChevronRight size={16} style={{ color: "#CBD5E0", cursor: "pointer" }} />
+                  <span style={{ fontSize: 11, color: C.textLight }}>
+                    {c.created_at ? new Date(c.created_at).toLocaleDateString() : "—"}
+                  </span>
+                </td>
+                <td style={S.td}>
+                  <FiChevronRight size={14} style={{ color: C.textLight }} />
                 </td>
               </tr>
             ))}
@@ -209,9 +353,9 @@ function ProtocolExCard({ entry, onRemove }) {
                 </span>
               )}
               {entry.frequency_per_day && <span style={S.badge("green")}>{entry.frequency_per_day}× /day</span>}
-              {ex.difficulty && (
-                <span style={S.badge(ex.difficulty === "Easy" ? "green" : ex.difficulty === "Advanced" ? "orange" : "blue")}>
-                  {ex.difficulty}
+              {ex.difficulty_level && (
+                <span style={S.badge(ex.difficulty_level === "Easy" ? "green" : ex.difficulty_level === "Advanced" ? "orange" : "blue")}>
+                  {ex.difficulty_level}
                 </span>
               )}
             </div>
@@ -341,7 +485,7 @@ function ProtocolExCard({ entry, onRemove }) {
               <p style={{ fontSize: 11, color: "#2B6CB0", margin: 0, lineHeight: 1.5 }}>{ex.progression}</p>
             </div>
           )}
-          <EvidenceSection grade={ex.evidence_grade} refs={ex.evidence_refs} />
+          <EvidenceSection grade={ex.evidence_base?.grade} refs={ex.evidence_base?.references} />
         </div>
       )}
     </div>
@@ -352,30 +496,219 @@ function ProtocolExCard({ entry, onRemove }) {
 // PROTOCOL GENERATOR VIEW
 // ─────────────────────────────────────────────
 function GeneratorView() {
-  const [condition, setCondition] = useState("TPLO");
-  const [phase, setPhase] = useState("weeks_0_2");
-  const [plan, setPlan] = useState(null);
-  const [weeks, setWeeks] = useState({});
+  const [protocol, setProtocol] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [wizardStep, setWizardStep] = useState(1);
   const [showAddModal, setShowAddModal] = useState(false);
   const [addingToWeek, setAddingToWeek] = useState(null);
   const [allExercises, setAllExercises] = useState([]);
   const [exSearch, setExSearch] = useState("");
 
-  const CONDITIONS = [
-    { value: "TPLO",             label: "TPLO — Tibial Plateau Leveling Osteotomy" },
-    { value: "TTA",              label: "TTA — Tibial Tuberosity Advancement" },
-    { value: "FHO",              label: "FHO — Femoral Head Ostectomy" },
-    { value: "IVDD",             label: "IVDD — Intervertebral Disc Disease" },
-    { value: "HIP_DYSPLASIA",    label: "Hip Dysplasia" },
-    { value: "ELBOW_DYSPLASIA",  label: "Elbow Dysplasia" },
+  // Patient intake form
+  const [form, setForm] = useState({
+    patientName: "", breed: "", age: "", dob: "",
+    weightKg: "", weightLbs: "", sex: "Male Intact",
+    diagnosis: "TPLO", affectedRegion: "Left Stifle",
+    surgeryDate: "", lamenessGrade: "2", bodyConditionScore: "5",
+    painLevel: "3", mobilityLevel: "Limited",
+    currentMedications: "", medsLastGiven: "", medicalHistory: "",
+    specialInstructions: "", protocolLength: "8",
+    clientName: "", clientEmail: "", clientPhone: "", clientPhone2: "",
+    referringVet: "", mailingAddress: "", city: "", state: "", zipCode: "",
+    nearbyHospital: "",
+    // Diagnostics
+    diagRadiographs: false, diagRadiographsNotes: "",
+    diagCT: false, diagCTNotes: "",
+    diagMRI: false, diagMRINotes: "",
+    diagUltrasound: false, diagUltrasoundNotes: "",
+    diagCBC: false, diagCBCNotes: "",
+    diagChemPanel: false, diagChemPanelNotes: "",
+    diagUrinalysis: false, diagUrinalysisNotes: "",
+    diagThyroid: false, diagThyroidNotes: "",
+    diagCRP: false, diagCRPNotes: "",
+    diagSynovial: false, diagSynovialNotes: "",
+    diagEMG: false, diagEMGNotes: "",
+    diagArthroscopy: false, diagArthroscopyNotes: "",
+    diagGaitAnalysis: false, diagGaitAnalysisNotes: "",
+    diagForcePlate: false, diagForcePlateNotes: "",
+    diagROM: false, diagROMNotes: "",
+    diagOtherDiag: false, diagOtherNotes: ""
+  });
+  const [weightWarning, setWeightWarning] = useState("");
+
+  const setField = (k, v) => setForm(prev => ({ ...prev, [k]: v }));
+
+  // Navigate wizard steps and scroll to top
+  const goToStep = (step) => {
+    setWizardStep(step);
+    // Scroll the content area to top
+    setTimeout(() => {
+      const el = document.querySelector('[data-content-scroll]');
+      if (el) el.scrollTop = 0;
+    }, 50);
+  };
+
+  // ── Weight conversion (KG ↔ LBS) ──
+  const handleWeightKg = (val) => {
+    setField("weightKg", val);
+    const kg = parseFloat(val);
+    if (!isNaN(kg) && kg > 0) {
+      setField("weightLbs", (kg * 2.20462).toFixed(1));
+      // Warning: if KG value seems too high for a dog (>90 kg = ~200 lbs)
+      if (kg > 90) setWeightWarning("Warning: " + kg + " kg = " + (kg * 2.20462).toFixed(0) + " lbs. Please confirm this is correct.");
+      else setWeightWarning("");
+    } else { setField("weightLbs", ""); setWeightWarning(""); }
+  };
+  const handleWeightLbs = (val) => {
+    setField("weightLbs", val);
+    const lbs = parseFloat(val);
+    if (!isNaN(lbs) && lbs > 0) {
+      setField("weightKg", (lbs / 2.20462).toFixed(1));
+      setWeightWarning("");
+    } else { setField("weightKg", ""); setWeightWarning(""); }
+  };
+
+  // ── DOB ↔ Age bidirectional ──
+  const handleDob = (val) => {
+    setField("dob", val);
+    if (val) {
+      const birth = new Date(val);
+      const now = new Date();
+      let years = now.getFullYear() - birth.getFullYear();
+      if (now.getMonth() < birth.getMonth() || (now.getMonth() === birth.getMonth() && now.getDate() < birth.getDate())) years--;
+      setField("age", String(Math.max(0, years)));
+    }
+  };
+  const handleAge = (val) => {
+    setField("age", val);
+    const years = parseInt(val);
+    if (!isNaN(years) && years >= 0) {
+      const d = new Date();
+      d.setFullYear(d.getFullYear() - years);
+      setField("dob", d.toISOString().split("T")[0]);
+    }
+  };
+
+  // ── ZIP code → City/State auto-fill ──
+  const handleZip = async (val) => {
+    setField("zipCode", val);
+    if (val.length === 5 && /^\d{5}$/.test(val)) {
+      try {
+        const r = await fetch(`https://api.zippopotam.us/us/${val}`);
+        if (r.ok) {
+          const data = await r.json();
+          const place = data.places?.[0];
+          if (place) {
+            setField("city", place["place name"]);
+            setField("state", place["state abbreviation"]);
+          }
+        }
+      } catch {}
+    }
+  };
+
+  // ── Breed list (top 50+ most common) ──
+  const BREEDS = [
+    "Labrador Retriever","German Shepherd","Golden Retriever","French Bulldog","Bulldog",
+    "Poodle (Standard)","Poodle (Miniature)","Beagle","Rottweiler","German Shorthaired Pointer",
+    "Dachshund","Pembroke Welsh Corgi","Australian Shepherd","Yorkshire Terrier","Boxer",
+    "Cavalier King Charles Spaniel","Doberman Pinscher","Miniature Schnauzer","Great Dane","Shih Tzu",
+    "Siberian Husky","Bernese Mountain Dog","Cane Corso","Pomeranian","Shetland Sheepdog",
+    "Boston Terrier","Havanese","English Springer Spaniel","Brittany","Cocker Spaniel",
+    "Miniature American Shepherd","Border Collie","Vizsla","Weimaraner","Belgian Malinois",
+    "Chihuahua","Maltese","Collie","Basset Hound","Mastiff",
+    "Rhodesian Ridgeback","Newfoundland","Bichon Frise","West Highland White Terrier","Pit Bull Terrier",
+    "Akita","Bloodhound","Saint Bernard","Chesapeake Bay Retriever","Greyhound",
+    "Irish Setter","Staffordshire Bull Terrier","Jack Russell Terrier","Australian Cattle Dog",
+    "Mixed Breed / Other"
   ];
-  const PHASES = [
-    { value: "weeks_0_2",   label: "Phase 1 — Weeks 0–2  (Protection / Acute)" },
-    { value: "weeks_2_6",   label: "Phase 2 — Weeks 2–6  (Early Mobility)" },
-    { value: "weeks_6_10",  label: "Phase 3 — Weeks 6–10 (Strengthening)" },
-    { value: "weeks_10_16", label: "Phase 4 — Weeks 10–16 (Return to Function)" },
+
+  // ── Nearby hospitals (populated after ZIP) ──
+  const HOSPITALS = [
+    "BluePearl Pet Hospital","VCA Animal Hospital","Banfield Pet Hospital",
+    "MedVet Medical & Cancer Center","Animal Emergency Center","ASPCA Animal Hospital",
+    "Red Bank Veterinary Hospital","Angell Animal Medical Center","Gulf Coast Veterinary Specialists",
+    "University of Pennsylvania — Ryan Veterinary Hospital","Colorado State University VTH",
+    "Cornell University Hospital for Animals","UC Davis VMTH","Ohio State University VMC",
+    "University of Florida Small Animal Hospital","Tufts Cummings School — Foster Hospital",
+    "North Carolina State University VH","University of Tennessee VTH",
+    "Texas A&M Small Animal Hospital","Purdue University VTH"
+  ];
+
+  const CONDITIONS = {
+    "Stifle (Knee)": [
+      { value: "TPLO",              label: "TPLO — Tibial Plateau Leveling Osteotomy" },
+      { value: "TTA",               label: "TTA — Tibial Tuberosity Advancement" },
+      { value: "CCL Conservative",  label: "CCL — Conservative Management" },
+      { value: "Lateral Suture",    label: "Lateral Suture Stabilization" },
+      { value: "Meniscal Injury",   label: "Meniscal Tear / Injury" },
+      { value: "Patellar Luxation", label: "Patellar Luxation (Medial/Lateral)" },
+      { value: "Stifle OA",        label: "Stifle Osteoarthritis" },
+    ],
+    "Hip": [
+      { value: "FHO",              label: "FHO — Femoral Head Ostectomy" },
+      { value: "Hip Dysplasia",    label: "Hip Dysplasia" },
+      { value: "THR",              label: "THR — Total Hip Replacement" },
+      { value: "Hip Luxation",     label: "Hip Luxation (Traumatic)" },
+      { value: "Legg-Calve-Perthes", label: "Legg-Calvé-Perthes Disease" },
+      { value: "Hip OA",           label: "Hip Osteoarthritis" },
+    ],
+    "Elbow & Shoulder": [
+      { value: "Elbow Dysplasia",    label: "Elbow Dysplasia" },
+      { value: "FCP",                label: "FCP — Fragmented Coronoid Process" },
+      { value: "UAP",                label: "UAP — Ununited Anconeal Process" },
+      { value: "Shoulder OCD",       label: "Shoulder OCD — Osteochondritis Dissecans" },
+      { value: "Biceps Tenosynovitis", label: "Biceps Tenosynovitis" },
+      { value: "Medial Shoulder Instability", label: "Medial Shoulder Instability" },
+      { value: "Elbow OA",          label: "Elbow Osteoarthritis" },
+      { value: "Shoulder Luxation",  label: "Shoulder Luxation" },
+    ],
+    "Spine & Neurological": [
+      { value: "IVDD",                label: "IVDD — Intervertebral Disc Disease" },
+      { value: "FCE",                 label: "FCE — Fibrocartilaginous Embolism" },
+      { value: "Degenerative Myelopathy", label: "Degenerative Myelopathy (DM)" },
+      { value: "Lumbosacral Stenosis", label: "Lumbosacral Stenosis / Cauda Equina" },
+      { value: "Cervical Spondylomyelopathy", label: "Wobbler Syndrome (CSM)" },
+      { value: "Spinal Fracture",     label: "Spinal Fracture / Luxation" },
+      { value: "Vestibular Disease",   label: "Vestibular Disease" },
+      { value: "Peripheral Neuropathy", label: "Peripheral Neuropathy" },
+    ],
+    "Fractures & Trauma": [
+      { value: "Femoral Fracture",     label: "Femoral Fracture" },
+      { value: "Tibial Fracture",      label: "Tibial Fracture" },
+      { value: "Humeral Fracture",     label: "Humeral Fracture" },
+      { value: "Radial Fracture",      label: "Radius / Ulna Fracture" },
+      { value: "Pelvic Fracture",      label: "Pelvic Fracture" },
+      { value: "Carpal/Tarsal Injury", label: "Carpal / Tarsal Injury" },
+      { value: "Polytrauma",           label: "Polytrauma — Multiple Injuries" },
+    ],
+    "Soft Tissue & Tendon": [
+      { value: "Achilles Rupture",     label: "Achilles Tendon Rupture" },
+      { value: "Iliopsoas Strain",     label: "Iliopsoas Muscle Strain" },
+      { value: "Gracilis Contracture", label: "Gracilis / Semitendinosus Contracture" },
+      { value: "Infraspinatus Contracture", label: "Infraspinatus Contracture" },
+      { value: "Muscle Strain",        label: "Muscle Strain / Tear (General)" },
+      { value: "Ligament Sprain",      label: "Ligament Sprain (Non-CCL)" },
+    ],
+    "Multi-Joint / Geriatric / Other": [
+      { value: "Osteoarthritis",       label: "Multi-Joint Osteoarthritis" },
+      { value: "Geriatric Mobility",   label: "Geriatric Mobility Program" },
+      { value: "Obesity Rehab",        label: "Obesity / Weight Management Program" },
+      { value: "Post-Amputation",      label: "Post-Amputation Rehab" },
+      { value: "Immune-Mediated Polyarthritis", label: "Immune-Mediated Polyarthritis" },
+      { value: "Fibrotic Myopathy",    label: "Fibrotic Myopathy" },
+      { value: "Conditioning",         label: "Fitness / Conditioning Program" },
+      { value: "Palliative",           label: "Palliative / Comfort Care" },
+    ],
+  };
+
+  const REGIONS = [
+    "Left Stifle", "Right Stifle", "Bilateral Stifle",
+    "Left Hip", "Right Hip", "Bilateral Hip",
+    "Left Elbow", "Right Elbow", "Left Shoulder", "Right Shoulder",
+    "Cervical Spine", "Thoracolumbar Spine", "Lumbosacral Spine",
+    "Multiple Joints"
   ];
 
   useEffect(() => {
@@ -383,28 +716,47 @@ function GeneratorView() {
   }, []);
 
   const generate = async () => {
-    setLoading(true); setError(null); setPlan(null); setWeeks({});
+    if (!form.patientName.trim()) { setError("Patient name is required"); return; }
+    if (!form.diagnosis) { setError("Please select a diagnosis"); return; }
+
+    setLoading(true); setError(null); setProtocol(null);
     try {
-      const { data } = await axios.post(`${API}/generate-plan`, { condition, phase });
-      setPlan(data.plan);
-      setWeeks(data.weeks || {});
+      const { data } = await axios.post(`${API}/generate-protocol`, {
+        ...form,
+        age: +form.age || 0,
+        weight: +form.weightLbs || +form.weightKg * 2.20462 || 0,
+        protocolLength: +form.protocolLength || 8
+      });
+      setProtocol(data);
     } catch (e) {
-      setError(e.response?.data?.error || "No protocol found for this combination");
+      setError(e.response?.data?.error || "Failed to generate protocol");
     } finally { setLoading(false); }
   };
 
-  const removeExercise = (weekKey, idx) => {
-    setWeeks(prev => ({ ...prev, [weekKey]: prev[weekKey].filter((_, i) => i !== idx) }));
+  const removeExercise = (weekIdx, exIdx) => {
+    setProtocol(prev => {
+      const updated = { ...prev, weeks: prev.weeks.map((w, i) =>
+        i === weekIdx ? { ...w, exercises: w.exercises.filter((_, j) => j !== exIdx) } : w
+      )};
+      return updated;
+    });
   };
 
-  const addExercise = (weekKey, ex) => {
-    setWeeks(prev => ({
-      ...prev,
-      [weekKey]: [...(prev[weekKey] || []), {
-        exercise: ex, sets: 3, reps: 10, frequency_per_day: 2,
-        notes: "Added manually by clinician"
-      }]
-    }));
+  const addExercise = (weekIdx, ex) => {
+    setProtocol(prev => {
+      const updated = { ...prev, weeks: prev.weeks.map((w, i) =>
+        i === weekIdx ? { ...w, exercises: [...w.exercises, {
+          exercise: ex, code: ex.code, name: ex.name, category: ex.category,
+          sets: 3, reps: 10, frequency: "2x daily", duration_minutes: 10,
+          equipment: ex.equipment, setup: ex.setup, steps: ex.steps,
+          good_form: ex.good_form, common_mistakes: ex.common_mistakes,
+          red_flags: ex.red_flags, progression: ex.progression,
+          contraindications: ex.contraindications,
+          notes: "Added manually by clinician"
+        }] } : w
+      )};
+      return updated;
+    });
     setShowAddModal(false);
     setExSearch("");
   };
@@ -414,84 +766,534 @@ function GeneratorView() {
     e.category?.toLowerCase().includes(exSearch.toLowerCase())
   );
 
+  // Section header component for the intake form
+  const SectionHead = ({ icon: Icon, title }) => (
+    <div style={S.sectionHeader()}>
+      <Icon size={14} style={{ color: "#1E3A5F" }} /> {title}
+    </div>
+  );
+
+  // Wizard progress bar
+  const WizardProgress = () => {
+    const steps = [
+      { num: 1, label: "Client & Patient" },
+      { num: 2, label: "Clinical Assessment" },
+      { num: 3, label: "Protocol Parameters" },
+    ];
+    return (
+      <div style={S.wizardProgress}>
+        {steps.map((s, i) => {
+          const state = wizardStep > s.num ? "done" : wizardStep === s.num ? "active" : "pending";
+          return (
+            <React.Fragment key={s.num}>
+              {i > 0 && <div style={S.wizardLine(wizardStep > s.num)} />}
+              <div style={S.wizardStep(state)}
+                onClick={() => state === "done" && goToStep(s.num)}>
+                <div style={S.wizardDot(state)}>
+                  {state === "done" ? <FiCheckCircle size={14} /> : s.num}
+                </div>
+                <span>{s.label}</span>
+              </div>
+            </React.Fragment>
+          );
+        })}
+      </div>
+    );
+  };
+
   return (
     <div>
-      {/* Generator form */}
-      <div style={S.card}>
-        <h3 style={{ margin: "0 0 20px", fontSize: 16, color: "#0F4C81" }}>
-          Generate Rehabilitation Protocol
-        </h3>
-        <div style={{ display: "flex", gap: 16, alignItems: "flex-end", flexWrap: "wrap" }}>
-          <div style={{ flex: 1, minWidth: 220 }}>
-            <label style={S.label}>Condition</label>
-            <select style={{ ...S.select, width: "100%" }} value={condition} onChange={e => setCondition(e.target.value)}>
-              {CONDITIONS.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+      {/* Wizard progress bar — visible during intake steps */}
+      {!protocol && <WizardProgress />}
+
+      {/* ═══════════ STEP 1: CLIENT & PATIENT INFO ═══════════ */}
+      {!protocol && wizardStep === 1 && (<>
+
+      {/* ═══════════ SECTION 1: CLIENT INFORMATION ═══════════ */}
+      <div style={{ background: "#EFF6FF", border: "2px solid #1E3A5F", borderRadius: 12, padding: 24, marginBottom: 16 }}>
+        <SectionHead icon={FiUsers} title="Section 1 — Client Information" />
+        <div style={S.grid(2)}>
+          <div>
+            <label style={S.label}>Client / Owner Name</label>
+            <input style={{ ...S.input, border: "1.5px solid #1E3A5F" }} value={form.clientName} onChange={e => setField("clientName", e.target.value)} placeholder="Last, First" />
+          </div>
+          <div>
+            <label style={S.label}>Email Address</label>
+            <input style={{ ...S.input, border: "1.5px solid #1E3A5F" }} type="email" value={form.clientEmail} onChange={e => setField("clientEmail", e.target.value)} placeholder="client@email.com" />
+          </div>
+        </div>
+        <div style={{ ...S.grid(3), marginTop: 12 }}>
+          <div>
+            <label style={S.label}>Phone Number</label>
+            <input style={{ ...S.input, border: "1.5px solid #1E3A5F" }} value={form.clientPhone} onChange={e => setField("clientPhone", e.target.value)} placeholder="(555) 000-0000" />
+          </div>
+          <div>
+            <label style={S.label}>Secondary Phone (Optional)</label>
+            <input style={{ ...S.input, border: "1.5px solid #1E3A5F" }} value={form.clientPhone2} onChange={e => setField("clientPhone2", e.target.value)} placeholder="(555) 000-0000" />
+          </div>
+          <div>
+            <label style={S.label}>Referring Veterinarian</label>
+            <input style={{ ...S.input, border: "1.5px solid #1E3A5F" }} value={form.referringVet} onChange={e => setField("referringVet", e.target.value)} placeholder="DVM Name, Practice" />
+          </div>
+        </div>
+        <div style={{ ...S.grid(4), marginTop: 12 }}>
+          <div style={{ gridColumn: "1 / 3" }}>
+            <label style={S.label}>Mailing Address</label>
+            <input style={{ ...S.input, border: "1.5px solid #1E3A5F" }} value={form.mailingAddress} onChange={e => setField("mailingAddress", e.target.value)} placeholder="Street Address" />
+          </div>
+          <div>
+            <label style={S.label}>ZIP Code</label>
+            <input style={{ ...S.input, border: "1.5px solid #1E3A5F", maxWidth: 120 }} value={form.zipCode} onChange={e => handleZip(e.target.value)} placeholder="00000" maxLength={5} />
+          </div>
+          <div />
+        </div>
+        <div style={{ ...S.grid(3), marginTop: 12 }}>
+          <div>
+            <label style={S.label}>City</label>
+            <input style={{ ...S.input, border: "1.5px solid #1E3A5F", background: form.city ? "#F0FFF4" : C.surface }} value={form.city} onChange={e => setField("city", e.target.value)} placeholder="Auto-filled from ZIP" />
+          </div>
+          <div>
+            <label style={S.label}>State</label>
+            <input style={{ ...S.input, border: "1.5px solid #1E3A5F", maxWidth: 80, background: form.state ? "#F0FFF4" : C.surface }} value={form.state} onChange={e => setField("state", e.target.value)} placeholder="ST" />
+          </div>
+          <div>
+            <label style={S.label}>Nearby Veterinary Hospital</label>
+            <select style={{ ...S.select, width: "100%", border: "1.5px solid #1E3A5F" }} value={form.nearbyHospital} onChange={e => setField("nearbyHospital", e.target.value)}>
+              <option value="">— Select Hospital —</option>
+              {HOSPITALS.map(h => <option key={h} value={h}>{h}</option>)}
             </select>
           </div>
-          <div style={{ flex: 1, minWidth: 220 }}>
-            <label style={S.label}>Rehabilitation Phase</label>
-            <select style={{ ...S.select, width: "100%" }} value={phase} onChange={e => setPhase(e.target.value)}>
-              {PHASES.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
-            </select>
-          </div>
-          <button style={S.btn("dark")} onClick={generate} disabled={loading}>
-            <FiActivity size={14} />
-            {loading ? "Generating…" : "Generate Plan"}
-          </button>
         </div>
       </div>
 
+      {/* ═══════════ SECTION 2: PATIENT SIGNALMENT ═══════════ */}
+      <div style={{ background: "#EFF6FF", border: "2px solid #1E3A5F", borderRadius: 12, padding: 24, marginBottom: 16 }}>
+        <div style={S.sectionHeader()}>
+          <span style={{ fontSize: 16 }}>🐕</span> PATIENT SIGNALMENT
+        </div>
+        <div style={S.grid(3)}>
+          <div>
+            <label style={S.label}>Patient Name</label>
+            <input style={{ ...S.input, border: "1.5px solid #1E3A5F" }} value={form.patientName}
+              onChange={e => setField("patientName", e.target.value)} placeholder="Patient Name" />
+          </div>
+          <div>
+            <label style={S.label}>Sex</label>
+            <select style={{ ...S.select, width: "100%", border: "1.5px solid #1E3A5F" }} value={form.sex} onChange={e => setField("sex", e.target.value)}>
+              <option value="Male Intact">♂ Male Intact</option>
+              <option value="Male Neutered">♂ Male Neutered</option>
+              <option value="Female Intact">♀ Female Intact</option>
+              <option value="Female Spayed">♀ Female Spayed</option>
+            </select>
+          </div>
+          <div>
+            <label style={S.label}>Breed</label>
+            <select style={{ ...S.select, width: "100%", border: "1.5px solid #1E3A5F" }} value={form.breed} onChange={e => setField("breed", e.target.value)}>
+              <option value="">— Select Breed —</option>
+              {BREEDS.map(b => <option key={b} value={b}>{b}</option>)}
+            </select>
+          </div>
+        </div>
+        <div style={{ ...S.grid(4), marginTop: 12 }}>
+          <div>
+            <label style={S.label}>Date of Birth</label>
+            <input style={{ ...S.input, border: "1.5px solid #1E3A5F" }} type="date" value={form.dob} onChange={e => handleDob(e.target.value)} />
+          </div>
+          <div>
+            <label style={S.label}>Age (Years)</label>
+            <input style={{ ...S.input, border: "1.5px solid #1E3A5F", maxWidth: 80 }} type="number" min="0" max="25" value={form.age}
+              onChange={e => handleAge(e.target.value)} placeholder="0" />
+          </div>
+          <div>
+            <label style={S.label}>Weight (KG)</label>
+            <input style={{ ...S.input, border: "1.5px solid #1E3A5F", maxWidth: 100 }} type="number" min="0" step="0.1" value={form.weightKg}
+              onChange={e => handleWeightKg(e.target.value)} placeholder="0.0" />
+          </div>
+          <div>
+            <label style={S.label}>Weight (LBS)</label>
+            <input style={{ ...S.input, border: "1.5px solid #1E3A5F", maxWidth: 100 }} type="number" min="0" step="0.1" value={form.weightLbs}
+              onChange={e => handleWeightLbs(e.target.value)} placeholder="0.0" />
+          </div>
+        </div>
+        {weightWarning && (
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8, padding: "8px 12px", background: "#FEF2F2", border: "1px solid #DC2626", borderRadius: 6 }}>
+            <FiAlertTriangle size={14} style={{ color: "#DC2626" }} />
+            <span style={{ fontSize: 12, color: "#DC2626", fontWeight: 500 }}>{weightWarning}</span>
+          </div>
+        )}
+        <div style={{ ...S.grid(2), marginTop: 12 }}>
+          <div>
+            <label style={S.label}>Body Condition Score (1–9 WSAVA Scale)</label>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <input style={{ ...S.input, flex: 1, border: "1.5px solid #1E3A5F" }} type="range" min="1" max="9" value={form.bodyConditionScore}
+                onChange={e => setField("bodyConditionScore", e.target.value)} />
+              <div style={{ textAlign: "center", minWidth: 60 }}>
+                <span style={{ fontSize: 16, fontWeight: 700, color: C.navy }}>{form.bodyConditionScore}/9</span>
+                <div style={{ fontSize: 9, color: C.textMid, fontWeight: 500 }}>
+                  {+form.bodyConditionScore <= 3 ? "Underweight" : +form.bodyConditionScore <= 5 ? "Ideal" : +form.bodyConditionScore <= 7 ? "Overweight" : "Obese"}
+                </div>
+              </div>
+            </div>
+          </div>
+          <div />
+        </div>
+        <div style={{ ...S.grid(2), marginTop: 12 }}>
+          <div>
+            <label style={S.label}>Current Medications</label>
+            <input style={{ ...S.input, border: "1.5px solid #1E3A5F" }} value={form.currentMedications} onChange={e => setField("currentMedications", e.target.value)}
+              placeholder="e.g. Carprofen 75mg BID, Gabapentin 100mg TID" />
+          </div>
+          <div>
+            <label style={S.label}>Medications Last Given</label>
+            <input style={{ ...S.input, border: "1.5px solid #1E3A5F" }} value={form.medsLastGiven} onChange={e => setField("medsLastGiven", e.target.value)}
+              placeholder="e.g. Today 8:00 AM, Yesterday PM" />
+          </div>
+        </div>
+      </div>
+
+      {/* Next button with glow */}
+      <div style={{ display: "flex", justifyContent: "flex-end", padding: "8px 0" }}>
+        <button
+          style={{
+            background: "#1E5A8A", color: "#fff", display: "inline-flex", alignItems: "center", gap: 6,
+            borderRadius: 8, border: "none", cursor: "pointer", padding: "14px 32px", fontSize: 14, fontWeight: 700,
+            boxShadow: "0 0 12px rgba(30,90,138,0.3), 0 0 24px rgba(30,90,138,0.1)",
+            transition: "all 0.25s",
+          }}
+          onClick={() => goToStep(2)}
+        >
+          Next: Clinical Assessment <FiChevronRight size={16} />
+        </button>
+      </div>
+
+      </>)}
+
+      {/* ═══════════ STEP 2: CLINICAL ASSESSMENT ═══════════ */}
+      {!protocol && wizardStep === 2 && (<>
+
+      {/* ═══════════ SECTION 3: CLINICAL ASSESSMENT ═══════════ */}
+      <div style={{ background: "#EFF6FF", border: "2px solid #1E3A5F", borderRadius: 12, padding: 24, marginBottom: 16 }}>
+        <SectionHead icon={FiActivity} title="Section 2 — Clinical Assessment" />
+        <div style={S.grid(2)}>
+          <div>
+            <label style={S.label}>Primary Diagnosis *</label>
+            <select style={{ ...S.select, width: "100%", fontWeight: 600, border: "1.5px solid #1E3A5F" }} value={form.diagnosis} onChange={e => setField("diagnosis", e.target.value)}>
+              <option value="">— Select Diagnosis —</option>
+              {Object.entries(CONDITIONS).map(([group, items]) => (
+                <optgroup key={group} label={group}>
+                  {items.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                </optgroup>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label style={S.label}>Affected Region</label>
+            <select style={{ ...S.select, width: "100%", border: "1.5px solid #1E3A5F" }} value={form.affectedRegion} onChange={e => setField("affectedRegion", e.target.value)}>
+              <optgroup label="Stifle">{REGIONS.filter(r => r.includes("Stifle")).map(r => <option key={r}>{r}</option>)}</optgroup>
+              <optgroup label="Hip">{REGIONS.filter(r => r.includes("Hip")).map(r => <option key={r}>{r}</option>)}</optgroup>
+              <optgroup label="Forelimb">{REGIONS.filter(r => r.includes("Elbow") || r.includes("Shoulder")).map(r => <option key={r}>{r}</option>)}</optgroup>
+              <optgroup label="Spine">{REGIONS.filter(r => r.includes("Spine")).map(r => <option key={r}>{r}</option>)}</optgroup>
+              <optgroup label="Other"><option>Multiple Joints</option></optgroup>
+            </select>
+          </div>
+        </div>
+
+        {/* Scoring row — visual scales */}
+        <div style={{ ...S.grid(3), marginTop: 16 }}>
+          <div>
+            <label style={S.label}>Pain Level (0–10 VAS)</label>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <input style={{ ...S.input, flex: 1, border: "1.5px solid #1E3A5F" }} type="range" min="0" max="10" value={form.painLevel}
+                onChange={e => setField("painLevel", e.target.value)} />
+              <span style={{
+                fontSize: 14, fontWeight: 700, minWidth: 38, textAlign: "center", padding: "2px 8px", borderRadius: 6,
+                background: +form.painLevel <= 3 ? C.greenBg : +form.painLevel <= 6 ? C.amberBg : C.redBg,
+                color: +form.painLevel <= 3 ? C.green : +form.painLevel <= 6 ? C.amber : C.red,
+              }}>
+                {form.painLevel}/10
+              </span>
+            </div>
+          </div>
+          <div>
+            <label style={S.label}>Lameness Grade (0–5 LOAD)</label>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <input style={{ ...S.input, flex: 1, border: "1.5px solid #1E3A5F" }} type="range" min="0" max="5" value={form.lamenessGrade}
+                onChange={e => setField("lamenessGrade", e.target.value)} />
+              <span style={{
+                fontSize: 14, fontWeight: 700, minWidth: 32, textAlign: "center", padding: "2px 8px", borderRadius: 6,
+                background: +form.lamenessGrade <= 1 ? C.greenBg : +form.lamenessGrade <= 3 ? C.amberBg : C.redBg,
+                color: +form.lamenessGrade <= 1 ? C.green : +form.lamenessGrade <= 3 ? C.amber : C.red,
+              }}>
+                {form.lamenessGrade}/5
+              </span>
+            </div>
+          </div>
+          <div>
+            <label style={S.label}>Mobility Status</label>
+            <select style={{ ...S.select, width: "100%", border: "1.5px solid #1E3A5F" }} value={form.mobilityLevel} onChange={e => setField("mobilityLevel", e.target.value)}>
+              <option value="Non-ambulatory">Non-ambulatory (0 — no voluntary movement)</option>
+              <option value="Limited">Limited (1 — assisted standing/stepping)</option>
+              <option value="Moderate">Moderate (2 — ambulatory with deficits)</option>
+              <option value="Good">Good (3 — ambulatory, mild impairment)</option>
+              <option value="Full">Full (4 — normal gait, conditioning focus)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style={{ ...S.grid(2), marginTop: 12 }}>
+          <div>
+            <label style={S.label}>Surgery / Injury Date</label>
+            <input style={{ ...S.input, border: "1.5px solid #1E3A5F" }} type="date" value={form.surgeryDate} onChange={e => setField("surgeryDate", e.target.value)} />
+          </div>
+          <div>
+            <label style={S.label}>Medical History / Notes</label>
+            <input style={{ ...S.input, border: "1.5px solid #1E3A5F" }} value={form.medicalHistory} onChange={e => setField("medicalHistory", e.target.value)}
+              placeholder="Prior surgeries, chronic conditions, behavioral notes" />
+          </div>
+        </div>
+      </div>
+
+      {/* ═══════════ DIAGNOSTICS PERFORMED ═══════════ */}
+      <div style={{ background: "#EFF6FF", border: "2px solid #1E3A5F", borderRadius: 12, padding: 24, marginBottom: 16 }}>
+        <SectionHead icon={FiClipboard} title="Diagnostics Performed" />
+
+        {/* Imaging */}
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#1E3A5F", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10, paddingBottom: 4, borderBottom: "1px solid #1E3A5F40" }}>
+            Imaging Studies
+          </div>
+          <div style={S.grid(2)}>
+            {[
+              { key: "diagRadiographs", label: "Radiographs (X-Rays)" },
+              { key: "diagCT", label: "CT Scan (Computed Tomography)" },
+              { key: "diagMRI", label: "MRI (Magnetic Resonance Imaging)" },
+              { key: "diagUltrasound", label: "Ultrasound / Musculoskeletal US" },
+            ].map(d => (
+              <div key={d.key} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "8px 12px", background: form[d.key] ? "#ECFDF5" : "#fff", border: "1.5px solid #1E3A5F", borderRadius: 8 }}>
+                <input type="checkbox" checked={form[d.key]} onChange={e => setField(d.key, e.target.checked)}
+                  style={{ marginTop: 3, accentColor: "#1E3A5F", width: 16, height: 16, cursor: "pointer" }} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: "#000" }}>{d.label}</div>
+                  {form[d.key] && (
+                    <input style={{ ...S.input, border: "1px solid #1E3A5F80", marginTop: 6, fontSize: 11, padding: "6px 8px" }}
+                      value={form[d.key + "Notes"]} onChange={e => setField(d.key + "Notes", e.target.value)}
+                      placeholder="Findings / Results / Date performed" />
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Laboratory */}
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#1E3A5F", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10, paddingBottom: 4, borderBottom: "1px solid #1E3A5F40" }}>
+            Laboratory Work
+          </div>
+          <div style={S.grid(2)}>
+            {[
+              { key: "diagCBC", label: "CBC (Complete Blood Count)" },
+              { key: "diagChemPanel", label: "Chemistry Panel / Metabolic" },
+              { key: "diagUrinalysis", label: "Urinalysis" },
+              { key: "diagThyroid", label: "Thyroid Panel (T4 / TSH)" },
+              { key: "diagCRP", label: "C-Reactive Protein (CRP)" },
+              { key: "diagSynovial", label: "Synovial Fluid Analysis" },
+            ].map(d => (
+              <div key={d.key} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "8px 12px", background: form[d.key] ? "#ECFDF5" : "#fff", border: "1.5px solid #1E3A5F", borderRadius: 8 }}>
+                <input type="checkbox" checked={form[d.key]} onChange={e => setField(d.key, e.target.checked)}
+                  style={{ marginTop: 3, accentColor: "#1E3A5F", width: 16, height: 16, cursor: "pointer" }} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: "#000" }}>{d.label}</div>
+                  {form[d.key] && (
+                    <input style={{ ...S.input, border: "1px solid #1E3A5F80", marginTop: 6, fontSize: 11, padding: "6px 8px" }}
+                      value={form[d.key + "Notes"]} onChange={e => setField(d.key + "Notes", e.target.value)}
+                      placeholder="Findings / Results / Date performed" />
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Specialized / Procedural */}
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#1E3A5F", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10, paddingBottom: 4, borderBottom: "1px solid #1E3A5F40" }}>
+            Specialized / Procedural Diagnostics
+          </div>
+          <div style={S.grid(2)}>
+            {[
+              { key: "diagEMG", label: "EMG / Nerve Conduction Study" },
+              { key: "diagArthroscopy", label: "Arthroscopy" },
+              { key: "diagGaitAnalysis", label: "Gait Analysis" },
+              { key: "diagForcePlate", label: "Force Plate Analysis" },
+              { key: "diagROM", label: "Range of Motion (Goniometry)" },
+              { key: "diagOtherDiag", label: "Other Diagnostic" },
+            ].map(d => (
+              <div key={d.key} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "8px 12px", background: form[d.key] ? "#ECFDF5" : "#fff", border: "1.5px solid #1E3A5F", borderRadius: 8 }}>
+                <input type="checkbox" checked={form[d.key]} onChange={e => setField(d.key, e.target.checked)}
+                  style={{ marginTop: 3, accentColor: "#1E3A5F", width: 16, height: 16, cursor: "pointer" }} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: "#000" }}>{d.label}</div>
+                  {form[d.key] && (
+                    <input style={{ ...S.input, border: "1px solid #1E3A5F80", marginTop: 6, fontSize: 11, padding: "6px 8px" }}
+                      value={form[d.key === "diagOtherDiag" ? "diagOtherNotes" : d.key + "Notes"]}
+                      onChange={e => setField(d.key === "diagOtherDiag" ? "diagOtherNotes" : d.key + "Notes", e.target.value)}
+                      placeholder={d.key === "diagOtherDiag" ? "Specify diagnostic and findings" : "Findings / Results / Date performed"} />
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Step 2 navigation */}
+      <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0" }}>
+        <button style={S.btn("ghost")} onClick={() => goToStep(1)}>
+          ← Back to Patient Info
+        </button>
+        <button
+          style={{
+            background: "#1E5A8A", color: "#fff", display: "inline-flex", alignItems: "center", gap: 6,
+            borderRadius: 8, border: "none", cursor: "pointer", padding: "14px 32px", fontSize: 14, fontWeight: 700,
+            boxShadow: "0 0 12px rgba(30,90,138,0.3), 0 0 24px rgba(30,90,138,0.1)",
+          }}
+          onClick={() => goToStep(3)}
+        >
+          Next: Protocol Parameters <FiChevronRight size={16} />
+        </button>
+      </div>
+
+      </>)}
+
+      {/* ═══════════ STEP 3: PROTOCOL PARAMETERS ═══════════ */}
+      {!protocol && wizardStep === 3 && (<>
+
+      {/* ═══════════ SECTION 4: PROTOCOL PARAMETERS ═══════════ */}
+      <div style={{ background: "#EFF6FF", border: "2px solid #1E3A5F", borderRadius: 12, padding: 24, marginBottom: 16 }}>
+        <SectionHead icon={FiCalendar} title="Section 4 — Protocol Parameters" />
+        <div style={S.grid(3)}>
+          <div>
+            <label style={S.label}>Protocol Duration</label>
+            <select style={{ ...S.select, width: "100%", border: "1.5px solid #1E3A5F" }} value={form.protocolLength} onChange={e => setField("protocolLength", e.target.value)}>
+              <option value="6">6 weeks — Accelerated (mild conditions)</option>
+              <option value="8">8 weeks — Standard post-surgical</option>
+              <option value="10">10 weeks — Extended recovery</option>
+              <option value="12">12 weeks — Complex / multi-joint</option>
+              <option value="16">16 weeks — Conservative management / neuro</option>
+            </select>
+          </div>
+          <div>
+            <label style={S.label}>Special Instructions</label>
+            <input style={{ ...S.input, border: "1.5px solid #1E3A5F" }} value={form.specialInstructions} onChange={e => setField("specialInstructions", e.target.value)}
+              placeholder="e.g. Fearful of water, aggressive with handling" />
+          </div>
+          <div style={{ display: "flex", alignItems: "flex-end" }}>
+            <button
+              style={{
+                ...S.btn("primary"), padding: "14px 28px", fontSize: 14, fontWeight: 700, width: "100%", justifyContent: "center",
+                boxShadow: "0 0 16px rgba(14,165,233,0.4), 0 0 32px rgba(14,165,233,0.15)",
+              }}
+              onClick={generate} disabled={loading}
+            >
+              <FiActivity size={15} />
+              {loading ? "Generating Protocol..." : "Generate Exercise Protocol"}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Step 3 navigation */}
+      <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0" }}>
+        <button style={S.btn("ghost")} onClick={() => goToStep(2)}>
+          ← Back to Assessment
+        </button>
+        <div />
+      </div>
+
+      </>)}
+
+      {/* ═══════════ ERROR ═══════════ */}
       {error && (
-        <div style={{ ...S.card, background: "#FFF5F5", border: "1px solid #FED7D7", color: "#C53030" }}>
-          {error}
+        <div style={{ ...S.card, background: C.redBg, border: `1px solid ${C.red}33`, color: C.red, display: "flex", alignItems: "center", gap: 8 }}>
+          <FiAlertTriangle size={16} /> {error}
         </div>
       )}
 
-      {plan && (
+      {/* ═══════════ GENERATED PROTOCOL RESULTS ═══════════ */}
+      {protocol && (
         <div>
-          {/* Plan header */}
-          <div style={S.card}>
+          {/* Protocol header — clinical document style */}
+          <div style={{ ...S.card, borderTop: `3px solid ${C.teal}`, background: `linear-gradient(135deg, ${C.surface} 0%, ${C.tealLight}22 100%)` }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
               <div>
-                <h2 style={{ margin: "0 0 4px", color: "#0F4C81", fontSize: 20 }}>{plan.protocol}</h2>
-                <p style={{ margin: 0, color: "#718096", fontSize: 14 }}>{plan.goal}</p>
-                {plan.description && (
-                  <p style={{ margin: "6px 0 0", color: "#A0AEC0", fontSize: 12 }}>{plan.description}</p>
-                )}
+                <div style={{ fontSize: 10, fontWeight: 700, color: C.teal, textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: 4 }}>
+                  Generated Rehabilitation Protocol
+                </div>
+                <h2 style={{ margin: "0 0 6px", color: C.navy, fontSize: 22, fontWeight: 800 }}>
+                  {protocol.patient_name}
+                </h2>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 4 }}>
+                  <span style={S.badge("blue")}>{protocol.condition}</span>
+                  <span style={S.badge("green")}>{protocol.affected_region}</span>
+                  <span style={S.badge("blue")}>{protocol.protocol_length_weeks} weeks</span>
+                </div>
+                <p style={{ margin: "8px 0 0", color: C.textLight, fontSize: 11 }}>
+                  Protocol ID: {protocol.patient_id} · Generated {new Date(protocol.generated_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })} · {protocol.total_exercises} exercises in library
+                </p>
               </div>
-              <span style={S.badge("green")}>{plan.condition}</span>
+              <div style={{ textAlign: "right" }}>
+                <div style={{ fontSize: 28, fontWeight: 800, color: C.navy }}>{protocol.protocol_length_weeks}</div>
+                <div style={{ fontSize: 9, fontWeight: 700, color: C.textLight, textTransform: "uppercase", letterSpacing: "1px" }}>Week Program</div>
+                <button style={{ ...S.btn("primary"), marginTop: 10, fontSize: 11, padding: "6px 16px" }}
+                  onClick={() => { setProtocol(null); setWizardStep(1); setError(null); }}>
+                  <FiFileText size={12} /> New Protocol
+                </button>
+              </div>
             </div>
           </div>
 
-          {/* Weeks */}
-          {Object.entries(weeks).map(([weekKey, exercises]) => (
-            <div key={weekKey} style={S.card}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                <h4 style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#0F4C81",
-                  textTransform: "uppercase", letterSpacing: "0.6px" }}>
-                  {weekKey.replace(/_/g, " ")}
-                  <span style={{ marginLeft: 8, fontSize: 11, color: "#A0AEC0", fontWeight: 400, textTransform: "none" }}>
-                    {exercises.length} exercise{exercises.length !== 1 ? "s" : ""}
-                  </span>
-                </h4>
-                <button
-                  onClick={() => { setAddingToWeek(weekKey); setShowAddModal(true); }}
-                  style={{ ...S.btn("primary"), padding: "6px 12px", fontSize: 12 }}>
-                  <FiPlus size={12} /> Add Exercise
-                </button>
-              </div>
+          {/* Weekly protocol cards */}
+          {(protocol.weeks || []).map((week, weekIdx) => {
+            const phaseProgress = week.week_number / protocol.protocol_length_weeks;
+            const phaseName = phaseProgress <= 0.25 ? "Acute / Protection" : phaseProgress <= 0.40 ? "Early Mobility" : phaseProgress <= 0.625 ? "Strengthening" : phaseProgress <= 0.875 ? "Balance / Proprioception" : "Return to Function";
+            const phaseColor = phaseProgress <= 0.25 ? C.red : phaseProgress <= 0.40 ? C.amber : phaseProgress <= 0.625 ? C.teal : phaseProgress <= 0.875 ? "#6B46C1" : C.green;
 
-              <div style={S.grid(3)}>
-                {exercises.map((ex, i) => (
-                  <ProtocolExCard
-                    key={i}
-                    entry={ex}
-                    onRemove={() => removeExercise(weekKey, i)}
-                  />
-                ))}
+            return (
+              <div key={week.week_number} style={{ ...S.card, borderLeft: `4px solid ${phaseColor}` }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                  <div>
+                    <h4 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: C.navy }}>
+                      Week {week.week_number}
+                    </h4>
+                    <div style={{ display: "flex", gap: 6, marginTop: 4 }}>
+                      <span style={{ fontSize: 10, fontWeight: 600, color: phaseColor, background: phaseColor + "14", padding: "2px 8px", borderRadius: 4 }}>
+                        {phaseName}
+                      </span>
+                      <span style={{ fontSize: 10, color: C.textLight }}>
+                        {week.exercises.length} exercise{week.exercises.length !== 1 ? "s" : ""}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => { setAddingToWeek(weekIdx); setShowAddModal(true); }}
+                    style={{ ...S.btn("primary"), padding: "6px 14px", fontSize: 11 }}>
+                    <span style={{ fontSize: 14 }}>⚕</span> Add Exercise
+                  </button>
+                </div>
+
+                <div style={S.grid(3)}>
+                  {week.exercises.map((ex, exIdx) => (
+                    <ProtocolExCard
+                      key={exIdx}
+                      entry={{ exercise: ex, sets: ex.sets, reps: ex.reps, frequency_per_day: ex.frequency, duration_seconds: ex.duration_minutes ? ex.duration_minutes * 60 : null, notes: ex.notes }}
+                      onRemove={() => removeExercise(weekIdx, exIdx)}
+                    />
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -508,7 +1310,7 @@ function GeneratorView() {
           }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
               <h3 style={{ margin: 0, color: "#0F4C81", fontSize: 16 }}>
-                Add Exercise to {addingToWeek?.replace(/_/g, " ")}
+                Add Exercise to Week {typeof addingToWeek === "number" ? addingToWeek + 1 : addingToWeek}
               </h3>
               <button onClick={() => { setShowAddModal(false); setExSearch(""); }}
                 style={{ background: "none", border: "none", cursor: "pointer", color: "#718096" }}>
@@ -526,7 +1328,7 @@ function GeneratorView() {
 
             <div style={{ overflowY: "auto", flex: 1 }}>
               {filteredEx.slice(0, 40).map(ex => (
-                <div key={ex.id}
+                <div key={ex.code}
                   onClick={() => addExercise(addingToWeek, ex)}
                   style={{
                     padding: "10px 12px", borderRadius: 8, cursor: "pointer",
@@ -539,8 +1341,8 @@ function GeneratorView() {
                   <div style={{ fontWeight: 600, fontSize: 13, color: "#1A202C" }}>{ex.name}</div>
                   <div style={{ display: "flex", gap: 5, marginTop: 4 }}>
                     <span style={S.badge("blue")}>{ex.category}</span>
-                    <span style={S.badge(ex.difficulty === "Easy" ? "green" : ex.difficulty === "Advanced" ? "orange" : "blue")}>
-                      {ex.difficulty}
+                    <span style={S.badge(ex.difficulty_level === "Easy" ? "green" : ex.difficulty_level === "Advanced" ? "orange" : "blue")}>
+                      {ex.difficulty_level}
                     </span>
                   </div>
                 </div>
@@ -659,7 +1461,7 @@ function EvidenceSection({ grade, refs }) {
 // ─────────────────────────────────────────────
 function ExerciseCard({ e }) {
   const [open, setOpen] = useState(false);
-  const diffColor = e.difficulty === "Easy" ? "green" : e.difficulty === "Advanced" ? "orange" : "blue";
+  const diffColor = e.difficulty_level === "Easy" ? "green" : e.difficulty_level === "Advanced" ? "orange" : "blue";
 
   return (
     <div style={{
@@ -677,7 +1479,7 @@ function ExerciseCard({ e }) {
         </div>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
           <span style={S.badge("blue")}>{e.category}</span>
-          <span style={S.badge(diffColor)}>{e.difficulty}</span>
+          <span style={S.badge(diffColor)}>{e.difficulty_level}</span>
         </div>
         {!open && e.description && (
           <p style={{ fontSize: 12, color: "#718096", margin: "8px 0 0", lineHeight: 1.5,
@@ -772,7 +1574,7 @@ function ExerciseCard({ e }) {
 
           {/* Contraindications + Progression */}
           <div style={{ ...S.grid(2), marginTop: 12 }}>
-            {e.contraindications?.length > 0 && (
+            {e.contraindications && (
               <div style={{ background: "#FFF5F5", borderRadius: 8, padding: 14 }}>
                 <div style={{ ...S.label, color: "#C53030", marginBottom: 8 }}>Contraindications</div>
                 <ul style={{ margin: 0, paddingLeft: 16 }}>
@@ -788,7 +1590,72 @@ function ExerciseCard({ e }) {
                 <p style={{ fontSize: 12, color: "#2B6CB0", margin: 0, lineHeight: 1.5 }}>{e.progression}</p>
               </div>
             )}
-            <EvidenceSection grade={e.evidence_grade} refs={e.evidence_refs} />
+          </div>
+
+          {/* Clinical Parameters — Dosage, Timing, Classification */}
+          {(e.clinical_parameters || e.clinical_classification) && (
+            <div style={{ marginTop: 12 }}>
+              <div style={{ ...S.label, color: "#0F4C81", marginBottom: 8 }}>Clinical Parameters</div>
+              <div style={S.grid(3)}>
+                {/* Dosage */}
+                {e.clinical_parameters?.dosage && (
+                  <div style={{ background: "#F0FFF4", borderRadius: 8, padding: 12 }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: "#276749", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 6 }}>Dosage</div>
+                    {Object.entries(e.clinical_parameters.dosage).map(([k, v]) => (
+                      <div key={k} style={{ fontSize: 11, color: "#2F855A", marginBottom: 3 }}>
+                        <span style={{ fontWeight: 600 }}>{k.replace(/_/g, " ")}:</span> {v}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {/* Post-Surgical Timing */}
+                {e.clinical_parameters?.post_surgical_timing && (
+                  <div style={{ background: "#EBF8FF", borderRadius: 8, padding: 12 }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: "#2B6CB0", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 6 }}>Post-Surgical Timing</div>
+                    {Object.entries(e.clinical_parameters.post_surgical_timing).map(([k, v]) => (
+                      <div key={k} style={{ fontSize: 11, color: "#2C5282", marginBottom: 3 }}>
+                        <span style={{ fontWeight: 600 }}>{k.replace(/_/g, " ")}:</span> {v}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {/* Classification */}
+                {e.clinical_classification && (
+                  <div style={{ background: "#FAF5FF", borderRadius: 8, padding: 12 }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: "#6B46C1", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 6 }}>Classification</div>
+                    <div style={{ fontSize: 11, color: "#553C9A", marginBottom: 3 }}>
+                      <span style={{ fontWeight: 600 }}>Type:</span> {e.clinical_classification.intervention_type}
+                    </div>
+                    {e.clinical_classification.rehab_phases?.length > 0 && (
+                      <div style={{ fontSize: 11, color: "#553C9A", marginBottom: 3 }}>
+                        <span style={{ fontWeight: 600 }}>Phases:</span> {e.clinical_classification.rehab_phases.join(", ")}
+                      </div>
+                    )}
+                    {e.clinical_classification.primary_indications?.length > 0 && (
+                      <div style={{ fontSize: 11, color: "#553C9A", marginBottom: 3 }}>
+                        <span style={{ fontWeight: 600 }}>Indications:</span> {e.clinical_classification.primary_indications.join(", ")}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Safety */}
+          {e.safety && (
+            <div style={{ background: "#FFFFF0", borderRadius: 8, padding: 14, marginTop: 12 }}>
+              <div style={{ ...S.label, color: "#975A16", marginBottom: 6 }}>Safety & Supervision</div>
+              <div style={{ display: "flex", gap: 12, flexWrap: "wrap", fontSize: 11, color: "#744210" }}>
+                {e.safety.risk_level && <span><strong>Risk:</strong> {e.safety.risk_level}</span>}
+                {e.safety.supervision_required && <span><strong>Supervision:</strong> {e.safety.supervision_required}</span>}
+              </div>
+            </div>
+          )}
+
+          {/* Evidence-Based References — FULL WIDTH */}
+          <div style={{ marginTop: 12 }}>
+            <EvidenceSection grade={e.evidence_base?.grade} refs={e.evidence_base?.references} />
           </div>
         </div>
       )}
@@ -836,7 +1703,7 @@ function ExercisesView() {
     (!search || e.name.toLowerCase().includes(search.toLowerCase()) ||
                 e.description?.toLowerCase().includes(search.toLowerCase())) &&
     (!filterCat  || e.category  === filterCat) &&
-    (!filterDiff || e.difficulty === filterDiff)
+    (!filterDiff || e.difficulty_level === filterDiff)
   );
 
   // Group by category
@@ -877,7 +1744,7 @@ function ExercisesView() {
       {!isSearching && exercises.length > 0 && (
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
           {["Easy","Moderate","Advanced"].map(d => {
-            const count = exercises.filter(e => e.difficulty === d).length;
+            const count = exercises.filter(e => e.difficulty_level === d).length;
             const color = d === "Easy" ? "green" : d === "Advanced" ? "orange" : "blue";
             return (
               <div key={d} style={{ ...S.card, margin: 0, padding: "10px 18px", flex: 1,
@@ -924,7 +1791,7 @@ function ExercisesView() {
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <div style={{ display: "flex", gap: 4 }}>
                   {["Easy","Moderate","Advanced"].map(d => {
-                    const n = exList.filter(e => e.difficulty === d).length;
+                    const n = exList.filter(e => e.difficulty_level === d).length;
                     if (!n) return null;
                     return <span key={d} style={{ ...S.badge(d === "Easy" ? "green" : d === "Advanced" ? "orange" : "blue"),
                       fontSize: 10 }}>{n} {d}</span>;
@@ -940,7 +1807,7 @@ function ExercisesView() {
             {!isCollapsed && (
               <div style={{ padding: 16 }}>
                 <div style={S.grid(3)}>
-                  {exList.map(e => <ExerciseCard key={e.id} e={e} />)}
+                  {exList.map(e => <ExerciseCard key={e.code} e={e} />)}
                 </div>
               </div>
             )}
@@ -962,13 +1829,13 @@ function SessionsView() {
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    axios.get(`${API}/clients`).then(r => setClients(r.data)).catch(() => {});
+    axios.get(`${API}/patients`).then(r => setClients(r.data)).catch(() => {});
     axios.get(`${API}/exercises`).then(r => setExercises(r.data)).catch(() => {});
   }, []);
 
   useEffect(() => {
     if (form.client_id) {
-      axios.get(`${API}/clients/${form.client_id}/sessions`)
+      axios.get(`${API}/patients/${form.client_id}/sessions`)
         .then(r => setSessions(r.data)).catch(() => {});
     }
   }, [form.client_id, saved]);
@@ -982,58 +1849,77 @@ function SessionsView() {
 
   return (
     <div>
+      {/* SOAP Note Entry */}
       <div style={S.card}>
-        <h3 style={{ margin: "0 0 20px", fontSize: 16, color: "#0F4C81" }}>Log Session</h3>
+        <div style={S.sectionHeader(C.teal)}>
+          <FiClipboard size={13} /> New Session — SOAP Note Entry
+        </div>
         <form onSubmit={submit}>
           <div style={S.grid(2)}>
             <div>
-              <label style={S.label}>Client</label>
+              <label style={S.label}>Patient</label>
               <select style={{ ...S.select, width: "100%" }} value={form.client_id}
                 onChange={e => setForm({ ...form, client_id: e.target.value })} required>
-                <option value="">Select patient…</option>
-                {clients.map(c => <option key={c.id} value={c.id}>{c.dog_name} ({c.owner_name})</option>)}
+                <option value="">Select patient...</option>
+                {clients.map(c => <option key={c.id} value={c.id}>{c.name} — {c.condition || "N/A"} ({c.client_name || "N/A"})</option>)}
               </select>
             </div>
             <div>
-              <label style={S.label}>Exercise</label>
+              <label style={S.label}>Exercise Performed</label>
               <select style={{ ...S.select, width: "100%" }} value={form.exercise_id}
                 onChange={e => setForm({ ...form, exercise_id: e.target.value })} required>
-                <option value="">Select exercise…</option>
-                {exercises.map(ex => <option key={ex.id} value={ex.id}>{ex.name}</option>)}
+                <option value="">Select exercise...</option>
+                {exercises.map(ex => <option key={ex.code} value={ex.code}>{ex.name} ({ex.category})</option>)}
               </select>
             </div>
+          </div>
+          <div style={{ ...S.grid(3), marginTop: 12 }}>
             <div>
-              <label style={S.label}>Pain Score (0–10)</label>
-              <input style={S.input} type="number" min="0" max="10" value={form.pain_score}
-                onChange={e => setForm({ ...form, pain_score: e.target.value })} placeholder="0" />
+              <label style={S.label}>Pain Score (0–10 VAS)</label>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <input style={{ ...S.input, flex: 1 }} type="range" min="0" max="10" value={form.pain_score || 0}
+                  onChange={e => setForm({ ...form, pain_score: e.target.value })} />
+                <span style={{
+                  fontSize: 14, fontWeight: 700, minWidth: 38, textAlign: "center", padding: "2px 8px", borderRadius: 6,
+                  background: +(form.pain_score||0) <= 3 ? C.greenBg : +(form.pain_score||0) <= 6 ? C.amberBg : C.redBg,
+                  color: +(form.pain_score||0) <= 3 ? C.green : +(form.pain_score||0) <= 6 ? C.amber : C.red,
+                }}>
+                  {form.pain_score || 0}/10
+                </span>
+              </div>
             </div>
-            <div>
-              <label style={S.label}>Notes</label>
+            <div style={{ gridColumn: "2 / 4" }}>
+              <label style={S.label}>Objective Notes (O)</label>
               <input style={S.input} value={form.notes}
-                onChange={e => setForm({ ...form, notes: e.target.value })} placeholder="Observations…" />
+                onChange={e => setForm({ ...form, notes: e.target.value })}
+                placeholder="ROM measurements, gait observations, weight bearing status, tolerance..." />
             </div>
           </div>
-          <button type="submit" style={{ ...S.btn("primary"), marginTop: 20 }}>
-            <FiClipboard size={14} /> Log Session
-          </button>
+          <div style={{ marginTop: 16 }}>
+            <button type="submit" style={S.btn("success")}>
+              <FiCheckCircle size={14} /> Save Session Record
+            </button>
+          </div>
         </form>
       </div>
 
+      {/* Session History */}
       {sessions.length > 0 && (
-        <div style={S.card}>
-          <h4 style={{ margin: "0 0 16px", fontSize: 13, fontWeight: 700, color: "#0F4C81",
-            textTransform: "uppercase", letterSpacing: "0.6px" }}>
-            Recent Sessions
-          </h4>
+        <div style={{ ...S.card, padding: 0, overflow: "hidden" }}>
+          <div style={{ padding: "14px 20px", borderBottom: `1px solid ${C.border}` }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: C.navy, textTransform: "uppercase", letterSpacing: "0.8px" }}>
+              Treatment History — {sessions.length} session{sessions.length !== 1 ? "s" : ""}
+            </div>
+          </div>
           <table style={S.table}>
             <thead>
-              <tr>{["Exercise", "Pain Score", "Completed", "Date", "Notes"].map(h =>
+              <tr>{["Exercise", "Pain (VAS)", "Status", "Date", "Clinical Notes"].map(h =>
                 <th key={h} style={S.th}>{h}</th>)}</tr>
             </thead>
             <tbody>
               {sessions.map(s => (
                 <tr key={s.id}>
-                  <td style={S.td}><strong>{s.exercises?.name || "—"}</strong></td>
+                  <td style={S.td}><strong style={{ color: C.navy }}>{s.exercises?.name || "—"}</strong></td>
                   <td style={S.td}>
                     {s.pain_score != null ? (
                       <span style={S.badge(s.pain_score <= 3 ? "green" : s.pain_score <= 6 ? "blue" : "orange")}>
@@ -1043,11 +1929,15 @@ function SessionsView() {
                   </td>
                   <td style={S.td}>
                     <span style={S.badge(s.completed ? "green" : "orange")}>
-                      {s.completed ? "Yes" : "No"}
+                      {s.completed ? "Completed" : "Incomplete"}
                     </span>
                   </td>
-                  <td style={S.td} >{new Date(s.performed_at).toLocaleDateString()}</td>
-                  <td style={{ ...S.td, color: "#718096" }}>{s.notes || "—"}</td>
+                  <td style={S.td}>
+                    <span style={{ fontSize: 12, color: C.textMid }}>
+                      {new Date(s.performed_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                    </span>
+                  </td>
+                  <td style={{ ...S.td, color: C.textMid, fontStyle: s.notes ? "normal" : "italic" }}>{s.notes || "No notes recorded"}</td>
                 </tr>
               ))}
             </tbody>
@@ -1182,6 +2072,113 @@ function SettingsView({ setBrand }) {
 }
 
 // ─────────────────────────────────────────────
+// LIVE EKG MONITOR — canvas-based scrolling ECG
+// ─────────────────────────────────────────────
+function EKGMonitor() {
+  const canvasRef = React.useRef(null);
+
+  React.useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    const W = canvas.width;
+    const H = canvas.height;
+    const midY = H * 0.50;
+    const amp  = H * 0.38;
+    const BEAT_W = 86;   // pixels per heartbeat cycle
+    const SPEED  = 1.3;  // pixels advanced per animation frame
+    let t = 0;
+    let animId;
+
+    // Offscreen buffer — holds the scrolling trace
+    const buf = document.createElement("canvas");
+    buf.width = W; buf.height = H;
+    const bCtx = buf.getContext("2d");
+    bCtx.fillStyle = "#020810";
+    bCtx.fillRect(0, 0, W, H);
+
+    // Classic PQRST waveform — returns -1..+1
+    function ecgY(phase) {
+      const p = ((phase % 1) + 1) % 1;
+      if (p < 0.07) return 0;
+      // P wave
+      if (p < 0.17) return 0.18 * Math.sin((p - 0.07) * Math.PI / 0.10);
+      if (p < 0.25) return 0;
+      // Q dip
+      if (p < 0.30) return -0.22 * Math.sin((p - 0.25) * Math.PI / 0.05);
+      // R spike — sharp tall peak
+      if (p < 0.38) {
+        const rp = (p - 0.30) / 0.08;
+        return rp < 0.44 ? rp / 0.44 : (1 - rp) / 0.56;
+      }
+      // S dip
+      if (p < 0.44) return -0.24 * Math.sin((p - 0.38) * Math.PI / 0.06);
+      if (p < 0.52) return 0;
+      // T wave — smooth rounded hump
+      if (p < 0.74) return 0.30 * Math.sin((p - 0.52) * Math.PI / 0.22);
+      return 0;
+    }
+
+    function drawFrame() {
+      // ── Scroll buffer left by SPEED px ──
+      bCtx.drawImage(buf, -SPEED, 0);
+      bCtx.clearRect(W - SPEED - 1, 0, SPEED + 2, H);
+
+      // Draw new segment at right edge
+      const prevY = midY - ecgY((t - SPEED) / BEAT_W) * amp;
+      const curY  = midY - ecgY(t / BEAT_W) * amp;
+      bCtx.beginPath();
+      bCtx.strokeStyle = "#10b981";
+      bCtx.lineWidth   = 1.8;
+      bCtx.shadowBlur  = 9;
+      bCtx.shadowColor = "rgba(16,185,129,0.75)";
+      bCtx.moveTo(W - SPEED - 1, prevY);
+      bCtx.lineTo(W - 1, curY);
+      bCtx.stroke();
+
+      // ── Render to main canvas ──
+      ctx.fillStyle = "#020810";
+      ctx.fillRect(0, 0, W, H);
+
+      // ECG grid (fine squares like a real monitor)
+      ctx.strokeStyle = "rgba(16,185,129,0.09)";
+      ctx.lineWidth   = 0.5;
+      for (let gx = 0; gx < W; gx += 16) {
+        ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, H); ctx.stroke();
+      }
+      for (let gy = 0; gy < H; gy += 12) {
+        ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(W, gy); ctx.stroke();
+      }
+
+      // Draw scrolling trace
+      ctx.drawImage(buf, 0, 0);
+
+      // Glowing cursor dot at current draw position
+      ctx.beginPath();
+      ctx.arc(W - 1, curY, 3.2, 0, Math.PI * 2);
+      ctx.fillStyle  = "#34d399";
+      ctx.shadowBlur = 18;
+      ctx.shadowColor = "#10b981";
+      ctx.fill();
+
+      t += SPEED;
+      animId = requestAnimationFrame(drawFrame);
+    }
+
+    drawFrame();
+    return () => cancelAnimationFrame(animId);
+  }, []);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      width={268} height={54}
+      style={{ display: "block", width: "100%", borderRadius: 3 }}
+    />
+  );
+}
+
+// ─────────────────────────────────────────────
 // WELCOME / SPLASH VIEW
 // ─────────────────────────────────────────────
 function WelcomeView({ onEnter }) {
@@ -1190,145 +2187,288 @@ function WelcomeView({ onEnter }) {
   return (
     <div style={{
       position: "fixed", inset: 0, zIndex: 1000,
-      backgroundImage: "url('/welcome-platform.png')",
-      backgroundSize: "cover", backgroundPosition: "center",
-      display: "flex", flexDirection: "column",
-      alignItems: "center", justifyContent: "center",
+      background: "#030c18",
     }}>
-      {/* Dark gradient overlay */}
+      {/* ── BACKGROUND IMAGE — isolated in its own div so filter ONLY hits the image ── */}
       <div style={{
         position: "absolute", inset: 0,
-        background: "linear-gradient(to bottom, rgba(0,0,0,0.72) 0%, rgba(4,18,34,0.55) 45%, rgba(0,0,0,0.82) 100%)"
+        backgroundImage: "url('/welcome-platform.png')",
+        backgroundSize: "contain", backgroundPosition: "center center", backgroundRepeat: "no-repeat",
+        filter: "contrast(1.55) brightness(1.28) saturate(1.9)",
       }} />
 
-      {/* Content */}
-      <div style={{ position: "relative", zIndex: 2, textAlign: "center", padding: "0 24px", maxWidth: 720 }}>
+      {/* Teal screen-blend boost — amplifies the cyan laser arms and HUD panels */}
+      <div style={{
+        position: "absolute", inset: 0,
+        background: "radial-gradient(ellipse at 50% 52%, rgba(0,210,255,0.10) 0%, transparent 68%)",
+        mixBlendMode: "screen",
+        pointerEvents: "none",
+      }} />
 
-        {/* Top badge */}
-        <div style={{
-          display: "inline-flex", alignItems: "center", gap: 8,
-          background: "rgba(14,165,233,0.12)", border: "1px solid rgba(14,165,233,0.35)",
-          borderRadius: 40, padding: "6px 20px", marginBottom: 32,
-          color: "#0EA5E9", fontSize: 12, fontWeight: 700, letterSpacing: "1.2px",
-          textTransform: "uppercase"
-        }}>
-          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#0EA5E9",
-            boxShadow: "0 0 8px #0EA5E9", display: "inline-block" }} />
-          Evidence-Based Canine Rehabilitation
-        </div>
+      {/* Subtle edge vignette — keeps corners from blowing out, center stays fully open */}
+      <div style={{
+        position: "absolute", inset: 0,
+        background: "radial-gradient(ellipse at 50% 50%, transparent 50%, rgba(0,0,0,0.38) 100%)",
+        pointerEvents: "none",
+      }} />
 
-        {/* Main title */}
+      {/* ── TOP HEADER ── K9 Rehab Pro + bubble centered at top */}
+      <div style={{
+        position: "absolute", top: 0, left: 0, right: 0, zIndex: 3,
+        display: "flex", flexDirection: "column", alignItems: "center",
+        paddingTop: 28,
+      }}>
+        {/* Brand title — futuristic Exo 2 font, reduced size */}
         <h1 style={{
-          fontSize: 62, fontWeight: 900, margin: "0 0 8px",
-          color: "#fff", letterSpacing: "-1px", lineHeight: 1.05,
-          textShadow: "0 2px 40px rgba(14,165,233,0.4)"
+          fontFamily: "'Exo 2', 'Orbitron', 'Segoe UI', sans-serif",
+          fontSize: 38, fontWeight: 900, margin: "0 0 12px",
+          color: "#fff", letterSpacing: "4px", lineHeight: 1,
+          textTransform: "uppercase",
+          textShadow:
+            "0 0 20px rgba(14,165,233,0.8), " +
+            "0 0 40px rgba(14,165,233,0.4), " +
+            "0 2px 0 rgba(0,80,140,0.9), " +
+            "0 4px 8px rgba(0,0,0,0.6)",
         }}>
-          K9 Rehab Pro
+          K9 Rehab Pro&#8482;
         </h1>
-        <p style={{
-          fontSize: 18, color: "#94C8E8", fontWeight: 400,
-          margin: "0 0 48px", letterSpacing: "0.3px"
-        }}>
-          Clinical Rehabilitation Platform for Veterinary Professionals
-        </p>
 
-        {/* Stats row */}
+        {/* Teal bubble with veterinary caduceus */}
         <div style={{
-          display: "flex", justifyContent: "center", gap: 0,
-          marginBottom: 56, borderRadius: 12, overflow: "hidden",
-          border: "1px solid rgba(14,165,233,0.2)",
-          background: "rgba(4,18,34,0.7)", backdropFilter: "blur(12px)"
+          display: "inline-flex", alignItems: "center", gap: 10,
+          background: "rgba(14,165,233,0.14)",
+          border: "1px solid rgba(14,165,233,0.45)",
+          borderRadius: 40, padding: "7px 22px",
+          backdropFilter: "blur(10px)",
+          color: "#0EA5E9", fontSize: 12, fontWeight: 700,
+          letterSpacing: "1.4px", textTransform: "uppercase",
         }}>
-          {[
-            { val: "195", label: "Exercises" },
-            { val: "30+", label: "Peer-Reviewed Citations" },
-            { val: "6",   label: "Condition Protocols" },
-            { val: "A",   label: "Grade Evidence" },
-          ].map((s, i) => (
-            <div key={i} style={{
-              flex: 1, padding: "20px 16px", borderRight: i < 3 ? "1px solid rgba(14,165,233,0.15)" : "none",
-              textAlign: "center"
-            }}>
-              <div style={{ fontSize: 28, fontWeight: 800, color: "#0EA5E9",
-                textShadow: "0 0 20px rgba(14,165,233,0.5)", lineHeight: 1 }}>
-                {s.val}
-              </div>
-              <div style={{ fontSize: 10, color: "#7FB3CC", marginTop: 5,
-                textTransform: "uppercase", letterSpacing: "0.8px", fontWeight: 600 }}>
-                {s.label}
-              </div>
-            </div>
-          ))}
+          {/* Rod of Asclepius — veterinary symbol, CSS 3D depth */}
+          <span style={{
+            fontSize: 18, lineHeight: 1, display: "inline-block",
+            color: "#38BDF8",
+            textShadow:
+              "0 1px 0 #0c8ac0, " +
+              "0 2px 0 #0a7aad, " +
+              "0 3px 0 #085e8a, " +
+              "0 4px 6px rgba(0,0,0,0.5), " +
+              "0 0 12px rgba(56,189,248,0.8)",
+            filter: "drop-shadow(0 0 6px rgba(14,165,233,0.9))",
+          }}>⚕</span>
+          Evidence-Based Canine Exercise Protocols
         </div>
+      </div>
 
-        {/* CTA Button */}
+      {/* All welcome-screen keyframes */}
+      <style>{`
+        /* ── Button pulse glow ── */
+        @keyframes welcomePulse {
+          0%, 100% {
+            box-shadow: 0 0 14px rgba(14,165,233,0.45), 0 0 28px rgba(14,165,233,0.2), inset 0 0 12px rgba(14,165,233,0.08);
+          }
+          50% {
+            box-shadow: 0 0 28px rgba(14,165,233,0.75), 0 0 56px rgba(14,165,233,0.35), 0 0 80px rgba(14,165,233,0.15), inset 0 0 20px rgba(14,165,233,0.12);
+          }
+        }
+        .welcome-enter-btn {
+          animation: welcomePulse 2.4s ease-in-out infinite;
+        }
+        .welcome-enter-btn:hover {
+          animation: none !important;
+          box-shadow: 0 0 40px rgba(14,165,233,0.8), 0 0 70px rgba(14,165,233,0.4) !important;
+        }
+
+        /* ── Electric scan lines ── */
+        @keyframes sweepDown1 {
+          0%   { transform: translateY(-4px); opacity: 0; }
+          4%   { opacity: 0.85; }
+          96%  { opacity: 0.65; }
+          100% { transform: translateY(100vh); opacity: 0; }
+        }
+        @keyframes sweepDown2 {
+          0%   { transform: translateY(-4px); opacity: 0; }
+          4%   { opacity: 0.4; }
+          96%  { opacity: 0.28; }
+          100% { transform: translateY(100vh); opacity: 0; }
+        }
+        @keyframes sweepDown3 {
+          0%   { transform: translateY(-4px); opacity: 0; }
+          4%   { opacity: 0.55; }
+          96%  { opacity: 0.4; }
+          100% { transform: translateY(100vh); opacity: 0; }
+        }
+        @keyframes sweepRight1 {
+          0%   { transform: translateX(-4px); opacity: 0; }
+          4%   { opacity: 0.6; }
+          96%  { opacity: 0.45; }
+          100% { transform: translateX(100vw); opacity: 0; }
+        }
+        @keyframes sweepRight2 {
+          0%   { transform: translateX(-4px); opacity: 0; }
+          4%   { opacity: 0.3; }
+          96%  { opacity: 0.2; }
+          100% { transform: translateX(100vw); opacity: 0; }
+        }
+        @keyframes boltFlash {
+          0%, 80%, 100% { opacity: 0; }
+          82% { opacity: 0.55; }
+          84% { opacity: 0.05; }
+          86% { opacity: 0.45; }
+          88% { opacity: 0; }
+        }
+      `}</style>
+
+      {/* ── Electric pulse overlay — pointer-events none so it never blocks clicks ── */}
+      <div style={{ position: "absolute", inset: 0, zIndex: 2, overflow: "hidden", pointerEvents: "none" }}>
+
+        {/* Scan line 1 — sharp bright, fast (3.2s) */}
+        <div style={{
+          position: "absolute", top: 0, left: 0, right: 0, height: 1,
+          background: "linear-gradient(to right, transparent 0%, rgba(14,165,233,0.0) 5%, rgba(14,165,233,0.7) 35%, rgba(96,220,255,0.95) 50%, rgba(14,165,233,0.7) 65%, rgba(14,165,233,0.0) 95%, transparent 100%)",
+          boxShadow: "0 0 6px 1px rgba(14,165,233,0.55)",
+          animation: "sweepDown1 3.2s linear infinite",
+          animationDelay: "0s",
+        }} />
+
+        {/* Scan line 2 — dimmer, slower (6.8s) */}
+        <div style={{
+          position: "absolute", top: 0, left: 0, right: 0, height: 1,
+          background: "linear-gradient(to right, transparent 0%, rgba(56,189,248,0.0) 10%, rgba(56,189,248,0.45) 40%, rgba(56,189,248,0.6) 50%, rgba(56,189,248,0.45) 60%, rgba(56,189,248,0.0) 90%, transparent 100%)",
+          animation: "sweepDown2 6.8s linear infinite",
+          animationDelay: "1.9s",
+        }} />
+
+        {/* Scan line 3 — medium, medium-speed (5.1s) */}
+        <div style={{
+          position: "absolute", top: 0, left: 0, right: 0, height: 2,
+          background: "linear-gradient(to right, transparent 0%, rgba(14,165,233,0.0) 15%, rgba(14,165,233,0.5) 45%, rgba(14,165,233,0.65) 50%, rgba(14,165,233,0.5) 55%, rgba(14,165,233,0.0) 85%, transparent 100%)",
+          boxShadow: "0 0 10px 2px rgba(14,165,233,0.25)",
+          animation: "sweepDown3 5.1s linear infinite",
+          animationDelay: "4.3s",
+        }} />
+
+        {/* Vertical sweep 1 — left to right, slow (7.5s) */}
+        <div style={{
+          position: "absolute", left: 0, top: 0, bottom: 0, width: 1,
+          background: "linear-gradient(to bottom, transparent 0%, rgba(14,165,233,0.0) 8%, rgba(14,165,233,0.55) 35%, rgba(96,220,255,0.8) 50%, rgba(14,165,233,0.55) 65%, rgba(14,165,233,0.0) 92%, transparent 100%)",
+          boxShadow: "0 0 6px 1px rgba(14,165,233,0.4)",
+          animation: "sweepRight1 7.5s linear infinite",
+          animationDelay: "2.6s",
+        }} />
+
+        {/* Vertical sweep 2 — dim, faster (4.4s) */}
+        <div style={{
+          position: "absolute", left: 0, top: 0, bottom: 0, width: 1,
+          background: "linear-gradient(to bottom, transparent 0%, rgba(56,189,248,0.0) 15%, rgba(56,189,248,0.35) 40%, rgba(56,189,248,0.5) 50%, rgba(56,189,248,0.35) 60%, rgba(56,189,248,0.0) 85%, transparent 100%)",
+          animation: "sweepRight2 4.4s linear infinite",
+          animationDelay: "0.7s",
+        }} />
+
+        {/* Edge bolt flash — brief crackle every ~5s */}
+        <div style={{
+          position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
+          background: "radial-gradient(ellipse at 50% 55%, rgba(14,165,233,0.06) 0%, transparent 70%)",
+          animation: "boltFlash 5.3s ease-in-out infinite",
+          animationDelay: "1.1s",
+        }} />
+        <div style={{
+          position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
+          background: "radial-gradient(ellipse at 50% 55%, rgba(96,220,255,0.05) 0%, transparent 65%)",
+          animation: "boltFlash 7.2s ease-in-out infinite",
+          animationDelay: "3.5s",
+        }} />
+      </div>
+
+      {/* ── BOTTOM RIGHT ── Enter Platform button — bubble style */}
+      <div style={{
+        position: "absolute", bottom: 48, right: 52, zIndex: 3,
+      }}>
         <button
+          className="welcome-enter-btn"
           onClick={onEnter}
           onMouseEnter={() => setHovering(true)}
           onMouseLeave={() => setHovering(false)}
           style={{
+            fontFamily: "'Exo 2', sans-serif",
+            display: "inline-flex", alignItems: "center", gap: 10,
             background: hovering
-              ? "linear-gradient(135deg, #0EA5E9 0%, #0F4C81 100%)"
-              : "linear-gradient(135deg, #0F4C81 0%, #0c3a63 100%)",
-            border: "1px solid rgba(14,165,233,0.5)",
-            color: "#fff", fontSize: 16, fontWeight: 700,
-            padding: "16px 52px", borderRadius: 10, cursor: "pointer",
-            letterSpacing: "0.5px", transition: "all 0.2s",
-            boxShadow: hovering
-              ? "0 0 40px rgba(14,165,233,0.5), 0 8px 32px rgba(0,0,0,0.4)"
-              : "0 0 20px rgba(14,165,233,0.2), 0 4px 16px rgba(0,0,0,0.4)",
+              ? "rgba(14,165,233,0.28)"
+              : "rgba(14,165,233,0.14)",
+            border: "1px solid rgba(14,165,233,0.55)",
+            borderRadius: 40,
+            backdropFilter: "blur(12px)",
+            color: "#0EA5E9", fontSize: 13, fontWeight: 700,
+            padding: "10px 28px",
+            cursor: "pointer",
+            letterSpacing: "1.6px", textTransform: "uppercase",
+            transition: "background 0.22s, transform 0.22s",
             transform: hovering ? "translateY(-2px)" : "none",
           }}
         >
-          Enter Platform  →
+          <span style={{
+            fontSize: 16, lineHeight: 1,
+            textShadow:
+              "0 1px 0 #0c8ac0, 0 2px 0 #0a7aad, " +
+              "0 3px 4px rgba(0,0,0,0.4), 0 0 10px rgba(56,189,248,0.8)",
+            filter: "drop-shadow(0 0 4px rgba(14,165,233,0.9))",
+          }}>⚕</span>
+          Enter Platform →
         </button>
-
-        {/* Bottom line */}
-        <p style={{ marginTop: 32, fontSize: 11, color: "#4a7a99", letterSpacing: "0.5px" }}>
-          CCRP · CCRT · DVM  ·  Built on Millis &amp; Levine standards
-        </p>
       </div>
-
-      {/* Corner scan lines — decorative */}
-      {[["top","left"],["top","right"],["bottom","left"],["bottom","right"]].map(([v,h],i) => (
-        <div key={i} style={{
-          position: "absolute", [v]: 28, [h]: 28,
-          width: 40, height: 40,
-          borderTop: v === "top" ? "2px solid rgba(14,165,233,0.4)" : "none",
-          borderBottom: v === "bottom" ? "2px solid rgba(14,165,233,0.4)" : "none",
-          borderLeft: h === "left" ? "2px solid rgba(14,165,233,0.4)" : "none",
-          borderRight: h === "right" ? "2px solid rgba(14,165,233,0.4)" : "none",
-        }} />
-      ))}
     </div>
   );
 }
 
 // ─────────────────────────────────────────────
-// SIDEBAR NAV ITEM
+// TOP NAVIGATION
 // ─────────────────────────────────────────────
 const NAV = [
-  { id: "clients",   label: "Clients",            icon: FiUsers },
-  { id: "generator", label: "Protocol Generator", icon: FiActivity },
-  { id: "exercises", label: "Exercise Library",   icon: FiBookOpen },
-  { id: "sessions",  label: "Session Logs",       icon: FiClipboard },
-  { id: "settings",  label: "Settings",           icon: FiSettings },
+  { id: "generator", label: "Protocol Generator", icon: FiFileText,   desc: "Clinical intake & protocol" },
+  { id: "clients",   label: "Patient Records",    icon: FiUsers,      desc: "Patient database" },
+  { id: "exercises", label: "Exercise Library",    icon: FiBookOpen,   desc: "195 evidence-based exercises" },
+  { id: "sessions",  label: "Session SOAP Notes",  icon: FiClipboard, desc: "Treatment documentation" },
+  { id: "settings",  label: "Clinic Settings",    icon: FiSettings,   desc: "Configuration" },
 ];
 
 const PAGE_TITLES = {
-  clients:   { title: "Clients",            sub: "Manage patients and their programs" },
-  generator: { title: "Protocol Generator", sub: "Generate evidence-based rehab plans" },
-  exercises: { title: "Exercise Library",   sub: "Browse and filter all exercises" },
-  sessions:  { title: "Session Logs",       sub: "Track and record therapy sessions" },
-  settings:  { title: "Settings",           sub: "Clinic branding and configuration" },
+  generator: { title: "K9 Exercise Protocols", sub: "Evidence-Based Vet-Recommended Exercise Protocols" },
+  clients:   { title: "Patient Records",                    sub: "Canine rehabilitation patient database and medical histories" },
+  exercises: { title: "Exercise Library",                   sub: "195 peer-reviewed therapeutic exercises with clinical parameters" },
+  sessions:  { title: "Session SOAP Notes",                 sub: "Subjective, Objective, Assessment, Plan — treatment documentation" },
+  settings:  { title: "Clinic Configuration",               sub: "Practice branding, contact information, and platform settings" },
 };
+
+function TopNav({ view, setView, brand }) {
+  return (
+    <div style={S.topNav}>
+      <div style={S.topNavBrand}>
+        <img src="/favicon.png" alt="K9 Rehab Pro"
+          style={{ width: 32, height: 32, filter: "drop-shadow(0 0 6px rgba(14,165,233,0.6))" }} />
+        <span>{brand.clinicName || "K9 Rehab Pro\u2122"}</span>
+      </div>
+      <div style={S.topNavLinks}>
+        {NAV.map(({ id, label, icon: Icon }) => (
+          <div key={id} style={S.topNavItem(view === id)} onClick={() => setView(id)}>
+            <Icon size={13} /> <span>{label}</span>
+          </div>
+        ))}
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", cursor: "pointer" }}
+          onClick={() => setView("welcome")}>
+          <FiStar size={11} style={{ marginRight: 4 }} /> Preview
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // ─────────────────────────────────────────────
 // APP
 // ─────────────────────────────────────────────
 export default function App() {
   const [view, setView] = useState("welcome");
-  const [brand, setBrand] = useState({ clinicName: "K9 Rehab Pro", accent: "#0F4C81" });
+  const [brand, setBrand] = useState({ clinicName: "K9 Rehab Pro™", accent: "#0F4C81" });
 
   const views = {
     clients:   <ClientsView />,
@@ -1342,38 +2482,32 @@ export default function App() {
     return <WelcomeView onEnter={() => setView("generator")} />;
   }
 
+  const now = new Date();
+  const dateStr = now.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+
   return (
     <div style={S.app}>
-      {/* SIDEBAR */}
-      <div style={S.sidebar}>
-        <div style={S.brand}>
-          <p style={S.brandTitle}>{brand.clinicName || "K9 Rehab Pro"}</p>
-          <p style={S.brandSub}>Rehabilitation Platform</p>
-        </div>
-        <nav style={S.nav}>
-          {NAV.map(({ id, label, icon: Icon }) => (
-            <div key={id} style={S.navItem(view === id)} onClick={() => setView(id)}>
-              <Icon size={16} />
-              {label}
-            </div>
-          ))}
-        </nav>
-        <div style={S.navBottom}>
-          <div style={S.navItem(false)}>
-            <FiLogOut size={16} /> Sign Out
-          </div>
-        </div>
-      </div>
+      {/* TOP NAV — replaces sidebar */}
+      <TopNav view={view} setView={setView} brand={brand} />
 
       {/* MAIN */}
       <div style={S.main}>
+        {/* Top bar — clinical header */}
         <div style={S.topbar}>
           <div>
-            <h1 style={S.pageTitle}>{PAGE_TITLES[view].title}</h1>
-            <p style={{ ...S.pageSub, margin: 0 }}>{PAGE_TITLES[view].sub}</p>
+            <h1 style={S.pageTitle}>{PAGE_TITLES[view]?.title}</h1>
+            <p style={{ ...S.pageSub, margin: 0 }}>{PAGE_TITLES[view]?.sub}</p>
+          </div>
+          <div style={{ textAlign: "right" }}>
+            <div style={{ fontSize: 11, color: C.textLight, fontWeight: 500 }}>{dateStr}</div>
+            <div style={{ fontSize: 10, color: C.teal, fontWeight: 600, marginTop: 2 }}>
+              <FiHeart size={9} style={{ marginRight: 3 }} />
+              Clinical Session Active
+            </div>
           </div>
         </div>
-        <div style={S.content}>
+
+        <div style={S.content} data-content-scroll>
           {views[view]}
         </div>
       </div>

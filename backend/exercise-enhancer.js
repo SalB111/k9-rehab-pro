@@ -14,6 +14,8 @@ const {
 
 const { EXERCISE_EVIDENCE_MAP, CORE_REFERENCES } = require('./evidence-references');
 
+const { getVideosByExerciseCode } = require('./video-references');
+
 // ============================================================================
 // CATEGORY TO INTERVENTION TYPE MAPPING
 // ============================================================================
@@ -158,10 +160,12 @@ function enhanceExercise(exercise) {
   };
 
   // Build client education
+  const videoMetadata = getVideosByExerciseCode(exercise.code);
   enhanced.client_education = {
     home_program_suitable: inferHomeProgramSuitability(exercise),
     teaching_time: '15-20 minutes',
-    video_available: false,
+    video_available: videoMetadata !== null && videoMetadata.angles && videoMetadata.angles.length > 0,
+    video_metadata: videoMetadata, // Full video metadata including angles, annotations, transcripts
     handout_available: false,
     key_teaching_points: [
       'Always warm up before starting',
