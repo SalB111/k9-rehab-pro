@@ -76,17 +76,19 @@ const S = {
   wizardStep: (state) => ({
     display: "flex", alignItems: "center", gap: 8,
     padding: "6px 16px", fontSize: 12, fontWeight: 600,
-    color: state === "active" ? C.teal : state === "done" ? C.green : C.textLight,
-    cursor: state === "done" ? "pointer" : "default",
+    color: state === "active" ? "#0EA5E9" : state === "done" ? "#10B981" : C.textLight,
+    cursor: "pointer",
+    transition: "all 0.2s ease",
   }),
   wizardDot: (state) => ({
     width: 32, height: 32, borderRadius: "50%",
     display: "flex", alignItems: "center", justifyContent: "center",
     fontSize: 13, fontWeight: 700,
-    background: state === "active" ? C.teal : state === "done" ? C.green : C.bg,
+    background: state === "active" ? "#0EA5E9" : state === "done" ? "#10B981" : C.bg,
     color: state === "active" || state === "done" ? "#fff" : C.textLight,
     border: state === "pending" ? `2px solid ${C.border}` : "none",
-    boxShadow: state === "active" ? `0 0 12px rgba(14,165,233,0.5), 0 0 24px rgba(14,165,233,0.25)` : state === "done" ? `0 0 8px rgba(5,150,105,0.35)` : "none",
+    boxShadow: state === "active" ? `0 0 12px rgba(14,165,233,0.6), 0 0 24px rgba(14,165,233,0.3)` : state === "done" ? `0 0 10px rgba(16,185,129,0.5), 0 0 20px rgba(16,185,129,0.2)` : "none",
+    animation: state === "active" ? "wizardPulse 2s ease-in-out infinite" : "none",
     transition: "all 0.4s ease",
   }),
   wizardLine: (done) => ({
@@ -107,8 +109,8 @@ const S = {
     display: "flex", alignItems: "center", justifyContent: "space-between",
     minHeight: 56,
   },
-  pageTitle: { fontSize: 22, fontWeight: 800, margin: 0, color: C.navy, letterSpacing: "0.3px" },
-  pageSub: { fontSize: 12, color: C.text, marginTop: 2, fontWeight: 300 },
+  pageTitle: { fontSize: 17, fontWeight: 800, margin: 0, color: C.navy, letterSpacing: "0.3px" },
+  pageSub: { fontSize: 9, color: C.text, marginTop: 2, fontWeight: 300 },
   content: { flex: 1, overflow: "auto", padding: "24px 32px" },
   // ── SHARED COMPONENTS ──
   card: {
@@ -119,8 +121,8 @@ const S = {
   sectionHeader: () => ({
     display: "flex", alignItems: "center", gap: 8,
     padding: "10px 0", marginBottom: 16,
-    borderBottom: "2px solid #1E3A5F",
-    fontSize: 13, fontWeight: 800, color: "#000",
+    borderBottom: "2px solid #0EA5E9",
+    fontSize: 13, fontWeight: 800, color: "#E2E8F0",
     textTransform: "uppercase", letterSpacing: "1.2px",
   }),
   btn: (variant = "primary") => ({
@@ -155,7 +157,7 @@ const S = {
     display: "grid", gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: 16,
   }),
   label: {
-    fontSize: 11, fontWeight: 600, color: "#000",
+    fontSize: 11, fontWeight: 600, color: "#CBD5E1",
     textTransform: "uppercase", letterSpacing: "0.6px",
     marginBottom: 6, display: "block",
   },
@@ -538,6 +540,22 @@ function GeneratorView() {
     slingAssistRequired: false,
     incisionStatus: "Clean/Dry/Intact",
     sutureRemovalDate: "",
+    // Patient Extras (Section 1)
+    allergies: "",
+    temperament: "Cooperative",
+    // Objective Measurements (Section 2 — Millis & Levine)
+    circumferenceAffected: "", circumferenceContralateral: "", circumferenceSite: "15cm proximal to patella",
+    romFlexion: "", romExtension: "", romJoint: "",
+    jointEffusion: "0", muscleCondition: "Normal",
+    neuroProprioception: "", neuroWithdrawal: "", neuroDeepPain: "", neuroMotorGrade: "",
+    // Treatment Goals (Section 3)
+    rehabGoals: [], implantDetails: "",
+    // Protocol Parameters (Section 4)
+    sessionFrequency: "2", homeExerciseProgram: true, ownerCompliance: "Motivated",
+    aquaticAccess: false,
+    modalityUWTM: false, modalityLaser: false, modalityTENS: false, modalityNMES: false,
+    modalityTherapeuticUS: false, modalityShockwave: false, modalityCryotherapy: false,
+    modalityHeatTherapy: false, modalityPulsedEMF: false,
     // Diagnostics
     diagRadiographs: false, diagRadiographsNotes: "",
     diagCT: false, diagCTNotes: "",
@@ -894,7 +912,7 @@ function GeneratorView() {
   // Section header component for the intake form
   const SectionHead = ({ icon: Icon, title }) => (
     <div style={S.sectionHeader()}>
-      <Icon size={14} style={{ color: "#1E3A5F" }} /> {title}
+      <Icon size={14} style={{ color: "#0EA5E9" }} /> {title}
     </div>
   );
 
@@ -907,23 +925,31 @@ function GeneratorView() {
       { num: 4, label: "Protocol Parameters" },
     ];
     return (
-      <div style={S.wizardProgress}>
-        {steps.map((s, i) => {
-          const state = wizardStep > s.num ? "done" : wizardStep === s.num ? "active" : "pending";
-          return (
-            <React.Fragment key={s.num}>
-              {i > 0 && <div style={S.wizardLine(wizardStep > s.num)} />}
-              <div style={S.wizardStep(state)}
-                onClick={() => state === "done" && goToStep(s.num)}>
-                <div style={S.wizardDot(state)}>
-                  {state === "done" ? <FiCheckCircle size={14} /> : s.num}
+      <>
+        <style>{`
+          @keyframes wizardPulse {
+            0%, 100% { box-shadow: 0 0 12px rgba(14,165,233,0.6), 0 0 24px rgba(14,165,233,0.3); }
+            50% { box-shadow: 0 0 20px rgba(14,165,233,0.8), 0 0 36px rgba(14,165,233,0.4), 0 0 48px rgba(14,165,233,0.15); }
+          }
+        `}</style>
+        <div style={S.wizardProgress}>
+          {steps.map((s, i) => {
+            const state = wizardStep > s.num ? "done" : wizardStep === s.num ? "active" : "pending";
+            return (
+              <React.Fragment key={s.num}>
+                {i > 0 && <div style={S.wizardLine(wizardStep > s.num)} />}
+                <div style={S.wizardStep(state)}
+                  onClick={() => goToStep(s.num)}>
+                  <div style={S.wizardDot(state)}>
+                    {state === "done" ? <FiCheckCircle size={16} /> : s.num}
+                  </div>
+                  <span>{s.label}</span>
                 </div>
-                <span>{s.label}</span>
-              </div>
-            </React.Fragment>
-          );
-        })}
-      </div>
+              </React.Fragment>
+            );
+          })}
+        </div>
+      </>
     );
   };
 
@@ -989,55 +1015,55 @@ function GeneratorView() {
       {!protocol && wizardStep === 1 && (<>
 
       {/* ═══════════ SECTION 1: CLIENT INFORMATION ═══════════ */}
-      <div style={{ background: "#EFF6FF", border: "2px solid #1E3A5F", borderRadius: 12, padding: 24, marginBottom: 16 }}>
+      <div style={{ background: "#1B1B2F", border: "2px solid #2A2A4A", borderRadius: 12, padding: 24, marginBottom: 16 }}>
         <SectionHead icon={FiUsers} title="Section 1 — Client Information" />
         <div style={S.grid(2)}>
           <div>
             <label style={S.label}>Client / Owner Name</label>
-            <input style={{ ...S.input, border: "1.5px solid #1E3A5F" }} value={form.clientName} onChange={e => setField("clientName", e.target.value)} placeholder="Last, First" />
+            <input style={{ ...S.input, border: "1.5px solid #3B3B5C" }} value={form.clientName} onChange={e => setField("clientName", e.target.value)} placeholder="Last, First" />
           </div>
           <div>
             <label style={S.label}>Email Address</label>
-            <input style={{ ...S.input, border: "1.5px solid #1E3A5F" }} type="email" value={form.clientEmail} onChange={e => setField("clientEmail", e.target.value)} placeholder="client@email.com" />
+            <input style={{ ...S.input, border: "1.5px solid #3B3B5C" }} type="email" value={form.clientEmail} onChange={e => setField("clientEmail", e.target.value)} placeholder="client@email.com" />
           </div>
         </div>
         <div style={{ ...S.grid(3), marginTop: 12 }}>
           <div>
             <label style={S.label}>Phone Number</label>
-            <input style={{ ...S.input, border: "1.5px solid #1E3A5F" }} value={form.clientPhone} onChange={e => setField("clientPhone", e.target.value)} placeholder="(555) 000-0000" />
+            <input style={{ ...S.input, border: "1.5px solid #3B3B5C" }} value={form.clientPhone} onChange={e => setField("clientPhone", e.target.value)} placeholder="(555) 000-0000" />
           </div>
           <div>
             <label style={S.label}>Secondary Phone (Optional)</label>
-            <input style={{ ...S.input, border: "1.5px solid #1E3A5F" }} value={form.clientPhone2} onChange={e => setField("clientPhone2", e.target.value)} placeholder="(555) 000-0000" />
+            <input style={{ ...S.input, border: "1.5px solid #3B3B5C" }} value={form.clientPhone2} onChange={e => setField("clientPhone2", e.target.value)} placeholder="(555) 000-0000" />
           </div>
           <div>
             <label style={S.label}>Referring Veterinarian</label>
-            <input style={{ ...S.input, border: "1.5px solid #1E3A5F" }} value={form.referringVet} onChange={e => setField("referringVet", e.target.value)} placeholder="DVM Name, Practice" />
+            <input style={{ ...S.input, border: "1.5px solid #3B3B5C" }} value={form.referringVet} onChange={e => setField("referringVet", e.target.value)} placeholder="DVM Name, Practice" />
           </div>
         </div>
         <div style={{ ...S.grid(4), marginTop: 12 }}>
           <div style={{ gridColumn: "1 / 3" }}>
             <label style={S.label}>Mailing Address</label>
-            <input style={{ ...S.input, border: "1.5px solid #1E3A5F" }} value={form.mailingAddress} onChange={e => setField("mailingAddress", e.target.value)} placeholder="Street Address" />
+            <input style={{ ...S.input, border: "1.5px solid #3B3B5C" }} value={form.mailingAddress} onChange={e => setField("mailingAddress", e.target.value)} placeholder="Street Address" />
           </div>
           <div>
             <label style={S.label}>ZIP Code</label>
-            <input style={{ ...S.input, border: "1.5px solid #1E3A5F", maxWidth: 120 }} value={form.zipCode} onChange={e => handleZip(e.target.value)} placeholder="00000" maxLength={5} />
+            <input style={{ ...S.input, border: "1.5px solid #3B3B5C", maxWidth: 120 }} value={form.zipCode} onChange={e => handleZip(e.target.value)} placeholder="00000" maxLength={5} />
           </div>
           <div />
         </div>
         <div style={{ ...S.grid(3), marginTop: 12 }}>
           <div>
             <label style={S.label}>City</label>
-            <input style={{ ...S.input, border: "1.5px solid #1E3A5F", background: form.city ? "#F0FFF4" : C.surface }} value={form.city} onChange={e => setField("city", e.target.value)} placeholder="Auto-filled from ZIP" />
+            <input style={{ ...S.input, border: "1.5px solid #3B3B5C", background: form.city ? "#F0FFF4" : C.surface }} value={form.city} onChange={e => setField("city", e.target.value)} placeholder="Auto-filled from ZIP" />
           </div>
           <div>
             <label style={S.label}>State</label>
-            <input style={{ ...S.input, border: "1.5px solid #1E3A5F", maxWidth: 80, background: form.state ? "#F0FFF4" : C.surface }} value={form.state} onChange={e => setField("state", e.target.value)} placeholder="ST" />
+            <input style={{ ...S.input, border: "1.5px solid #3B3B5C", maxWidth: 80, background: form.state ? "#F0FFF4" : C.surface }} value={form.state} onChange={e => setField("state", e.target.value)} placeholder="ST" />
           </div>
           <div>
             <label style={S.label}>Nearby Veterinary Hospital</label>
-            <select style={{ ...S.select, width: "100%", border: "1.5px solid #1E3A5F" }} value={form.nearbyHospital} onChange={e => setField("nearbyHospital", e.target.value)}>
+            <select style={{ ...S.select, width: "100%", border: "1.5px solid #3B3B5C" }} value={form.nearbyHospital} onChange={e => setField("nearbyHospital", e.target.value)}>
               <option value="">— Select Hospital —</option>
               {HOSPITALS.map(h => <option key={h} value={h}>{h}</option>)}
             </select>
@@ -1046,19 +1072,19 @@ function GeneratorView() {
       </div>
 
       {/* ═══════════ SECTION 2: PATIENT SIGNALMENT ═══════════ */}
-      <div style={{ background: "#EFF6FF", border: "2px solid #1E3A5F", borderRadius: 12, padding: 24, marginBottom: 16 }}>
+      <div style={{ background: "#1B1B2F", border: "2px solid #2A2A4A", borderRadius: 12, padding: 24, marginBottom: 16 }}>
         <div style={S.sectionHeader()}>
           <span style={{ fontSize: 16 }}>🐕</span> PATIENT SIGNALMENT
         </div>
         <div style={S.grid(3)}>
           <div>
             <label style={S.label}>Patient Name</label>
-            <input style={{ ...S.input, border: "1.5px solid #1E3A5F" }} value={form.patientName}
+            <input style={{ ...S.input, border: "1.5px solid #3B3B5C" }} value={form.patientName}
               onChange={e => setField("patientName", e.target.value)} placeholder="Patient Name" />
           </div>
           <div>
             <label style={S.label}>Sex</label>
-            <select style={{ ...S.select, width: "100%", border: "1.5px solid #1E3A5F" }} value={form.sex} onChange={e => setField("sex", e.target.value)}>
+            <select style={{ ...S.select, width: "100%", border: "1.5px solid #3B3B5C" }} value={form.sex} onChange={e => setField("sex", e.target.value)}>
               <option value="Male Intact">♂ Male Intact</option>
               <option value="Male Neutered">♂ Male Neutered</option>
               <option value="Female Intact">♀ Female Intact</option>
@@ -1067,7 +1093,7 @@ function GeneratorView() {
           </div>
           <div>
             <label style={S.label}>Breed</label>
-            <select style={{ ...S.select, width: "100%", border: "1.5px solid #1E3A5F" }} value={form.breed} onChange={e => setField("breed", e.target.value)}>
+            <select style={{ ...S.select, width: "100%", border: "1.5px solid #3B3B5C" }} value={form.breed} onChange={e => setField("breed", e.target.value)}>
               <option value="">— Select Breed —</option>
               {BREEDS.map(b => <option key={b} value={b}>{b}</option>)}
             </select>
@@ -1076,22 +1102,22 @@ function GeneratorView() {
         <div style={{ ...S.grid(4), marginTop: 12 }}>
           <div>
             <label style={S.label}>Date of Birth</label>
-            <input style={{ ...S.input, border: "1.5px solid #1E3A5F" }} type="date" value={form.dob} onChange={e => handleDob(e.target.value)} />
+            <input style={{ ...S.input, border: "1.5px solid #3B3B5C" }} type="date" value={form.dob} onChange={e => handleDob(e.target.value)} />
           </div>
           <div>
             <label style={S.label}>Age (Years)</label>
-            <input style={{ ...S.input, border: "1.5px solid #1E3A5F", maxWidth: 80 }} type="number" min="0" max="25" value={form.age}
-              onChange={e => handleAge(e.target.value)} placeholder="0" />
+            <input style={{ ...S.input, border: "1.5px solid #3B3B5C", maxWidth: 80 }} type="number" min="0" max="25" step="1" value={form.age}
+              onChange={e => handleAge(e.target.value)} onInput={e => handleAge(e.target.value)} placeholder="0" />
           </div>
           <div>
             <label style={S.label}>Weight (KG)</label>
-            <input style={{ ...S.input, border: "1.5px solid #1E3A5F", maxWidth: 100 }} type="number" min="0" step="0.1" value={form.weightKg}
-              onChange={e => handleWeightKg(e.target.value)} placeholder="0.0" />
+            <input style={{ ...S.input, border: "1.5px solid #3B3B5C", maxWidth: 100 }} type="number" min="0" step="0.5" value={form.weightKg}
+              onChange={e => handleWeightKg(e.target.value)} onInput={e => handleWeightKg(e.target.value)} placeholder="0.0" />
           </div>
           <div>
             <label style={S.label}>Weight (LBS)</label>
-            <input style={{ ...S.input, border: "1.5px solid #1E3A5F", maxWidth: 100 }} type="number" min="0" step="0.1" value={form.weightLbs}
-              onChange={e => handleWeightLbs(e.target.value)} placeholder="0.0" />
+            <input style={{ ...S.input, border: "1.5px solid #3B3B5C", maxWidth: 100 }} type="number" min="0" step="1" value={form.weightLbs}
+              onChange={e => handleWeightLbs(e.target.value)} onInput={e => handleWeightLbs(e.target.value)} placeholder="0.0" />
           </div>
         </div>
         {weightWarning && (
@@ -1125,11 +1151,11 @@ function GeneratorView() {
           <div>
             <label style={S.label}>Body Condition Score (1–9 WSAVA Scale)</label>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <input style={{ ...S.input, flex: 1, border: "1.5px solid #1E3A5F" }} type="range" min="1" max="9" value={form.bodyConditionScore}
+              <input style={{ ...S.input, flex: 1, border: "1.5px solid #3B3B5C" }} type="range" min="1" max="9" value={form.bodyConditionScore}
                 onChange={e => setField("bodyConditionScore", e.target.value)} />
               <div style={{ textAlign: "center", minWidth: 60 }}>
-                <span style={{ fontSize: 16, fontWeight: 700, color: C.navy }}>{form.bodyConditionScore}/9</span>
-                <div style={{ fontSize: 9, color: "#000", fontWeight: 500 }}>
+                <span style={{ fontSize: 16, fontWeight: 700, color: "#E2E8F0" }}>{form.bodyConditionScore}/9</span>
+                <div style={{ fontSize: 9, color: "#94A3B8", fontWeight: 500 }}>
                   {+form.bodyConditionScore <= 3 ? "Underweight" : +form.bodyConditionScore <= 5 ? "Ideal" : +form.bodyConditionScore <= 7 ? "Overweight" : "Obese"}
                 </div>
               </div>
@@ -1140,13 +1166,31 @@ function GeneratorView() {
         <div style={{ ...S.grid(2), marginTop: 12 }}>
           <div>
             <label style={S.label}>Current Medications</label>
-            <input style={{ ...S.input, border: "1.5px solid #1E3A5F" }} value={form.currentMedications} onChange={e => setField("currentMedications", e.target.value)}
+            <input style={{ ...S.input, border: "1.5px solid #3B3B5C" }} value={form.currentMedications} onChange={e => setField("currentMedications", e.target.value)}
               placeholder="e.g. Carprofen 75mg BID, Gabapentin 100mg TID" />
           </div>
           <div>
             <label style={S.label}>Medications Last Given</label>
-            <input style={{ ...S.input, border: "1.5px solid #1E3A5F" }} value={form.medsLastGiven} onChange={e => setField("medsLastGiven", e.target.value)}
+            <input style={{ ...S.input, border: "1.5px solid #3B3B5C" }} value={form.medsLastGiven} onChange={e => setField("medsLastGiven", e.target.value)}
               placeholder="e.g. Today 8:00 AM, Yesterday PM" />
+          </div>
+        </div>
+        <div style={{ ...S.grid(2), marginTop: 12 }}>
+          <div>
+            <label style={S.label}>Allergies / Sensitivities</label>
+            <input style={{ ...S.input, border: "1.5px solid #3B3B5C" }} value={form.allergies} onChange={e => setField("allergies", e.target.value)}
+              placeholder="e.g. NSAID sensitivity, latex, adhesive tape, bee stings" />
+          </div>
+          <div>
+            <label style={S.label}>Patient Temperament</label>
+            <select style={{ ...S.select, width: "100%", border: "1.5px solid #3B3B5C" }} value={form.temperament} onChange={e => setField("temperament", e.target.value)}>
+              <option value="Cooperative">Cooperative — Tolerates handling well</option>
+              <option value="Anxious">Anxious — Nervous, needs slow approach</option>
+              <option value="Fearful">Fearful — May require desensitization</option>
+              <option value="Reactive">Reactive — May snap/bite under stress</option>
+              <option value="Aggressive">Aggressive — Muzzle required for handling</option>
+              <option value="Sedation Required">Sedation Required — Cannot safely handle</option>
+            </select>
           </div>
         </div>
       </div>
@@ -1174,12 +1218,12 @@ function GeneratorView() {
       {!protocol && wizardStep === 2 && (<>
 
       {/* ═══════════ SECTION 3: CLINICAL ASSESSMENT ═══════════ */}
-      <div style={{ background: "#EFF6FF", border: "2px solid #1E3A5F", borderRadius: 12, padding: 24, marginBottom: 16 }}>
+      <div style={{ background: "#1B1B2F", border: "2px solid #2A2A4A", borderRadius: 12, padding: 24, marginBottom: 16 }}>
         <SectionHead icon={FiActivity} title="Section 2 — Clinical Assessment" />
         <div style={S.grid(2)}>
           <div>
             <label style={S.label}>Primary Diagnosis *</label>
-            <select style={{ ...S.select, width: "100%", fontWeight: 600, border: "1.5px solid #1E3A5F" }} value={form.diagnosis} onChange={e => setField("diagnosis", e.target.value)}>
+            <select style={{ ...S.select, width: "100%", fontWeight: 600, border: "1.5px solid #3B3B5C" }} value={form.diagnosis} onChange={e => setField("diagnosis", e.target.value)}>
               <option value="">— Select Diagnosis —</option>
               {Object.entries(CONDITIONS).map(([group, items]) => (
                 <optgroup key={group} label={group}>
@@ -1190,7 +1234,7 @@ function GeneratorView() {
           </div>
           <div>
             <label style={S.label}>Affected Region</label>
-            <select style={{ ...S.select, width: "100%", border: "1.5px solid #1E3A5F" }} value={form.affectedRegion} onChange={e => setField("affectedRegion", e.target.value)}>
+            <select style={{ ...S.select, width: "100%", border: "1.5px solid #3B3B5C" }} value={form.affectedRegion} onChange={e => setField("affectedRegion", e.target.value)}>
               <optgroup label="Stifle">{REGIONS.filter(r => r.includes("Stifle")).map(r => <option key={r}>{r}</option>)}</optgroup>
               <optgroup label="Hip">{REGIONS.filter(r => r.includes("Hip")).map(r => <option key={r}>{r}</option>)}</optgroup>
               <optgroup label="Forelimb">{REGIONS.filter(r => r.includes("Elbow") || r.includes("Shoulder")).map(r => <option key={r}>{r}</option>)}</optgroup>
@@ -1205,7 +1249,7 @@ function GeneratorView() {
           <div>
             <label style={S.label}>Pain Level (0–10 VAS)</label>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <input style={{ ...S.input, flex: 1, border: "1.5px solid #1E3A5F" }} type="range" min="0" max="10" value={form.painLevel}
+              <input style={{ ...S.input, flex: 1, border: "1.5px solid #3B3B5C" }} type="range" min="0" max="10" value={form.painLevel}
                 onChange={e => setField("painLevel", e.target.value)} />
               <span style={{
                 fontSize: 14, fontWeight: 700, minWidth: 38, textAlign: "center", padding: "2px 8px", borderRadius: 6,
@@ -1219,7 +1263,7 @@ function GeneratorView() {
           <div>
             <label style={S.label}>Lameness Grade (0–5 LOAD)</label>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <input style={{ ...S.input, flex: 1, border: "1.5px solid #1E3A5F" }} type="range" min="0" max="5" value={form.lamenessGrade}
+              <input style={{ ...S.input, flex: 1, border: "1.5px solid #3B3B5C" }} type="range" min="0" max="5" value={form.lamenessGrade}
                 onChange={e => setField("lamenessGrade", e.target.value)} />
               <span style={{
                 fontSize: 14, fontWeight: 700, minWidth: 32, textAlign: "center", padding: "2px 8px", borderRadius: 6,
@@ -1232,7 +1276,7 @@ function GeneratorView() {
           </div>
           <div>
             <label style={S.label}>Mobility Status</label>
-            <select style={{ ...S.select, width: "100%", border: "1.5px solid #1E3A5F" }} value={form.mobilityLevel} onChange={e => setField("mobilityLevel", e.target.value)}>
+            <select style={{ ...S.select, width: "100%", border: "1.5px solid #3B3B5C" }} value={form.mobilityLevel} onChange={e => setField("mobilityLevel", e.target.value)}>
               <option value="Non-ambulatory">Non-ambulatory (0 — no voluntary movement)</option>
               <option value="Limited">Limited (1 — assisted standing/stepping)</option>
               <option value="Moderate">Moderate (2 — ambulatory with deficits)</option>
@@ -1242,20 +1286,176 @@ function GeneratorView() {
           </div>
         </div>
 
+        {/* ── Objective Measurements (Millis & Levine) ── */}
+        <div style={{ marginTop: 16 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#7DD3FC", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10, paddingBottom: 4, borderBottom: "1px solid rgba(14,165,233,0.25)" }}>
+            Objective Measurements
+          </div>
+          {/* Limb Circumference */}
+          <div style={{ marginBottom: 12 }}>
+            <div style={{ fontSize: 10, fontWeight: 600, color: "#94A3B8", marginBottom: 8 }}>Limb Circumference (cm) — Measure bilaterally at consistent landmark</div>
+            <div style={S.grid(3)}>
+              <div>
+                <label style={S.label}>Measurement Site</label>
+                <select style={{ ...S.select, width: "100%", border: "1.5px solid #3B3B5C" }} value={form.circumferenceSite} onChange={e => setField("circumferenceSite", e.target.value)}>
+                  <option value="15cm proximal to patella">15cm proximal to patella (standard)</option>
+                  <option value="10cm proximal to patella">10cm proximal to patella</option>
+                  <option value="Mid-thigh">Mid-thigh</option>
+                  <option value="Mid-antebrachium">Mid-antebrachium (forearm)</option>
+                  <option value="Mid-crus">Mid-crus (below stifle)</option>
+                </select>
+              </div>
+              <div>
+                <label style={S.label}>Affected Limb (cm)</label>
+                <input style={{ ...S.input, border: "1.5px solid #3B3B5C" }} type="number" step="0.1" min="0" value={form.circumferenceAffected}
+                  onChange={e => setField("circumferenceAffected", e.target.value)} placeholder="e.g. 32.5" />
+              </div>
+              <div>
+                <label style={S.label}>Contralateral Limb (cm)</label>
+                <input style={{ ...S.input, border: "1.5px solid #3B3B5C" }} type="number" step="0.1" min="0" value={form.circumferenceContralateral}
+                  onChange={e => setField("circumferenceContralateral", e.target.value)} placeholder="e.g. 36.0" />
+              </div>
+            </div>
+            {form.circumferenceAffected && form.circumferenceContralateral && (
+              <div style={{ marginTop: 6, fontSize: 11, fontWeight: 600, padding: "6px 12px", borderRadius: 6,
+                background: Math.abs(parseFloat(form.circumferenceAffected) - parseFloat(form.circumferenceContralateral)) > 2 ? "rgba(220,38,38,0.15)" : "rgba(16,185,129,0.15)",
+                color: Math.abs(parseFloat(form.circumferenceAffected) - parseFloat(form.circumferenceContralateral)) > 2 ? "#FCA5A5" : "#6EE7B7",
+                border: Math.abs(parseFloat(form.circumferenceAffected) - parseFloat(form.circumferenceContralateral)) > 2 ? "1px solid rgba(220,38,38,0.3)" : "1px solid rgba(16,185,129,0.3)",
+              }}>
+                Difference: {Math.abs(parseFloat(form.circumferenceAffected) - parseFloat(form.circumferenceContralateral)).toFixed(1)} cm
+                ({((Math.abs(parseFloat(form.circumferenceAffected) - parseFloat(form.circumferenceContralateral)) / parseFloat(form.circumferenceContralateral)) * 100).toFixed(1)}% asymmetry)
+                {Math.abs(parseFloat(form.circumferenceAffected) - parseFloat(form.circumferenceContralateral)) > 2 && " — Significant muscle atrophy detected"}
+              </div>
+            )}
+          </div>
+          {/* Joint Range of Motion */}
+          <div style={{ marginBottom: 12 }}>
+            <div style={{ fontSize: 10, fontWeight: 600, color: "#94A3B8", marginBottom: 8 }}>Joint Range of Motion (Goniometry — degrees)</div>
+            <div style={S.grid(3)}>
+              <div>
+                <label style={S.label}>Joint Measured</label>
+                <select style={{ ...S.select, width: "100%", border: "1.5px solid #3B3B5C" }} value={form.romJoint} onChange={e => setField("romJoint", e.target.value)}>
+                  <option value="">— Select Joint —</option>
+                  <option value="Stifle">Stifle (Knee)</option>
+                  <option value="Hip">Hip</option>
+                  <option value="Elbow">Elbow</option>
+                  <option value="Shoulder">Shoulder</option>
+                  <option value="Hock/Tarsus">Hock / Tarsus</option>
+                  <option value="Carpus">Carpus (Wrist)</option>
+                </select>
+              </div>
+              <div>
+                <label style={S.label}>Flexion (°)</label>
+                <input style={{ ...S.input, border: "1.5px solid #3B3B5C" }} type="number" min="0" max="180" value={form.romFlexion}
+                  onChange={e => setField("romFlexion", e.target.value)} placeholder="e.g. 42" />
+              </div>
+              <div>
+                <label style={S.label}>Extension (°)</label>
+                <input style={{ ...S.input, border: "1.5px solid #3B3B5C" }} type="number" min="0" max="180" value={form.romExtension}
+                  onChange={e => setField("romExtension", e.target.value)} placeholder="e.g. 162" />
+              </div>
+            </div>
+          </div>
+          {/* Muscle Condition & Effusion */}
+          <div style={S.grid(2)}>
+            <div>
+              <label style={S.label}>Muscle Condition (Affected Limb)</label>
+              <select style={{ ...S.select, width: "100%", border: "1.5px solid #3B3B5C" }} value={form.muscleCondition} onChange={e => setField("muscleCondition", e.target.value)}>
+                <option value="Normal">Normal — Symmetric muscle mass</option>
+                <option value="Mild Atrophy">Mild Atrophy — Slight decrease, palpable</option>
+                <option value="Moderate Atrophy">Moderate Atrophy — Visible asymmetry</option>
+                <option value="Severe Atrophy">Severe Atrophy — Marked wasting, bony prominences</option>
+                <option value="Fibrosis">Fibrosis — Firm, non-contractile tissue</option>
+              </select>
+            </div>
+            <div>
+              <label style={S.label}>Joint Effusion (0–3 Scale)</label>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <input style={{ ...S.input, flex: 1, border: "1.5px solid #3B3B5C" }} type="range" min="0" max="3" value={form.jointEffusion}
+                  onChange={e => setField("jointEffusion", e.target.value)} />
+                <span style={{
+                  fontSize: 14, fontWeight: 700, minWidth: 40, textAlign: "center", padding: "2px 8px", borderRadius: 6,
+                  background: +form.jointEffusion === 0 ? "rgba(16,185,129,0.15)" : +form.jointEffusion <= 1 ? "rgba(217,119,6,0.15)" : "rgba(220,38,38,0.15)",
+                  color: +form.jointEffusion === 0 ? "#6EE7B7" : +form.jointEffusion <= 1 ? "#FCD34D" : "#FCA5A5",
+                }}>{form.jointEffusion}/3</span>
+              </div>
+              <div style={{ fontSize: 9, color: "#94A3B8", marginTop: 4 }}>
+                {+form.jointEffusion === 0 ? "None" : +form.jointEffusion === 1 ? "Mild — palpable fluid wave" : +form.jointEffusion === 2 ? "Moderate — visible swelling" : "Severe — tense, distended"}
+              </div>
+            </div>
+          </div>
+          {/* Neurological (conditional — shown for neuro diagnoses) */}
+          {(form.diagnosis === "IVDD" || form.diagnosis === "FCE" || form.diagnosis === "Degenerative Myelopathy" || form.diagnosis === "Lumbosacral Stenosis" || form.diagnosis === "Cervical Spondylomyelopathy" || form.diagnosis === "Spinal Fracture" || form.diagnosis === "Vestibular Disease" || form.diagnosis === "Peripheral Neuropathy") && (
+            <div style={{ marginTop: 12 }}>
+              <div style={{ fontSize: 10, fontWeight: 600, color: "#C4B5FD", marginBottom: 8 }}>Neurological Assessment</div>
+              <div style={S.grid(4)}>
+                <div>
+                  <label style={S.label}>Proprioception</label>
+                  <select style={{ ...S.select, width: "100%", border: "1.5px solid #3B3B5C" }} value={form.neuroProprioception} onChange={e => setField("neuroProprioception", e.target.value)}>
+                    <option value="">— Select —</option>
+                    <option value="Normal">Normal (Immediate correction)</option>
+                    <option value="Delayed">Delayed (Slow correction)</option>
+                    <option value="Absent">Absent (No correction)</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={S.label}>Withdrawal Reflex</label>
+                  <select style={{ ...S.select, width: "100%", border: "1.5px solid #3B3B5C" }} value={form.neuroWithdrawal} onChange={e => setField("neuroWithdrawal", e.target.value)}>
+                    <option value="">— Select —</option>
+                    <option value="Normal">Normal</option>
+                    <option value="Reduced">Reduced</option>
+                    <option value="Absent">Absent</option>
+                    <option value="Exaggerated">Exaggerated (UMN)</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={S.label}>Deep Pain Sensation</label>
+                  <select style={{ ...S.select, width: "100%", border: "1.5px solid #3B3B5C" }} value={form.neuroDeepPain} onChange={e => setField("neuroDeepPain", e.target.value)}>
+                    <option value="">— Select —</option>
+                    <option value="Present">Present (Intact)</option>
+                    <option value="Diminished">Diminished</option>
+                    <option value="Absent">Absent — Guarded prognosis</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={S.label}>Motor Function Grade (0–5)</label>
+                  <select style={{ ...S.select, width: "100%", border: "1.5px solid #3B3B5C" }} value={form.neuroMotorGrade} onChange={e => setField("neuroMotorGrade", e.target.value)}>
+                    <option value="">— Select —</option>
+                    <option value="0">0 — No voluntary movement</option>
+                    <option value="1">1 — Minimal movement, non-ambulatory</option>
+                    <option value="2">2 — Ambulatory with significant deficits</option>
+                    <option value="3">3 — Ambulatory with mild ataxia</option>
+                    <option value="4">4 — Ambulatory, occasional knuckling</option>
+                    <option value="5">5 — Normal motor function</option>
+                  </select>
+                </div>
+              </div>
+              {form.neuroDeepPain === "Absent" && (
+                <div style={{ marginTop: 8, padding: "10px 14px", background: "rgba(220,38,38,0.15)", border: "1.5px solid rgba(220,38,38,0.4)", borderRadius: 8, display: "flex", alignItems: "center", gap: 8 }}>
+                  <FiAlertTriangle size={16} style={{ color: "#FCA5A5", flexShrink: 0 }} />
+                  <span style={{ fontSize: 11, fontWeight: 600, color: "#FCA5A5" }}>
+                    Absent deep pain sensation carries a guarded to poor prognosis for return to ambulation. Document discussion with owner regarding expectations and timeline.
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
         <div style={{ marginTop: 12 }}>
           <label style={S.label}>Medical History / Notes</label>
-          <input style={{ ...S.input, border: "1.5px solid #1E3A5F" }} value={form.medicalHistory} onChange={e => setField("medicalHistory", e.target.value)}
-            placeholder="Prior surgeries, chronic conditions, behavioral notes" />
+          <textarea style={{ ...S.input, border: "1.5px solid #3B3B5C", minHeight: 60, resize: "vertical", fontFamily: "inherit" }} value={form.medicalHistory} onChange={e => setField("medicalHistory", e.target.value)}
+            placeholder="Prior surgeries, chronic conditions, behavioral notes, relevant medical history" />
         </div>
       </div>
 
       {/* ═══════════ DIAGNOSTICS PERFORMED ═══════════ */}
-      <div style={{ background: "#EFF6FF", border: "2px solid #1E3A5F", borderRadius: 12, padding: 24, marginBottom: 16 }}>
+      <div style={{ background: "#1B1B2F", border: "2px solid #2A2A4A", borderRadius: 12, padding: 24, marginBottom: 16 }}>
         <SectionHead icon={FiClipboard} title="Diagnostics Performed" />
 
         {/* Imaging */}
         <div style={{ marginBottom: 16 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "#1E3A5F", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10, paddingBottom: 4, borderBottom: "1px solid #1E3A5F40" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#7DD3FC", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10, paddingBottom: 4, borderBottom: "1px solid rgba(14,165,233,0.25)" }}>
             Imaging Studies
           </div>
           <div style={S.grid(2)}>
@@ -1265,11 +1465,11 @@ function GeneratorView() {
               { key: "diagMRI", label: "MRI (Magnetic Resonance Imaging)" },
               { key: "diagUltrasound", label: "Ultrasound / Musculoskeletal US" },
             ].map(d => (
-              <div key={d.key} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "8px 12px", background: form[d.key] ? "#ECFDF5" : "#fff", border: "1.5px solid #1E3A5F", borderRadius: 8 }}>
+              <div key={d.key} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "8px 12px", background: form[d.key] ? "rgba(16,185,129,0.12)" : "rgba(255,255,255,0.05)", border: "1.5px solid #3B3B5C", borderRadius: 8 }}>
                 <input type="checkbox" checked={form[d.key]} onChange={e => setField(d.key, e.target.checked)}
                   style={{ marginTop: 3, accentColor: "#1E3A5F", width: 16, height: 16, cursor: "pointer" }} />
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: "#000" }}>{d.label}</div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: "#E2E8F0" }}>{d.label}</div>
                   {form[d.key] && (
                     <input style={{ ...S.input, border: "1px solid #1E3A5F80", marginTop: 6, fontSize: 11, padding: "6px 8px" }}
                       value={form[d.key + "Notes"]} onChange={e => setField(d.key + "Notes", e.target.value)}
@@ -1283,7 +1483,7 @@ function GeneratorView() {
 
         {/* Laboratory */}
         <div style={{ marginBottom: 16 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "#1E3A5F", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10, paddingBottom: 4, borderBottom: "1px solid #1E3A5F40" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#7DD3FC", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10, paddingBottom: 4, borderBottom: "1px solid rgba(14,165,233,0.25)" }}>
             Laboratory Work
           </div>
           <div style={S.grid(2)}>
@@ -1295,11 +1495,11 @@ function GeneratorView() {
               { key: "diagCRP", label: "C-Reactive Protein (CRP)" },
               { key: "diagSynovial", label: "Synovial Fluid Analysis" },
             ].map(d => (
-              <div key={d.key} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "8px 12px", background: form[d.key] ? "#ECFDF5" : "#fff", border: "1.5px solid #1E3A5F", borderRadius: 8 }}>
+              <div key={d.key} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "8px 12px", background: form[d.key] ? "rgba(16,185,129,0.12)" : "rgba(255,255,255,0.05)", border: "1.5px solid #3B3B5C", borderRadius: 8 }}>
                 <input type="checkbox" checked={form[d.key]} onChange={e => setField(d.key, e.target.checked)}
                   style={{ marginTop: 3, accentColor: "#1E3A5F", width: 16, height: 16, cursor: "pointer" }} />
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: "#000" }}>{d.label}</div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: "#E2E8F0" }}>{d.label}</div>
                   {form[d.key] && (
                     <input style={{ ...S.input, border: "1px solid #1E3A5F80", marginTop: 6, fontSize: 11, padding: "6px 8px" }}
                       value={form[d.key + "Notes"]} onChange={e => setField(d.key + "Notes", e.target.value)}
@@ -1313,7 +1513,7 @@ function GeneratorView() {
 
         {/* Specialized / Procedural */}
         <div>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "#1E3A5F", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10, paddingBottom: 4, borderBottom: "1px solid #1E3A5F40" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#7DD3FC", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10, paddingBottom: 4, borderBottom: "1px solid rgba(14,165,233,0.25)" }}>
             Specialized / Procedural Diagnostics
           </div>
           <div style={S.grid(2)}>
@@ -1325,11 +1525,11 @@ function GeneratorView() {
               { key: "diagROM", label: "Range of Motion (Goniometry)" },
               { key: "diagOtherDiag", label: "Other Diagnostic" },
             ].map(d => (
-              <div key={d.key} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "8px 12px", background: form[d.key] ? "#ECFDF5" : "#fff", border: "1.5px solid #1E3A5F", borderRadius: 8 }}>
+              <div key={d.key} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "8px 12px", background: form[d.key] ? "rgba(16,185,129,0.12)" : "rgba(255,255,255,0.05)", border: "1.5px solid #3B3B5C", borderRadius: 8 }}>
                 <input type="checkbox" checked={form[d.key]} onChange={e => setField(d.key, e.target.checked)}
                   style={{ marginTop: 3, accentColor: "#1E3A5F", width: 16, height: 16, cursor: "pointer" }} />
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: "#000" }}>{d.label}</div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: "#E2E8F0" }}>{d.label}</div>
                   {form[d.key] && (
                     <input style={{ ...S.input, border: "1px solid #1E3A5F80", marginTop: 6, fontSize: 11, padding: "6px 8px" }}
                       value={form[d.key === "diagOtherDiag" ? "diagOtherNotes" : d.key + "Notes"]}
@@ -1376,12 +1576,12 @@ function GeneratorView() {
       {/* ═══════════ STEP 3: TREATMENT PLAN & SURGICAL STATUS ═══════════ */}
       {!protocol && wizardStep === 3 && (<>
 
-      <div style={{ background: "#EFF6FF", border: "2px solid #1E3A5F", borderRadius: 12, padding: 24, marginBottom: 16 }}>
+      <div style={{ background: "#1B1B2F", border: "2px solid #2A2A4A", borderRadius: 12, padding: 24, marginBottom: 16 }}>
         <SectionHead icon={FiFileText} title="Section 3 — Treatment Plan & Surgical Status" />
 
         {/* ── Treatment Approach ── */}
         <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "#1E3A5F", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 12, paddingBottom: 4, borderBottom: "1px solid #1E3A5F40" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#7DD3FC", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 12, paddingBottom: 4, borderBottom: "1px solid rgba(14,165,233,0.25)" }}>
             Treatment Approach
           </div>
           <div style={S.grid(3)}>
@@ -1394,14 +1594,14 @@ function GeneratorView() {
                 onClick={() => setField("treatmentApproach", opt.value)}
                 style={{
                   padding: "14px 16px", borderRadius: 10, cursor: "pointer",
-                  background: form.treatmentApproach === opt.value ? "#DBEAFE" : "#fff",
-                  border: form.treatmentApproach === opt.value ? "2px solid #1E3A5F" : "1.5px solid #1E3A5F",
+                  background: form.treatmentApproach === opt.value ? "rgba(14,165,233,0.15)" : "rgba(255,255,255,0.05)",
+                  border: form.treatmentApproach === opt.value ? "2px solid #0EA5E9" : "1.5px solid #3B3B5C",
                   boxShadow: form.treatmentApproach === opt.value ? "0 0 12px rgba(14,165,233,0.2)" : "none",
                   transition: "all 0.2s",
                 }}>
                 <div style={{ fontSize: 20, marginBottom: 4 }}>{opt.icon}</div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "#000" }}>{opt.label}</div>
-                <div style={{ fontSize: 11, color: "#000", marginTop: 2, fontWeight: 400 }}>{opt.desc}</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#E2E8F0" }}>{opt.label}</div>
+                <div style={{ fontSize: 11, color: "#94A3B8", marginTop: 2, fontWeight: 400 }}>{opt.desc}</div>
               </div>
             ))}
           </div>
@@ -1409,13 +1609,13 @@ function GeneratorView() {
 
         {/* ── Veterinary Recommendation vs Owner Election ── */}
         <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "#1E3A5F", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 12, paddingBottom: 4, borderBottom: "1px solid #1E3A5F40" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#7DD3FC", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 12, paddingBottom: 4, borderBottom: "1px solid rgba(14,165,233,0.25)" }}>
             Clinical Recommendation & Owner Decision
           </div>
           <div style={S.grid(2)}>
             <div>
               <label style={S.label}>Veterinary Recommendation</label>
-              <select style={{ ...S.select, width: "100%", border: "1.5px solid #1E3A5F" }} value={form.vetRecommendation} onChange={e => setField("vetRecommendation", e.target.value)}>
+              <select style={{ ...S.select, width: "100%", border: "1.5px solid #3B3B5C" }} value={form.vetRecommendation} onChange={e => setField("vetRecommendation", e.target.value)}>
                 <option value="">— Select —</option>
                 <option value="Surgery - Strongly Recommended">Surgery — Strongly Recommended</option>
                 <option value="Surgery - Recommended">Surgery — Recommended</option>
@@ -1427,7 +1627,7 @@ function GeneratorView() {
             </div>
             <div>
               <label style={S.label}>Owner Election / Decision</label>
-              <select style={{ ...S.select, width: "100%", border: "1.5px solid #1E3A5F" }} value={form.ownerElection} onChange={e => setField("ownerElection", e.target.value)}>
+              <select style={{ ...S.select, width: "100%", border: "1.5px solid #3B3B5C" }} value={form.ownerElection} onChange={e => setField("ownerElection", e.target.value)}>
                 <option value="">— Select —</option>
                 <option value="Elected Surgery">Elected Surgery (per recommendation)</option>
                 <option value="Elected Conservative">Elected Conservative Management</option>
@@ -1460,13 +1660,13 @@ function GeneratorView() {
         {/* ── Surgical Details (shown when surgical approach selected) ── */}
         {form.treatmentApproach === "surgical" && (
           <div style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: "#1E3A5F", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 12, paddingBottom: 4, borderBottom: "1px solid #1E3A5F40" }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "#7DD3FC", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 12, paddingBottom: 4, borderBottom: "1px solid rgba(14,165,233,0.25)" }}>
               Surgical Details
             </div>
             <div style={S.grid(3)}>
               <div>
                 <label style={S.label}>Surgery Type / Procedure</label>
-                <select style={{ ...S.select, width: "100%", border: "1.5px solid #1E3A5F" }} value={form.surgeryType} onChange={e => setField("surgeryType", e.target.value)}>
+                <select style={{ ...S.select, width: "100%", border: "1.5px solid #3B3B5C" }} value={form.surgeryType} onChange={e => setField("surgeryType", e.target.value)}>
                   <option value="">— Select Procedure —</option>
                   <optgroup label="Stifle / Knee Procedures">
                     <option value="TPLO">TPLO — Tibial Plateau Leveling Osteotomy</option>
@@ -1529,11 +1729,12 @@ function GeneratorView() {
               </div>
               <div>
                 <label style={S.label}>Surgery Date</label>
-                <input style={{ ...S.input, border: "1.5px solid #1E3A5F", background: form.surgeryDate && form.postOpDay ? "#F0FFF4" : C.surface }} type="date" value={form.surgeryDate} onChange={e => handleSurgeryDate(e.target.value)} />
+                <input style={{ ...S.input, border: "1.5px solid #3B3B5C", background: form.surgeryDate && form.postOpDay ? "#F0FFF4" : C.surface }} type="date" value={form.surgeryDate} onChange={e => handleSurgeryDate(e.target.value)} />
               </div>
               <div>
                 <label style={S.label}>Post-Op Day (POD)</label>
-                <input style={{ ...S.input, border: "1.5px solid #1E3A5F", background: form.postOpDay && form.surgeryDate ? "#F0FFF4" : C.surface }} type="number" min="0" value={form.postOpDay} onChange={e => handlePostOpDay(e.target.value)}
+                <input style={{ ...S.input, border: "1.5px solid #3B3B5C", background: form.postOpDay && form.surgeryDate ? "#F0FFF4" : C.surface }} type="number" min="0" value={form.postOpDay}
+                  onChange={e => handlePostOpDay(e.target.value)} onInput={e => handlePostOpDay(e.target.value)}
                   placeholder="Days since surgery" />
                 {form.postOpDay && form.surgeryDate && (
                   <div style={{ fontSize: 10, color: "#059669", fontWeight: 500, marginTop: 4 }}>
@@ -1545,17 +1746,17 @@ function GeneratorView() {
             <div style={{ ...S.grid(3), marginTop: 12 }}>
               <div>
                 <label style={S.label}>Surgeon Name</label>
-                <input style={{ ...S.input, border: "1.5px solid #1E3A5F" }} value={form.surgeonName} onChange={e => setField("surgeonName", e.target.value)}
+                <input style={{ ...S.input, border: "1.5px solid #3B3B5C" }} value={form.surgeonName} onChange={e => setField("surgeonName", e.target.value)}
                   placeholder="DVM / DACVS name" />
               </div>
               <div>
                 <label style={S.label}>Surgical Facility</label>
-                <input style={{ ...S.input, border: "1.5px solid #1E3A5F" }} value={form.surgicalFacility} onChange={e => setField("surgicalFacility", e.target.value)}
+                <input style={{ ...S.input, border: "1.5px solid #3B3B5C" }} value={form.surgicalFacility} onChange={e => setField("surgicalFacility", e.target.value)}
                   placeholder="Hospital / Clinic name" />
               </div>
               <div>
                 <label style={S.label}>ASA Physical Status</label>
-                <select style={{ ...S.select, width: "100%", border: "1.5px solid #1E3A5F" }} value={form.anesthesiaRisk} onChange={e => setField("anesthesiaRisk", e.target.value)}>
+                <select style={{ ...S.select, width: "100%", border: "1.5px solid #3B3B5C" }} value={form.anesthesiaRisk} onChange={e => setField("anesthesiaRisk", e.target.value)}>
                   <option value="ASA I">ASA I — Normal healthy patient</option>
                   <option value="ASA II">ASA II — Mild systemic disease</option>
                   <option value="ASA III">ASA III — Severe systemic disease</option>
@@ -1567,7 +1768,7 @@ function GeneratorView() {
             <div style={{ ...S.grid(2), marginTop: 12 }}>
               <div>
                 <label style={S.label}>Incision Status</label>
-                <select style={{ ...S.select, width: "100%", border: "1.5px solid #1E3A5F" }} value={form.incisionStatus} onChange={e => setField("incisionStatus", e.target.value)}>
+                <select style={{ ...S.select, width: "100%", border: "1.5px solid #3B3B5C" }} value={form.incisionStatus} onChange={e => setField("incisionStatus", e.target.value)}>
                   <option value="Clean/Dry/Intact">Clean / Dry / Intact (CDI)</option>
                   <option value="Mild Swelling">Mild Swelling — Monitoring</option>
                   <option value="Seroma Present">Seroma Present</option>
@@ -1579,7 +1780,7 @@ function GeneratorView() {
               </div>
               <div>
                 <label style={S.label}>Suture / Staple Removal Date</label>
-                <input style={{ ...S.input, border: "1.5px solid #1E3A5F", background: form.sutureRemovalDate && form.surgeryDate ? "#F0FFF4" : C.surface }} type="date" value={form.sutureRemovalDate} onChange={e => setField("sutureRemovalDate", e.target.value)} />
+                <input style={{ ...S.input, border: "1.5px solid #3B3B5C", background: form.sutureRemovalDate && form.surgeryDate ? "#F0FFF4" : C.surface }} type="date" value={form.sutureRemovalDate} onChange={e => setField("sutureRemovalDate", e.target.value)} />
                 {form.sutureRemovalDate && form.surgeryDate && (
                   <div style={{ fontSize: 10, color: "#059669", fontWeight: 500, marginTop: 4 }}>
                     Auto-set to 14 days post-op (editable)
@@ -1587,23 +1788,30 @@ function GeneratorView() {
                 )}
               </div>
             </div>
-            <div style={{ marginTop: 12 }}>
-              <label style={S.label}>Surgical Complications / Notes</label>
-              <input style={{ ...S.input, border: "1.5px solid #1E3A5F" }} value={form.complicationsNoted} onChange={e => setField("complicationsNoted", e.target.value)}
-                placeholder="Any intraoperative or postoperative complications noted" />
+            <div style={{ ...S.grid(2), marginTop: 12 }}>
+              <div>
+                <label style={S.label}>Implant / Hardware Details</label>
+                <input style={{ ...S.input, border: "1.5px solid #3B3B5C" }} value={form.implantDetails} onChange={e => setField("implantDetails", e.target.value)}
+                  placeholder="e.g. Synthes 3.5mm TPLO plate, 2.4mm locking screws" />
+              </div>
+              <div>
+                <label style={S.label}>Surgical Complications / Notes</label>
+                <input style={{ ...S.input, border: "1.5px solid #3B3B5C" }} value={form.complicationsNoted} onChange={e => setField("complicationsNoted", e.target.value)}
+                  placeholder="Any intraoperative or postoperative complications" />
+              </div>
             </div>
           </div>
         )}
 
         {/* ── Post-Op / Recovery Restrictions ── */}
         <div style={{ marginBottom: 16 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "#1E3A5F", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 12, paddingBottom: 4, borderBottom: "1px solid #1E3A5F40" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#7DD3FC", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 12, paddingBottom: 4, borderBottom: "1px solid rgba(14,165,233,0.25)" }}>
             Current Recovery Status & Restrictions
           </div>
           <div style={S.grid(2)}>
             <div>
               <label style={S.label}>Weight-Bearing Status</label>
-              <select style={{ ...S.select, width: "100%", border: "1.5px solid #1E3A5F" }} value={form.weightBearingStatus} onChange={e => setField("weightBearingStatus", e.target.value)}>
+              <select style={{ ...S.select, width: "100%", border: "1.5px solid #3B3B5C" }} value={form.weightBearingStatus} onChange={e => setField("weightBearingStatus", e.target.value)}>
                 <option value="Non-weight bearing">Non-weight bearing (NWB)</option>
                 <option value="Toe-touching">Toe-touching weight bearing (TTWB)</option>
                 <option value="Partial">Partial weight bearing (PWB)</option>
@@ -1613,8 +1821,8 @@ function GeneratorView() {
             </div>
             <div>
               <label style={S.label}>Activity Restrictions</label>
-              <input style={{ ...S.input, border: "1.5px solid #1E3A5F" }} value={form.activityRestrictions} onChange={e => setField("activityRestrictions", e.target.value)}
-                placeholder="e.g. No stairs, no jumping, leash walks only" />
+              <textarea style={{ ...S.input, border: "1.5px solid #3B3B5C", minHeight: 42, resize: "vertical", fontFamily: "inherit" }} value={form.activityRestrictions} onChange={e => setField("activityRestrictions", e.target.value)}
+                placeholder="e.g. No stairs, no jumping, leash walks only, no off-leash activity" />
             </div>
           </div>
           <div style={{ display: "flex", gap: 16, marginTop: 14, flexWrap: "wrap" }}>
@@ -1624,8 +1832,8 @@ function GeneratorView() {
               { key: "slingAssistRequired", label: "Sling Assist Required" },
             ].map(item => (
               <label key={item.key} style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer",
-                padding: "8px 14px", background: form[item.key] ? "#DBEAFE" : "#fff",
-                border: "1.5px solid #1E3A5F", borderRadius: 8, fontSize: 12, fontWeight: 600, color: "#000",
+                padding: "8px 14px", background: form[item.key] ? "rgba(14,165,233,0.15)" : "rgba(255,255,255,0.05)",
+                border: "1.5px solid #3B3B5C", borderRadius: 8, fontSize: 12, fontWeight: 600, color: "#E2E8F0",
                 transition: "all 0.2s" }}>
                 <input type="checkbox" checked={form[item.key]} onChange={e => setField(item.key, e.target.checked)}
                   style={{ accentColor: "#1E3A5F", width: 16, height: 16, cursor: "pointer" }} />
@@ -1635,8 +1843,52 @@ function GeneratorView() {
           </div>
           <div style={{ marginTop: 12 }}>
             <label style={S.label}>Prior Surgeries / Relevant Surgical History</label>
-            <input style={{ ...S.input, border: "1.5px solid #1E3A5F" }} value={form.priorSurgeries} onChange={e => setField("priorSurgeries", e.target.value)}
+            <input style={{ ...S.input, border: "1.5px solid #3B3B5C" }} value={form.priorSurgeries} onChange={e => setField("priorSurgeries", e.target.value)}
               placeholder="e.g. Contralateral TPLO 2024, splenectomy 2023" />
+          </div>
+        </div>
+
+        {/* ── Rehabilitation Goals ── */}
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#7DD3FC", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 12, paddingBottom: 4, borderBottom: "1px solid rgba(14,165,233,0.25)" }}>
+            Rehabilitation Goals
+          </div>
+          <div style={{ fontSize: 10, color: "#94A3B8", marginBottom: 10 }}>Select all primary goals for this patient (guides protocol intensity and exercise selection)</div>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            {[
+              { value: "pain_management", label: "Pain Management", icon: "🎯" },
+              { value: "restore_rom", label: "Restore ROM", icon: "📐" },
+              { value: "rebuild_muscle", label: "Rebuild Muscle Mass", icon: "💪" },
+              { value: "improve_ambulation", label: "Improve Ambulation", icon: "🚶" },
+              { value: "return_function", label: "Return to Full Function", icon: "🏃" },
+              { value: "return_sport", label: "Return to Sport/Work", icon: "🏅" },
+              { value: "weight_management", label: "Weight Management", icon: "⚖️" },
+              { value: "comfort_care", label: "Comfort / Quality of Life", icon: "❤️" },
+              { value: "prevent_contralateral", label: "Prevent Contralateral Injury", icon: "🛡️" },
+              { value: "owner_education", label: "Owner Education & HEP", icon: "📋" },
+            ].map(goal => (
+              <label key={goal.value} style={{
+                display: "flex", alignItems: "center", gap: 8, cursor: "pointer",
+                padding: "8px 14px", borderRadius: 8, fontSize: 12, fontWeight: 600,
+                color: "#E2E8F0",
+                background: (form.rehabGoals || []).includes(goal.value) ? "rgba(14,165,233,0.18)" : "rgba(255,255,255,0.05)",
+                border: (form.rehabGoals || []).includes(goal.value) ? "1.5px solid #0EA5E9" : "1.5px solid #3B3B5C",
+                transition: "all 0.2s",
+              }}>
+                <input type="checkbox"
+                  checked={(form.rehabGoals || []).includes(goal.value)}
+                  onChange={e => {
+                    const current = form.rehabGoals || [];
+                    if (e.target.checked) {
+                      setField("rehabGoals", [...current, goal.value]);
+                    } else {
+                      setField("rehabGoals", current.filter(g => g !== goal.value));
+                    }
+                  }}
+                  style={{ accentColor: "#0EA5E9", width: 15, height: 15, cursor: "pointer" }} />
+                <span>{goal.icon}</span> {goal.label}
+              </label>
+            ))}
           </div>
         </div>
       </div>
@@ -1674,6 +1926,102 @@ function GeneratorView() {
       {/* ═══════════ STEP 4: PROTOCOL PARAMETERS ═══════════ */}
       {!protocol && wizardStep === 4 && (<>
 
+      {/* ═══════════ SECTION 4: PROTOCOL PARAMETERS ═══════════ */}
+      <div style={{ background: "#1B1B2F", border: "2px solid #2A2A4A", borderRadius: 12, padding: 24, marginBottom: 16 }}>
+        <SectionHead icon={FiCalendar} title="Section 4 — Protocol Parameters" />
+        <div style={S.grid(3)}>
+          <div>
+            <label style={S.label}>Protocol Duration</label>
+            <select style={{ ...S.select, width: "100%", border: "1.5px solid #3B3B5C" }} value={form.protocolLength} onChange={e => setField("protocolLength", e.target.value)}>
+              <option value="6">6 weeks — Accelerated (mild)</option>
+              <option value="8">8 weeks — Standard post-surgical</option>
+              <option value="10">10 weeks — Extended recovery</option>
+              <option value="12">12 weeks — Complex / multi-joint</option>
+              <option value="16">16 weeks — Conservative / neuro</option>
+            </select>
+          </div>
+          <div>
+            <label style={S.label}>Session Frequency (per week)</label>
+            <select style={{ ...S.select, width: "100%", border: "1.5px solid #3B3B5C" }} value={form.sessionFrequency} onChange={e => setField("sessionFrequency", e.target.value)}>
+              <option value="1">1× per week</option>
+              <option value="2">2× per week (Recommended)</option>
+              <option value="3">3× per week (Intensive)</option>
+              <option value="5">5× per week (Inpatient / Acute)</option>
+            </select>
+          </div>
+          <div>
+            <label style={S.label}>Expected Owner Compliance</label>
+            <select style={{ ...S.select, width: "100%", border: "1.5px solid #3B3B5C" }} value={form.ownerCompliance} onChange={e => setField("ownerCompliance", e.target.value)}>
+              <option value="Highly Motivated">Highly Motivated — Will follow HEP diligently</option>
+              <option value="Motivated">Motivated — Reliable with reminders</option>
+              <option value="Average">Average — Moderate adherence expected</option>
+              <option value="Limited">Limited — Minimal home exercise expected</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Home Exercise Program & Aquatic */}
+        <div style={{ display: "flex", gap: 16, marginTop: 14, flexWrap: "wrap" }}>
+          <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer",
+            padding: "8px 14px", background: form.homeExerciseProgram ? "rgba(16,185,129,0.15)" : "rgba(255,255,255,0.05)",
+            border: form.homeExerciseProgram ? "1.5px solid #10B981" : "1.5px solid #3B3B5C", borderRadius: 8, fontSize: 12, fontWeight: 600, color: "#E2E8F0",
+            transition: "all 0.2s" }}>
+            <input type="checkbox" checked={form.homeExerciseProgram} onChange={e => setField("homeExerciseProgram", e.target.checked)}
+              style={{ accentColor: "#10B981", width: 16, height: 16, cursor: "pointer" }} />
+            Include Home Exercise Program (HEP)
+          </label>
+          <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer",
+            padding: "8px 14px", background: form.aquaticAccess ? "rgba(14,165,233,0.15)" : "rgba(255,255,255,0.05)",
+            border: form.aquaticAccess ? "1.5px solid #0EA5E9" : "1.5px solid #3B3B5C", borderRadius: 8, fontSize: 12, fontWeight: 600, color: "#E2E8F0",
+            transition: "all 0.2s" }}>
+            <input type="checkbox" checked={form.aquaticAccess} onChange={e => setField("aquaticAccess", e.target.checked)}
+              style={{ accentColor: "#0EA5E9", width: 16, height: 16, cursor: "pointer" }} />
+            Aquatic Therapy Available (UWTM / Pool)
+          </label>
+        </div>
+
+        {/* Available Therapeutic Modalities */}
+        <div style={{ marginTop: 16 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#7DD3FC", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10, paddingBottom: 4, borderBottom: "1px solid rgba(14,165,233,0.25)" }}>
+            Available Therapeutic Modalities
+          </div>
+          <div style={{ fontSize: 10, color: "#94A3B8", marginBottom: 10 }}>Select all modalities available at your facility (determines which interventions can be prescribed)</div>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            {[
+              { key: "modalityUWTM", label: "Underwater Treadmill", icon: "🌊" },
+              { key: "modalityLaser", label: "Therapeutic Laser (PBM)", icon: "🔴" },
+              { key: "modalityTENS", label: "TENS", icon: "⚡" },
+              { key: "modalityNMES", label: "NMES / E-Stim", icon: "⚡" },
+              { key: "modalityTherapeuticUS", label: "Therapeutic Ultrasound", icon: "📡" },
+              { key: "modalityShockwave", label: "Shockwave (ESWT)", icon: "💥" },
+              { key: "modalityCryotherapy", label: "Cryotherapy", icon: "❄️" },
+              { key: "modalityHeatTherapy", label: "Heat Therapy", icon: "🔥" },
+              { key: "modalityPulsedEMF", label: "Pulsed EMF (PEMF)", icon: "🧲" },
+            ].map(mod => (
+              <label key={mod.key} style={{
+                display: "flex", alignItems: "center", gap: 7, cursor: "pointer",
+                padding: "7px 12px", borderRadius: 8, fontSize: 11, fontWeight: 600,
+                color: "#E2E8F0",
+                background: form[mod.key] ? "rgba(14,165,233,0.15)" : "rgba(255,255,255,0.05)",
+                border: form[mod.key] ? "1.5px solid #0EA5E9" : "1.5px solid #3B3B5C",
+                transition: "all 0.2s",
+              }}>
+                <input type="checkbox" checked={form[mod.key]} onChange={e => setField(mod.key, e.target.checked)}
+                  style={{ accentColor: "#0EA5E9", width: 14, height: 14, cursor: "pointer" }} />
+                <span>{mod.icon}</span> {mod.label}
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {/* Special Instructions */}
+        <div style={{ marginTop: 14 }}>
+          <label style={S.label}>Special Instructions / Clinical Notes</label>
+          <textarea style={{ ...S.input, border: "1.5px solid #3B3B5C", minHeight: 56, resize: "vertical", fontFamily: "inherit" }} value={form.specialInstructions} onChange={e => setField("specialInstructions", e.target.value)}
+            placeholder="e.g. Fearful of water — avoid aquatic initially, aggressive with handling — needs muzzle for manual therapy, owner has pool at home" />
+        </div>
+      </div>
+
       {/* ═══════════ PRE-PROTOCOL SUMMARY OVERVIEW ═══════════ */}
       {(() => {
         // Find the diagnosis label from the CONDITIONS object
@@ -1709,39 +2057,39 @@ function GeneratorView() {
 
         return (
           <div style={{
-            background: `linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 50%, #F0FDF4 100%)`,
-            border: "2px solid #1E3A5F", borderRadius: 12, padding: 24, marginBottom: 16,
+            background: `linear-gradient(135deg, #1B1B2F 0%, #1E2240 50%, #1B2838 100%)`,
+            border: "2px solid #2A2A4A", borderRadius: 12, padding: 24, marginBottom: 16,
             position: "relative", overflow: "hidden",
           }}>
             {/* Decorative top accent */}
             <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 4, background: "linear-gradient(90deg, #0F4C81, #0EA5E9, #10B981)" }} />
 
             <div style={{ ...S.sectionHeader(), marginTop: 4 }}>
-              <FiCheckCircle size={14} style={{ color: "#1E3A5F" }} /> PRE-PROTOCOL SUMMARY
+              <FiCheckCircle size={14} style={{ color: "#0EA5E9" }} /> PRE-PROTOCOL SUMMARY
             </div>
 
             {/* Patient & Diagnosis Row */}
             <div style={S.grid(3)}>
               {/* Patient Info Card */}
-              <div style={{ background: "#fff", border: "1.5px solid #1E3A5F", borderRadius: 10, padding: "14px 16px" }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: "#1E3A5F", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 8 }}>Patient</div>
-                <div style={{ fontSize: 15, fontWeight: 800, color: "#000", marginBottom: 4 }}>
+              <div style={{ background: "rgba(255,255,255,0.05)", border: "1.5px solid #3B3B5C", borderRadius: 10, padding: "14px 16px" }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "#7DD3FC", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 8 }}>Patient</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: "#E2E8F0", marginBottom: 4 }}>
                   {form.patientName || "—"} <span style={{ fontSize: 12, fontWeight: 400 }}>({form.sex || "—"})</span>
                 </div>
-                <div style={{ fontSize: 12, color: "#000", marginBottom: 2 }}>{form.breed || "Breed not selected"}</div>
+                <div style={{ fontSize: 12, color: "#CBD5E1", marginBottom: 2 }}>{form.breed || "Breed not selected"}</div>
                 <div style={{ display: "flex", gap: 12, marginTop: 6 }}>
-                  <span style={{ fontSize: 11, color: "#000", fontWeight: 500 }}>Age: <strong>{form.age ? form.age + " yr" : "—"}</strong></span>
-                  <span style={{ fontSize: 11, color: "#000", fontWeight: 500 }}>Wt: <strong>{form.weightKg ? form.weightKg + " kg" : "—"}{form.weightLbs ? " (" + form.weightLbs + " lbs)" : ""}</strong></span>
-                  <span style={{ fontSize: 11, color: "#000", fontWeight: 500 }}>BCS: <strong>{form.bodyConditionScore}/9</strong></span>
+                  <span style={{ fontSize: 11, color: "#CBD5E1", fontWeight: 500 }}>Age: <strong>{form.age ? form.age + " yr" : "—"}</strong></span>
+                  <span style={{ fontSize: 11, color: "#CBD5E1", fontWeight: 500 }}>Wt: <strong>{form.weightKg ? form.weightKg + " kg" : "—"}{form.weightLbs ? " (" + form.weightLbs + " lbs)" : ""}</strong></span>
+                  <span style={{ fontSize: 11, color: "#CBD5E1", fontWeight: 500 }}>BCS: <strong>{form.bodyConditionScore}/9</strong></span>
                 </div>
               </div>
 
               {/* Diagnosis Card */}
-              <div style={{ background: "#fff", border: "1.5px solid #1E3A5F", borderRadius: 10, padding: "14px 16px" }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: "#1E3A5F", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 8 }}>Diagnosis & Region</div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "#000", marginBottom: 4 }}>{diagLabel}</div>
-                {diagCategory && <div style={{ fontSize: 11, color: "#000", fontWeight: 400, marginBottom: 4 }}>Category: {diagCategory}</div>}
-                <div style={{ fontSize: 11, color: "#000", fontWeight: 500 }}>Region: <strong>{form.affectedRegion || "—"}</strong></div>
+              <div style={{ background: "rgba(255,255,255,0.05)", border: "1.5px solid #3B3B5C", borderRadius: 10, padding: "14px 16px" }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "#7DD3FC", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 8 }}>Diagnosis & Region</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#E2E8F0", marginBottom: 4 }}>{diagLabel}</div>
+                {diagCategory && <div style={{ fontSize: 11, color: "#94A3B8", fontWeight: 400, marginBottom: 4 }}>Category: {diagCategory}</div>}
+                <div style={{ fontSize: 11, color: "#CBD5E1", fontWeight: 500 }}>Region: <strong>{form.affectedRegion || "—"}</strong></div>
                 <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
                   <span style={{
                     fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 4,
@@ -1760,17 +2108,17 @@ function GeneratorView() {
               </div>
 
               {/* Treatment Plan Card */}
-              <div style={{ background: "#fff", border: "1.5px solid #1E3A5F", borderRadius: 10, padding: "14px 16px" }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: "#1E3A5F", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 8 }}>Treatment Plan</div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: "#000", marginBottom: 4 }}>{txLabel}</div>
+              <div style={{ background: "rgba(255,255,255,0.05)", border: "1.5px solid #3B3B5C", borderRadius: 10, padding: "14px 16px" }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "#7DD3FC", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 8 }}>Treatment Plan</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "#E2E8F0", marginBottom: 4 }}>{txLabel}</div>
                 {form.treatmentApproach === "surgical" && form.surgeryType && (
-                  <div style={{ fontSize: 11, color: "#000", fontWeight: 500, marginBottom: 2 }}>Procedure: <strong>{form.surgeryType}</strong></div>
+                  <div style={{ fontSize: 11, color: "#CBD5E1", fontWeight: 500, marginBottom: 2 }}>Procedure: <strong>{form.surgeryType}</strong></div>
                 )}
                 {form.treatmentApproach === "surgical" && form.postOpDay && (
-                  <div style={{ fontSize: 11, color: "#000", fontWeight: 500, marginBottom: 2 }}>Post-Op Day: <strong>{form.postOpDay}</strong></div>
+                  <div style={{ fontSize: 11, color: "#CBD5E1", fontWeight: 500, marginBottom: 2 }}>Post-Op Day: <strong>{form.postOpDay}</strong></div>
                 )}
                 {form.weightBearingStatus && (
-                  <div style={{ fontSize: 11, color: "#000", fontWeight: 500, marginBottom: 2 }}>Weight Bearing: <strong>{form.weightBearingStatus}</strong></div>
+                  <div style={{ fontSize: 11, color: "#CBD5E1", fontWeight: 500, marginBottom: 2 }}>Weight Bearing: <strong>{form.weightBearingStatus}</strong></div>
                 )}
                 {ownerDeclined && (
                   <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 6, padding: "4px 8px", background: "#FEF3C7", border: "1px solid #D97706", borderRadius: 4 }}>
@@ -1782,20 +2130,20 @@ function GeneratorView() {
             </div>
 
             {/* Exercise Availability Row */}
-            <div style={{ marginTop: 16, background: "#fff", border: "1.5px solid #1E3A5F", borderRadius: 10, padding: "14px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ marginTop: 16, background: "rgba(255,255,255,0.05)", border: "1.5px solid #3B3B5C", borderRadius: 10, padding: "14px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div>
-                <div style={{ fontSize: 10, fontWeight: 700, color: "#1E3A5F", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 6 }}>Exercise Library Available</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "#7DD3FC", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 6 }}>Exercise Library Available</div>
                 <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
-                  <div style={{ fontSize: 11, color: "#000", fontWeight: 500 }}>
-                    Total Exercises: <strong style={{ fontSize: 14, color: "#0F4C81" }}>{totalExercises}</strong>
+                  <div style={{ fontSize: 11, color: "#CBD5E1", fontWeight: 500 }}>
+                    Total Exercises: <strong style={{ fontSize: 14, color: "#7DD3FC" }}>{totalExercises}</strong>
                   </div>
                   {relevantExercises.length > 0 && (
-                    <div style={{ fontSize: 11, color: "#000", fontWeight: 500 }}>
+                    <div style={{ fontSize: 11, color: "#CBD5E1", fontWeight: 500 }}>
                       Condition-Matched: <strong style={{ fontSize: 14, color: "#059669" }}>{relevantExercises.length}</strong>
                     </div>
                   )}
                   {form.currentMedications && (
-                    <div style={{ fontSize: 11, color: "#000", fontWeight: 500 }}>
+                    <div style={{ fontSize: 11, color: "#CBD5E1", fontWeight: 500 }}>
                       Active Medications: <strong>{form.currentMedications}</strong>
                     </div>
                   )}
@@ -1809,44 +2157,73 @@ function GeneratorView() {
               </div>
             </div>
 
+            {/* Rehab Goals & Protocol Config Row */}
+            <div style={{ marginTop: 12, display: "flex", gap: 12 }}>
+              {/* Rehab Goals */}
+              <div style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: "1.5px solid #3B3B5C", borderRadius: 10, padding: "12px 16px" }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "#7DD3FC", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 6 }}>Rehab Goals</div>
+                {(form.rehabGoals || []).length > 0 ? (
+                  <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
+                    {(form.rehabGoals || []).map(g => (
+                      <span key={g} style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 4, background: "rgba(14,165,233,0.15)", color: "#7DD3FC" }}>
+                        {g.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())}
+                      </span>
+                    ))}
+                  </div>
+                ) : <span style={{ fontSize: 11, color: "#94A3B8" }}>No goals selected</span>}
+              </div>
+              {/* Protocol Config */}
+              <div style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: "1.5px solid #3B3B5C", borderRadius: 10, padding: "12px 16px" }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "#7DD3FC", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 6 }}>Protocol Configuration</div>
+                <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                  <span style={{ fontSize: 11, color: "#CBD5E1", fontWeight: 500 }}>{form.protocolLength} weeks</span>
+                  <span style={{ fontSize: 11, color: "#CBD5E1", fontWeight: 500 }}>{form.sessionFrequency}×/week</span>
+                  {form.homeExerciseProgram && <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 4, background: "rgba(16,185,129,0.15)", color: "#6EE7B7" }}>HEP Included</span>}
+                  {form.aquaticAccess && <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 4, background: "rgba(14,165,233,0.15)", color: "#7DD3FC" }}>Aquatic</span>}
+                </div>
+                {/* Modalities count */}
+                {(() => {
+                  const modCount = ["modalityUWTM","modalityLaser","modalityTENS","modalityNMES","modalityTherapeuticUS","modalityShockwave","modalityCryotherapy","modalityHeatTherapy","modalityPulsedEMF"].filter(k => form[k]).length;
+                  return modCount > 0 ? <div style={{ fontSize: 10, color: "#94A3B8", marginTop: 4 }}>{modCount} modalities available</div> : null;
+                })()}
+              </div>
+            </div>
+
+            {/* Objective Measurements Summary */}
+            {(form.circumferenceAffected || form.romFlexion || form.muscleCondition !== "Normal" || +form.jointEffusion > 0) && (
+              <div style={{ marginTop: 12, background: "rgba(255,255,255,0.05)", border: "1.5px solid #3B3B5C", borderRadius: 10, padding: "12px 16px" }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "#7DD3FC", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 6 }}>Baseline Measurements</div>
+                <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+                  {form.circumferenceAffected && form.circumferenceContralateral && (
+                    <span style={{ fontSize: 11, color: "#CBD5E1", fontWeight: 500 }}>
+                      Circumference: {form.circumferenceAffected}cm / {form.circumferenceContralateral}cm
+                      ({Math.abs(parseFloat(form.circumferenceAffected) - parseFloat(form.circumferenceContralateral)).toFixed(1)}cm diff)
+                    </span>
+                  )}
+                  {form.romFlexion && <span style={{ fontSize: 11, color: "#CBD5E1", fontWeight: 500 }}>ROM: {form.romFlexion}°–{form.romExtension || "—"}°</span>}
+                  {form.muscleCondition !== "Normal" && <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 4, background: "rgba(220,38,38,0.15)", color: "#FCA5A5" }}>{form.muscleCondition}</span>}
+                  {+form.jointEffusion > 0 && <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 4, background: "rgba(217,119,6,0.15)", color: "#FCD34D" }}>Effusion: {form.jointEffusion}/3</span>}
+                </div>
+              </div>
+            )}
+
             {/* Missing Info Warnings */}
-            {(!form.patientName || !form.diagnosis || !form.treatmentApproach) && (
+            {(!form.patientName || !form.diagnosis || !form.treatmentApproach || (form.rehabGoals || []).length === 0) && (
               <div style={{ marginTop: 12, padding: "10px 16px", background: "#FEF3C7", border: "1.5px solid #D97706", borderRadius: 8, display: "flex", alignItems: "center", gap: 8 }}>
                 <FiAlertTriangle size={14} style={{ color: "#D97706" }} />
                 <span style={{ fontSize: 11, fontWeight: 600, color: "#92400E" }}>
-                  Missing required fields:
+                  Missing recommended fields:
                   {!form.patientName && " Patient Name,"}
                   {!form.diagnosis && " Diagnosis,"}
-                  {!form.treatmentApproach && " Treatment Approach"}
-                  {" — please go back and complete before generating."}
+                  {!form.treatmentApproach && " Treatment Approach,"}
+                  {(form.rehabGoals || []).length === 0 && " Rehab Goals"}
+                  {" — go back and complete for optimal protocol generation."}
                 </span>
               </div>
             )}
           </div>
         );
       })()}
-
-      {/* ═══════════ SECTION 4: PROTOCOL PARAMETERS ═══════════ */}
-      <div style={{ background: "#EFF6FF", border: "2px solid #1E3A5F", borderRadius: 12, padding: 24, marginBottom: 16 }}>
-        <SectionHead icon={FiCalendar} title="Section 4 — Protocol Parameters" />
-        <div style={S.grid(2)}>
-          <div>
-            <label style={S.label}>Protocol Duration</label>
-            <select style={{ ...S.select, width: "100%", border: "1.5px solid #1E3A5F" }} value={form.protocolLength} onChange={e => setField("protocolLength", e.target.value)}>
-              <option value="6">6 weeks — Accelerated (mild conditions)</option>
-              <option value="8">8 weeks — Standard post-surgical</option>
-              <option value="10">10 weeks — Extended recovery</option>
-              <option value="12">12 weeks — Complex / multi-joint</option>
-              <option value="16">16 weeks — Conservative management / neuro</option>
-            </select>
-          </div>
-          <div>
-            <label style={S.label}>Special Instructions</label>
-            <input style={{ ...S.input, border: "1.5px solid #1E3A5F" }} value={form.specialInstructions} onChange={e => setField("specialInstructions", e.target.value)}
-              placeholder="e.g. Fearful of water, aggressive with handling" />
-          </div>
-        </div>
-      </div>
 
       {/* ═══════════ GENERATE BUTTON — standalone with heavy neon green glow ═══════════ */}
       <div style={{ display: "flex", justifyContent: "center", padding: "12px 0 8px" }}>
@@ -3103,7 +3480,6 @@ function WelcomeView({ onEnter }) {
 // TOP NAVIGATION
 // ─────────────────────────────────────────────
 const NAV = [
-  { id: "generator", label: "Protocol Generator", icon: FiFileText,   desc: "Clinical intake & protocol" },
   { id: "clients",   label: "Patient Records",    icon: FiUsers,      desc: "Patient database" },
   { id: "exercises", label: "Exercise Library",    icon: FiBookOpen,   desc: "195 evidence-based exercises" },
   { id: "sessions",  label: "Session SOAP Notes",  icon: FiClipboard, desc: "Treatment documentation" },
@@ -3111,7 +3487,7 @@ const NAV = [
 ];
 
 const PAGE_TITLES = {
-  generator: { title: "K9 Exercise Protocols", sub: "Evidence-Based Vet-Recommended Exercise Protocols" },
+  generator: { title: "K9 Exercise Protocols", sub: "Evidence-Based | Vet-Recommended Exercise Protocols" },
   clients:   { title: "Patient Records",                    sub: "Canine rehabilitation patient database and medical histories" },
   exercises: { title: "Exercise Library",                   sub: "195 peer-reviewed therapeutic exercises with clinical parameters" },
   sessions:  { title: "Session SOAP Notes",                 sub: "Subjective, Objective, Assessment, Plan — treatment documentation" },
@@ -3121,10 +3497,26 @@ const PAGE_TITLES = {
 function TopNav({ view, setView, brand }) {
   return (
     <div style={S.topNav}>
-      <div style={S.topNavBrand}>
+      <style>{`
+        @keyframes brandGlow {
+          0%, 100% { text-shadow: 0 0 8px rgba(14,165,233,0.4), 0 0 16px rgba(14,165,233,0.15); }
+          50% { text-shadow: 0 0 14px rgba(14,165,233,0.7), 0 0 28px rgba(14,165,233,0.3), 0 0 42px rgba(14,165,233,0.1); }
+        }
+        @keyframes faviconPulse {
+          0%, 100% { filter: drop-shadow(0 0 4px rgba(14,165,233,0.5)); }
+          50% { filter: drop-shadow(0 0 10px rgba(14,165,233,0.9)) drop-shadow(0 0 20px rgba(14,165,233,0.3)); }
+        }
+      `}</style>
+      <div style={{ ...S.topNavBrand, cursor: "pointer" }} onClick={() => setView("generator")}>
         <img src="/favicon.png" alt="K9 Rehab Pro"
-          style={{ width: 32, height: 32, filter: "drop-shadow(0 0 6px rgba(14,165,233,0.6))" }} />
-        <span>{brand.clinicName || "K9 Rehab Pro\u2122"}</span>
+          style={{ width: 34, height: 34, animation: "faviconPulse 2.8s ease-in-out infinite" }} />
+        <span style={{
+          fontFamily: "'Exo 2', 'Orbitron', sans-serif",
+          fontSize: 16, fontWeight: 800, letterSpacing: "1.5px",
+          background: "linear-gradient(90deg, #fff 0%, #7DD3FC 50%, #fff 100%)",
+          WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+          animation: "brandGlow 3s ease-in-out infinite",
+        }}>{brand.clinicName || "K9 Rehab Pro\u2122"}</span>
       </div>
       <div style={S.topNavLinks}>
         {NAV.map(({ id, label, icon: Icon }) => (
@@ -3150,6 +3542,12 @@ export default function App() {
   const [view, setView] = useState("welcome");
   const [brand, setBrand] = useState({ clinicName: "K9 Rehab Pro™", accent: "#0F4C81" });
 
+  const [liveTime, setLiveTime] = useState(new Date());
+  useEffect(() => {
+    const timer = setInterval(() => setLiveTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
   const views = {
     clients:   <ClientsView />,
     generator: <GeneratorView />,
@@ -3162,11 +3560,17 @@ export default function App() {
     return <WelcomeView onEnter={() => setView("generator")} />;
   }
 
-  const now = new Date();
-  const dateStr = now.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+  const dateStr = liveTime.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+  const timeStr = liveTime.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 
   return (
     <div style={S.app}>
+      <style>{`
+        @keyframes glowSweep {
+          0% { background-position: -200% center; }
+          100% { background-position: 200% center; }
+        }
+      `}</style>
       {/* TOP NAV — replaces sidebar */}
       <TopNav view={view} setView={setView} brand={brand} />
 
@@ -3180,12 +3584,16 @@ export default function App() {
           </div>
           <div style={{ textAlign: "right" }}>
             <div style={{ fontSize: 11, color: C.textLight, fontWeight: 500 }}>{dateStr}</div>
-            <div style={{ fontSize: 10, color: C.teal, fontWeight: 600, marginTop: 2 }}>
-              <FiHeart size={9} style={{ marginRight: 3 }} />
-              Clinical Session Active
-            </div>
+            <div style={{ fontSize: 12, color: C.navy, fontWeight: 700, marginTop: 2, fontFamily: "'Exo 2', monospace", letterSpacing: "1px" }}>{timeStr}</div>
           </div>
         </div>
+        {/* Animated glow line — sweeps left to right continuously */}
+        <div style={{
+          height: 2, width: "100%",
+          background: `linear-gradient(90deg, transparent 0%, transparent 30%, ${C.teal} 50%, transparent 70%, transparent 100%)`,
+          backgroundSize: "200% 100%",
+          animation: "glowSweep 3s linear infinite",
+        }} />
 
         <div style={S.content} data-content-scroll>
           {views[view]}
