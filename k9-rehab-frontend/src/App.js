@@ -65,8 +65,8 @@ const S = {
     color: active ? "#fff" : "rgba(255,255,255,0.6)",
     background: active ? "rgba(14,165,233,0.22)" : "transparent",
     borderBottom: active ? "2px solid #0EA5E9" : "2px solid transparent",
-    boxShadow: active ? "0 0 10px rgba(14,165,233,0.3)" : "none",
-    transition: "all 0.2s ease",
+    boxShadow: active ? "0 0 12px rgba(14,165,233,0.4), 0 0 24px rgba(14,165,233,0.15)" : "0 0 0 rgba(14,165,233,0)",
+    transition: "all 0.25s ease",
   }),
   // ── WIZARD ──
   wizardProgress: {
@@ -498,6 +498,7 @@ function ProtocolExCard({ entry, onRemove }) {
 function GeneratorView() {
   const [protocol, setProtocol] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [showVideo, setShowVideo] = useState(false);
   const [error, setError] = useState(null);
   const [wizardStep, setWizardStep] = useState(1);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -510,13 +511,33 @@ function GeneratorView() {
     patientName: "", breed: "", age: "", dob: "",
     weightKg: "", weightLbs: "", sex: "Male Intact",
     diagnosis: "TPLO", affectedRegion: "Left Stifle",
-    surgeryDate: "", lamenessGrade: "2", bodyConditionScore: "5",
+    lamenessGrade: "2", bodyConditionScore: "5",
     painLevel: "3", mobilityLevel: "Limited",
     currentMedications: "", medsLastGiven: "", medicalHistory: "",
     specialInstructions: "", protocolLength: "8",
     clientName: "", clientEmail: "", clientPhone: "", clientPhone2: "",
     referringVet: "", mailingAddress: "", city: "", state: "", zipCode: "",
     nearbyHospital: "",
+    // Treatment Plan & Surgical Status
+    treatmentApproach: "",  // "surgical", "conservative", "palliative"
+    surgeryType: "",
+    surgeryDate: "",
+    surgeonName: "",
+    surgicalFacility: "",
+    anesthesiaRisk: "ASA II",
+    postOpDay: "",
+    vetRecommendation: "",  // what the vet recommended
+    ownerElection: "",      // what the owner elected
+    ownerDeclineReason: "", // if owner declines surgery
+    priorSurgeries: "",
+    complicationsNoted: "",
+    weightBearingStatus: "Toe-touching",
+    activityRestrictions: "",
+    eCollarRequired: false,
+    crateRestRequired: false,
+    slingAssistRequired: false,
+    incisionStatus: "Clean/Dry/Intact",
+    sutureRemovalDate: "",
     // Diagnostics
     diagRadiographs: false, diagRadiographsNotes: "",
     diagCT: false, diagCTNotes: "",
@@ -549,44 +570,132 @@ function GeneratorView() {
     }, 50);
   };
 
-  // ── Weight conversion (KG ↔ LBS) ──
+  // ── Weight conversion (KG ↔ LBS) with dosing safety warnings ──
+  const validateWeight = (kg) => {
+    const lbs = kg * 2.20462;
+    const warnings = [];
+    // Extreme outlier — likely entered LBS in KG field
+    if (kg > 90) {
+      warnings.push(`CRITICAL: ${kg} kg = ${lbs.toFixed(0)} lbs. Did you enter LBS in the KG field? This exceeds the weight of any known dog breed. Incorrect weight will cause medication dosing errors.`);
+    }
+    // Very heavy but possible (Great Dane, Mastiff, Saint Bernard)
+    else if (kg > 70) {
+      warnings.push(`Caution: ${kg} kg (${lbs.toFixed(0)} lbs) is very heavy. Confirm this is correct — only giant breeds (Mastiff, Great Dane, Saint Bernard) typically exceed 70 kg. Accurate weight is critical for safe drug dosing.`);
+    }
+    // Suspiciously low — possibly entered KG in LBS field
+    else if (kg > 0 && kg < 1) {
+      warnings.push(`Warning: ${kg} kg = ${lbs.toFixed(1)} lbs — extremely low. Did you enter KG correctly? Neonates only. Verify before calculating drug doses.`);
+    }
+    // Common error: LBS entered in KG field for medium dogs
+    else if (kg > 45 && kg <= 70) {
+      warnings.push(`Note: ${kg} kg = ${lbs.toFixed(0)} lbs. This is in the large/giant breed range. If this is a medium breed, you may have entered LBS in the KG field.`);
+    }
+    return warnings.length > 0 ? warnings.join(" ") : "";
+  };
+
   const handleWeightKg = (val) => {
     setField("weightKg", val);
     const kg = parseFloat(val);
     if (!isNaN(kg) && kg > 0) {
       setField("weightLbs", (kg * 2.20462).toFixed(1));
-      // Warning: if KG value seems too high for a dog (>90 kg = ~200 lbs)
-      if (kg > 90) setWeightWarning("Warning: " + kg + " kg = " + (kg * 2.20462).toFixed(0) + " lbs. Please confirm this is correct.");
-      else setWeightWarning("");
-    } else { setField("weightLbs", ""); setWeightWarning(""); }
+      setWeightWarning(validateWeight(kg));
+    } else {
+      setField("weightLbs", "");
+      setWeightWarning("");
+    }
   };
+
   const handleWeightLbs = (val) => {
     setField("weightLbs", val);
     const lbs = parseFloat(val);
     if (!isNaN(lbs) && lbs > 0) {
-      setField("weightKg", (lbs / 2.20462).toFixed(1));
+      const kg = lbs / 2.20462;
+      setField("weightKg", kg.toFixed(1));
+      // Check if LBS value seems wrong (entered KG in LBS field)
+      if (lbs < 2) {
+        setWeightWarning(`Warning: ${lbs} lbs = ${kg.toFixed(2)} kg — extremely low. Did you enter KG in the LBS field? Verify before calculating drug doses.`);
+      } else if (lbs > 200) {
+        setWeightWarning(`CRITICAL: ${lbs} lbs = ${kg.toFixed(1)} kg. No known dog breed exceeds 200 lbs. Please verify. Incorrect weight will cause medication dosing errors.`);
+      } else {
+        setWeightWarning(validateWeight(kg));
+      }
+    } else {
+      setField("weightKg", "");
       setWeightWarning("");
-    } else { setField("weightKg", ""); setWeightWarning(""); }
+    }
   };
 
   // ── DOB ↔ Age bidirectional ──
   const handleDob = (val) => {
     setField("dob", val);
     if (val) {
-      const birth = new Date(val);
+      const birth = new Date(val + "T00:00:00");
       const now = new Date();
       let years = now.getFullYear() - birth.getFullYear();
-      if (now.getMonth() < birth.getMonth() || (now.getMonth() === birth.getMonth() && now.getDate() < birth.getDate())) years--;
-      setField("age", String(Math.max(0, years)));
+      const monthDiff = now.getMonth() - birth.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < birth.getDate())) years--;
+      if (years < 0) years = 0;
+      setField("age", String(years));
+    } else {
+      setField("age", "");
     }
   };
   const handleAge = (val) => {
     setField("age", val);
     const years = parseInt(val);
-    if (!isNaN(years) && years >= 0) {
-      const d = new Date();
-      d.setFullYear(d.getFullYear() - years);
-      setField("dob", d.toISOString().split("T")[0]);
+    if (!isNaN(years) && years >= 0 && years <= 30) {
+      const now = new Date();
+      const birthYear = now.getFullYear() - years;
+      const month = String(now.getMonth() + 1).padStart(2, "0");
+      const day = String(now.getDate()).padStart(2, "0");
+      setField("dob", `${birthYear}-${month}-${day}`);
+    } else if (val === "") {
+      setField("dob", "");
+    }
+  };
+
+  // ── Surgery Date ↔ POD bidirectional + auto suture removal ──
+  const handleSurgeryDate = (val) => {
+    setField("surgeryDate", val);
+    if (val) {
+      const surgDate = new Date(val + "T00:00:00");
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
+      const diffMs = now.getTime() - surgDate.getTime();
+      const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+      setField("postOpDay", String(Math.max(0, diffDays)));
+      // Auto-generate suture removal date: 10-14 days post-op (standard = 14 days for dogs)
+      const sutureDate = new Date(surgDate);
+      sutureDate.setDate(sutureDate.getDate() + 14);
+      const yr = sutureDate.getFullYear();
+      const mo = String(sutureDate.getMonth() + 1).padStart(2, "0");
+      const dy = String(sutureDate.getDate()).padStart(2, "0");
+      setField("sutureRemovalDate", `${yr}-${mo}-${dy}`);
+    } else {
+      setField("postOpDay", "");
+      setField("sutureRemovalDate", "");
+    }
+  };
+  const handlePostOpDay = (val) => {
+    setField("postOpDay", val);
+    const days = parseInt(val);
+    if (!isNaN(days) && days >= 0) {
+      const surgDate = new Date();
+      surgDate.setDate(surgDate.getDate() - days);
+      const yr = surgDate.getFullYear();
+      const mo = String(surgDate.getMonth() + 1).padStart(2, "0");
+      const dy = String(surgDate.getDate()).padStart(2, "0");
+      setField("surgeryDate", `${yr}-${mo}-${dy}`);
+      // Auto-generate suture removal date: 14 days from surgery
+      const sutureDate = new Date(surgDate);
+      sutureDate.setDate(sutureDate.getDate() + 14);
+      const syr = sutureDate.getFullYear();
+      const smo = String(sutureDate.getMonth() + 1).padStart(2, "0");
+      const sdy = String(sutureDate.getDate()).padStart(2, "0");
+      setField("sutureRemovalDate", `${syr}-${smo}-${sdy}`);
+    } else if (val === "") {
+      setField("surgeryDate", "");
+      setField("sutureRemovalDate", "");
     }
   };
 
@@ -610,17 +719,26 @@ function GeneratorView() {
 
   // ── Breed list (top 50+ most common) ──
   const BREEDS = [
-    "Labrador Retriever","German Shepherd","Golden Retriever","French Bulldog","Bulldog",
-    "Poodle (Standard)","Poodle (Miniature)","Beagle","Rottweiler","German Shorthaired Pointer",
-    "Dachshund","Pembroke Welsh Corgi","Australian Shepherd","Yorkshire Terrier","Boxer",
-    "Cavalier King Charles Spaniel","Doberman Pinscher","Miniature Schnauzer","Great Dane","Shih Tzu",
-    "Siberian Husky","Bernese Mountain Dog","Cane Corso","Pomeranian","Shetland Sheepdog",
-    "Boston Terrier","Havanese","English Springer Spaniel","Brittany","Cocker Spaniel",
-    "Miniature American Shepherd","Border Collie","Vizsla","Weimaraner","Belgian Malinois",
-    "Chihuahua","Maltese","Collie","Basset Hound","Mastiff",
-    "Rhodesian Ridgeback","Newfoundland","Bichon Frise","West Highland White Terrier","Pit Bull Terrier",
-    "Akita","Bloodhound","Saint Bernard","Chesapeake Bay Retriever","Greyhound",
-    "Irish Setter","Staffordshire Bull Terrier","Jack Russell Terrier","Australian Cattle Dog",
+    "Akita","Australian Cattle Dog","Australian Shepherd",
+    "Basset Hound","Beagle","Belgian Malinois","Bernese Mountain Dog","Bichon Frise","Bloodhound",
+    "Border Collie","Boston Terrier","Boxer","Brittany","Bulldog",
+    "Cane Corso","Cavalier King Charles Spaniel","Chesapeake Bay Retriever","Chihuahua","Cocker Spaniel","Collie",
+    "Dachshund","Doberman Pinscher",
+    "English Springer Spaniel",
+    "French Bulldog",
+    "German Shepherd","German Shorthaired Pointer","Golden Retriever","Great Dane","Greyhound",
+    "Havanese",
+    "Irish Setter",
+    "Jack Russell Terrier",
+    "Labrador Retriever",
+    "Maltese","Mastiff","Miniature American Shepherd","Miniature Schnauzer",
+    "Newfoundland",
+    "Pembroke Welsh Corgi","Pit Bull Terrier","Pomeranian","Poodle (Miniature)","Poodle (Standard)",
+    "Rhodesian Ridgeback","Rottweiler",
+    "Saint Bernard","Shetland Sheepdog","Shih Tzu","Siberian Husky","Staffordshire Bull Terrier",
+    "Vizsla",
+    "Weimaraner","West Highland White Terrier",
+    "Yorkshire Terrier",
     "Mixed Breed / Other"
   ];
 
@@ -719,18 +837,25 @@ function GeneratorView() {
     if (!form.patientName.trim()) { setError("Patient name is required"); return; }
     if (!form.diagnosis) { setError("Please select a diagnosis"); return; }
 
-    setLoading(true); setError(null); setProtocol(null);
+    setLoading(true); setShowVideo(true); setError(null); setProtocol(null);
+
+    // Video plays full duration (8s) + 3s pause on last frame = 11s minimum
+    const minDelay = new Promise(resolve => setTimeout(resolve, 11000));
+
     try {
-      const { data } = await axios.post(`${API}/generate-protocol`, {
-        ...form,
-        age: +form.age || 0,
-        weight: +form.weightLbs || +form.weightKg * 2.20462 || 0,
-        protocolLength: +form.protocolLength || 8
-      });
+      const [{ data }] = await Promise.all([
+        axios.post(`${API}/generate-protocol`, {
+          ...form,
+          age: +form.age || 0,
+          weight: +form.weightLbs || +form.weightKg * 2.20462 || 0,
+          protocolLength: +form.protocolLength || 8
+        }),
+        minDelay
+      ]);
       setProtocol(data);
     } catch (e) {
       setError(e.response?.data?.error || "Failed to generate protocol");
-    } finally { setLoading(false); }
+    } finally { setLoading(false); setShowVideo(false); }
   };
 
   const removeExercise = (weekIdx, exIdx) => {
@@ -778,7 +903,8 @@ function GeneratorView() {
     const steps = [
       { num: 1, label: "Client & Patient" },
       { num: 2, label: "Clinical Assessment" },
-      { num: 3, label: "Protocol Parameters" },
+      { num: 3, label: "Treatment Plan" },
+      { num: 4, label: "Protocol Parameters" },
     ];
     return (
       <div style={S.wizardProgress}>
@@ -800,6 +926,59 @@ function GeneratorView() {
       </div>
     );
   };
+
+  // ── Full-screen video while generating ──
+  if (showVideo) {
+    return (
+      <div style={{
+        position: "fixed", inset: 0, zIndex: 9999,
+        background: "#000", display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center",
+      }}>
+        <video
+          src="/loading-animation.mp4"
+          autoPlay
+          muted
+          playsInline
+          style={{
+            width: "100vw", height: "100vh",
+            objectFit: "contain",
+          }}
+        />
+        <button
+          onClick={() => setShowVideo(false)}
+          style={{
+            position: "fixed", bottom: 32, right: 40, zIndex: 10000,
+            padding: "10px 28px", borderRadius: 8,
+            background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)",
+            border: "1px solid rgba(255,255,255,0.25)",
+            color: "rgba(255,255,255,0.6)", fontSize: 12, fontWeight: 600,
+            cursor: "pointer", transition: "all 0.2s",
+          }}
+          onMouseEnter={e => { e.currentTarget.style.color = "#fff"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.6)"; }}
+          onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,255,255,0.6)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.25)"; }}
+        >
+          Skip →
+        </button>
+      </div>
+    );
+  }
+
+  // ── API still working after video skipped — compact spinner ──
+  if (loading) {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "40vh", gap: 16 }}>
+        <div style={{
+          width: 48, height: 48, borderRadius: "50%",
+          border: "4px solid #E2E8F0", borderTopColor: "#10B981",
+          animation: "spin 0.8s linear infinite",
+        }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        <div style={{ fontSize: 14, fontWeight: 600, color: "#0F4C81" }}>Generating Protocol...</div>
+        <div style={{ fontSize: 11, color: "#94A3B8" }}>Building your evidence-based exercise program</div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -916,9 +1095,30 @@ function GeneratorView() {
           </div>
         </div>
         {weightWarning && (
-          <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8, padding: "8px 12px", background: "#FEF2F2", border: "1px solid #DC2626", borderRadius: 6 }}>
-            <FiAlertTriangle size={14} style={{ color: "#DC2626" }} />
-            <span style={{ fontSize: 12, color: "#DC2626", fontWeight: 500 }}>{weightWarning}</span>
+          <div style={{
+            display: "flex", alignItems: "flex-start", gap: 10, marginTop: 10, padding: "12px 16px",
+            background: weightWarning.includes("CRITICAL") ? "#FEE2E2" : "#FEF3C7",
+            border: weightWarning.includes("CRITICAL") ? "2px solid #DC2626" : "1.5px solid #D97706",
+            borderRadius: 8,
+          }}>
+            <FiAlertTriangle size={18} style={{
+              color: weightWarning.includes("CRITICAL") ? "#DC2626" : "#D97706",
+              flexShrink: 0, marginTop: 2
+            }} />
+            <div>
+              <div style={{
+                fontSize: 12, fontWeight: 700,
+                color: weightWarning.includes("CRITICAL") ? "#991B1B" : "#92400E",
+                marginBottom: 2,
+              }}>
+                {weightWarning.includes("CRITICAL") ? "DOSING SAFETY ALERT" : "Weight Verification Needed"}
+              </div>
+              <span style={{
+                fontSize: 11, lineHeight: 1.5,
+                color: weightWarning.includes("CRITICAL") ? "#991B1B" : "#92400E",
+                fontWeight: 500,
+              }}>{weightWarning}</span>
+            </div>
           </div>
         )}
         <div style={{ ...S.grid(2), marginTop: 12 }}>
@@ -929,7 +1129,7 @@ function GeneratorView() {
                 onChange={e => setField("bodyConditionScore", e.target.value)} />
               <div style={{ textAlign: "center", minWidth: 60 }}>
                 <span style={{ fontSize: 16, fontWeight: 700, color: C.navy }}>{form.bodyConditionScore}/9</span>
-                <div style={{ fontSize: 9, color: C.textMid, fontWeight: 500 }}>
+                <div style={{ fontSize: 9, color: "#000", fontWeight: 500 }}>
                   {+form.bodyConditionScore <= 3 ? "Underweight" : +form.bodyConditionScore <= 5 ? "Ideal" : +form.bodyConditionScore <= 7 ? "Overweight" : "Obese"}
                 </div>
               </div>
@@ -951,15 +1151,17 @@ function GeneratorView() {
         </div>
       </div>
 
-      {/* Next button with glow */}
+      {/* Next button with neon glow */}
       <div style={{ display: "flex", justifyContent: "flex-end", padding: "8px 0" }}>
         <button
           style={{
             background: "#1E5A8A", color: "#fff", display: "inline-flex", alignItems: "center", gap: 6,
             borderRadius: 8, border: "none", cursor: "pointer", padding: "14px 32px", fontSize: 14, fontWeight: 700,
-            boxShadow: "0 0 12px rgba(30,90,138,0.3), 0 0 24px rgba(30,90,138,0.1)",
+            boxShadow: "0 0 14px rgba(14,165,233,0.35), 0 0 28px rgba(14,165,233,0.12)",
             transition: "all 0.25s",
           }}
+          onMouseEnter={e => e.currentTarget.style.boxShadow = "0 0 20px rgba(14,165,233,0.5), 0 0 40px rgba(14,165,233,0.2)"}
+          onMouseLeave={e => e.currentTarget.style.boxShadow = "0 0 14px rgba(14,165,233,0.35), 0 0 28px rgba(14,165,233,0.12)"}
           onClick={() => goToStep(2)}
         >
           Next: Clinical Assessment <FiChevronRight size={16} />
@@ -1040,16 +1242,10 @@ function GeneratorView() {
           </div>
         </div>
 
-        <div style={{ ...S.grid(2), marginTop: 12 }}>
-          <div>
-            <label style={S.label}>Surgery / Injury Date</label>
-            <input style={{ ...S.input, border: "1.5px solid #1E3A5F" }} type="date" value={form.surgeryDate} onChange={e => setField("surgeryDate", e.target.value)} />
-          </div>
-          <div>
-            <label style={S.label}>Medical History / Notes</label>
-            <input style={{ ...S.input, border: "1.5px solid #1E3A5F" }} value={form.medicalHistory} onChange={e => setField("medicalHistory", e.target.value)}
-              placeholder="Prior surgeries, chronic conditions, behavioral notes" />
-          </div>
+        <div style={{ marginTop: 12 }}>
+          <label style={S.label}>Medical History / Notes</label>
+          <input style={{ ...S.input, border: "1.5px solid #1E3A5F" }} value={form.medicalHistory} onChange={e => setField("medicalHistory", e.target.value)}
+            placeholder="Prior surgeries, chronic conditions, behavioral notes" />
         </div>
       </div>
 
@@ -1149,16 +1345,325 @@ function GeneratorView() {
 
       {/* Step 2 navigation */}
       <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0" }}>
-        <button style={S.btn("ghost")} onClick={() => goToStep(1)}>
+        <button
+          style={{
+            ...S.btn("ghost"), boxShadow: "0 0 8px rgba(14,165,233,0.15)",
+            transition: "all 0.25s",
+          }}
+          onMouseEnter={e => e.currentTarget.style.boxShadow = "0 0 14px rgba(14,165,233,0.3)"}
+          onMouseLeave={e => e.currentTarget.style.boxShadow = "0 0 8px rgba(14,165,233,0.15)"}
+          onClick={() => goToStep(1)}
+        >
           ← Back to Patient Info
         </button>
         <button
           style={{
             background: "#1E5A8A", color: "#fff", display: "inline-flex", alignItems: "center", gap: 6,
             borderRadius: 8, border: "none", cursor: "pointer", padding: "14px 32px", fontSize: 14, fontWeight: 700,
-            boxShadow: "0 0 12px rgba(30,90,138,0.3), 0 0 24px rgba(30,90,138,0.1)",
+            boxShadow: "0 0 14px rgba(14,165,233,0.35), 0 0 28px rgba(14,165,233,0.12)",
+            transition: "all 0.25s",
           }}
+          onMouseEnter={e => e.currentTarget.style.boxShadow = "0 0 20px rgba(14,165,233,0.5), 0 0 40px rgba(14,165,233,0.2)"}
+          onMouseLeave={e => e.currentTarget.style.boxShadow = "0 0 14px rgba(14,165,233,0.35), 0 0 28px rgba(14,165,233,0.12)"}
           onClick={() => goToStep(3)}
+        >
+          Next: Treatment Plan <FiChevronRight size={16} />
+        </button>
+      </div>
+
+      </>)}
+
+      {/* ═══════════ STEP 3: TREATMENT PLAN & SURGICAL STATUS ═══════════ */}
+      {!protocol && wizardStep === 3 && (<>
+
+      <div style={{ background: "#EFF6FF", border: "2px solid #1E3A5F", borderRadius: 12, padding: 24, marginBottom: 16 }}>
+        <SectionHead icon={FiFileText} title="Section 3 — Treatment Plan & Surgical Status" />
+
+        {/* ── Treatment Approach ── */}
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#1E3A5F", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 12, paddingBottom: 4, borderBottom: "1px solid #1E3A5F40" }}>
+            Treatment Approach
+          </div>
+          <div style={S.grid(3)}>
+            {[
+              { value: "surgical", label: "Surgical", icon: "🔪", desc: "Post-operative rehabilitation" },
+              { value: "conservative", label: "Conservative", icon: "🩺", desc: "Non-surgical management" },
+              { value: "palliative", label: "Palliative / Comfort", icon: "💙", desc: "Quality of life focused" },
+            ].map(opt => (
+              <div key={opt.value}
+                onClick={() => setField("treatmentApproach", opt.value)}
+                style={{
+                  padding: "14px 16px", borderRadius: 10, cursor: "pointer",
+                  background: form.treatmentApproach === opt.value ? "#DBEAFE" : "#fff",
+                  border: form.treatmentApproach === opt.value ? "2px solid #1E3A5F" : "1.5px solid #1E3A5F",
+                  boxShadow: form.treatmentApproach === opt.value ? "0 0 12px rgba(14,165,233,0.2)" : "none",
+                  transition: "all 0.2s",
+                }}>
+                <div style={{ fontSize: 20, marginBottom: 4 }}>{opt.icon}</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#000" }}>{opt.label}</div>
+                <div style={{ fontSize: 11, color: "#000", marginTop: 2, fontWeight: 400 }}>{opt.desc}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Veterinary Recommendation vs Owner Election ── */}
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#1E3A5F", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 12, paddingBottom: 4, borderBottom: "1px solid #1E3A5F40" }}>
+            Clinical Recommendation & Owner Decision
+          </div>
+          <div style={S.grid(2)}>
+            <div>
+              <label style={S.label}>Veterinary Recommendation</label>
+              <select style={{ ...S.select, width: "100%", border: "1.5px solid #1E3A5F" }} value={form.vetRecommendation} onChange={e => setField("vetRecommendation", e.target.value)}>
+                <option value="">— Select —</option>
+                <option value="Surgery - Strongly Recommended">Surgery — Strongly Recommended</option>
+                <option value="Surgery - Recommended">Surgery — Recommended</option>
+                <option value="Surgery - Optional">Surgery — Optional (Either approach viable)</option>
+                <option value="Conservative - Recommended">Conservative Management — Recommended</option>
+                <option value="Conservative - Only Option">Conservative — Only Viable Option</option>
+                <option value="Palliative">Palliative / Comfort Care</option>
+              </select>
+            </div>
+            <div>
+              <label style={S.label}>Owner Election / Decision</label>
+              <select style={{ ...S.select, width: "100%", border: "1.5px solid #1E3A5F" }} value={form.ownerElection} onChange={e => setField("ownerElection", e.target.value)}>
+                <option value="">— Select —</option>
+                <option value="Elected Surgery">Elected Surgery (per recommendation)</option>
+                <option value="Elected Conservative">Elected Conservative Management</option>
+                <option value="Declined Surgery - Conservative">Declined Surgery — Elected Conservative</option>
+                <option value="Declined Surgery - Financial">Declined Surgery — Financial Constraints</option>
+                <option value="Declined Surgery - Age/Risk">Declined Surgery — Patient Age/Risk Concern</option>
+                <option value="Seeking Second Opinion">Seeking Second Opinion</option>
+                <option value="Elected Palliative">Elected Palliative / Comfort Care</option>
+              </select>
+            </div>
+          </div>
+          {/* Warning banner when owner declines recommended surgery */}
+          {form.vetRecommendation && form.vetRecommendation.startsWith("Surgery") && form.ownerElection && form.ownerElection.startsWith("Declined") && (
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 10, marginTop: 12, padding: "12px 16px", background: "#FEF3C7", border: "1.5px solid #D97706", borderRadius: 8 }}>
+              <FiAlertTriangle size={18} style={{ color: "#D97706", flexShrink: 0, marginTop: 2 }} />
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "#92400E" }}>Owner Declines Recommended Surgery</div>
+                <div style={{ fontSize: 11, color: "#92400E", marginTop: 4 }}>Protocol will be generated for conservative / non-surgical management. Document informed consent and owner's understanding of prognosis differences.</div>
+                <div style={{ marginTop: 8 }}>
+                  <label style={{ ...S.label, fontSize: 10 }}>Reason / Notes for Declining (Document for Medical Record)</label>
+                  <input style={{ ...S.input, border: "1.5px solid #D97706", background: "#FFFBEB", fontSize: 11 }}
+                    value={form.ownerDeclineReason} onChange={e => setField("ownerDeclineReason", e.target.value)}
+                    placeholder="Owner's stated reason, informed consent discussion documented" />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ── Surgical Details (shown when surgical approach selected) ── */}
+        {form.treatmentApproach === "surgical" && (
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "#1E3A5F", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 12, paddingBottom: 4, borderBottom: "1px solid #1E3A5F40" }}>
+              Surgical Details
+            </div>
+            <div style={S.grid(3)}>
+              <div>
+                <label style={S.label}>Surgery Type / Procedure</label>
+                <select style={{ ...S.select, width: "100%", border: "1.5px solid #1E3A5F" }} value={form.surgeryType} onChange={e => setField("surgeryType", e.target.value)}>
+                  <option value="">— Select Procedure —</option>
+                  <optgroup label="Stifle / Knee Procedures">
+                    <option value="TPLO">TPLO — Tibial Plateau Leveling Osteotomy</option>
+                    <option value="TTA">TTA — Tibial Tuberosity Advancement</option>
+                    <option value="Lateral Suture">Lateral Suture Stabilization (LSS)</option>
+                    <option value="TightRope CCL">TightRope CCL Repair</option>
+                    <option value="Meniscectomy">Meniscectomy (Partial/Total)</option>
+                    <option value="Patellar Luxation Repair">Patellar Luxation Repair (Trochleoplasty)</option>
+                    <option value="Stifle Arthroscopy">Stifle Arthroscopy (Diagnostic/Therapeutic)</option>
+                  </optgroup>
+                  <optgroup label="Hip Procedures">
+                    <option value="FHO">FHO — Femoral Head Ostectomy</option>
+                    <option value="THR">THR — Total Hip Replacement</option>
+                    <option value="JPS">JPS — Juvenile Pubic Symphysiodesis</option>
+                    <option value="DPO/TPO">DPO/TPO — Double/Triple Pelvic Osteotomy</option>
+                    <option value="Toggle Pin Hip Reduction">Toggle Pin — Hip Luxation Reduction</option>
+                  </optgroup>
+                  <optgroup label="Elbow & Shoulder Procedures">
+                    <option value="FCP Removal">FCP Removal — Fragmented Coronoid</option>
+                    <option value="UAP Fixation">UAP Fixation — Ununited Anconeal Process</option>
+                    <option value="Elbow Arthroscopy">Elbow Arthroscopy</option>
+                    <option value="Shoulder OCD Fragment Removal">Shoulder OCD Fragment Removal</option>
+                    <option value="Shoulder Stabilization">Shoulder Stabilization (Medial/Lateral)</option>
+                    <option value="Biceps Tenodesis">Biceps Tenodesis / Tenotomy</option>
+                  </optgroup>
+                  <optgroup label="Spinal / Neurological Procedures">
+                    <option value="Hemilaminectomy">Hemilaminectomy (IVDD Decompression)</option>
+                    <option value="Ventral Slot">Ventral Slot (Cervical IVDD)</option>
+                    <option value="Dorsal Laminectomy">Dorsal Laminectomy</option>
+                    <option value="Lumbosacral Decompression">Lumbosacral Decompression</option>
+                    <option value="Disc Fenestration">Disc Fenestration (Prophylactic)</option>
+                    <option value="Spinal Stabilization">Spinal Stabilization (Pins/PMMA/Plates)</option>
+                    <option value="Cervical Distraction-Fusion">Cervical Distraction-Fusion (Wobbler)</option>
+                  </optgroup>
+                  <optgroup label="Fracture Repair">
+                    <option value="Plate Fixation">Plate & Screw Fixation (ORIF)</option>
+                    <option value="External Fixation">External Skeletal Fixation (ESF)</option>
+                    <option value="IM Pin">Intramedullary Pin (IM Pin)</option>
+                    <option value="Interlocking Nail">Interlocking Nail</option>
+                    <option value="Cerclage Wire">Cerclage Wire Fixation</option>
+                    <option value="Pelvic Fracture Repair">Pelvic Fracture ORIF</option>
+                    <option value="Mandibular Fracture Repair">Mandibular Fracture Repair</option>
+                  </optgroup>
+                  <optgroup label="Soft Tissue / Tendon Procedures">
+                    <option value="Achilles Repair">Achilles Tendon Repair</option>
+                    <option value="Iliopsoas Tenotomy">Iliopsoas Tenotomy</option>
+                    <option value="Muscle Repair">Muscle Repair / Myorrhaphy</option>
+                    <option value="Tendon Transfer">Tendon Transfer Procedure</option>
+                    <option value="Contracture Release">Contracture Release</option>
+                  </optgroup>
+                  <optgroup label="Amputation / Other Orthopedic">
+                    <option value="Forelimb Amputation">Forelimb Amputation</option>
+                    <option value="Hindlimb Amputation">Hindlimb Amputation</option>
+                    <option value="Arthrodesis">Arthrodesis (Joint Fusion)</option>
+                    <option value="Limb Salvage">Limb Salvage Procedure</option>
+                    <option value="Hardware Removal">Hardware Removal (Implant)</option>
+                    <option value="Other Procedure">Other — Specify in Notes</option>
+                  </optgroup>
+                </select>
+              </div>
+              <div>
+                <label style={S.label}>Surgery Date</label>
+                <input style={{ ...S.input, border: "1.5px solid #1E3A5F", background: form.surgeryDate && form.postOpDay ? "#F0FFF4" : C.surface }} type="date" value={form.surgeryDate} onChange={e => handleSurgeryDate(e.target.value)} />
+              </div>
+              <div>
+                <label style={S.label}>Post-Op Day (POD)</label>
+                <input style={{ ...S.input, border: "1.5px solid #1E3A5F", background: form.postOpDay && form.surgeryDate ? "#F0FFF4" : C.surface }} type="number" min="0" value={form.postOpDay} onChange={e => handlePostOpDay(e.target.value)}
+                  placeholder="Days since surgery" />
+                {form.postOpDay && form.surgeryDate && (
+                  <div style={{ fontSize: 10, color: "#059669", fontWeight: 500, marginTop: 4 }}>
+                    Auto-calculated from surgery date
+                  </div>
+                )}
+              </div>
+            </div>
+            <div style={{ ...S.grid(3), marginTop: 12 }}>
+              <div>
+                <label style={S.label}>Surgeon Name</label>
+                <input style={{ ...S.input, border: "1.5px solid #1E3A5F" }} value={form.surgeonName} onChange={e => setField("surgeonName", e.target.value)}
+                  placeholder="DVM / DACVS name" />
+              </div>
+              <div>
+                <label style={S.label}>Surgical Facility</label>
+                <input style={{ ...S.input, border: "1.5px solid #1E3A5F" }} value={form.surgicalFacility} onChange={e => setField("surgicalFacility", e.target.value)}
+                  placeholder="Hospital / Clinic name" />
+              </div>
+              <div>
+                <label style={S.label}>ASA Physical Status</label>
+                <select style={{ ...S.select, width: "100%", border: "1.5px solid #1E3A5F" }} value={form.anesthesiaRisk} onChange={e => setField("anesthesiaRisk", e.target.value)}>
+                  <option value="ASA I">ASA I — Normal healthy patient</option>
+                  <option value="ASA II">ASA II — Mild systemic disease</option>
+                  <option value="ASA III">ASA III — Severe systemic disease</option>
+                  <option value="ASA IV">ASA IV — Life-threatening disease</option>
+                  <option value="ASA V">ASA V — Moribund, not expected to survive</option>
+                </select>
+              </div>
+            </div>
+            <div style={{ ...S.grid(2), marginTop: 12 }}>
+              <div>
+                <label style={S.label}>Incision Status</label>
+                <select style={{ ...S.select, width: "100%", border: "1.5px solid #1E3A5F" }} value={form.incisionStatus} onChange={e => setField("incisionStatus", e.target.value)}>
+                  <option value="Clean/Dry/Intact">Clean / Dry / Intact (CDI)</option>
+                  <option value="Mild Swelling">Mild Swelling — Monitoring</option>
+                  <option value="Seroma Present">Seroma Present</option>
+                  <option value="Dehiscence Concern">Dehiscence Concern</option>
+                  <option value="Infection Signs">Signs of Infection (SSI)</option>
+                  <option value="Healed">Fully Healed / Sutures Removed</option>
+                  <option value="N/A">N/A — No Incision</option>
+                </select>
+              </div>
+              <div>
+                <label style={S.label}>Suture / Staple Removal Date</label>
+                <input style={{ ...S.input, border: "1.5px solid #1E3A5F", background: form.sutureRemovalDate && form.surgeryDate ? "#F0FFF4" : C.surface }} type="date" value={form.sutureRemovalDate} onChange={e => setField("sutureRemovalDate", e.target.value)} />
+                {form.sutureRemovalDate && form.surgeryDate && (
+                  <div style={{ fontSize: 10, color: "#059669", fontWeight: 500, marginTop: 4 }}>
+                    Auto-set to 14 days post-op (editable)
+                  </div>
+                )}
+              </div>
+            </div>
+            <div style={{ marginTop: 12 }}>
+              <label style={S.label}>Surgical Complications / Notes</label>
+              <input style={{ ...S.input, border: "1.5px solid #1E3A5F" }} value={form.complicationsNoted} onChange={e => setField("complicationsNoted", e.target.value)}
+                placeholder="Any intraoperative or postoperative complications noted" />
+            </div>
+          </div>
+        )}
+
+        {/* ── Post-Op / Recovery Restrictions ── */}
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#1E3A5F", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 12, paddingBottom: 4, borderBottom: "1px solid #1E3A5F40" }}>
+            Current Recovery Status & Restrictions
+          </div>
+          <div style={S.grid(2)}>
+            <div>
+              <label style={S.label}>Weight-Bearing Status</label>
+              <select style={{ ...S.select, width: "100%", border: "1.5px solid #1E3A5F" }} value={form.weightBearingStatus} onChange={e => setField("weightBearingStatus", e.target.value)}>
+                <option value="Non-weight bearing">Non-weight bearing (NWB)</option>
+                <option value="Toe-touching">Toe-touching weight bearing (TTWB)</option>
+                <option value="Partial">Partial weight bearing (PWB)</option>
+                <option value="Weight bearing as tolerated">Weight bearing as tolerated (WBAT)</option>
+                <option value="Full weight bearing">Full weight bearing (FWB)</option>
+              </select>
+            </div>
+            <div>
+              <label style={S.label}>Activity Restrictions</label>
+              <input style={{ ...S.input, border: "1.5px solid #1E3A5F" }} value={form.activityRestrictions} onChange={e => setField("activityRestrictions", e.target.value)}
+                placeholder="e.g. No stairs, no jumping, leash walks only" />
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 16, marginTop: 14, flexWrap: "wrap" }}>
+            {[
+              { key: "eCollarRequired", label: "E-Collar Required" },
+              { key: "crateRestRequired", label: "Strict Crate Rest" },
+              { key: "slingAssistRequired", label: "Sling Assist Required" },
+            ].map(item => (
+              <label key={item.key} style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer",
+                padding: "8px 14px", background: form[item.key] ? "#DBEAFE" : "#fff",
+                border: "1.5px solid #1E3A5F", borderRadius: 8, fontSize: 12, fontWeight: 600, color: "#000",
+                transition: "all 0.2s" }}>
+                <input type="checkbox" checked={form[item.key]} onChange={e => setField(item.key, e.target.checked)}
+                  style={{ accentColor: "#1E3A5F", width: 16, height: 16, cursor: "pointer" }} />
+                {item.label}
+              </label>
+            ))}
+          </div>
+          <div style={{ marginTop: 12 }}>
+            <label style={S.label}>Prior Surgeries / Relevant Surgical History</label>
+            <input style={{ ...S.input, border: "1.5px solid #1E3A5F" }} value={form.priorSurgeries} onChange={e => setField("priorSurgeries", e.target.value)}
+              placeholder="e.g. Contralateral TPLO 2024, splenectomy 2023" />
+          </div>
+        </div>
+      </div>
+
+      {/* Step 3 navigation */}
+      <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0" }}>
+        <button
+          style={{
+            ...S.btn("ghost"), boxShadow: "0 0 8px rgba(14,165,233,0.15)",
+            transition: "all 0.25s",
+          }}
+          onMouseEnter={e => e.currentTarget.style.boxShadow = "0 0 14px rgba(14,165,233,0.3)"}
+          onMouseLeave={e => e.currentTarget.style.boxShadow = "0 0 8px rgba(14,165,233,0.15)"}
+          onClick={() => goToStep(2)}
+        >
+          ← Back to Assessment
+        </button>
+        <button
+          style={{
+            background: "#1E5A8A", color: "#fff", display: "inline-flex", alignItems: "center", gap: 6,
+            borderRadius: 8, border: "none", cursor: "pointer", padding: "14px 32px", fontSize: 14, fontWeight: 700,
+            boxShadow: "0 0 14px rgba(14,165,233,0.35), 0 0 28px rgba(14,165,233,0.12)",
+            transition: "all 0.25s",
+          }}
+          onMouseEnter={e => e.currentTarget.style.boxShadow = "0 0 20px rgba(14,165,233,0.5), 0 0 40px rgba(14,165,233,0.2)"}
+          onMouseLeave={e => e.currentTarget.style.boxShadow = "0 0 14px rgba(14,165,233,0.35), 0 0 28px rgba(14,165,233,0.12)"}
+          onClick={() => goToStep(4)}
         >
           Next: Protocol Parameters <FiChevronRight size={16} />
         </button>
@@ -1166,13 +1671,165 @@ function GeneratorView() {
 
       </>)}
 
-      {/* ═══════════ STEP 3: PROTOCOL PARAMETERS ═══════════ */}
-      {!protocol && wizardStep === 3 && (<>
+      {/* ═══════════ STEP 4: PROTOCOL PARAMETERS ═══════════ */}
+      {!protocol && wizardStep === 4 && (<>
+
+      {/* ═══════════ PRE-PROTOCOL SUMMARY OVERVIEW ═══════════ */}
+      {(() => {
+        // Find the diagnosis label from the CONDITIONS object
+        const diagLabel = (() => {
+          for (const [, items] of Object.entries(CONDITIONS)) {
+            const found = items.find(c => c.value === form.diagnosis);
+            if (found) return found.label;
+          }
+          return form.diagnosis || "Not selected";
+        })();
+        // Find category the diagnosis belongs to
+        const diagCategory = (() => {
+          for (const [cat, items] of Object.entries(CONDITIONS)) {
+            if (items.find(c => c.value === form.diagnosis)) return cat;
+          }
+          return "";
+        })();
+        // Count exercises relevant to the condition
+        const relevantExercises = allExercises.filter(ex => {
+          const name = (ex.name || "").toLowerCase();
+          const cat = (ex.category || "").toLowerCase();
+          const diag = (form.diagnosis || "").toLowerCase();
+          const region = (form.affectedRegion || "").toLowerCase();
+          return name.includes(diag) || cat.includes(diag) || name.includes(region.split(" ").pop()) || cat.includes(region.split(" ").pop());
+        });
+        const totalExercises = allExercises.length;
+        // Treatment summary
+        const txLabel = form.treatmentApproach === "surgical" ? "Surgical — Post-Operative Rehabilitation"
+          : form.treatmentApproach === "conservative" ? "Conservative — Non-Surgical Management"
+          : form.treatmentApproach === "palliative" ? "Palliative — Comfort Care"
+          : "Not specified";
+        const ownerDeclined = form.vetRecommendation && form.vetRecommendation.startsWith("Surgery") && form.ownerElection && form.ownerElection.startsWith("Declined");
+
+        return (
+          <div style={{
+            background: `linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 50%, #F0FDF4 100%)`,
+            border: "2px solid #1E3A5F", borderRadius: 12, padding: 24, marginBottom: 16,
+            position: "relative", overflow: "hidden",
+          }}>
+            {/* Decorative top accent */}
+            <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 4, background: "linear-gradient(90deg, #0F4C81, #0EA5E9, #10B981)" }} />
+
+            <div style={{ ...S.sectionHeader(), marginTop: 4 }}>
+              <FiCheckCircle size={14} style={{ color: "#1E3A5F" }} /> PRE-PROTOCOL SUMMARY
+            </div>
+
+            {/* Patient & Diagnosis Row */}
+            <div style={S.grid(3)}>
+              {/* Patient Info Card */}
+              <div style={{ background: "#fff", border: "1.5px solid #1E3A5F", borderRadius: 10, padding: "14px 16px" }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "#1E3A5F", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 8 }}>Patient</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: "#000", marginBottom: 4 }}>
+                  {form.patientName || "—"} <span style={{ fontSize: 12, fontWeight: 400 }}>({form.sex || "—"})</span>
+                </div>
+                <div style={{ fontSize: 12, color: "#000", marginBottom: 2 }}>{form.breed || "Breed not selected"}</div>
+                <div style={{ display: "flex", gap: 12, marginTop: 6 }}>
+                  <span style={{ fontSize: 11, color: "#000", fontWeight: 500 }}>Age: <strong>{form.age ? form.age + " yr" : "—"}</strong></span>
+                  <span style={{ fontSize: 11, color: "#000", fontWeight: 500 }}>Wt: <strong>{form.weightKg ? form.weightKg + " kg" : "—"}{form.weightLbs ? " (" + form.weightLbs + " lbs)" : ""}</strong></span>
+                  <span style={{ fontSize: 11, color: "#000", fontWeight: 500 }}>BCS: <strong>{form.bodyConditionScore}/9</strong></span>
+                </div>
+              </div>
+
+              {/* Diagnosis Card */}
+              <div style={{ background: "#fff", border: "1.5px solid #1E3A5F", borderRadius: 10, padding: "14px 16px" }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "#1E3A5F", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 8 }}>Diagnosis & Region</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#000", marginBottom: 4 }}>{diagLabel}</div>
+                {diagCategory && <div style={{ fontSize: 11, color: "#000", fontWeight: 400, marginBottom: 4 }}>Category: {diagCategory}</div>}
+                <div style={{ fontSize: 11, color: "#000", fontWeight: 500 }}>Region: <strong>{form.affectedRegion || "—"}</strong></div>
+                <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                  <span style={{
+                    fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 4,
+                    background: +form.painLevel <= 3 ? "#ECFDF5" : +form.painLevel <= 6 ? "#FFFBEB" : "#FEF2F2",
+                    color: +form.painLevel <= 3 ? "#059669" : +form.painLevel <= 6 ? "#D97706" : "#DC2626",
+                  }}>Pain: {form.painLevel}/10</span>
+                  <span style={{
+                    fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 4,
+                    background: +form.lamenessGrade <= 1 ? "#ECFDF5" : +form.lamenessGrade <= 3 ? "#FFFBEB" : "#FEF2F2",
+                    color: +form.lamenessGrade <= 1 ? "#059669" : +form.lamenessGrade <= 3 ? "#D97706" : "#DC2626",
+                  }}>Lameness: {form.lamenessGrade}/5</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: "#E0F2FE", color: "#0284C7" }}>
+                    {form.mobilityLevel}
+                  </span>
+                </div>
+              </div>
+
+              {/* Treatment Plan Card */}
+              <div style={{ background: "#fff", border: "1.5px solid #1E3A5F", borderRadius: 10, padding: "14px 16px" }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "#1E3A5F", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 8 }}>Treatment Plan</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "#000", marginBottom: 4 }}>{txLabel}</div>
+                {form.treatmentApproach === "surgical" && form.surgeryType && (
+                  <div style={{ fontSize: 11, color: "#000", fontWeight: 500, marginBottom: 2 }}>Procedure: <strong>{form.surgeryType}</strong></div>
+                )}
+                {form.treatmentApproach === "surgical" && form.postOpDay && (
+                  <div style={{ fontSize: 11, color: "#000", fontWeight: 500, marginBottom: 2 }}>Post-Op Day: <strong>{form.postOpDay}</strong></div>
+                )}
+                {form.weightBearingStatus && (
+                  <div style={{ fontSize: 11, color: "#000", fontWeight: 500, marginBottom: 2 }}>Weight Bearing: <strong>{form.weightBearingStatus}</strong></div>
+                )}
+                {ownerDeclined && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 6, padding: "4px 8px", background: "#FEF3C7", border: "1px solid #D97706", borderRadius: 4 }}>
+                    <FiAlertTriangle size={11} style={{ color: "#D97706" }} />
+                    <span style={{ fontSize: 10, fontWeight: 600, color: "#92400E" }}>Owner declined recommended surgery</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Exercise Availability Row */}
+            <div style={{ marginTop: 16, background: "#fff", border: "1.5px solid #1E3A5F", borderRadius: 10, padding: "14px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "#1E3A5F", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 6 }}>Exercise Library Available</div>
+                <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+                  <div style={{ fontSize: 11, color: "#000", fontWeight: 500 }}>
+                    Total Exercises: <strong style={{ fontSize: 14, color: "#0F4C81" }}>{totalExercises}</strong>
+                  </div>
+                  {relevantExercises.length > 0 && (
+                    <div style={{ fontSize: 11, color: "#000", fontWeight: 500 }}>
+                      Condition-Matched: <strong style={{ fontSize: 14, color: "#059669" }}>{relevantExercises.length}</strong>
+                    </div>
+                  )}
+                  {form.currentMedications && (
+                    <div style={{ fontSize: 11, color: "#000", fontWeight: 500 }}>
+                      Active Medications: <strong>{form.currentMedications}</strong>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", maxWidth: 320 }}>
+                {form.eCollarRequired && <span style={{ fontSize: 10, fontWeight: 600, padding: "3px 8px", borderRadius: 4, background: "#DBEAFE", color: "#1E3A5F" }}>E-Collar</span>}
+                {form.crateRestRequired && <span style={{ fontSize: 10, fontWeight: 600, padding: "3px 8px", borderRadius: 4, background: "#DBEAFE", color: "#1E3A5F" }}>Crate Rest</span>}
+                {form.slingAssistRequired && <span style={{ fontSize: 10, fontWeight: 600, padding: "3px 8px", borderRadius: 4, background: "#DBEAFE", color: "#1E3A5F" }}>Sling Assist</span>}
+                {form.specialInstructions && <span style={{ fontSize: 10, fontWeight: 600, padding: "3px 8px", borderRadius: 4, background: "#FEF3C7", color: "#92400E" }}>Special Instructions</span>}
+              </div>
+            </div>
+
+            {/* Missing Info Warnings */}
+            {(!form.patientName || !form.diagnosis || !form.treatmentApproach) && (
+              <div style={{ marginTop: 12, padding: "10px 16px", background: "#FEF3C7", border: "1.5px solid #D97706", borderRadius: 8, display: "flex", alignItems: "center", gap: 8 }}>
+                <FiAlertTriangle size={14} style={{ color: "#D97706" }} />
+                <span style={{ fontSize: 11, fontWeight: 600, color: "#92400E" }}>
+                  Missing required fields:
+                  {!form.patientName && " Patient Name,"}
+                  {!form.diagnosis && " Diagnosis,"}
+                  {!form.treatmentApproach && " Treatment Approach"}
+                  {" — please go back and complete before generating."}
+                </span>
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* ═══════════ SECTION 4: PROTOCOL PARAMETERS ═══════════ */}
       <div style={{ background: "#EFF6FF", border: "2px solid #1E3A5F", borderRadius: 12, padding: 24, marginBottom: 16 }}>
         <SectionHead icon={FiCalendar} title="Section 4 — Protocol Parameters" />
-        <div style={S.grid(3)}>
+        <div style={S.grid(2)}>
           <div>
             <label style={S.label}>Protocol Duration</label>
             <select style={{ ...S.select, width: "100%", border: "1.5px solid #1E3A5F" }} value={form.protocolLength} onChange={e => setField("protocolLength", e.target.value)}>
@@ -1188,25 +1845,48 @@ function GeneratorView() {
             <input style={{ ...S.input, border: "1.5px solid #1E3A5F" }} value={form.specialInstructions} onChange={e => setField("specialInstructions", e.target.value)}
               placeholder="e.g. Fearful of water, aggressive with handling" />
           </div>
-          <div style={{ display: "flex", alignItems: "flex-end" }}>
-            <button
-              style={{
-                ...S.btn("primary"), padding: "14px 28px", fontSize: 14, fontWeight: 700, width: "100%", justifyContent: "center",
-                boxShadow: "0 0 16px rgba(14,165,233,0.4), 0 0 32px rgba(14,165,233,0.15)",
-              }}
-              onClick={generate} disabled={loading}
-            >
-              <FiActivity size={15} />
-              {loading ? "Generating Protocol..." : "Generate Exercise Protocol"}
-            </button>
-          </div>
         </div>
       </div>
 
-      {/* Step 3 navigation */}
+      {/* ═══════════ GENERATE BUTTON — standalone with heavy neon green glow ═══════════ */}
+      <div style={{ display: "flex", justifyContent: "center", padding: "12px 0 8px" }}>
+        <button
+          style={{
+            display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 10,
+            padding: "18px 56px", borderRadius: 12, border: "2px solid #10B981",
+            fontSize: 16, fontWeight: 800, letterSpacing: "0.5px", cursor: "pointer",
+            background: "linear-gradient(135deg, #059669 0%, #10B981 50%, #34D399 100%)",
+            color: "#fff",
+            boxShadow: "0 0 20px rgba(16,185,129,0.5), 0 0 40px rgba(16,185,129,0.3), 0 0 60px rgba(16,185,129,0.15), inset 0 1px 0 rgba(255,255,255,0.2)",
+            transition: "all 0.3s ease",
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.boxShadow = "0 0 30px rgba(16,185,129,0.7), 0 0 60px rgba(16,185,129,0.4), 0 0 90px rgba(16,185,129,0.2), inset 0 1px 0 rgba(255,255,255,0.3)";
+            e.currentTarget.style.transform = "translateY(-2px)";
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.boxShadow = "0 0 20px rgba(16,185,129,0.5), 0 0 40px rgba(16,185,129,0.3), 0 0 60px rgba(16,185,129,0.15), inset 0 1px 0 rgba(255,255,255,0.2)";
+            e.currentTarget.style.transform = "translateY(0)";
+          }}
+          onClick={generate} disabled={loading}
+        >
+          <FiActivity size={18} />
+          {loading ? "Generating Protocol..." : "Generate Exercise Protocol"}
+        </button>
+      </div>
+
+      {/* Step 4 navigation */}
       <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0" }}>
-        <button style={S.btn("ghost")} onClick={() => goToStep(2)}>
-          ← Back to Assessment
+        <button
+          style={{
+            ...S.btn("ghost"), boxShadow: "0 0 8px rgba(14,165,233,0.15)",
+            transition: "all 0.25s",
+          }}
+          onMouseEnter={e => e.currentTarget.style.boxShadow = "0 0 14px rgba(14,165,233,0.3)"}
+          onMouseLeave={e => e.currentTarget.style.boxShadow = "0 0 8px rgba(14,165,233,0.15)"}
+          onClick={() => goToStep(3)}
+        >
+          ← Back to Treatment Plan
         </button>
         <div />
       </div>
