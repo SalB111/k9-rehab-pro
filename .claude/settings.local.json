@@ -11,7 +11,26 @@
       "Bash(npx http-server:*)",
       "Bash(powershell -Command \"Start-Sleep -Seconds 3; Invoke-WebRequest -Uri http://localhost:3000/api/health -UseBasicParsing | Select-Object -ExpandProperty Content\")",
       "Bash(netstat:*)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(git config:*)",
+      "Bash(git commit:*)",
+      "Bash(git tag:*)",
+      "Bash(git checkout:*)",
+      "Bash(node -e:*)",
+      "Bash(node check-duplicates-exercises.js:*)",
+      "Bash(sqlite3:*)",
+      "Bash(ls:*)",
+      "Bash(python -m json.tool:*)",
+      "Read(//tmp/claude/c--Users-sbona-k9-rehab-pro/tasks/**)",
+      "Bash(python:*)",
+      "Bash(node seed.js:*)",
+      "Bash(PORT=3001 npx react-scripts start:*)",
+      "Bash(wmic process where \"ProcessId=44436\" get CommandLine:*)",
+      "Bash(start http://localhost:3001)",
+      "Bash(npx react-scripts build)"
+    ],
+    "additionalDirectories": [
+      "C:\\k9 _rehab_pro_3d\\reference_pngs\\PLATFORM SEQU"
     ]
   }
 }

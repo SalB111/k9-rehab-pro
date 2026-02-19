@@ -7,7 +7,7 @@ const express = require('express');
 const cors = require('cors');
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
-const { selectExercisesForWeek } = require('./protocol-generator-enhanced'); // ✅ Using enhanced evidence-based generator
+const { selectExercisesForWeek, PROTOCOL_DEFINITIONS } = require('./protocol-generator'); // ✅ ACVSMR-aligned 4-protocol system
 const { ALL_EXERCISES, getExerciseByCode, searchExercises } = require('./all-exercises');
 const { INTERVENTION_TYPES, REHAB_PHASES, PRIMARY_INDICATIONS } = require('./exercise-taxonomy');
 const {
@@ -1037,11 +1037,18 @@ function generateProtocol(formData, patientId, callback) {
       });
     }
 
+    // Get protocol metadata
+    const { getProtocolType } = require('./protocol-generator');
+    const protocolType = getProtocolType(formData.diagnosis, formData.affectedRegion, formData.treatmentApproach);
+    const protocolDef = PROTOCOL_DEFINITIONS[protocolType];
+
     const protocol = {
       patient_id: patientId,
       patient_name: formData.patientName,
       condition: formData.diagnosis,
       affected_region: formData.affectedRegion,
+      protocol_type: protocolType,
+      protocol_name: protocolDef ? protocolDef.name : 'General Protocol',
       protocol_length_weeks: numWeeks,
       total_exercises: parsedExercises.length,
       weeks: weeks,
@@ -1051,8 +1058,6 @@ function generateProtocol(formData, patientId, callback) {
     callback(protocol);
   });
 }
-
-// selectExercisesForWeek is now imported from protocol-generator.js
 
 // ============================================================================
 // API v1 - EXERCISE LIBRARY ENDPOINTS

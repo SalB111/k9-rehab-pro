@@ -1,7 +1,7 @@
 // ============================================================================
 // ALL EXERCISES - MASTER COMPILATION
 // K9-REHAB-PRO - Complete Exercise Database
-// 190 VET-APPROVED EXERCISES - COMPLETE LIBRARY
+// ACVSMR-Aligned | Evidence-Based | Zero Duplicates
 // ============================================================================
 // Following Dr. Denis Millis & Dr. Darryl Levine Standards
 // Certified Canine Rehabilitation Practitioner (CCRP) Guidelines
@@ -24,9 +24,33 @@ const EXERCISES_PART9 = require('./exercises-part9');
 const { enhanceAllExercises } = require('./exercise-enhancer');
 
 // ============================================================================
-// COMBINE ALL EXERCISE PARTS
+// SEMANTIC DUPLICATE REMOVAL
+// These codes duplicate exercises that already exist under canonical codes.
+// Canonical code (USED in protocols) → Removed duplicate
 // ============================================================================
-const ALL_EXERCISES_BASE = [
+const DUPLICATE_CODES = new Set([
+  'TENS',              // → use TENS_THERAPY
+  'LASER_THERAPY',     // → use LASER_IV
+  'ESTIM',             // → use NMES_QUAD
+  'PULSED_EMF',        // → use PEMF_THERAPY
+  'THERAPEUTIC_US',    // → use US_PULSED
+  'MYOFASCIAL',        // → use MYOFASC_ILIO / MYOFASC_BF
+  'ASSISI_LOOP',       // → use PEMF_THERAPY
+  'WADING_WALK',       // → use WATER_WALKING
+  'POOL_SWIM_HYDRO',   // → use POOL_SWIM
+  'COLD_THERAPY_GERI', // → use COLD_THERAPY
+  'HEAT_THERAPY_GERI', // → use HEAT_THERAPY
+  'MASSAGE_SENIOR',    // → use MASSAGE_THERA
+  'SIT_STAND_SENIOR',  // → use SIT_STAND
+  'GENTLE_PROM',       // → use PROM_STIFLE
+  'SENIOR_WALK',       // → use SLOW_WALK
+  'NEURO_PROM',        // → use PROM_STIFLE
+]);
+
+// ============================================================================
+// COMBINE ALL EXERCISE PARTS (deduplicated)
+// ============================================================================
+const ALL_EXERCISES_RAW = [
   ...EXERCISES_PART1,  // 15 exercises - Basic Rehabilitation Exercises
   ...EXERCISES_PART2,  // 15 exercises - Advanced Mobility & Strengthening
   ...EXERCISES_PART3,  // 15 exercises - Balance, Coordination & Proprioception
@@ -37,6 +61,8 @@ const ALL_EXERCISES_BASE = [
   ...EXERCISES_PART8,  // 35 exercises - Sport Conditioning & Complementary Therapies
   ...EXERCISES_PART9   // 20 exercises - Pediatric, Palliative, Breed-Specific
 ];
+
+const ALL_EXERCISES_BASE = ALL_EXERCISES_RAW.filter(ex => !DUPLICATE_CODES.has(ex.code));
 
 // ============================================================================
 // APPLY MEDICAL-GRADE ENHANCEMENTS
