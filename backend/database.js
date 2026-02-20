@@ -238,10 +238,30 @@ function initializeDatabase() {
         )
       `, (err) => {
         if (err) console.error('Error creating session_exercises table:', err);
-        else {
+
+        // AUDIT LOG — required for compliance (Must-Have #8)
+        db.run(`
+          CREATE TABLE IF NOT EXISTS audit_log (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp TEXT NOT NULL DEFAULT (datetime('now')),
+            action TEXT NOT NULL,
+            resource_type TEXT,
+            resource_id TEXT,
+            user_label TEXT DEFAULT 'system',
+            ip_address TEXT,
+            request_method TEXT,
+            request_path TEXT,
+            status_code INTEGER,
+            detail TEXT,
+            created_at TEXT NOT NULL DEFAULT (datetime('now'))
+          )
+        `, (err) => {
+          if (err) console.error('Error creating audit_log table:', err);
+          else console.log('✅ Audit log table ready');
+
           console.log('✅ Database schema initialized successfully');
           resolve();
-        }
+        });
       });
 
     });

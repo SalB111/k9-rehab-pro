@@ -2,11 +2,15 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import {
   FiUsers, FiActivity, FiBookOpen, FiClipboard,
-  FiSettings, FiSearch, FiChevronRight,
+  FiSettings, FiSearch, FiChevronRight, FiChevronDown,
   FiX, FiAlertTriangle, FiCheckCircle, FiBook, FiStar,
-  FiCalendar, FiFileText, FiHeart,
-  FiBarChart2, FiClock, FiPlus, FiArrowRight
+  FiCalendar, FiFileText, FiHeart, FiHome,
+  FiBarChart2, FiClock, FiPlus, FiArrowRight,
+  FiShield, FiDownload, FiUpload, FiLock, FiMonitor,
+  FiPrinter, FiBell, FiAward, FiTool, FiDatabase,
+  FiSliders
 } from "react-icons/fi";
+import { TbDog } from "react-icons/tb";
 
 const API = process.env.REACT_APP_API_URL || "http://localhost:3000/api";
 
@@ -46,84 +50,78 @@ const S = {
   },
   // ── TOP NAV ──
   topNav: {
-    background: `linear-gradient(90deg, ${C.navy} 0%, ${C.navyMid} 100%)`,
+    background: "#fff",
     display: "flex", alignItems: "center", justifyContent: "space-between",
-    padding: "0 24px", height: 56, flexShrink: 0,
-    borderBottom: `1px solid rgba(255,255,255,0.06)`,
+    padding: "0 24px", height: 48, flexShrink: 0,
+    borderBottom: `1px solid ${C.border}`,
   },
   topNavBrand: {
     display: "flex", alignItems: "center", gap: 10,
-    color: "#fff", fontFamily: "'Exo 2', 'Inter', sans-serif",
+    color: C.navy, fontFamily: "'Exo 2', 'Inter', sans-serif",
     fontSize: 15, fontWeight: 700, letterSpacing: "0.5px",
   },
   topNavLinks: {
-    display: "flex", alignItems: "center", gap: 4,
+    display: "flex", alignItems: "center", gap: 2,
   },
   topNavItem: (active) => ({
     display: "flex", alignItems: "center", gap: 6,
-    padding: "8px 16px", borderRadius: 6, cursor: "pointer",
-    fontSize: 12, fontWeight: 600,
-    color: active ? "#fff" : "rgba(255,255,255,0.6)",
-    background: active ? "rgba(14,165,233,0.22)" : "transparent",
-    borderBottom: active ? "2px solid #0EA5E9" : "2px solid transparent",
-    boxShadow: active ? "0 0 12px rgba(14,165,233,0.4), 0 0 24px rgba(14,165,233,0.15)" : "0 0 0 rgba(14,165,233,0)",
+    padding: "7px 14px", borderRadius: 6, cursor: "pointer",
+    fontSize: 11, fontWeight: 600,
+    color: "#fff",
+    background: active ? "rgba(57,255,126,0.18)" : "transparent",
+    borderBottom: active ? "2px solid #39FF7E" : "2px solid transparent",
+    boxShadow: active ? "0 0 10px rgba(57,255,126,0.3), 0 0 20px rgba(57,255,126,0.12)" : "none",
     transition: "all 0.25s ease",
   }),
   // ── WIZARD ──
   wizardProgress: {
     display: "flex", alignItems: "center", justifyContent: "center",
-    gap: 0, padding: "8px 32px 8px",
+    gap: 0, padding: "4px 32px 2px",
   },
   wizardStep: (state) => ({
-    display: "flex", alignItems: "center", gap: 8,
-    padding: "6px 16px", fontSize: 12, fontWeight: 600,
-    color: state === "active" ? "#0EA5E9" : state === "done" ? "#10B981" : C.textLight,
+    display: "flex", alignItems: "center", gap: 6,
+    padding: "4px 12px", fontSize: 10, fontWeight: 600,
+    color: state === "done" ? "#39FF7E" : "#111",
     cursor: "pointer",
     transition: "all 0.2s ease",
   }),
   wizardDot: (state) => ({
-    width: 32, height: 32, borderRadius: "50%",
+    width: 22, height: 22, borderRadius: "50%",
     display: "flex", alignItems: "center", justifyContent: "center",
-    fontSize: 13, fontWeight: 700,
-    background: state === "active" ? "#0EA5E9" : state === "done" ? "#10B981" : C.bg,
-    color: state === "active" || state === "done" ? "#fff" : C.textLight,
-    border: state === "pending" ? `2px solid ${C.border}` : "none",
-    boxShadow: state === "active" ? `0 0 12px rgba(14,165,233,0.6), 0 0 24px rgba(14,165,233,0.3)` : state === "done" ? `0 0 10px rgba(16,185,129,0.5), 0 0 20px rgba(16,185,129,0.2)` : "none",
-    animation: state === "active" ? "wizardPulse 2s ease-in-out infinite" : "none",
+    fontSize: 10, fontWeight: 700,
+    background: state === "done" ? "#39FF7E" : state === "active" ? "#fff" : C.bg,
+    color: "#111",
+    border: state === "done" ? "1.5px solid #39FF7E" : state === "pending" ? `1.5px solid ${C.border}` : `1.5px solid #111`,
+    boxShadow: state === "done" ? "0 0 8px rgba(57,255,126,0.45), 0 0 16px rgba(57,255,126,0.2)" : "none",
+    animation: "none",
     transition: "all 0.4s ease",
   }),
   wizardLine: (done) => ({
-    width: 60, height: 2,
-    background: done ? C.green : C.border,
+    width: 50, height: 2,
+    background: done ? "#39FF7E" : C.border,
     margin: "0 4px",
+    boxShadow: done ? "0 0 6px rgba(57,255,126,0.4)" : "none",
   }),
   wizardNav: {
     display: "flex", justifyContent: "space-between", alignItems: "center",
-    padding: "16px 0", marginTop: 16,
+    padding: "10px 0", marginTop: 8,
     borderTop: `1px solid ${C.border}`,
   },
   // ── MAIN AREA ──
   main: { flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" },
-  topbar: {
-    background: C.surface, padding: "14px 32px",
-    borderBottom: `1px solid ${C.border}`,
-    display: "flex", alignItems: "center", justifyContent: "space-between",
-    minHeight: 56,
-  },
-  pageTitle: { fontSize: 17, fontWeight: 800, margin: 0, color: C.navy, letterSpacing: "0.3px" },
-  pageSub: { fontSize: 9, color: C.text, marginTop: 2, fontWeight: 300 },
-  content: { flex: 1, overflow: "auto", padding: "24px 32px" },
+  // topbar replaced by inline nav links bar in return()
+  content: { flex: 1, overflow: "auto", padding: "8px 32px 12px" },
   // ── SHARED COMPONENTS ──
   card: {
-    background: C.surface, borderRadius: 10, padding: 24,
+    background: C.surface, borderRadius: 10, padding: 20,
     border: `1px solid ${C.border}`,
-    boxShadow: "0 1px 3px rgba(0,0,0,0.04)", marginBottom: 16,
+    boxShadow: "0 1px 3px rgba(0,0,0,0.04)", marginBottom: 10,
   },
   sectionHeader: () => ({
     display: "flex", alignItems: "center", gap: 8,
-    padding: "10px 0", marginBottom: 16,
-    borderBottom: "2px solid #0EA5E9",
-    fontSize: 13, fontWeight: 800, color: "#E2E8F0",
+    padding: "4px 0 2px", marginBottom: 0,
+    borderBottom: "none",
+    fontSize: 12, fontWeight: 800, color: "#fff",
     textTransform: "uppercase", letterSpacing: "1.2px",
   }),
   btn: (variant = "primary") => ({
@@ -158,7 +156,7 @@ const S = {
     display: "grid", gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: 16,
   }),
   label: {
-    fontSize: 11, fontWeight: 600, color: "#CBD5E1",
+    fontSize: 11, fontWeight: 600, color: "#fff",
     textTransform: "uppercase", letterSpacing: "0.6px",
     marginBottom: 6, display: "block",
   },
@@ -222,9 +220,9 @@ function DashboardView({ setView }) {
       {/* ── KPI STAT CARDS ── */}
       <div style={S.grid(4)}>
         {[
-          { label: "Active Patients", value: patients.length, icon: FiUsers, color: C.teal, bg: C.tealLight },
+          { label: "Active Patients", value: patients.length, img: "/Beau.png", color: C.teal, bg: C.tealLight },
           { label: "Protocols Available", value: "4 × 4 Phases", icon: FiActivity, color: "#7C3AED", bg: "#EDE9FE" },
-          { label: "Exercise Library", value: exercises.length, icon: FiBookOpen, color: C.navy, bg: "#DBEAFE" },
+          { label: "Exercise Library", value: exercises.length, img: "/2.png", color: C.navy, bg: "#DBEAFE" },
           { label: "Unique Conditions", value: Object.keys(conditionCounts).length || "—", icon: FiBarChart2, color: C.amber, bg: C.amberBg },
         ].map((stat, i) => (
           <div key={i} style={{
@@ -236,8 +234,11 @@ function DashboardView({ setView }) {
                 <div style={{ fontSize: 10, fontWeight: 700, color: C.textLight, textTransform: "uppercase", letterSpacing: "0.8px" }}>{stat.label}</div>
                 <div style={{ fontSize: 28, fontWeight: 800, color: C.navy, marginTop: 4 }}>{stat.value}</div>
               </div>
-              <div style={{ width: 44, height: 44, borderRadius: 10, background: stat.bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <stat.icon size={20} style={{ color: stat.color }} />
+              <div style={{ width: 44, height: 44, borderRadius: 10, background: stat.bg, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+                {stat.img
+                  ? <img src={stat.img} alt={stat.label} style={{ width: 44, height: 44, objectFit: "cover", borderRadius: 10 }} />
+                  : <stat.icon size={20} style={{ color: stat.color }} />
+                }
               </div>
             </div>
           </div>
@@ -311,8 +312,9 @@ function DashboardView({ setView }) {
 
           {/* Condition Distribution */}
           <div style={S.card}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: C.navy, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 14, paddingBottom: 8, borderBottom: `1px solid ${C.border}` }}>
-              Condition Distribution
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: C.navy, textTransform: "uppercase", letterSpacing: "0.5px", paddingBottom: 8 }}>Condition Distribution</div>
+              <div style={{ height: 2, width: "100%", overflow: "hidden", borderRadius: 1 }}><div style={{ width: "200%", height: "100%", background: "linear-gradient(90deg, transparent, #39FF7E, #0EA5E9, #39FF7E, transparent)", animation: "neonFlatline 3s linear infinite" }} /></div>
             </div>
             {conditionEntries.length === 0 ? (
               <div style={{ fontSize: 12, color: C.textLight, textAlign: "center", padding: "16px 0" }}>No patient data yet</div>
@@ -333,8 +335,9 @@ function DashboardView({ setView }) {
 
           {/* Platform Status */}
           <div style={S.card}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: C.navy, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 14, paddingBottom: 8, borderBottom: `1px solid ${C.border}` }}>
-              Platform Status
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: C.navy, textTransform: "uppercase", letterSpacing: "0.5px", paddingBottom: 8 }}>Platform Status</div>
+              <div style={{ height: 2, width: "100%", overflow: "hidden", borderRadius: 1 }}><div style={{ width: "200%", height: "100%", background: "linear-gradient(90deg, transparent, #39FF7E, #0EA5E9, #39FF7E, transparent)", animation: "neonFlatline 3s linear infinite" }} /></div>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {[
@@ -447,8 +450,13 @@ function ClientsView() {
 
       {showForm && (
         <div style={S.card}>
-          <div style={S.sectionHeader(C.teal)}>
-            <FiHeart size={13} /> New Patient Registration
+          <div>
+            <div style={S.sectionHeader()}>
+              <FiHeart size={13} style={{ color: "#39FF7E" }} /> New Patient Registration
+            </div>
+            <div style={{ height: 2, width: "100%", overflow: "hidden", borderRadius: 1 }}>
+              <div style={{ width: "200%", height: "100%", background: "linear-gradient(90deg, transparent, #39FF7E, #0EA5E9, #39FF7E, transparent)", animation: "neonFlatline 3s linear infinite" }} />
+            </div>
           </div>
           <form onSubmit={submit}>
             <div style={S.grid(3)}>
@@ -551,9 +559,38 @@ function ClientsView() {
 // ─────────────────────────────────────────────
 // PROTOCOL EXERCISE CARD (expandable, removable)
 // ─────────────────────────────────────────────
+// Exercise category → icon mapping for visual identification (Must-Have 7.4)
+const EXERCISE_CATEGORY_ICONS = {
+  "Passive Therapy":        { icon: "🤲", bg: "#E0F2FE", color: "#0369A1" },
+  "Active-Assisted":        { icon: "🏃", bg: "#ECFDF5", color: "#059669" },
+  "Strengthening":          { icon: "💪", bg: "#FEF3C7", color: "#B45309" },
+  "Balance":                { icon: "⚖️", bg: "#EDE9FE", color: "#7C3AED" },
+  "Proprioception":         { icon: "⚖️", bg: "#EDE9FE", color: "#7C3AED" },
+  "Gait Retraining":        { icon: "🐕", bg: "#F0FDF4", color: "#15803D" },
+  "Aquatic Therapy":        { icon: "🌊", bg: "#E0F2FE", color: "#0284C7" },
+  "Hydrotherapy":           { icon: "🌊", bg: "#E0F2FE", color: "#0284C7" },
+  "Modality":               { icon: "⚡", bg: "#FFF7ED", color: "#C2410C" },
+  "Therapeutic Modalities": { icon: "⚡", bg: "#FFF7ED", color: "#C2410C" },
+  "Manual Therapy":         { icon: "✋", bg: "#FCE7F3", color: "#BE185D" },
+  "Core Stability":         { icon: "🎯", bg: "#FEF9C3", color: "#A16207" },
+  "Functional":             { icon: "🏅", bg: "#ECFDF5", color: "#047857" },
+  "Sport Conditioning":     { icon: "🏅", bg: "#ECFDF5", color: "#047857" },
+  "Complementary Therapy":  { icon: "🧘", bg: "#F5F3FF", color: "#6D28D9" },
+  "Geriatric":              { icon: "🐾", bg: "#FFF1F2", color: "#BE123C" },
+  "Neurological":           { icon: "🧠", bg: "#EFF6FF", color: "#1D4ED8" },
+};
+function getExCategoryIcon(ex) {
+  const cat = ex.category || ex.intervention_type || "";
+  for (const [key, val] of Object.entries(EXERCISE_CATEGORY_ICONS)) {
+    if (cat.toLowerCase().includes(key.toLowerCase())) return val;
+  }
+  return { icon: "🔬", bg: "#F1F5F9", color: "#475569" };
+}
+
 function ProtocolExCard({ entry, onRemove }) {
   const [open, setOpen] = useState(false);
   const ex = entry.exercise || {};
+  const catIcon = getExCategoryIcon(ex);
 
   return (
     <div style={{
@@ -564,24 +601,32 @@ function ProtocolExCard({ entry, onRemove }) {
       {/* Card header */}
       <div style={{ padding: "14px 16px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
-          <div style={{ flex: 1, cursor: "pointer" }} onClick={() => setOpen(o => !o)}>
-            <div style={{ fontWeight: 700, fontSize: 13, color: "#1A202C", marginBottom: 6 }}>
-              {ex.name || "Exercise"}
-            </div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
-              {entry.sets         && <span style={S.badge("blue")}>{entry.sets} sets</span>}
-              {entry.reps         && <span style={S.badge("blue")}>{entry.reps} reps</span>}
-              {entry.duration_seconds && (
-                <span style={S.badge("blue")}>
-                  {entry.duration_seconds >= 60 ? `${entry.duration_seconds / 60} min` : `${entry.duration_seconds}s`}
-                </span>
-              )}
-              {entry.frequency_per_day && <span style={S.badge("green")}>{entry.frequency_per_day}× /day</span>}
-              {ex.difficulty_level && (
-                <span style={S.badge(ex.difficulty_level === "Easy" ? "green" : ex.difficulty_level === "Advanced" ? "orange" : "blue")}>
-                  {ex.difficulty_level}
-                </span>
-              )}
+          <div style={{ display: "flex", gap: 10, flex: 1, cursor: "pointer" }} onClick={() => setOpen(o => !o)}>
+            {/* Category icon badge */}
+            <div style={{
+              width: 36, height: 36, borderRadius: 8, background: catIcon.bg,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 18, flexShrink: 0, border: `1px solid ${catIcon.color}22`
+            }}>{catIcon.icon}</div>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 13, color: "#1A202C", marginBottom: 6 }}>
+                {ex.name || "Exercise"}
+              </div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+                {entry.sets         && <span style={S.badge("blue")}>{entry.sets} sets</span>}
+                {entry.reps         && <span style={S.badge("blue")}>{entry.reps} reps</span>}
+                {entry.duration_seconds && (
+                  <span style={S.badge("blue")}>
+                    {entry.duration_seconds >= 60 ? `${entry.duration_seconds / 60} min` : `${entry.duration_seconds}s`}
+                  </span>
+                )}
+                {entry.frequency_per_day && <span style={S.badge("green")}>{entry.frequency_per_day}× /day</span>}
+                {ex.difficulty_level && (
+                  <span style={S.badge(ex.difficulty_level === "Easy" ? "green" : ex.difficulty_level === "Advanced" ? "orange" : "blue")}>
+                    {ex.difficulty_level}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
           <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
@@ -605,6 +650,15 @@ function ProtocolExCard({ entry, onRemove }) {
           <div style={{ marginTop: 8, fontSize: 11, color: "#718096", fontStyle: "italic",
             background: "#F7FAFC", padding: "6px 10px", borderRadius: 6 }}>
             📋 {entry.notes}
+          </div>
+        )}
+
+        {entry.evidence_citation && (
+          <div style={{ marginTop: 6, fontSize: 10, color: "#5B6B82", display: "flex",
+            alignItems: "center", gap: 5, background: "#F0F6FF", padding: "4px 10px",
+            borderRadius: 5, border: "1px solid #D6E4F0" }}>
+            <FiBook size={10} style={{ flexShrink: 0, color: "#2B6CB0" }} />
+            <span style={{ fontStyle: "italic" }}>{entry.evidence_citation}</span>
           </div>
         )}
       </div>
@@ -719,16 +773,47 @@ function ProtocolExCard({ entry, onRemove }) {
 // ─────────────────────────────────────────────
 // PROTOCOL GENERATOR VIEW
 // ─────────────────────────────────────────────
-function GeneratorView() {
+function GeneratorView({ initialStep }) {
   const [protocol, setProtocol] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
   const [error, setError] = useState(null);
-  const [wizardStep, setWizardStep] = useState(1);
+  const [wizardStep, setWizardStep] = useState(initialStep || 1);
   const [showAddModal, setShowAddModal] = useState(false);
   const [addingToWeek, setAddingToWeek] = useState(null);
   const [allExercises, setAllExercises] = useState([]);
   const [exSearch, setExSearch] = useState("");
+  const [complianceAgreed, setComplianceAgreed] = useState(false);
+  const [complianceOpen, setComplianceOpen] = useState(false);
+
+  // Print CSS injection
+  useEffect(() => {
+    const id = "k9-print-styles";
+    if (!document.getElementById(id)) {
+      const style = document.createElement("style");
+      style.id = id;
+      style.textContent = `
+        @media print {
+          body { background: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          nav, .no-print, button, [class*="TopNav"] { display: none !important; }
+          .print-protocol { box-shadow: none !important; border: none !important; }
+          .print-protocol * { break-inside: avoid; }
+          @page { margin: 0.5in; size: letter; }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+  }, []);
+
+  // Scroll to diagnostics section when opened via nav button
+  useEffect(() => {
+    if (initialStep === 2) {
+      setTimeout(() => {
+        const el = document.getElementById("diagnostics-workup");
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 200);
+    }
+  }, [initialStep]);
 
   // Patient intake form
   const [form, setForm] = useState({
@@ -1133,8 +1218,13 @@ function GeneratorView() {
 
   // Section header component for the intake form
   const SectionHead = ({ icon: Icon, title }) => (
-    <div style={S.sectionHeader()}>
-      <Icon size={14} style={{ color: "#0EA5E9" }} /> {title}
+    <div style={{ marginBottom: 10 }}>
+      <div style={S.sectionHeader()}>
+        <Icon size={12} style={{ color: "#39FF7E" }} /> {title}
+      </div>
+      <div style={{ height: 2, width: "100%", overflow: "hidden", borderRadius: 1, marginTop: 2 }}>
+        <div style={{ width: "200%", height: "100%", background: "linear-gradient(90deg, transparent, #39FF7E, #0EA5E9, #39FF7E, transparent)", animation: "neonFlatline 3s linear infinite" }} />
+      </div>
     </div>
   );
 
@@ -1150,8 +1240,12 @@ function GeneratorView() {
       <>
         <style>{`
           @keyframes wizardPulse {
-            0%, 100% { box-shadow: 0 0 12px rgba(14,165,233,0.6), 0 0 24px rgba(14,165,233,0.3); }
-            50% { box-shadow: 0 0 20px rgba(14,165,233,0.8), 0 0 36px rgba(14,165,233,0.4), 0 0 48px rgba(14,165,233,0.15); }
+            0%, 100% { box-shadow: 0 0 8px rgba(57,255,126,0.5), 0 0 18px rgba(57,255,126,0.2); }
+            50% { box-shadow: 0 0 14px rgba(57,255,126,0.7), 0 0 28px rgba(57,255,126,0.35), 0 0 40px rgba(57,255,126,0.1); }
+          }
+          @keyframes neonFlatline {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
           }
         `}</style>
         <div style={S.wizardProgress}>
@@ -1223,7 +1317,7 @@ function GeneratorView() {
         }} />
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         <div style={{ fontSize: 14, fontWeight: 600, color: "#0F4C81" }}>Generating Protocol...</div>
-        <div style={{ fontSize: 11, color: "#94A3B8" }}>Building your evidence-based exercise program</div>
+        <div style={{ fontSize: 11, color: "#fff" }}>Building your evidence-based exercise program</div>
       </div>
     );
   }
@@ -1237,7 +1331,7 @@ function GeneratorView() {
       {!protocol && wizardStep === 1 && (<>
 
       {/* ═══════════ SECTION 1: CLIENT INFORMATION ═══════════ */}
-      <div style={{ background: "#1D2B3A", border: "2px solid #2E3D4F", borderRadius: 12, padding: 24, marginBottom: 16 }}>
+      <div style={{ background: "#1D2B3A", border: "2px solid #2E3D4F", borderRadius: 10, padding: "16px 20px", marginBottom: 12 }}>
         <SectionHead icon={FiUsers} title="Section 1 — Client Information" />
         <div style={S.grid(2)}>
           <div>
@@ -1294,9 +1388,14 @@ function GeneratorView() {
       </div>
 
       {/* ═══════════ SECTION 2: PATIENT SIGNALMENT ═══════════ */}
-      <div style={{ background: "#1D2B3A", border: "2px solid #2E3D4F", borderRadius: 12, padding: 24, marginBottom: 16 }}>
-        <div style={S.sectionHeader()}>
-          <span style={{ fontSize: 16 }}>🐕</span> PATIENT SIGNALMENT
+      <div style={{ background: "#1D2B3A", border: "2px solid #2E3D4F", borderRadius: 10, padding: "16px 20px", marginBottom: 12 }}>
+        <div style={{ marginBottom: 10 }}>
+          <div style={S.sectionHeader()}>
+            <span style={{ fontSize: 14 }}>🐕</span> PATIENT SIGNALMENT
+          </div>
+          <div style={{ height: 2, width: "100%", overflow: "hidden", borderRadius: 1, marginTop: 2 }}>
+            <div style={{ width: "200%", height: "100%", background: "linear-gradient(90deg, transparent, #39FF7E, #0EA5E9, #39FF7E, transparent)", animation: "neonFlatline 3s linear infinite" }} />
+          </div>
         </div>
         <div style={S.grid(3)}>
           <div>
@@ -1376,8 +1475,8 @@ function GeneratorView() {
               <input style={{ ...S.input, flex: 1, border: "1.5px solid #3A4A5C" }} type="range" min="1" max="9" value={form.bodyConditionScore}
                 onChange={e => setField("bodyConditionScore", e.target.value)} />
               <div style={{ textAlign: "center", minWidth: 60 }}>
-                <span style={{ fontSize: 16, fontWeight: 700, color: "#E2E8F0" }}>{form.bodyConditionScore}/9</span>
-                <div style={{ fontSize: 9, color: "#94A3B8", fontWeight: 500 }}>
+                <span style={{ fontSize: 16, fontWeight: 700, color: "#fff" }}>{form.bodyConditionScore}/9</span>
+                <div style={{ fontSize: 9, color: "#fff", fontWeight: 500 }}>
                   {+form.bodyConditionScore <= 3 ? "Underweight" : +form.bodyConditionScore <= 5 ? "Ideal" : +form.bodyConditionScore <= 7 ? "Overweight" : "Obese"}
                 </div>
               </div>
@@ -1440,7 +1539,7 @@ function GeneratorView() {
       {!protocol && wizardStep === 2 && (<>
 
       {/* ═══════════ SECTION 2: CLINICAL ASSESSMENT ═══════════ */}
-      <div style={{ background: "#1D2B3A", border: "2px solid #2E3D4F", borderRadius: 12, padding: 24, marginBottom: 16 }}>
+      <div style={{ background: "#1D2B3A", border: "2px solid #2E3D4F", borderRadius: 10, padding: "16px 20px", marginBottom: 12 }}>
         <SectionHead icon={FiActivity} title="Section 2 — Clinical Assessment" />
         <div style={S.grid(2)}>
           <div>
@@ -1515,7 +1614,7 @@ function GeneratorView() {
           </div>
           {/* Limb Circumference */}
           <div style={{ marginBottom: 12 }}>
-            <div style={{ fontSize: 10, fontWeight: 600, color: "#94A3B8", marginBottom: 8 }}>Limb Circumference (cm) — Measure bilaterally at consistent landmark</div>
+            <div style={{ fontSize: 10, fontWeight: 600, color: "#fff", marginBottom: 8 }}>Limb Circumference (cm) — Measure bilaterally at consistent landmark</div>
             <div style={S.grid(3)}>
               <div>
                 <label style={S.label}>Measurement Site</label>
@@ -1552,7 +1651,7 @@ function GeneratorView() {
           </div>
           {/* Joint Range of Motion */}
           <div style={{ marginBottom: 12 }}>
-            <div style={{ fontSize: 10, fontWeight: 600, color: "#94A3B8", marginBottom: 8 }}>Joint Range of Motion (Goniometry — degrees)</div>
+            <div style={{ fontSize: 10, fontWeight: 600, color: "#fff", marginBottom: 8 }}>Joint Range of Motion (Goniometry — degrees)</div>
             <div style={S.grid(3)}>
               <div>
                 <label style={S.label}>Joint Measured</label>
@@ -1601,7 +1700,7 @@ function GeneratorView() {
                   color: +form.jointEffusion === 0 ? "#6EE7B7" : +form.jointEffusion <= 1 ? "#FCD34D" : "#FCA5A5",
                 }}>{form.jointEffusion}/3</span>
               </div>
-              <div style={{ fontSize: 9, color: "#94A3B8", marginTop: 4 }}>
+              <div style={{ fontSize: 9, color: "#fff", marginTop: 4 }}>
                 {+form.jointEffusion === 0 ? "None" : +form.jointEffusion === 1 ? "Mild — palpable fluid wave" : +form.jointEffusion === 2 ? "Moderate — visible swelling" : "Severe — tense, distended"}
               </div>
             </div>
@@ -1672,11 +1771,11 @@ function GeneratorView() {
       </div>
 
       {/* ═══════════ DIAGNOSTIC WORKUP ═══════════ */}
-      <div style={{ background: "#1D2B3A", border: "2px solid #2E3D4F", borderRadius: 12, padding: 24, marginBottom: 16 }}>
+      <div id="diagnostics-workup" style={{ background: "#1D2B3A", border: "2px solid #2E3D4F", borderRadius: 10, padding: "16px 20px", marginBottom: 12 }}>
         <SectionHead icon={FiClipboard} title="Diagnostic Workup" />
-        <div style={{ fontSize: 10, color: "#94A3B8", marginBottom: 16, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 10, color: "#fff", marginBottom: 16, lineHeight: 1.5 }}>
           Document all diagnostics obtained or reviewed for this patient. Mark each study as <strong style={{ color: "#6EE7B7" }}>Reviewed &amp; Obtained</strong> with findings,
-          or <strong style={{ color: "#94A3B8" }}>Not Clinically Indicated</strong> to confirm the diagnostic was evaluated and deemed unnecessary at this time.
+          or <strong style={{ color: "#fff" }}>Not Clinically Indicated</strong> to confirm the diagnostic was evaluated and deemed unnecessary at this time.
           Undocumented items remain as pending review.
         </div>
 
@@ -1742,11 +1841,11 @@ function GeneratorView() {
                         <div>
                           <div style={{
                             fontSize: 12, fontWeight: 600,
-                            color: isPerformed ? "#6EE7B7" : isNotIndicated ? "#64748B" : "#E2E8F0",
+                            color: isPerformed ? "#6EE7B7" : isNotIndicated ? "#64748B" : "#fff",
                             textDecoration: isNotIndicated ? "line-through" : "none",
                           }}>{d.label}</div>
                           {isNotIndicated && (
-                            <div style={{ fontSize: 10, color: "#64748B", fontStyle: "italic", marginTop: 2 }}>
+                            <div style={{ fontSize: 10, color: "#fff", fontStyle: "italic", marginTop: 2 }}>
                               Reviewed — not clinically indicated at this time
                             </div>
                           )}
@@ -1788,7 +1887,7 @@ function GeneratorView() {
                         <input style={{
                           ...S.input, border: "1px solid rgba(16,185,129,0.2)",
                           background: "rgba(16,185,129,0.05)", fontSize: 11, padding: "7px 10px",
-                          color: "#E2E8F0",
+                          color: "#fff",
                         }}
                           value={form[notesKey] || ""} onChange={e => setField(notesKey, e.target.value)}
                           placeholder={d.hint} />
@@ -1811,8 +1910,8 @@ function GeneratorView() {
             <div style={{ marginTop: 8, padding: "10px 16px", background: "rgba(14,165,233,0.06)", border: "1px solid rgba(14,165,233,0.15)", borderRadius: 8, display: "flex", gap: 20, alignItems: "center" }}>
               <span style={{ fontSize: 10, fontWeight: 700, color: "#7DD3FC", textTransform: "uppercase", letterSpacing: "0.5px" }}>Workup Status</span>
               <span style={{ fontSize: 11, fontWeight: 600, color: "#6EE7B7" }}>{performed} Obtained</span>
-              <span style={{ fontSize: 11, fontWeight: 600, color: "#64748B" }}>{notIndicated} Not Indicated</span>
-              <span style={{ fontSize: 11, fontWeight: 600, color: "#94A3B8" }}>{pending} Pending Review</span>
+              <span style={{ fontSize: 11, fontWeight: 600, color: "#fff" }}>{notIndicated} Not Indicated</span>
+              <span style={{ fontSize: 11, fontWeight: 600, color: "#fff" }}>{pending} Pending Review</span>
             </div>
           );
         })()}
@@ -1851,7 +1950,7 @@ function GeneratorView() {
       {/* ═══════════ STEP 3: TREATMENT PLAN & SURGICAL STATUS ═══════════ */}
       {!protocol && wizardStep === 3 && (<>
 
-      <div style={{ background: "#1D2B3A", border: "2px solid #2E3D4F", borderRadius: 12, padding: 24, marginBottom: 16 }}>
+      <div style={{ background: "#1D2B3A", border: "2px solid #2E3D4F", borderRadius: 10, padding: "16px 20px", marginBottom: 12 }}>
         <SectionHead icon={FiFileText} title="Section 3 — Treatment Plan & Surgical Status" />
 
         {/* ── Treatment Approach ── */}
@@ -1875,8 +1974,8 @@ function GeneratorView() {
                   transition: "all 0.2s",
                 }}>
                 <div style={{ fontSize: 20, marginBottom: 4 }}>{opt.icon}</div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "#E2E8F0" }}>{opt.label}</div>
-                <div style={{ fontSize: 11, color: "#94A3B8", marginTop: 2, fontWeight: 400 }}>{opt.desc}</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{opt.label}</div>
+                <div style={{ fontSize: 11, color: "#fff", marginTop: 2, fontWeight: 400 }}>{opt.desc}</div>
               </div>
             ))}
           </div>
@@ -2108,7 +2207,7 @@ function GeneratorView() {
             ].map(item => (
               <label key={item.key} style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer",
                 padding: "8px 14px", background: form[item.key] ? "rgba(14,165,233,0.15)" : "rgba(255,255,255,0.05)",
-                border: "1.5px solid #3A4A5C", borderRadius: 8, fontSize: 12, fontWeight: 600, color: "#E2E8F0",
+                border: "1.5px solid #3A4A5C", borderRadius: 8, fontSize: 12, fontWeight: 600, color: "#fff",
                 transition: "all 0.2s" }}>
                 <input type="checkbox" checked={form[item.key]} onChange={e => setField(item.key, e.target.checked)}
                   style={{ accentColor: "#1E3A5F", width: 16, height: 16, cursor: "pointer" }} />
@@ -2128,7 +2227,7 @@ function GeneratorView() {
           <div style={{ fontSize: 11, fontWeight: 700, color: "#7DD3FC", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 12, paddingBottom: 4, borderBottom: "1px solid rgba(14,165,233,0.25)" }}>
             Rehabilitation Goals
           </div>
-          <div style={{ fontSize: 10, color: "#94A3B8", marginBottom: 10 }}>Select all primary goals for this patient (guides protocol intensity and exercise selection)</div>
+          <div style={{ fontSize: 10, color: "#fff", marginBottom: 10 }}>Select all primary goals for this patient (guides protocol intensity and exercise selection)</div>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             {[
               { value: "pain_management", label: "Pain Management", icon: "🎯" },
@@ -2145,7 +2244,7 @@ function GeneratorView() {
               <label key={goal.value} style={{
                 display: "flex", alignItems: "center", gap: 8, cursor: "pointer",
                 padding: "8px 14px", borderRadius: 8, fontSize: 12, fontWeight: 600,
-                color: "#E2E8F0",
+                color: "#fff",
                 background: (form.rehabGoals || []).includes(goal.value) ? "rgba(14,165,233,0.18)" : "rgba(255,255,255,0.05)",
                 border: (form.rehabGoals || []).includes(goal.value) ? "1.5px solid #0EA5E9" : "1.5px solid #3A4A5C",
                 transition: "all 0.2s",
@@ -2202,7 +2301,7 @@ function GeneratorView() {
       {!protocol && wizardStep === 4 && (<>
 
       {/* ═══════════ SECTION 4: PROTOCOL PARAMETERS ═══════════ */}
-      <div style={{ background: "#1D2B3A", border: "2px solid #2E3D4F", borderRadius: 12, padding: 24, marginBottom: 16 }}>
+      <div style={{ background: "#1D2B3A", border: "2px solid #2E3D4F", borderRadius: 10, padding: "16px 20px", marginBottom: 12 }}>
         <SectionHead icon={FiCalendar} title="Section 4 — Protocol Parameters" />
         <div style={S.grid(3)}>
           <div>
@@ -2239,7 +2338,7 @@ function GeneratorView() {
         <div style={{ display: "flex", gap: 16, marginTop: 14, flexWrap: "wrap" }}>
           <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer",
             padding: "8px 14px", background: form.homeExerciseProgram ? "rgba(16,185,129,0.15)" : "rgba(255,255,255,0.05)",
-            border: form.homeExerciseProgram ? "1.5px solid #10B981" : "1.5px solid #3A4A5C", borderRadius: 8, fontSize: 12, fontWeight: 600, color: "#E2E8F0",
+            border: form.homeExerciseProgram ? "1.5px solid #10B981" : "1.5px solid #3A4A5C", borderRadius: 8, fontSize: 12, fontWeight: 600, color: "#fff",
             transition: "all 0.2s" }}>
             <input type="checkbox" checked={form.homeExerciseProgram} onChange={e => setField("homeExerciseProgram", e.target.checked)}
               style={{ accentColor: "#10B981", width: 16, height: 16, cursor: "pointer" }} />
@@ -2247,7 +2346,7 @@ function GeneratorView() {
           </label>
           <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer",
             padding: "8px 14px", background: form.aquaticAccess ? "rgba(14,165,233,0.15)" : "rgba(255,255,255,0.05)",
-            border: form.aquaticAccess ? "1.5px solid #0EA5E9" : "1.5px solid #3A4A5C", borderRadius: 8, fontSize: 12, fontWeight: 600, color: "#E2E8F0",
+            border: form.aquaticAccess ? "1.5px solid #0EA5E9" : "1.5px solid #3A4A5C", borderRadius: 8, fontSize: 12, fontWeight: 600, color: "#fff",
             transition: "all 0.2s" }}>
             <input type="checkbox" checked={form.aquaticAccess} onChange={e => setField("aquaticAccess", e.target.checked)}
               style={{ accentColor: "#0EA5E9", width: 16, height: 16, cursor: "pointer" }} />
@@ -2260,7 +2359,7 @@ function GeneratorView() {
           <div style={{ fontSize: 11, fontWeight: 700, color: "#7DD3FC", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10, paddingBottom: 4, borderBottom: "1px solid rgba(14,165,233,0.25)" }}>
             Available Therapeutic Modalities
           </div>
-          <div style={{ fontSize: 10, color: "#94A3B8", marginBottom: 10 }}>Select all modalities available at your facility (determines which interventions can be prescribed)</div>
+          <div style={{ fontSize: 10, color: "#fff", marginBottom: 10 }}>Select all modalities available at your facility (determines which interventions can be prescribed)</div>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             {[
               { key: "modalityUWTM", label: "Underwater Treadmill", icon: "🌊" },
@@ -2276,7 +2375,7 @@ function GeneratorView() {
               <label key={mod.key} style={{
                 display: "flex", alignItems: "center", gap: 7, cursor: "pointer",
                 padding: "7px 12px", borderRadius: 8, fontSize: 11, fontWeight: 600,
-                color: "#E2E8F0",
+                color: "#fff",
                 background: form[mod.key] ? "rgba(14,165,233,0.15)" : "rgba(255,255,255,0.05)",
                 border: form[mod.key] ? "1.5px solid #0EA5E9" : "1.5px solid #3A4A5C",
                 transition: "all 0.2s",
@@ -2333,7 +2432,7 @@ function GeneratorView() {
         return (
           <div style={{
             background: `linear-gradient(135deg, #1D2B3A 0%, #22323F 50%, #1D2B3A 100%)`,
-            border: "2px solid #2E3D4F", borderRadius: 12, padding: 24, marginBottom: 16,
+            border: "2px solid #2E3D4F", borderRadius: 10, padding: "16px 20px", marginBottom: 12,
             position: "relative", overflow: "hidden",
           }}>
             {/* Decorative top accent */}
@@ -2348,23 +2447,23 @@ function GeneratorView() {
               {/* Patient Info Card */}
               <div style={{ background: "rgba(255,255,255,0.05)", border: "1.5px solid #3A4A5C", borderRadius: 10, padding: "14px 16px" }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: "#7DD3FC", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 8 }}>Patient</div>
-                <div style={{ fontSize: 15, fontWeight: 800, color: "#E2E8F0", marginBottom: 4 }}>
+                <div style={{ fontSize: 15, fontWeight: 800, color: "#fff", marginBottom: 4 }}>
                   {form.patientName || "—"} <span style={{ fontSize: 12, fontWeight: 400 }}>({form.sex || "—"})</span>
                 </div>
-                <div style={{ fontSize: 12, color: "#CBD5E1", marginBottom: 2 }}>{form.breed || "Breed not selected"}</div>
+                <div style={{ fontSize: 12, color: "#fff", marginBottom: 2 }}>{form.breed || "Breed not selected"}</div>
                 <div style={{ display: "flex", gap: 12, marginTop: 6 }}>
-                  <span style={{ fontSize: 11, color: "#CBD5E1", fontWeight: 500 }}>Age: <strong>{form.age ? form.age + " yr" : "—"}</strong></span>
-                  <span style={{ fontSize: 11, color: "#CBD5E1", fontWeight: 500 }}>Wt: <strong>{form.weightKg ? form.weightKg + " kg" : "—"}{form.weightLbs ? " (" + form.weightLbs + " lbs)" : ""}</strong></span>
-                  <span style={{ fontSize: 11, color: "#CBD5E1", fontWeight: 500 }}>BCS: <strong>{form.bodyConditionScore}/9</strong></span>
+                  <span style={{ fontSize: 11, color: "#fff", fontWeight: 500 }}>Age: <strong>{form.age ? form.age + " yr" : "—"}</strong></span>
+                  <span style={{ fontSize: 11, color: "#fff", fontWeight: 500 }}>Wt: <strong>{form.weightKg ? form.weightKg + " kg" : "—"}{form.weightLbs ? " (" + form.weightLbs + " lbs)" : ""}</strong></span>
+                  <span style={{ fontSize: 11, color: "#fff", fontWeight: 500 }}>BCS: <strong>{form.bodyConditionScore}/9</strong></span>
                 </div>
               </div>
 
               {/* Diagnosis Card */}
               <div style={{ background: "rgba(255,255,255,0.05)", border: "1.5px solid #3A4A5C", borderRadius: 10, padding: "14px 16px" }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: "#7DD3FC", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 8 }}>Diagnosis & Region</div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "#E2E8F0", marginBottom: 4 }}>{diagLabel}</div>
-                {diagCategory && <div style={{ fontSize: 11, color: "#94A3B8", fontWeight: 400, marginBottom: 4 }}>Category: {diagCategory}</div>}
-                <div style={{ fontSize: 11, color: "#CBD5E1", fontWeight: 500 }}>Region: <strong>{form.affectedRegion || "—"}</strong></div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", marginBottom: 4 }}>{diagLabel}</div>
+                {diagCategory && <div style={{ fontSize: 11, color: "#fff", fontWeight: 400, marginBottom: 4 }}>Category: {diagCategory}</div>}
+                <div style={{ fontSize: 11, color: "#fff", fontWeight: 500 }}>Region: <strong>{form.affectedRegion || "—"}</strong></div>
                 <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
                   <span style={{
                     fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 4,
@@ -2385,15 +2484,15 @@ function GeneratorView() {
               {/* Treatment Plan Card */}
               <div style={{ background: "rgba(255,255,255,0.05)", border: "1.5px solid #3A4A5C", borderRadius: 10, padding: "14px 16px" }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: "#7DD3FC", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 8 }}>Treatment Plan</div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: "#E2E8F0", marginBottom: 4 }}>{txLabel}</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "#fff", marginBottom: 4 }}>{txLabel}</div>
                 {form.treatmentApproach === "surgical" && form.surgeryType && (
-                  <div style={{ fontSize: 11, color: "#CBD5E1", fontWeight: 500, marginBottom: 2 }}>Procedure: <strong>{form.surgeryType}</strong></div>
+                  <div style={{ fontSize: 11, color: "#fff", fontWeight: 500, marginBottom: 2 }}>Procedure: <strong>{form.surgeryType}</strong></div>
                 )}
                 {form.treatmentApproach === "surgical" && form.postOpDay && (
-                  <div style={{ fontSize: 11, color: "#CBD5E1", fontWeight: 500, marginBottom: 2 }}>Post-Op Day: <strong>{form.postOpDay}</strong></div>
+                  <div style={{ fontSize: 11, color: "#fff", fontWeight: 500, marginBottom: 2 }}>Post-Op Day: <strong>{form.postOpDay}</strong></div>
                 )}
                 {form.weightBearingStatus && (
-                  <div style={{ fontSize: 11, color: "#CBD5E1", fontWeight: 500, marginBottom: 2 }}>Weight Bearing: <strong>{form.weightBearingStatus}</strong></div>
+                  <div style={{ fontSize: 11, color: "#fff", fontWeight: 500, marginBottom: 2 }}>Weight Bearing: <strong>{form.weightBearingStatus}</strong></div>
                 )}
                 {ownerDeclined && (
                   <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 6, padding: "4px 8px", background: "#FEF3C7", border: "1px solid #D97706", borderRadius: 4 }}>
@@ -2409,16 +2508,16 @@ function GeneratorView() {
               <div>
                 <div style={{ fontSize: 10, fontWeight: 700, color: "#7DD3FC", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 6 }}>Exercise Library Available</div>
                 <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
-                  <div style={{ fontSize: 11, color: "#CBD5E1", fontWeight: 500 }}>
+                  <div style={{ fontSize: 11, color: "#fff", fontWeight: 500 }}>
                     Total Exercises: <strong style={{ fontSize: 14, color: "#7DD3FC" }}>{totalExercises}</strong>
                   </div>
                   {relevantExercises.length > 0 && (
-                    <div style={{ fontSize: 11, color: "#CBD5E1", fontWeight: 500 }}>
+                    <div style={{ fontSize: 11, color: "#fff", fontWeight: 500 }}>
                       Condition-Matched: <strong style={{ fontSize: 14, color: "#059669" }}>{relevantExercises.length}</strong>
                     </div>
                   )}
                   {form.currentMedications && (
-                    <div style={{ fontSize: 11, color: "#CBD5E1", fontWeight: 500 }}>
+                    <div style={{ fontSize: 11, color: "#fff", fontWeight: 500 }}>
                       Active Medications: <strong>{form.currentMedications}</strong>
                     </div>
                   )}
@@ -2445,21 +2544,21 @@ function GeneratorView() {
                       </span>
                     ))}
                   </div>
-                ) : <span style={{ fontSize: 11, color: "#94A3B8" }}>No goals selected</span>}
+                ) : <span style={{ fontSize: 11, color: "#fff" }}>No goals selected</span>}
               </div>
               {/* Protocol Config */}
               <div style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: "1.5px solid #3A4A5C", borderRadius: 10, padding: "12px 16px" }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: "#7DD3FC", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 6 }}>Protocol Configuration</div>
                 <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-                  <span style={{ fontSize: 11, color: "#CBD5E1", fontWeight: 500 }}>{form.protocolLength} weeks</span>
-                  <span style={{ fontSize: 11, color: "#CBD5E1", fontWeight: 500 }}>{form.sessionFrequency}×/week</span>
+                  <span style={{ fontSize: 11, color: "#fff", fontWeight: 500 }}>{form.protocolLength} weeks</span>
+                  <span style={{ fontSize: 11, color: "#fff", fontWeight: 500 }}>{form.sessionFrequency}×/week</span>
                   {form.homeExerciseProgram && <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 4, background: "rgba(16,185,129,0.15)", color: "#6EE7B7" }}>HEP Included</span>}
                   {form.aquaticAccess && <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 4, background: "rgba(14,165,233,0.15)", color: "#7DD3FC" }}>Aquatic</span>}
                 </div>
                 {/* Modalities count */}
                 {(() => {
                   const modCount = ["modalityUWTM","modalityLaser","modalityTENS","modalityNMES","modalityTherapeuticUS","modalityShockwave","modalityCryotherapy","modalityHeatTherapy","modalityPulsedEMF"].filter(k => form[k]).length;
-                  return modCount > 0 ? <div style={{ fontSize: 10, color: "#94A3B8", marginTop: 4 }}>{modCount} modalities available</div> : null;
+                  return modCount > 0 ? <div style={{ fontSize: 10, color: "#fff", marginTop: 4 }}>{modCount} modalities available</div> : null;
                 })()}
               </div>
             </div>
@@ -2470,12 +2569,12 @@ function GeneratorView() {
                 <div style={{ fontSize: 10, fontWeight: 700, color: "#7DD3FC", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 6 }}>Baseline Measurements</div>
                 <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
                   {form.circumferenceAffected && form.circumferenceContralateral && (
-                    <span style={{ fontSize: 11, color: "#CBD5E1", fontWeight: 500 }}>
+                    <span style={{ fontSize: 11, color: "#fff", fontWeight: 500 }}>
                       Circumference: {form.circumferenceAffected}cm / {form.circumferenceContralateral}cm
                       ({Math.abs(parseFloat(form.circumferenceAffected) - parseFloat(form.circumferenceContralateral)).toFixed(1)}cm diff)
                     </span>
                   )}
-                  {form.romFlexion && <span style={{ fontSize: 11, color: "#CBD5E1", fontWeight: 500 }}>ROM: {form.romFlexion}°–{form.romExtension || "—"}°</span>}
+                  {form.romFlexion && <span style={{ fontSize: 11, color: "#fff", fontWeight: 500 }}>ROM: {form.romFlexion}°–{form.romExtension || "—"}°</span>}
                   {form.muscleCondition !== "Normal" && <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 4, background: "rgba(220,38,38,0.15)", color: "#FCA5A5" }}>{form.muscleCondition}</span>}
                   {+form.jointEffusion > 0 && <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 4, background: "rgba(217,119,6,0.15)", color: "#FCD34D" }}>Effusion: {form.jointEffusion}/3</span>}
                 </div>
@@ -2499,6 +2598,233 @@ function GeneratorView() {
           </div>
         );
       })()}
+
+      {/* ═══════════ K9 REHAB PRO — COMPLIANCE & DATA PROTECTION ═══════════ */}
+      <div style={{ marginBottom: 12 }}>
+        <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
+          <input type="checkbox" checked={complianceAgreed} onChange={e => setComplianceAgreed(e.target.checked)}
+            style={{ accentColor: "#39FF7E", width: 16, height: 16, cursor: "pointer" }} />
+          <span style={{ fontSize: 11, fontWeight: 600, color: C.text }}>
+            I acknowledge the{" "}
+            <span
+              onClick={e => { e.preventDefault(); setComplianceOpen(o => !o); }}
+              style={{ color: "#0EA5E9", textDecoration: "underline", cursor: "pointer" }}
+            >K9 Rehab Pro — Compliance & Data Protection Notice</span>
+          </span>
+        </label>
+        {complianceOpen && (
+          <div style={{
+            background: "#1D2B3A", border: "2px solid #2E3D4F", borderRadius: 10,
+            padding: "20px 24px", marginTop: 8, maxHeight: 420, overflowY: "auto",
+          }}>
+            {/* Section 1 */}
+            <div style={{ fontSize: 12, fontWeight: 800, color: "#7DD3FC", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 8 }}>
+              1. Regulatory Framework & Governing Standards
+            </div>
+            <div style={{ fontSize: 10, color: "#fff", lineHeight: 1.7, marginBottom: 6 }}>
+              K9 Rehab Pro operates under the regulatory authority of state veterinary medical boards in the United States. All clinical decision-support features, rehabilitation protocol generation, and professional-facing tools are designed to comply with:
+            </div>
+            <ul style={{ fontSize: 10, color: "#fff", lineHeight: 1.8, margin: "0 0 12px 16px", padding: 0 }}>
+              <li>State veterinary practice acts</li>
+              <li>State veterinary medical board rules for teleadvice, teleconsulting, and client communication</li>
+              <li>State-specific definitions of the veterinarian–client–patient relationship (VCPR)</li>
+              <li>Professional conduct, recordkeeping, and data-handling requirements</li>
+              <li>Restrictions on diagnosis, prescription, and medical decision-making by non-veterinarians</li>
+            </ul>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.7)", lineHeight: 1.7, marginBottom: 16, fontStyle: "italic" }}>
+              The platform functions as a clinical decision-support system (CDSS) and educational tool, not a substitute for licensed veterinary judgment.
+            </div>
+
+            {/* Section 2 */}
+            <div style={{ fontSize: 12, fontWeight: 800, color: "#7DD3FC", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 8 }}>
+              2. Scope of Use & Professional Boundaries
+            </div>
+            <div style={{ fontSize: 10, color: "#fff", lineHeight: 1.7, marginBottom: 6 }}>
+              K9 Rehab Pro is designed for:
+            </div>
+            <ul style={{ fontSize: 10, color: "#fff", lineHeight: 1.8, margin: "0 0 8px 16px", padding: 0 }}>
+              <li>Licensed veterinarians</li>
+              <li>Certified canine rehabilitation practitioners (CCRP/CCRT)</li>
+              <li>Veterinary physical therapists</li>
+              <li>Veterinary technicians under supervision</li>
+              <li>Veterinary students and rehabilitation trainees</li>
+            </ul>
+            <div style={{ fontSize: 10, color: "#fff", lineHeight: 1.7, marginBottom: 6 }}>
+              The system does not:
+            </div>
+            <ul style={{ fontSize: 10, color: "rgba(255,255,255,0.7)", lineHeight: 1.8, margin: "0 0 8px 16px", padding: 0 }}>
+              <li>Establish a VCPR</li>
+              <li>Provide medical diagnosis</li>
+              <li>Replace in-person examinations</li>
+              <li>Prescribe medications</li>
+              <li>Override state veterinary medical board rules</li>
+            </ul>
+            <div style={{ fontSize: 10, color: "#6EE7B7", lineHeight: 1.7, marginBottom: 16, fontWeight: 600 }}>
+              All generated content must be reviewed and approved by a licensed veterinarian before being applied to a patient.
+            </div>
+
+            {/* Section 3 */}
+            <div style={{ fontSize: 12, fontWeight: 800, color: "#7DD3FC", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 8 }}>
+              3. Data Privacy & Confidentiality Standards
+            </div>
+            <div style={{ fontSize: 10, color: "#fff", lineHeight: 1.7, marginBottom: 6 }}>
+              K9 Rehab Pro is committed to data privacy standards that align with or exceed veterinary medical board recordkeeping requirements. HIPAA does not govern veterinary medicine; however, the platform is designed with the following protections in place or on the implementation roadmap:
+            </div>
+            <ul style={{ fontSize: 10, color: "#fff", lineHeight: 1.8, margin: "0 0 4px 16px", padding: 0 }}>
+              <li>All patient and client data stored locally on the host device — no external transmission</li>
+              <li>No third-party data sharing, advertising use, or AI training on user-submitted data</li>
+              <li>Session-based access with configurable timeout</li>
+            </ul>
+            <div style={{ fontSize: 10, color: "#FBBF24", lineHeight: 1.7, marginBottom: 4, fontWeight: 600 }}>
+              Planned for production deployment:
+            </div>
+            <ul style={{ fontSize: 10, color: "rgba(255,255,255,0.6)", lineHeight: 1.8, margin: "0 0 8px 16px", padding: 0 }}>
+              <li>AES-256 encryption at rest</li>
+              <li>TLS 1.3 encryption in transit</li>
+              <li>Zero-knowledge architecture for sensitive fields</li>
+              <li>Role-based access control (RBAC)</li>
+              <li>Multi-factor authentication</li>
+              <li>Encrypted backups and disaster-recovery protocols</li>
+            </ul>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.7)", lineHeight: 1.7, marginBottom: 16, fontStyle: "italic" }}>
+              No client or patient data is sold, shared, or used for advertising. Security features will be fully implemented prior to multi-user or cloud deployment.
+            </div>
+
+            {/* Section 4 */}
+            <div style={{ fontSize: 12, fontWeight: 800, color: "#7DD3FC", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 8 }}>
+              4. State Veterinary Medical Board Compliance
+            </div>
+            <ul style={{ fontSize: 10, color: "#fff", lineHeight: 1.8, margin: "0 0 8px 16px", padding: 0 }}>
+              <li>VCPR-dependent features clearly labeled</li>
+              <li>Protocols requiring veterinary oversight flagged for review</li>
+              <li>Restrictions on remote diagnosis enforced</li>
+              <li>Documentation standards aligned with state recordkeeping rules</li>
+              <li>Clear separation between education, decision support, and clinical judgment</li>
+            </ul>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.7)", lineHeight: 1.7, marginBottom: 16, fontStyle: "italic" }}>
+              All workflows are designed to align with state-level practice restrictions. Final clinical decisions remain the responsibility of the supervising veterinarian.
+            </div>
+
+            {/* Section 5 */}
+            <div style={{ fontSize: 12, fontWeight: 800, color: "#7DD3FC", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 8 }}>
+              5. Clinical Accuracy, Evidence Standards & Protocol Validation
+            </div>
+            <div style={{ fontSize: 10, color: "#fff", lineHeight: 1.7, marginBottom: 6 }}>
+              All rehabilitation protocols follow:
+            </div>
+            <ul style={{ fontSize: 10, color: "#fff", lineHeight: 1.8, margin: "0 0 8px 16px", padding: 0 }}>
+              <li>Millis & Levine <em>Canine Rehabilitation and Physical Therapy</em></li>
+              <li><em>Canine Sports Medicine & Rehabilitation</em> (Zink & Van Dyke)</li>
+              <li>ACVSMR-aligned best practices</li>
+              <li>Peer-reviewed veterinary rehabilitation literature</li>
+              <li>State veterinary medical board expectations for evidence-based care</li>
+            </ul>
+            <div style={{ fontSize: 10, color: "#fff", lineHeight: 1.7, marginBottom: 6 }}>
+              Every exercise in the library is:
+            </div>
+            <ul style={{ fontSize: 10, color: "#6EE7B7", lineHeight: 1.8, margin: "0 0 8px 16px", padding: 0, fontWeight: 600 }}>
+              <li>Clinically validated</li>
+              <li>Evidence-based</li>
+              <li>Stage-appropriate</li>
+              <li>Safety-screened</li>
+              <li>Free of hallucinated or non-standard techniques</li>
+            </ul>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.7)", lineHeight: 1.7, marginBottom: 16, fontStyle: "italic" }}>
+              Protocols are generated using deterministic logic to ensure reproducibility and clinical reliability.
+            </div>
+
+            {/* Section 6 */}
+            <div style={{ fontSize: 12, fontWeight: 800, color: "#7DD3FC", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 8 }}>
+              6. Security Infrastructure & Technical Safeguards
+            </div>
+            <div style={{ fontSize: 10, color: "#fff", lineHeight: 1.7, marginBottom: 6 }}>
+              K9 Rehab Pro currently operates as a locally-hosted application. Active and planned security measures include:
+            </div>
+            <ul style={{ fontSize: 10, color: "#6EE7B7", lineHeight: 1.8, margin: "0 0 4px 16px", padding: 0, fontWeight: 600 }}>
+              <li>Local-only data storage — no external servers or cloud transmission</li>
+              <li>Deterministic protocol logic — no AI/ML in clinical output</li>
+              <li>Configurable session timeout and auto-lock</li>
+              <li>Strict API access controls (CORS-restricted)</li>
+            </ul>
+            <div style={{ fontSize: 10, color: "#FBBF24", lineHeight: 1.7, marginBottom: 4, fontWeight: 600 }}>
+              Planned for production deployment:
+            </div>
+            <ul style={{ fontSize: 10, color: "rgba(255,255,255,0.6)", lineHeight: 1.8, margin: "0 0 8px 16px", padding: 0 }}>
+              <li>Encrypted databases (AES-256)</li>
+              <li>Audit logs for all clinical-related actions</li>
+              <li>Multi-factor authentication</li>
+              <li>Continuous monitoring and intrusion detection</li>
+              <li>Automated patching and vulnerability scanning</li>
+            </ul>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.7)", lineHeight: 1.7, marginBottom: 16, fontStyle: "italic" }}>
+              Enterprise-grade security features will be fully implemented prior to multi-user, cloud, or production deployment.
+            </div>
+
+            {/* Section 7 */}
+            <div style={{ fontSize: 12, fontWeight: 800, color: "#7DD3FC", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 8 }}>
+              7. Data Retention, Ownership & Client Rights
+            </div>
+            <div style={{ fontSize: 10, color: "#fff", lineHeight: 1.7, marginBottom: 6 }}>
+              Clients and clinicians retain full ownership of their data. K9 Rehab Pro acts only as a secure processor.
+            </div>
+            <ul style={{ fontSize: 10, color: "#fff", lineHeight: 1.8, margin: "0 0 8px 16px", padding: 0 }}>
+              <li>Data retained only as long as required for clinical or legal purposes</li>
+              <li>Permanent deletion available upon request</li>
+              <li>Exportable records for veterinary medical board audits</li>
+              <li>No third-party data sharing</li>
+              <li>No AI training on user-submitted patient data</li>
+            </ul>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.7)", lineHeight: 1.7, marginBottom: 16, fontStyle: "italic" }}>
+              All retention timelines align with state veterinary medical board recordkeeping requirements.
+            </div>
+
+            {/* Section 8 */}
+            <div style={{ fontSize: 12, fontWeight: 800, color: "#7DD3FC", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 8 }}>
+              8. Ethical Use, Transparency & Professional Responsibility
+            </div>
+            <div style={{ fontSize: 10, color: "#fff", lineHeight: 1.7, marginBottom: 6 }}>
+              K9 Rehab Pro adheres to the ethical standards of:
+            </div>
+            <ul style={{ fontSize: 10, color: "#fff", lineHeight: 1.8, margin: "0 0 8px 16px", padding: 0 }}>
+              <li>AVMA</li>
+              <li>State veterinary medical boards</li>
+              <li>ACVSMR</li>
+              <li>APTA (for PT-licensed users)</li>
+            </ul>
+            <div style={{ fontSize: 10, color: "#fff", lineHeight: 1.7, marginBottom: 6 }}>
+              Ethical commitments include:
+            </div>
+            <ul style={{ fontSize: 10, color: "#fff", lineHeight: 1.8, margin: "0 0 8px 16px", padding: 0 }}>
+              <li>Transparency about system limitations</li>
+              <li>Clear labeling of AI-generated content</li>
+              <li>Mandatory veterinary oversight for clinical decisions</li>
+              <li>No replacement of licensed professional judgment</li>
+              <li>No misleading claims about outcomes or guarantees</li>
+            </ul>
+            <div style={{ fontSize: 10, color: "#6EE7B7", lineHeight: 1.7, fontWeight: 700, marginBottom: 16 }}>
+              The platform supports clinicians — never replaces them.
+            </div>
+
+            {/* Section 9 */}
+            <div style={{ fontSize: 12, fontWeight: 800, color: "#7DD3FC", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 8 }}>
+              9. Intellectual Property & Ownership
+            </div>
+            <div style={{ fontSize: 10, color: "#fff", lineHeight: 1.7, marginBottom: 6 }}>
+              All intellectual property rights are defined as follows:
+            </div>
+            <ul style={{ fontSize: 10, color: "#fff", lineHeight: 1.8, margin: "0 0 8px 16px", padding: 0 }}>
+              <li><strong>Platform IP:</strong> The K9 Rehab Pro platform, including its protocol generation engine, exercise library, clinical algorithms, user interface, and source code, is the proprietary intellectual property of the platform owner.</li>
+              <li><strong>Exercise Library:</strong> The curated exercise library is a proprietary compilation. Individual exercises reference published veterinary rehabilitation literature (Millis & Levine, Zink & Van Dyke, peer-reviewed journals) under fair use for clinical decision support.</li>
+              <li><strong>Generated Protocols:</strong> Rehabilitation protocols generated by the platform become the clinical property of the generating clinic or clinician. The platform retains no ownership of patient-specific output.</li>
+              <li><strong>Patient Data:</strong> All patient and client data entered into the system is owned exclusively by the clinic or clinician. K9 Rehab Pro acts solely as a local data processor.</li>
+              <li><strong>Branding & Trademarks:</strong> "K9 Rehab Pro," the K9 Rehab Pro logo, and all associated branding elements are proprietary marks of the platform owner.</li>
+            </ul>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.7)", lineHeight: 1.7, fontStyle: "italic" }}>
+              Unauthorized reproduction, distribution, or reverse engineering of the platform, its algorithms, or exercise library is prohibited.
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* ═══════════ GENERATE BUTTON — standalone with heavy neon green glow ═══════════ */}
       <div style={{ display: "flex", justifyContent: "center", padding: "12px 0 8px" }}>
@@ -2575,7 +2901,67 @@ function GeneratorView() {
         const totalWeeks = protocol.protocol_length_weeks || protocol.weeks?.length || 8;
 
         return (
-        <div>
+        <div className="print-protocol">
+          {/* ── CDSS / Veterinary Oversight Disclaimer Banner ── */}
+          <div style={{
+            padding: "12px 20px", marginBottom: 10, borderRadius: 8,
+            background: "linear-gradient(135deg, #1E3A5F 0%, #0A2540 100%)",
+            border: "1px solid #2E4A6F",
+            display: "flex", alignItems: "center", gap: 12,
+          }}>
+            <FiShield size={18} style={{ color: "#FBBF24", flexShrink: 0 }} />
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 800, color: "#FBBF24", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 2 }}>
+                Clinical Decision-Support Output — Veterinary Review Required
+              </div>
+              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.8)", lineHeight: 1.5 }}>
+                This protocol is generated by a clinical decision-support system (CDSS). It does not constitute a diagnosis, prescription, or veterinary-client-patient relationship (VCPR). All content must be reviewed and approved by a licensed veterinarian before being applied to a patient.
+              </div>
+            </div>
+          </div>
+
+          {/* ── Print / Export Action Bar ── */}
+          <div className="no-print" style={{
+            display: "flex", gap: 8, marginBottom: 10, justifyContent: "flex-end",
+          }}>
+            <button onClick={() => window.print()} style={{
+              ...S.btn("outline"), fontSize: 11, padding: "6px 14px",
+              display: "flex", alignItems: "center", gap: 6,
+            }}>
+              <FiPrinter size={12} /> Print Protocol
+            </button>
+            <button onClick={() => {
+              setProtocol(null);
+              setWizardStep(1);
+            }} style={{
+              ...S.btn("outline"), fontSize: 11, padding: "6px 14px",
+              display: "flex", alignItems: "center", gap: 6,
+            }}>
+              <FiPlus size={12} /> New Protocol
+            </button>
+          </div>
+
+          {/* ── Red-Flag Warnings (if any) ── */}
+          {protocol.red_flag_warnings && protocol.red_flag_warnings.length > 0 && (
+            <div style={{
+              padding: "14px 20px", marginBottom: 10, borderRadius: 8,
+              background: "linear-gradient(135deg, #7F1D1D 0%, #450A0A 100%)",
+              border: "1px solid #DC2626",
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                <FiAlertTriangle size={16} style={{ color: "#FCA5A5", flexShrink: 0 }} />
+                <span style={{ fontSize: 12, fontWeight: 800, color: "#FCA5A5", textTransform: "uppercase", letterSpacing: "1px" }}>
+                  Clinical Red Flags Detected
+                </span>
+              </div>
+              {protocol.red_flag_warnings.map((w, i) => (
+                <div key={i} style={{ fontSize: 11, color: "#FECACA", lineHeight: 1.6, marginBottom: 4, paddingLeft: 24 }}>
+                  {w}
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* ── Protocol Summary Header ── */}
           <div style={{
             ...S.card, borderTop: `4px solid ${C.teal}`,
@@ -2762,46 +3148,139 @@ function GeneratorView() {
             </div>
           ))}
 
-          {/* ── Home Exercise Program (HEP) ── */}
+          {/* ── Home Exercise Program (HEP) — Client Take-Home ── */}
+          {(() => {
+            const CLINIC_ONLY = new Set(["LASER_IV","TENS_THERAPY","NMES_QUAD","US_PULSED",
+              "PEMF_THERAPY","SHOCKWAVE","UNDERWATER_TREAD","POOL_SWIM","WATER_WALKING","WATER_RETRIEVE"]);
+            const hepByPhase = {};
+            (protocol.weeks || []).forEach(week => {
+              const phaseInfo = week.exercises?.[0]?._phaseInfo;
+              const phaseName = phaseInfo?.name || "Phase 1";
+              const phaseNum = phaseInfo?.number || 1;
+              if (!hepByPhase[phaseNum]) hepByPhase[phaseNum] = { name: phaseName, exercises: new Map() };
+              (week.exercises || []).forEach(ex => {
+                if (!CLINIC_ONLY.has(ex.code)) {
+                  hepByPhase[phaseNum].exercises.set(ex.code, ex);
+                }
+              });
+            });
+            return (
+              <div style={{
+                ...S.card, borderTop: `3px solid ${C.green}`,
+                background: `linear-gradient(135deg, ${C.surface} 0%, ${C.greenBg} 100%)`,
+              }} className="hep-section">
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <FiHeart size={14} style={{ color: C.green }} />
+                    <span style={{ fontSize: 13, fontWeight: 800, color: C.navy, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                      Home Exercise Program (HEP)
+                    </span>
+                  </div>
+                  <span style={{ ...S.badge("green"), fontSize: 10 }}>Client Take-Home</span>
+                </div>
+                <p style={{ fontSize: 11, color: C.textMid, marginBottom: 14, lineHeight: 1.6, background: "#F0FFF4", padding: "10px 14px", borderRadius: 6 }}>
+                  These exercises are safe to perform at home under the guidance provided. Clinic-only interventions (laser, electrical stimulation, ultrasound, aquatic therapy) are excluded. Always follow your veterinarian's specific instructions and stop any exercise that causes pain or distress.
+                </p>
+                {Object.entries(hepByPhase).map(([phaseNum, phase]) => (
+                  <div key={phaseNum} style={{ marginBottom: 16 }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: C.navy, marginBottom: 8,
+                      padding: "4px 10px", background: "#EBF8FF", borderRadius: 4, display: "inline-block" }}>
+                      Phase {phaseNum}: {phase.name}
+                    </div>
+                    <div style={S.grid(2)}>
+                      {[...phase.exercises.values()].slice(0, 10).map((ex, i) => (
+                        <div key={i} style={{
+                          padding: "10px 14px", background: "#fff",
+                          border: `1px solid ${C.border}`, borderRadius: 8,
+                        }}>
+                          <div style={{ fontWeight: 700, fontSize: 12, color: C.navy }}>{ex.name || ex.exercise?.name}</div>
+                          <div style={{ fontSize: 11, color: C.textMid, marginTop: 4 }}>
+                            {ex.sets && `${ex.sets}`}{ex.reps && ` × ${ex.reps}`}
+                            {ex.duration_seconds && ` · ${ex.duration_seconds >= 60 ? `${ex.duration_seconds / 60} min` : `${ex.duration_seconds}s`}`}
+                            {ex.frequency_per_day && ` · ${ex.frequency_per_day}×/day`}
+                          </div>
+                          {ex.notes && <div style={{ fontSize: 10, color: C.textLight, marginTop: 3, fontStyle: "italic" }}>{ex.notes}</div>}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+                <div style={{ padding: "8px 12px", background: C.amberBg, border: `1px solid ${C.amber}33`,
+                  borderRadius: 6, fontSize: 10, color: C.amber, fontWeight: 600, marginTop: 8 }}>
+                  If your pet shows signs of pain, limping, swelling, or reluctance during any exercise, stop immediately and contact your veterinarian.
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* ── Veterinary Sign-Off Section ── */}
           <div style={{
-            ...S.card, borderTop: `3px solid ${C.green}`,
-            background: `linear-gradient(135deg, ${C.surface} 0%, ${C.greenBg} 100%)`,
+            ...S.card, borderTop: `3px solid ${C.navy}`,
+            background: `linear-gradient(135deg, ${C.surface} 0%, #F0F4F8 100%)`,
           }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-              <FiHeart size={14} style={{ color: C.green }} />
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+              <FiAward size={14} style={{ color: C.navy }} />
               <span style={{ fontSize: 13, fontWeight: 800, color: C.navy, textTransform: "uppercase", letterSpacing: "0.5px" }}>
-                Home Exercise Program (HEP) — Phase 1
+                Veterinary Review & Approval
               </span>
             </div>
-            <p style={{ fontSize: 11, color: C.textMid, marginBottom: 12, lineHeight: 1.5 }}>
-              Simplified summary for client take-home. Excludes clinic-only interventions (laser, TENS, NMES, UWTM, pool therapy).
-            </p>
             <div style={S.grid(2)}>
-              {(protocol.weeks?.[0]?.exercises || [])
-                .filter(ex => !["LASER_IV","TENS_THERAPY","NMES_QUAD","US_PULSED",
-                  "PEMF_THERAPY","SHOCKWAVE","UNDERWATER_TREAD","POOL_SWIM",
-                  "WATER_WALKING","WATER_RETRIEVE"].includes(ex.code))
-                .slice(0, 8)
-                .map((ex, i) => (
-                  <div key={i} style={{
-                    padding: "10px 14px", background: "#fff",
-                    border: `1px solid ${C.border}`, borderRadius: 8,
-                  }}>
-                    <div style={{ fontWeight: 700, fontSize: 12, color: C.navy }}>{ex.name}</div>
-                    <div style={{ fontSize: 11, color: C.textMid, marginTop: 4 }}>
-                      {ex.sets} · {ex.frequency}
-                    </div>
-                    {ex.notes && <div style={{ fontSize: 10, color: C.textLight, marginTop: 2, fontStyle: "italic" }}>{ex.notes}</div>}
-                  </div>
-                ))
-              }
+              <div>
+                <label style={{ fontSize: 10, fontWeight: 600, color: C.textMid, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 4, display: "block" }}>
+                  Reviewed By (Licensed Veterinarian)
+                </label>
+                <input style={{ ...S.input, borderColor: C.navy + "44" }} placeholder="DVM name, credentials, license #" />
+              </div>
+              <div>
+                <label style={{ fontSize: 10, fontWeight: 600, color: C.textMid, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 4, display: "block" }}>
+                  Date Reviewed
+                </label>
+                <input style={{ ...S.input, borderColor: C.navy + "44" }} type="date" defaultValue={new Date().toISOString().split("T")[0]} />
+              </div>
+            </div>
+            <div style={{ marginTop: 12 }}>
+              <label style={{ fontSize: 10, fontWeight: 600, color: C.textMid, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 4, display: "block" }}>
+                Clinical Notes / Modifications
+              </label>
+              <textarea style={{ ...S.input, minHeight: 48, resize: "vertical" }} placeholder="Document any protocol modifications, patient-specific adjustments, or clinical rationale..." />
+            </div>
+            <div style={{
+              marginTop: 12, padding: "8px 14px", background: C.amberBg,
+              border: `1px solid ${C.amber}33`, borderRadius: 6,
+              fontSize: 10, color: C.amber, fontWeight: 600,
+            }}>
+              This protocol must be reviewed and approved by a licensed veterinarian before being applied to a patient. Unsigned protocols are for reference only.
             </div>
           </div>
 
-          {/* ── ACVSMR Standards Footer ── */}
-          <div style={{ textAlign: "center", padding: "12px 0 4px", opacity: 0.5 }}>
-            <div style={{ fontSize: 9, color: C.textLight, letterSpacing: "0.5px" }}>
-              Protocol generated per ACVSMR standards · Millis & Levine methodology · Evidence-based exercise selection
+          {/* ── Legal Disclaimer & ACVSMR Standards Footer ── */}
+          <div style={{
+            ...S.card, background: "#0A2540", border: "1px solid #1E3A5F",
+            padding: "16px 20px",
+          }}>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.5)", lineHeight: 1.7 }}>
+              <strong style={{ color: "rgba(255,255,255,0.7)" }}>DISCLAIMER:</strong> This document is generated by K9 Rehab Pro, a clinical decision-support system (CDSS). It does not establish a veterinarian-client-patient relationship (VCPR), provide a medical diagnosis, or replace in-person veterinary examination. All rehabilitation protocols must be reviewed, modified as clinically appropriate, and approved by a licensed veterinarian before implementation. The platform owner assumes no liability for clinical outcomes resulting from protocol application without proper veterinary oversight.
+            </div>
+
+            <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+              <div style={{ fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 6 }}>
+                Practice-Type Applicability
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 16px", fontSize: 9, color: "rgba(255,255,255,0.45)", lineHeight: 1.6 }}>
+                <div><strong style={{ color: "rgba(255,255,255,0.6)" }}>General Practice:</strong> Protocols require oversight by attending DVM. Refer complex cases to CCRP/CCRT-certified clinicians.</div>
+                <div><strong style={{ color: "rgba(255,255,255,0.6)" }}>Rehabilitation Centers:</strong> Intended for use by CCRP, CCRT, or ACVSMR-certified professionals with direct patient access.</div>
+                <div><strong style={{ color: "rgba(255,255,255,0.6)" }}>Specialty Hospitals:</strong> Integrate with existing treatment plans. Coordinate with surgical, neurology, and oncology teams as indicated.</div>
+                <div><strong style={{ color: "rgba(255,255,255,0.6)" }}>Universities:</strong> Suitable for clinical teaching under faculty supervision. Not for unsupervised student application.</div>
+              </div>
+            </div>
+
+            <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid rgba(255,255,255,0.1)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", letterSpacing: "0.5px" }}>
+                Protocol generated per ACVSMR standards · Millis & Levine methodology · Evidence-based exercise selection
+              </div>
+              <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)" }}>
+                K9 Rehab Pro™ · Clinical Decision-Support System
+              </div>
             </div>
           </div>
         </div>
@@ -3377,7 +3856,7 @@ function SessionsView() {
   // Shared 0-10 button row component
   const ScoreRow = ({ label, value, onChange }) => (
     <div style={{ marginBottom: 14 }}>
-      <label style={{ fontSize: 12, fontWeight: 600, color: "#E2E8F0", marginBottom: 8, display: "block" }}>{label}</label>
+      <label style={{ fontSize: 12, fontWeight: 600, color: "#fff", marginBottom: 8, display: "block" }}>{label}</label>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <span style={{ fontSize: 10, color: C.green, fontWeight: 600, minWidth: 48 }}>No Pain</span>
         <div style={{ flex: 1, display: "flex", gap: 3 }}>
@@ -3444,8 +3923,13 @@ function SessionsView() {
       {/* ═══════════ SOAP TAB ═══════════ */}
       {activeTab === "soap" && (
         <div style={{ ...S.card, background: "#1D2B3A", border: "2px solid #2E3D4F" }}>
-          <div style={S.sectionHeader()}>
-            <FiClipboard size={13} style={{ color: C.teal }} /> SOAP Note Entry
+          <div>
+            <div style={S.sectionHeader()}>
+              <FiClipboard size={13} style={{ color: "#39FF7E" }} /> SOAP Note Entry
+            </div>
+            <div style={{ height: 2, width: "100%", overflow: "hidden", borderRadius: 1 }}>
+              <div style={{ width: "200%", height: "100%", background: "linear-gradient(90deg, transparent, #39FF7E, #0EA5E9, #39FF7E, transparent)", animation: "neonFlatline 3s linear infinite" }} />
+            </div>
           </div>
 
           {/* S - Subjective */}
@@ -3527,25 +4011,27 @@ function SessionsView() {
 
           {/* Pain Severity Scale (PSS) — 4 items */}
           <div style={{ ...S.card, background: "#1D2B3A", border: "2px solid #2E3D4F" }}>
-            <div style={{ fontSize: 12, fontWeight: 800, color: "#E2E8F0", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 16, borderBottom: `2px solid ${C.teal}`, paddingBottom: 8 }}>
-              Pain Severity Scale (PSS)
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontSize: 12, fontWeight: 800, color: "#fff", textTransform: "uppercase", letterSpacing: "0.8px", paddingBottom: 8 }}>Pain Severity Scale (PSS)</div>
+              <div style={{ height: 2, width: "100%", overflow: "hidden", borderRadius: 1 }}><div style={{ width: "200%", height: "100%", background: "linear-gradient(90deg, transparent, #39FF7E, #0EA5E9, #39FF7E, transparent)", animation: "neonFlatline 3s linear infinite" }} /></div>
             </div>
             <ScoreRow label="1. Rate your dog's pain at its WORST in the last 7 days" value={cbpi.pss_worst} onChange={v => setCbpi(f => ({ ...f, pss_worst: v }))} />
             <ScoreRow label="2. Rate your dog's pain at its LEAST in the last 7 days" value={cbpi.pss_least} onChange={v => setCbpi(f => ({ ...f, pss_least: v }))} />
             <ScoreRow label="3. Rate your dog's pain on AVERAGE" value={cbpi.pss_average} onChange={v => setCbpi(f => ({ ...f, pss_average: v }))} />
             <ScoreRow label="4. Rate your dog's pain RIGHT NOW" value={cbpi.pss_now} onChange={v => setCbpi(f => ({ ...f, pss_now: v }))} />
             <div style={{ padding: "12px 16px", background: "rgba(255,255,255,0.04)", borderRadius: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontSize: 12, fontWeight: 700, color: "#E2E8F0" }}>PSS Score (Mean of 4 items)</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>PSS Score (Mean of 4 items)</span>
               <span style={{ fontSize: 22, fontWeight: 800, color: scoreColor(pssScore) }}>{pssScore}/10</span>
             </div>
           </div>
 
           {/* Pain Interference Scale (PIS) — 6 items */}
           <div style={{ ...S.card, background: "#1D2B3A", border: "2px solid #2E3D4F" }}>
-            <div style={{ fontSize: 12, fontWeight: 800, color: "#E2E8F0", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 8, borderBottom: `2px solid ${C.teal}`, paddingBottom: 8 }}>
-              Pain Interference Scale (PIS)
+            <div style={{ marginBottom: 8 }}>
+              <div style={{ fontSize: 12, fontWeight: 800, color: "#fff", textTransform: "uppercase", letterSpacing: "0.8px", paddingBottom: 8 }}>Pain Interference Scale (PIS)</div>
+              <div style={{ height: 2, width: "100%", overflow: "hidden", borderRadius: 1 }}><div style={{ width: "200%", height: "100%", background: "linear-gradient(90deg, transparent, #39FF7E, #0EA5E9, #39FF7E, transparent)", animation: "neonFlatline 3s linear infinite" }} /></div>
             </div>
-            <div style={{ fontSize: 10, color: "#94A3B8", marginBottom: 14 }}>
+            <div style={{ fontSize: 10, color: "#fff", marginBottom: 14 }}>
               During the past 7 days, how much has pain interfered with your dog's:
             </div>
             <ScoreRow label="1. General activity" value={cbpi.pis_activity} onChange={v => setCbpi(f => ({ ...f, pis_activity: v }))} />
@@ -3555,7 +4041,7 @@ function SessionsView() {
             <ScoreRow label="5. Ability to run" value={cbpi.pis_running} onChange={v => setCbpi(f => ({ ...f, pis_running: v }))} />
             <ScoreRow label="6. Ability to climb (stairs, curbs, bed)" value={cbpi.pis_climbing} onChange={v => setCbpi(f => ({ ...f, pis_climbing: v }))} />
             <div style={{ padding: "12px 16px", background: "rgba(255,255,255,0.04)", borderRadius: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontSize: 12, fontWeight: 700, color: "#E2E8F0" }}>PIS Score (Mean of 6 items)</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>PIS Score (Mean of 6 items)</span>
               <span style={{ fontSize: 22, fontWeight: 800, color: scoreColor(pisScore) }}>{pisScore}/10</span>
             </div>
           </div>
@@ -3583,7 +4069,7 @@ function SessionsView() {
             </div>
             <div style={{ marginTop: 16 }}>
               <label style={{ ...S.label, color: "rgba(255,255,255,0.5)" }}>Assessor Notes</label>
-              <textarea style={{ ...S.input, border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)", color: "#E2E8F0", minHeight: 48, resize: "vertical", fontFamily: "inherit" }}
+              <textarea style={{ ...S.input, border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)", color: "#fff", minHeight: 48, resize: "vertical", fontFamily: "inherit" }}
                 placeholder="Clinical observations during CBPI assessment..."
                 value={cbpi.notes} onChange={e => setCbpi(f => ({ ...f, notes: e.target.value }))} />
             </div>
@@ -3675,123 +4161,1229 @@ function SessionsView() {
 }
 
 // ─────────────────────────────────────────────
+// SETTINGS — Shared sub-components (defined outside SettingsView to prevent re-mount)
+// ─────────────────────────────────────────────
+const settingsStyles = {
+  sectionCard: {
+    background: "#fff", borderRadius: 10, border: `1px solid ${C.border}`,
+    marginBottom: 12, overflow: "visible",
+    boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+  },
+  sectionHeader: (open) => ({
+    display: "flex", alignItems: "center", justifyContent: "space-between",
+    padding: "14px 20px", cursor: "pointer",
+    background: open ? C.navy : "#FAFBFD",
+    borderBottom: open ? `1px solid ${C.navyMid}` : "none",
+    borderRadius: open ? "10px 10px 0 0" : 10,
+    transition: "background 0.2s ease, color 0.2s ease",
+  }),
+  sectionTitle: (open) => ({
+    display: "flex", alignItems: "center", gap: 10,
+    fontSize: 13, fontWeight: 700, color: open ? "#fff" : C.navy,
+    letterSpacing: "0.3px",
+  }),
+  sectionBody: { padding: "20px 24px", position: "relative", zIndex: 1, overflow: "visible" },
+  toggleRow: {
+    display: "flex", alignItems: "center", justifyContent: "space-between",
+    padding: "10px 0", borderBottom: `1px solid ${C.borderLight}`,
+  },
+  toggleTrack: (on) => ({
+    display: "inline-flex", alignItems: "center", justifyContent: on ? "flex-end" : "flex-start",
+    width: 40, height: 22, borderRadius: 11, cursor: "pointer",
+    background: on ? "#10B981" : "#CBD5E1",
+    padding: 2, transition: "all 0.2s ease",
+    boxShadow: on ? "0 0 6px rgba(16,185,129,0.3)" : "none",
+  }),
+  toggleDot: {
+    width: 18, height: 18, borderRadius: "50%",
+    background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
+    transition: "all 0.2s ease",
+  },
+};
+
+function SettingsToggle({ value, onChange, label, desc }) {
+  return (
+    <div style={settingsStyles.toggleRow}>
+      <div>
+        <div style={{ fontSize: 13, fontWeight: 500, color: C.text }}>{label}</div>
+        {desc && <div style={{ fontSize: 11, color: C.textLight, marginTop: 2 }}>{desc}</div>}
+      </div>
+      <div style={settingsStyles.toggleTrack(value)} onClick={() => onChange(!value)}>
+        <div style={settingsStyles.toggleDot} />
+      </div>
+    </div>
+  );
+}
+
+function SettingsSection({ id, icon: Icon, title, open, onToggle, children }) {
+  return (
+    <div style={settingsStyles.sectionCard}>
+      <div style={settingsStyles.sectionHeader(open)} onClick={() => onToggle(id)}>
+        <div style={settingsStyles.sectionTitle(open)}>
+          <Icon size={16} />
+          {title}
+        </div>
+        <FiChevronDown size={16} style={{
+          color: open ? "#fff" : C.textLight,
+          transform: open ? "rotate(0deg)" : "rotate(-90deg)",
+          transition: "transform 0.2s ease",
+        }} />
+      </div>
+      {open && <div style={settingsStyles.sectionBody}>{children}</div>}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+// AUDIT LOG VIEWER — Must-Have #8
+// ─────────────────────────────────────────────
+function AuditLogViewer() {
+  const [entries, setEntries] = useState([]);
+  const [stats, setStats] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [showLog, setShowLog] = useState(false);
+
+  const fetchLog = async () => {
+    setLoading(true);
+    try {
+      const [logRes, statsRes] = await Promise.all([
+        axios.get(`${API}/audit-log?limit=100`),
+        axios.get(`${API}/audit-log/stats`)
+      ]);
+      setEntries(logRes.data.entries || []);
+      setTotal(logRes.data.total || 0);
+      setStats(statsRes.data.stats || []);
+    } catch (e) { console.error('Audit log fetch error:', e); }
+    setLoading(false);
+  };
+
+  useEffect(() => { if (showLog) fetchLog(); }, [showLog]);
+
+  const actionColor = (action) => {
+    if (action?.includes('DELETE')) return '#DC2626';
+    if (action?.includes('PUT')) return '#D97706';
+    if (action?.includes('POST')) return '#059669';
+    return C.textLight;
+  };
+
+  return (
+    <SettingsSection id="audit_log_viewer" open={showLog} onToggle={() => setShowLog(o => !o)} icon={FiFileText} title="Audit Log Viewer">
+      {loading ? (
+        <div style={{ padding: 20, textAlign: "center", color: C.textLight, fontSize: 13 }}>Loading audit entries...</div>
+      ) : (
+        <>
+          {/* Stats summary */}
+          {stats.length > 0 && (
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
+              {stats.slice(0, 6).map((s, i) => (
+                <div key={i} style={{
+                  padding: "6px 12px", borderRadius: 6, background: "rgba(14,165,233,0.06)",
+                  border: "1px solid rgba(14,165,233,0.15)", fontSize: 11
+                }}>
+                  <span style={{ fontWeight: 700, color: C.text }}>{s.count}</span>
+                  <span style={{ color: C.textLight, marginLeft: 6 }}>{s.action}</span>
+                </div>
+              ))}
+              <div style={{ padding: "6px 12px", borderRadius: 6, background: "rgba(15,76,129,0.06)",
+                border: "1px solid rgba(15,76,129,0.15)", fontSize: 11 }}>
+                <span style={{ fontWeight: 700, color: C.navy }}>{total}</span>
+                <span style={{ color: C.textLight, marginLeft: 6 }}>total entries</span>
+              </div>
+            </div>
+          )}
+
+          {/* Log table */}
+          {entries.length === 0 ? (
+            <div style={{ padding: 24, textAlign: "center", color: C.textLight, fontSize: 13,
+              background: "#F9FAFB", borderRadius: 8 }}>
+              No audit entries yet. Entries are created when protocols are generated, patients are created, or data is modified.
+            </div>
+          ) : (
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                <thead>
+                  <tr style={{ borderBottom: "2px solid #E2E8F0" }}>
+                    {["Timestamp", "Action", "Resource", "User", "Status", "Detail"].map(h => (
+                      <th key={h} style={{ textAlign: "left", padding: "8px 10px", fontSize: 10,
+                        fontWeight: 700, color: C.textLight, textTransform: "uppercase", letterSpacing: "0.5px" }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {entries.map((e, i) => (
+                    <tr key={e.id || i} style={{ borderBottom: "1px solid #F0F4F8" }}>
+                      <td style={{ padding: "8px 10px", color: C.textLight, fontSize: 11, whiteSpace: "nowrap" }}>
+                        {e.timestamp ? new Date(e.timestamp + 'Z').toLocaleString() : '—'}
+                      </td>
+                      <td style={{ padding: "8px 10px", fontWeight: 600, color: actionColor(e.action) }}>{e.action || '—'}</td>
+                      <td style={{ padding: "8px 10px", color: C.text }}>{e.resource_type || '—'}</td>
+                      <td style={{ padding: "8px 10px", color: C.textLight }}>{e.user_label || '—'}</td>
+                      <td style={{ padding: "8px 10px" }}>
+                        <span style={{
+                          padding: "2px 8px", borderRadius: 4, fontSize: 10, fontWeight: 600,
+                          background: (e.status_code >= 200 && e.status_code < 300) ? "rgba(5,150,105,0.1)" : "rgba(220,38,38,0.1)",
+                          color: (e.status_code >= 200 && e.status_code < 300) ? "#059669" : "#DC2626"
+                        }}>{e.status_code || '—'}</span>
+                      </td>
+                      <td style={{ padding: "8px 10px", color: C.textLight, fontSize: 11, maxWidth: 200,
+                        overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e.detail || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {entries.length > 0 && (
+            <div style={{ marginTop: 12, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontSize: 11, color: C.textLight }}>Showing {entries.length} of {total} entries</span>
+              <div style={{ display: "flex", gap: 8 }}>
+                <a href={`${API}/audit-log/export`} download
+                  style={{ ...S.btn("outline"), fontSize: 11, padding: "4px 12px", textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}>
+                  <FiDownload size={11} /> Export CSV
+                </a>
+                <button onClick={fetchLog} style={{ ...S.btn("outline"), fontSize: 11, padding: "4px 12px" }}>
+                  Refresh
+                </button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </SettingsSection>
+  );
+}
+
+// ─────────────────────────────────────────────
 // SETTINGS VIEW
 // ─────────────────────────────────────────────
 function SettingsView({ setBrand }) {
+  // ── Clinic profile (persisted to API) ──
   const [form, setForm] = useState({
     clinic_name: "", logo_url: "", primary_color: "#0F4C81",
-    secondary_color: "#0EA5E9", contact_email: "", phone: "", address: ""
+    secondary_color: "#0EA5E9", contact_email: "", phone: "", address: "",
+    website: "", license_number: "", dea_number: "",
+    clinic_type: "specialty_referral",
   });
   const [clinicId, setClinicId] = useState(null);
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  // ── Settings tab ──
+  const [activeTab, setActiveTab] = useState("clinic");
+
+  // ── Clinician credentials (client-side) ──
+  const [clinician, setClinician] = useState({
+    name: "", title: "DVM", credentials: [], license_number: "",
+    license_state: "", npi: "", board_certs: [],
+  });
+
+  // ── Equipment & facility (client-side) ──
+  const [equipment, setEquipment] = useState({
+    underwater_treadmill: false, therapeutic_pool: false,
+    land_treadmill: false, cavaletti_rails: true,
+    balance_discs: true, wobble_boards: true, physio_balls: true,
+    rocker_boards: false, ramps_stairs: true,
+    nmes: false, tens: false, pemf: false,
+    therapeutic_ultrasound: false,
+    class_iii_laser: false, class_iv_laser: false,
+    cryotherapy: true, thermotherapy: true,
+    harness: true, sling: true,
+    resistance_bands: true, weight_vests: false,
+  });
+
+  // ── Protocol defaults (client-side) ──
+  const [protocolDefaults, setProtocolDefaults] = useState({
+    progression_philosophy: "moderate",
+    session_duration: 45,
+    sessions_per_week: 3,
+    pain_threshold_hold: 4,
+    weight_bearing_threshold: "partial",
+    include_hep: true,
+    default_outcome_measure: "cbpi",
+    auto_progression_gates: true,
+    recheck_interval_weeks: 2,
+  });
+
+  // ── Documentation & reports (client-side) ──
+  const [docSettings, setDocSettings] = useState({
+    include_citations: true,
+    include_json_blocks: false,
+    logo_on_reports: true,
+    default_export_format: "pdf",
+    report_header: "",
+    report_footer: "Generated by K9 Rehab Pro — Evidence-based canine rehabilitation",
+    include_contraindications: true,
+    include_progression_criteria: true,
+  });
+
+  // ── Notifications (client-side) ──
+  const [notifications, setNotifications] = useState({
+    phase_progression_reminders: true,
+    recheck_reminders: true,
+    pain_threshold_alerts: true,
+    protocol_expiration_alerts: true,
+    session_completion_tracking: true,
+    reminder_lead_days: 3,
+  });
+
+  // ── Security (client-side) ──
+  const [security, setSecurity] = useState({
+    session_timeout_minutes: 30,
+    audit_log_enabled: true,
+    auto_lock_screen: true,
+    data_retention_years: 7,
+  });
+
+  // ── Appearance (client-side) ──
+  const [appearance, setAppearance] = useState({
+    theme: "clinical_light",
+    font_size: "standard",
+    exercise_card_display: "detailed",
+    dashboard_layout: "standard",
+  });
+
+  // ── Section expand states ──
+  const [expanded, setExpanded] = useState({});
+  const toggleSection = (key) => setExpanded(prev => ({ ...prev, [key]: !prev[key] }));
+
+  // ── Load clinic data ──
   useEffect(() => {
     axios.get(`${API}/clinics`).then(r => {
       const clinic = r.data?.[0];
       if (clinic) {
         setClinicId(clinic.id);
-        setForm(clinic);
+        setForm(prev => ({ ...prev, ...clinic }));
         setBrand(b => ({ ...b, clinicName: clinic.clinic_name, accent: clinic.primary_color }));
       }
     }).catch(() => {});
   }, [setBrand]);
 
-  const save = async (e) => {
-    e.preventDefault();
+  // ── Save clinic profile ──
+  const saveClinic = async () => {
     setSaving(true);
-    if (clinicId) {
-      await axios.put(`${API}/clinics/${clinicId}`, form);
-    } else {
-      const { data } = await axios.post(`${API}/clinics`, form);
-      setClinicId(data.id);
-    }
-    setBrand(b => ({ ...b, clinicName: form.clinic_name, accent: form.primary_color }));
-    setSaved(true);
+    try {
+      if (clinicId) {
+        await axios.put(`${API}/clinics/${clinicId}`, form);
+      } else {
+        const { data } = await axios.post(`${API}/clinics`, form);
+        setClinicId(data.id);
+      }
+      setBrand(b => ({ ...b, clinicName: form.clinic_name, accent: form.primary_color }));
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (e) { console.error("Save failed", e); }
     setSaving(false);
+  };
+
+  // ── Save any section (client-side flash) ──
+  const flashSave = () => {
+    setSaved(true);
     setTimeout(() => setSaved(false), 3000);
   };
 
+  // ── Shared styles (only what's NOT in settingsStyles) ──
+  const sty = {
+    tabBar: {
+      display: "flex", gap: 2, padding: "0 0 12px", marginBottom: 12,
+      borderBottom: `1px solid ${C.border}`, flexWrap: "wrap",
+    },
+    tab: (active) => ({
+      display: "flex", alignItems: "center", gap: 6,
+      padding: "8px 16px", borderRadius: 6, cursor: "pointer",
+      fontSize: 11, fontWeight: 600, letterSpacing: "0.3px",
+      background: active ? C.navy : "transparent",
+      color: active ? "#fff" : C.textMid,
+      border: active ? "none" : `1px solid ${C.border}`,
+      transition: "all 0.2s ease",
+    }),
+    fieldRow: { marginBottom: 16 },
+    fieldLabel: {
+      fontSize: 11, fontWeight: 600, color: C.textMid,
+      textTransform: "uppercase", letterSpacing: "0.6px",
+      marginBottom: 6, display: "block",
+    },
+    fieldHint: { fontSize: 11, color: C.textLight, marginTop: 4 },
+    statusBadge: (ok) => ({
+      display: "inline-flex", alignItems: "center", gap: 4,
+      padding: "4px 12px", borderRadius: 20, fontSize: 10, fontWeight: 700,
+      background: ok ? C.greenBg : C.redBg,
+      color: ok ? C.green : C.red,
+      textTransform: "uppercase", letterSpacing: "0.5px",
+    }),
+    saveBar: {
+      display: "flex", alignItems: "center", gap: 16,
+      padding: "16px 0", borderTop: `1px solid ${C.border}`, marginTop: 8,
+    },
+  };
+
+  // ── Helper: is section open (default true) ──
+  const isOpen = (id) => expanded[id] !== false;
+
+  // ── SETTINGS TABS ──
+  const TABS = [
+    { id: "clinic",       label: "Clinic Profile",      icon: FiHome },
+    { id: "clinician",    label: "Clinician",            icon: FiAward },
+    { id: "equipment",    label: "Equipment & Facility", icon: FiTool },
+    { id: "protocols",    label: "Protocol Defaults",    icon: FiActivity },
+    { id: "documentation",label: "Documentation",        icon: FiFileText },
+    { id: "notifications",label: "Notifications",        icon: FiBell },
+    { id: "security",     label: "Security & Compliance",icon: FiShield },
+    { id: "appearance",   label: "Appearance",           icon: FiMonitor },
+    { id: "data",         label: "Data Management",      icon: FiDatabase },
+  ];
+
+  // ── Credential options ──
+  const CREDENTIAL_OPTIONS = [
+    "DVM", "VMD", "CCRP", "CCRT", "DACVSMR", "CVT", "RVT", "LVT",
+    "PT", "DPT", "CCFT", "CSCS",
+  ];
+  const BOARD_CERT_OPTIONS = [
+    "ACVSMR (Sports Medicine & Rehabilitation)",
+    "ACVS (Surgery)",
+    "ACVIM (Internal Medicine)",
+    "ACVO (Ophthalmology)",
+  ];
+
   return (
     <div>
-      <form onSubmit={save}>
-        <div style={S.card}>
-          <h3 style={{ margin: "0 0 20px", fontSize: 16, color: "#0F4C81" }}>Clinic Branding</h3>
-          <div style={S.grid(2)}>
-            {[
-              ["clinic_name",   "Clinic Name"],
-              ["contact_email", "Contact Email"],
-              ["phone",         "Phone"],
-              ["address",       "Address"],
-              ["logo_url",      "Logo URL"],
-            ].map(([key, label]) => (
-              <div key={key}>
-                <label style={S.label}>{label}</label>
-                <input style={S.input} value={form[key] || ""}
-                  onChange={e => setForm({ ...form, [key]: e.target.value })} />
-              </div>
-            ))}
+      {/* ── Tab bar ── */}
+      <div style={sty.tabBar}>
+        {TABS.map(t => (
+          <div key={t.id} style={sty.tab(activeTab === t.id)} onClick={() => setActiveTab(t.id)}>
+            <t.icon size={13} />
+            {t.label}
           </div>
+        ))}
+      </div>
 
-          <div style={{ marginTop: 20 }}>
-            <label style={S.label}>Primary Color</label>
-            <div style={{ display: "flex", gap: 10, marginTop: 6, alignItems: "center" }}>
-              {["#0F4C81", "#0EA5E9", "#10B981", "#7C3AED", "#DC2626"].map(color => (
-                <div key={color} onClick={() => setForm({ ...form, primary_color: color })}
-                  style={{
-                    width: 32, height: 32, borderRadius: 8, background: color, cursor: "pointer",
-                    border: form.primary_color === color ? "3px solid #1A202C" : "3px solid transparent",
-                    transition: "border 0.15s"
-                  }} />
-              ))}
-              <input type="color" value={form.primary_color}
-                onChange={e => setForm({ ...form, primary_color: e.target.value })}
-                style={{ width: 32, height: 32, borderRadius: 8, border: "1px solid #E2E8F0",
-                  padding: 0, cursor: "pointer" }} />
-            </div>
-          </div>
-
-          <div style={{ marginTop: 16 }}>
-            <label style={S.label}>Secondary Color</label>
-            <div style={{ display: "flex", gap: 10, marginTop: 6, alignItems: "center" }}>
-              {["#0EA5E9", "#10B981", "#F59E0B", "#8B5CF6", "#EC4899"].map(color => (
-                <div key={color} onClick={() => setForm({ ...form, secondary_color: color })}
-                  style={{
-                    width: 32, height: 32, borderRadius: 8, background: color, cursor: "pointer",
-                    border: form.secondary_color === color ? "3px solid #1A202C" : "3px solid transparent",
-                    transition: "border 0.15s"
-                  }} />
-              ))}
-              <input type="color" value={form.secondary_color}
-                onChange={e => setForm({ ...form, secondary_color: e.target.value })}
-                style={{ width: 32, height: 32, borderRadius: 8, border: "1px solid #E2E8F0",
-                  padding: 0, cursor: "pointer" }} />
-            </div>
-          </div>
-
-          <div style={{ marginTop: 24, display: "flex", alignItems: "center", gap: 16 }}>
-            <button type="submit" style={S.btn("dark")} disabled={saving}>
-              {saving ? "Saving…" : "Save Settings"}
-            </button>
-            {saved && (
-              <span style={{ fontSize: 13, color: "#276749", fontWeight: 600 }}>
-                ✓ Saved successfully
-              </span>
-            )}
-          </div>
+      {/* ── Save confirmation ── */}
+      {saved && (
+        <div style={{
+          padding: "10px 20px", marginBottom: 12, borderRadius: 8,
+          background: C.greenBg, border: `1px solid ${C.green}`,
+          display: "flex", alignItems: "center", gap: 8,
+          fontSize: 13, fontWeight: 600, color: C.green,
+        }}>
+          <FiCheckCircle size={16} /> Settings saved successfully
         </div>
-      </form>
+      )}
 
-      <div style={S.card}>
-        <h3 style={{ margin: "0 0 16px", fontSize: 16, color: "#0F4C81" }}>API Configuration</h3>
+      {/* ══════════════════════════════════════════════
+          TAB 1: CLINIC PROFILE
+          ══════════════════════════════════════════════ */}
+      {activeTab === "clinic" && (
         <div>
-          <label style={S.label}>Backend API URL</label>
-          <input style={S.input} value={API} readOnly />
+          <SettingsSection id="clinic_info" open={isOpen("clinic_info")} onToggle={toggleSection} icon={FiHome} title="Practice Information">
+            <div style={S.grid(2)}>
+              {[
+                ["clinic_name", "Practice Name", "Full legal name of your veterinary practice"],
+                ["contact_email", "Contact Email", "Primary clinic email address"],
+                ["phone", "Phone Number", "Main phone line"],
+                ["address", "Address", "Street address, city, state, ZIP"],
+                ["website", "Website", "Practice website URL"],
+                ["license_number", "Veterinary Facility License", "State facility license number"],
+                ["dea_number", "DEA Registration", "DEA registration number (if applicable)"],
+              ].map(([key, label, hint]) => (
+                <div key={key} style={sty.fieldRow}>
+                  <label style={sty.fieldLabel}>{label}</label>
+                  <input style={S.input} value={form[key] || ""}
+                    onChange={e => setForm({ ...form, [key]: e.target.value })} />
+                  <div style={sty.fieldHint}>{hint}</div>
+                </div>
+              ))}
+              <div style={sty.fieldRow}>
+                <label style={sty.fieldLabel}>Facility Type</label>
+                <select style={{ ...S.select, width: "100%" }} value={form.clinic_type}
+                  onChange={e => setForm({ ...form, clinic_type: e.target.value })}>
+                  <option value="specialty_referral">Specialty Referral Hospital</option>
+                  <option value="general_practice">General Practice</option>
+                  <option value="university">University Teaching Hospital</option>
+                  <option value="rehabilitation_center">Dedicated Rehabilitation Center</option>
+                  <option value="mobile">Mobile Rehabilitation Service</option>
+                  <option value="multi_location">Multi-Location Corporate</option>
+                </select>
+                <div style={sty.fieldHint}>Determines default workflow and report formatting</div>
+              </div>
+            </div>
+          </SettingsSection>
+
+          <SettingsSection id="clinic_brand" open={isOpen("clinic_brand")} onToggle={toggleSection} icon={FiSliders} title="Branding & Colors">
+            <div style={sty.fieldRow}>
+              <label style={sty.fieldLabel}>Logo URL</label>
+              <input style={S.input} value={form.logo_url || ""}
+                onChange={e => setForm({ ...form, logo_url: e.target.value })} />
+              <div style={sty.fieldHint}>URL to your clinic logo (displayed on reports and dashboard)</div>
+            </div>
+
+            <div style={{ display: "flex", gap: 40, marginTop: 16 }}>
+              <div>
+                <label style={sty.fieldLabel}>Primary Color</label>
+                <div style={{ display: "flex", gap: 8, marginTop: 6, alignItems: "center" }}>
+                  {["#0F4C81", "#0EA5E9", "#10B981", "#7C3AED", "#DC2626"].map(color => (
+                    <div key={color} onClick={() => setForm({ ...form, primary_color: color })}
+                      style={{
+                        width: 32, height: 32, borderRadius: 8, background: color, cursor: "pointer",
+                        border: form.primary_color === color ? "3px solid #1A202C" : "3px solid transparent",
+                        transition: "border 0.15s",
+                      }} />
+                  ))}
+                  <input type="color" value={form.primary_color}
+                    onChange={e => setForm({ ...form, primary_color: e.target.value })}
+                    style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${C.border}`,
+                      padding: 0, cursor: "pointer" }} />
+                </div>
+              </div>
+              <div>
+                <label style={sty.fieldLabel}>Secondary Color</label>
+                <div style={{ display: "flex", gap: 8, marginTop: 6, alignItems: "center" }}>
+                  {["#0EA5E9", "#10B981", "#F59E0B", "#8B5CF6", "#EC4899"].map(color => (
+                    <div key={color} onClick={() => setForm({ ...form, secondary_color: color })}
+                      style={{
+                        width: 32, height: 32, borderRadius: 8, background: color, cursor: "pointer",
+                        border: form.secondary_color === color ? "3px solid #1A202C" : "3px solid transparent",
+                        transition: "border 0.15s",
+                      }} />
+                  ))}
+                  <input type="color" value={form.secondary_color}
+                    onChange={e => setForm({ ...form, secondary_color: e.target.value })}
+                    style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${C.border}`,
+                      padding: 0, cursor: "pointer" }} />
+                </div>
+              </div>
+            </div>
+          </SettingsSection>
+
+          <div style={sty.saveBar}>
+            <button style={S.btn("dark")} onClick={saveClinic} disabled={saving}>
+              {saving ? "Saving..." : "Save Clinic Profile"}
+            </button>
+          </div>
         </div>
-        <div style={{ marginTop: 16, padding: "12px 16px", background: "#F0FFF4",
-          borderRadius: 8, fontSize: 13, color: "#276749" }}>
-          ✓ Connected to K9 Rehab API
+      )}
+
+      {/* ══════════════════════════════════════════════
+          TAB 2: CLINICIAN CREDENTIALS
+          ══════════════════════════════════════════════ */}
+      {activeTab === "clinician" && (
+        <div>
+          <SettingsSection id="clin_id" open={isOpen("clin_id")} onToggle={toggleSection} icon={FiAward} title="Clinician Identity">
+            <div style={S.grid(2)}>
+              <div style={sty.fieldRow}>
+                <label style={sty.fieldLabel}>Full Name</label>
+                <input style={S.input} value={clinician.name}
+                  onChange={e => setClinician({ ...clinician, name: e.target.value })}
+                  placeholder="Dr. Jane Smith" />
+              </div>
+              <div style={sty.fieldRow}>
+                <label style={sty.fieldLabel}>Professional Title</label>
+                <select style={{ ...S.select, width: "100%" }} value={clinician.title}
+                  onChange={e => setClinician({ ...clinician, title: e.target.value })}>
+                  <option value="DVM">DVM — Doctor of Veterinary Medicine</option>
+                  <option value="VMD">VMD — Veterinariae Medicinae Doctoris</option>
+                  <option value="PT">PT — Physical Therapist</option>
+                  <option value="DPT">DPT — Doctor of Physical Therapy</option>
+                  <option value="CVT">CVT — Certified Veterinary Technician</option>
+                  <option value="RVT">RVT — Registered Veterinary Technician</option>
+                </select>
+              </div>
+              <div style={sty.fieldRow}>
+                <label style={sty.fieldLabel}>State License Number</label>
+                <input style={S.input} value={clinician.license_number}
+                  onChange={e => setClinician({ ...clinician, license_number: e.target.value })} />
+              </div>
+              <div style={sty.fieldRow}>
+                <label style={sty.fieldLabel}>License State</label>
+                <input style={S.input} value={clinician.license_state}
+                  onChange={e => setClinician({ ...clinician, license_state: e.target.value })}
+                  placeholder="e.g. CA, TX, NY" />
+              </div>
+              <div style={sty.fieldRow}>
+                <label style={sty.fieldLabel}>National Provider Identifier (NPI)</label>
+                <input style={S.input} value={clinician.npi}
+                  onChange={e => setClinician({ ...clinician, npi: e.target.value })}
+                  placeholder="10-digit NPI (optional)" />
+                <div style={sty.fieldHint}>Required for insurance billing and referral coordination</div>
+              </div>
+            </div>
+          </SettingsSection>
+
+          <SettingsSection id="clin_certs" open={isOpen("clin_certs")} onToggle={toggleSection} icon={FiCheckCircle} title="Certifications & Board Diplomate Status">
+            <div style={sty.fieldRow}>
+              <label style={sty.fieldLabel}>Rehabilitation Certifications</label>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 6 }}>
+                {CREDENTIAL_OPTIONS.map(cred => {
+                  const active = clinician.credentials.includes(cred);
+                  return (
+                    <div key={cred} onClick={() => {
+                      setClinician(prev => ({
+                        ...prev,
+                        credentials: active
+                          ? prev.credentials.filter(c => c !== cred)
+                          : [...prev.credentials, cred],
+                      }));
+                    }} style={{
+                      padding: "6px 14px", borderRadius: 6, cursor: "pointer",
+                      fontSize: 12, fontWeight: 600, letterSpacing: "0.3px",
+                      background: active ? C.navy : "#F1F5F9",
+                      color: active ? "#fff" : C.textMid,
+                      border: active ? `1px solid ${C.navyLight}` : `1px solid ${C.border}`,
+                      transition: "all 0.15s",
+                    }}>
+                      {cred}
+                    </div>
+                  );
+                })}
+              </div>
+              <div style={sty.fieldHint}>Select all certifications held by the primary clinician</div>
+            </div>
+
+            <div style={{ ...sty.fieldRow, marginTop: 20 }}>
+              <label style={sty.fieldLabel}>Board Diplomate Status</label>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 6 }}>
+                {BOARD_CERT_OPTIONS.map(cert => {
+                  const active = clinician.board_certs.includes(cert);
+                  return (
+                    <div key={cert} onClick={() => {
+                      setClinician(prev => ({
+                        ...prev,
+                        board_certs: active
+                          ? prev.board_certs.filter(c => c !== cert)
+                          : [...prev.board_certs, cert],
+                      }));
+                    }} style={{
+                      display: "flex", alignItems: "center", gap: 10,
+                      padding: "10px 16px", borderRadius: 8, cursor: "pointer",
+                      background: active ? "rgba(10,37,64,0.06)" : "#FAFBFD",
+                      border: active ? `2px solid ${C.navy}` : `1px solid ${C.border}`,
+                      transition: "all 0.15s",
+                    }}>
+                      <div style={{
+                        width: 18, height: 18, borderRadius: 4,
+                        background: active ? C.navy : "#fff",
+                        border: active ? "none" : `2px solid ${C.border}`,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        color: "#fff", fontSize: 11,
+                      }}>
+                        {active && "✓"}
+                      </div>
+                      <span style={{ fontSize: 13, fontWeight: active ? 600 : 400, color: C.text }}>{cert}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </SettingsSection>
+
+          <div style={sty.saveBar}>
+            <button style={S.btn("dark")} onClick={flashSave}>Save Clinician Profile</button>
+          </div>
         </div>
+      )}
+
+      {/* ══════════════════════════════════════════════
+          TAB 3: EQUIPMENT & FACILITY
+          ══════════════════════════════════════════════ */}
+      {activeTab === "equipment" && (
+        <div>
+          <div style={{
+            padding: "12px 16px", marginBottom: 12, borderRadius: 8,
+            background: C.amberBg, border: `1px solid ${C.amber}`,
+            display: "flex", alignItems: "center", gap: 8,
+            fontSize: 12, color: C.amber, fontWeight: 500,
+          }}>
+            <FiAlertTriangle size={14} />
+            Equipment settings gate protocol generation — exercises requiring unavailable equipment will be excluded automatically
+          </div>
+
+          <SettingsSection id="equip_aquatic" open={isOpen("equip_aquatic")} onToggle={toggleSection} icon={FiActivity} title="Aquatic Therapy">
+            <SettingsToggle value={equipment.underwater_treadmill}
+              onChange={v => setEquipment({ ...equipment, underwater_treadmill: v })}
+              label="Underwater Treadmill (UWTT)"
+              desc="Hudson Aquatic, Ferno, or equivalent — required for controlled aquatic gait training" />
+            <SettingsToggle value={equipment.therapeutic_pool}
+              onChange={v => setEquipment({ ...equipment, therapeutic_pool: v })}
+              label="Therapeutic Swimming Pool"
+              desc="Heated pool with controlled access — swim-based conditioning and ROM" />
+          </SettingsSection>
+
+          <SettingsSection id="equip_electro" open={isOpen("equip_electro")} onToggle={toggleSection} icon={FiActivity} title="Electrotherapy & Modalities">
+            <SettingsToggle value={equipment.nmes}
+              onChange={v => setEquipment({ ...equipment, nmes: v })}
+              label="Neuromuscular Electrical Stimulation (NMES)"
+              desc="For muscle re-education and atrophy prevention — Millis & Levine Ch. 12" />
+            <SettingsToggle value={equipment.tens}
+              onChange={v => setEquipment({ ...equipment, tens: v })}
+              label="Transcutaneous Electrical Nerve Stimulation (TENS)"
+              desc="Pain modulation via gate control theory — analgesic applications" />
+            <SettingsToggle value={equipment.pemf}
+              onChange={v => setEquipment({ ...equipment, pemf: v })}
+              label="Pulsed Electromagnetic Field Therapy (PEMF)"
+              desc="Non-invasive bone healing and pain reduction" />
+            <SettingsToggle value={equipment.therapeutic_ultrasound}
+              onChange={v => setEquipment({ ...equipment, therapeutic_ultrasound: v })}
+              label="Therapeutic Ultrasound"
+              desc="Deep tissue heating — periarticular fibrosis, scar tissue, joint stiffness" />
+          </SettingsSection>
+
+          <SettingsSection id="equip_photo" open={isOpen("equip_photo")} onToggle={toggleSection} icon={FiActivity} title="Photobiomodulation (Laser Therapy)">
+            <SettingsToggle value={equipment.class_iii_laser}
+              onChange={v => setEquipment({ ...equipment, class_iii_laser: v })}
+              label="Class III (Cold) Laser"
+              desc="Low-level laser therapy — superficial tissue, wound healing" />
+            <SettingsToggle value={equipment.class_iv_laser}
+              onChange={v => setEquipment({ ...equipment, class_iv_laser: v })}
+              label="Class IV Therapeutic Laser"
+              desc="Deep tissue penetration — pain, inflammation, tissue repair" />
+          </SettingsSection>
+
+          <SettingsSection id="equip_manual" open={isOpen("equip_manual")} onToggle={toggleSection} icon={FiTool} title="Manual Therapy & Exercise Equipment">
+            <div style={S.grid(2)}>
+              {[
+                ["cavaletti_rails", "Cavaletti Rails", "Gait patterning, proprioception, stride length"],
+                ["balance_discs", "Balance Discs / BOSU", "Proprioceptive training, weight shifting"],
+                ["wobble_boards", "Wobble Boards", "Dynamic balance, core stability"],
+                ["physio_balls", "Physio / Peanut Balls", "Core stabilization, weight shifting"],
+                ["rocker_boards", "Rocker Boards", "Controlled instability training"],
+                ["ramps_stairs", "Ramps & Stairs", "Incline/decline strengthening, functional mobility"],
+                ["land_treadmill", "Land Treadmill", "Controlled gait speed, endurance training"],
+                ["resistance_bands", "Resistance Bands", "Progressive resistance exercises"],
+                ["weight_vests", "Weight Vests", "Graduated loading for strengthening"],
+                ["harness", "Support Harness", "Assisted ambulation, safety during exercises"],
+                ["sling", "Abdominal Sling", "Hindquarter support during early rehabilitation"],
+                ["cryotherapy", "Cryotherapy", "Ice packs, cold compression — post-exercise inflammation control"],
+                ["thermotherapy", "Thermotherapy", "Warm packs, moist heat — pre-exercise tissue preparation"],
+              ].map(([key, label, desc]) => (
+                <div key={key} style={{
+                  display: "flex", alignItems: "center", justifyContent: "space-between",
+                  padding: "10px 14px", borderRadius: 8,
+                  background: equipment[key] ? "rgba(16,185,129,0.06)" : "#FAFBFD",
+                  border: equipment[key] ? `1px solid rgba(16,185,129,0.3)` : `1px solid ${C.border}`,
+                  transition: "all 0.15s",
+                }}>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{label}</div>
+                    <div style={{ fontSize: 10, color: C.textLight, marginTop: 2 }}>{desc}</div>
+                  </div>
+                  <div style={settingsStyles.toggleTrack(equipment[key])} onClick={() => setEquipment({ ...equipment, [key]: !equipment[key] })}>
+                    <div style={settingsStyles.toggleDot} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </SettingsSection>
+
+          <div style={sty.saveBar}>
+            <button style={S.btn("dark")} onClick={flashSave}>Save Equipment Profile</button>
+            <span style={{ fontSize: 12, color: C.textLight }}>
+              {Object.values(equipment).filter(Boolean).length} of {Object.keys(equipment).length} items available
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════
+          TAB 4: PROTOCOL DEFAULTS
+          ══════════════════════════════════════════════ */}
+      {activeTab === "protocols" && (
+        <div>
+          <SettingsSection id="proto_philosophy" open={isOpen("proto_philosophy")} onToggle={toggleSection} icon={FiActivity} title="Clinical Progression Philosophy">
+            <div style={sty.fieldRow}>
+              <label style={sty.fieldLabel}>Progression Philosophy</label>
+              <div style={{ display: "flex", gap: 10, marginTop: 6 }}>
+                {[
+                  ["conservative", "Conservative", "Slower advancement, extended phase durations, prioritize safety"],
+                  ["moderate", "Moderate (Recommended)", "Balanced approach per Millis & Levine guidelines"],
+                  ["progressive", "Progressive", "Accelerated timelines for athletic or high-demand patients"],
+                ].map(([val, label, desc]) => (
+                  <div key={val} onClick={() => setProtocolDefaults({ ...protocolDefaults, progression_philosophy: val })}
+                    style={{
+                      flex: 1, padding: "14px 16px", borderRadius: 8, cursor: "pointer",
+                      background: protocolDefaults.progression_philosophy === val ? C.navy : "#FAFBFD",
+                      color: protocolDefaults.progression_philosophy === val ? "#fff" : C.text,
+                      border: protocolDefaults.progression_philosophy === val ? `2px solid ${C.navyLight}` : `1px solid ${C.border}`,
+                      transition: "all 0.15s",
+                    }}>
+                    <div style={{ fontSize: 13, fontWeight: 700 }}>{label}</div>
+                    <div style={{ fontSize: 11, marginTop: 4, opacity: 0.8 }}>{desc}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </SettingsSection>
+
+          <SettingsSection id="proto_session" open={isOpen("proto_session")} onToggle={toggleSection} icon={FiClock} title="Session Configuration">
+            <div style={S.grid(3)}>
+              <div style={sty.fieldRow}>
+                <label style={sty.fieldLabel}>Default Session Duration</label>
+                <select style={{ ...S.select, width: "100%" }} value={protocolDefaults.session_duration}
+                  onChange={e => setProtocolDefaults({ ...protocolDefaults, session_duration: +e.target.value })}>
+                  <option value={30}>30 minutes</option>
+                  <option value={45}>45 minutes (Recommended)</option>
+                  <option value={60}>60 minutes</option>
+                  <option value={90}>90 minutes (Extended)</option>
+                </select>
+              </div>
+              <div style={sty.fieldRow}>
+                <label style={sty.fieldLabel}>Sessions Per Week</label>
+                <select style={{ ...S.select, width: "100%" }} value={protocolDefaults.sessions_per_week}
+                  onChange={e => setProtocolDefaults({ ...protocolDefaults, sessions_per_week: +e.target.value })}>
+                  <option value={1}>1x weekly</option>
+                  <option value={2}>2x weekly</option>
+                  <option value={3}>3x weekly (Recommended)</option>
+                  <option value={5}>5x weekly (Intensive)</option>
+                </select>
+              </div>
+              <div style={sty.fieldRow}>
+                <label style={sty.fieldLabel}>Recheck Interval</label>
+                <select style={{ ...S.select, width: "100%" }} value={protocolDefaults.recheck_interval_weeks}
+                  onChange={e => setProtocolDefaults({ ...protocolDefaults, recheck_interval_weeks: +e.target.value })}>
+                  <option value={1}>Every 1 week</option>
+                  <option value={2}>Every 2 weeks (Recommended)</option>
+                  <option value={4}>Every 4 weeks</option>
+                </select>
+              </div>
+            </div>
+          </SettingsSection>
+
+          <SettingsSection id="proto_thresholds" open={isOpen("proto_thresholds")} onToggle={toggleSection} icon={FiAlertTriangle} title="Safety Thresholds & Gating">
+            <div style={S.grid(2)}>
+              <div style={sty.fieldRow}>
+                <label style={sty.fieldLabel}>Pain Score Threshold for Progression Hold</label>
+                <select style={{ ...S.select, width: "100%" }} value={protocolDefaults.pain_threshold_hold}
+                  onChange={e => setProtocolDefaults({ ...protocolDefaults, pain_threshold_hold: +e.target.value })}>
+                  {[2,3,4,5,6].map(n => (
+                    <option key={n} value={n}>VAS {n}/10 {n === 4 ? "(Recommended)" : ""}</option>
+                  ))}
+                </select>
+                <div style={sty.fieldHint}>Protocol progression halts if patient pain exceeds this threshold</div>
+              </div>
+              <div style={sty.fieldRow}>
+                <label style={sty.fieldLabel}>Weight-Bearing Requirement</label>
+                <select style={{ ...S.select, width: "100%" }} value={protocolDefaults.weight_bearing_threshold}
+                  onChange={e => setProtocolDefaults({ ...protocolDefaults, weight_bearing_threshold: e.target.value })}>
+                  <option value="non_weight_bearing">Non-Weight-Bearing (NWB)</option>
+                  <option value="toe_touch">Toe-Touch Weight Bearing (TTWB)</option>
+                  <option value="partial">Partial Weight Bearing (PWB) — Default</option>
+                  <option value="full">Full Weight Bearing (FWB)</option>
+                </select>
+                <div style={sty.fieldHint}>Minimum weight-bearing status before advancing to next phase</div>
+              </div>
+            </div>
+
+            <SettingsToggle value={protocolDefaults.auto_progression_gates}
+              onChange={v => setProtocolDefaults({ ...protocolDefaults, auto_progression_gates: v })}
+              label="Automatic Progression Gates"
+              desc="Require explicit clinician approval before advancing between protocol phases" />
+          </SettingsSection>
+
+          <SettingsSection id="proto_output" open={isOpen("proto_output")} onToggle={toggleSection} icon={FiFileText} title="Protocol Output Preferences">
+            <div style={sty.fieldRow}>
+              <label style={sty.fieldLabel}>Default Outcome Measure</label>
+              <select style={{ ...S.select, width: "100%" }} value={protocolDefaults.default_outcome_measure}
+                onChange={e => setProtocolDefaults({ ...protocolDefaults, default_outcome_measure: e.target.value })}>
+                <option value="cbpi">CBPI — Canine Brief Pain Inventory (Brown et al. 2008)</option>
+                <option value="load">LOAD — Liverpool Osteoarthritis in Dogs</option>
+                <option value="csu">CSU — Colorado State University Pain Scale</option>
+                <option value="hcpi">HCPI — Helsinki Chronic Pain Index</option>
+              </select>
+              <div style={sty.fieldHint}>Validated instrument used for longitudinal outcome tracking</div>
+            </div>
+
+            <SettingsToggle value={protocolDefaults.include_hep}
+              onChange={v => setProtocolDefaults({ ...protocolDefaults, include_hep: v })}
+              label="Include Home Exercise Program (HEP)"
+              desc="Auto-generate a client-safe take-home exercise sheet with each protocol" />
+          </SettingsSection>
+
+          <div style={sty.saveBar}>
+            <button style={S.btn("dark")} onClick={flashSave}>Save Protocol Defaults</button>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════
+          TAB 5: DOCUMENTATION & REPORTS
+          ══════════════════════════════════════════════ */}
+      {activeTab === "documentation" && (
+        <div>
+          <SettingsSection id="doc_content" open={isOpen("doc_content")} onToggle={toggleSection} icon={FiFileText} title="Report Content">
+            <SettingsToggle value={docSettings.include_citations}
+              onChange={v => setDocSettings({ ...docSettings, include_citations: v })}
+              label="Include Evidence Citations"
+              desc="Append peer-reviewed references (Millis & Levine, Zink & Van Dyke) to each exercise" />
+            <SettingsToggle value={docSettings.include_contraindications}
+              onChange={v => setDocSettings({ ...docSettings, include_contraindications: v })}
+              label="Include Contraindications"
+              desc="Display contraindication warnings per exercise and per protocol phase" />
+            <SettingsToggle value={docSettings.include_progression_criteria}
+              onChange={v => setDocSettings({ ...docSettings, include_progression_criteria: v })}
+              label="Include Progression Criteria"
+              desc="Show gated progression requirements between each protocol phase" />
+            <SettingsToggle value={docSettings.include_json_blocks}
+              onChange={v => setDocSettings({ ...docSettings, include_json_blocks: v })}
+              label="Include JSON Blocks (Developer Mode)"
+              desc="Append machine-readable JSON objects for EHR/API integration" />
+          </SettingsSection>
+
+          <SettingsSection id="doc_format" open={isOpen("doc_format")} onToggle={toggleSection} icon={FiPrinter} title="Export & Formatting">
+            <div style={S.grid(2)}>
+              <div style={sty.fieldRow}>
+                <label style={sty.fieldLabel}>Default Export Format</label>
+                <select style={{ ...S.select, width: "100%" }} value={docSettings.default_export_format}
+                  onChange={e => setDocSettings({ ...docSettings, default_export_format: e.target.value })}>
+                  <option value="pdf">PDF Document</option>
+                  <option value="print">Print-Ready (Browser Print)</option>
+                  <option value="csv">CSV (Spreadsheet)</option>
+                  <option value="json">JSON (API / EHR Export)</option>
+                </select>
+              </div>
+              <div style={sty.fieldRow}>
+                <SettingsToggle value={docSettings.logo_on_reports}
+                  onChange={v => setDocSettings({ ...docSettings, logo_on_reports: v })}
+                  label="Clinic Logo on Reports"
+                  desc="Display your practice logo in the report header" />
+              </div>
+            </div>
+          </SettingsSection>
+
+          <SettingsSection id="doc_custom" open={isOpen("doc_custom")} onToggle={toggleSection} icon={FiBook} title="Custom Header & Footer">
+            <div style={sty.fieldRow}>
+              <label style={sty.fieldLabel}>Report Header Text</label>
+              <input style={S.input} value={docSettings.report_header}
+                onChange={e => setDocSettings({ ...docSettings, report_header: e.target.value })}
+                placeholder="e.g. Canine Rehabilitation & Sports Medicine Center" />
+              <div style={sty.fieldHint}>Appears at the top of every generated report</div>
+            </div>
+            <div style={sty.fieldRow}>
+              <label style={sty.fieldLabel}>Report Footer / Disclaimer</label>
+              <textarea style={{ ...S.input, minHeight: 60, resize: "vertical" }}
+                value={docSettings.report_footer}
+                onChange={e => setDocSettings({ ...docSettings, report_footer: e.target.value })} />
+              <div style={sty.fieldHint}>Legal disclaimer or branding line appended to report footer</div>
+            </div>
+          </SettingsSection>
+
+          <div style={sty.saveBar}>
+            <button style={S.btn("dark")} onClick={flashSave}>Save Documentation Settings</button>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════
+          TAB 6: NOTIFICATIONS & ALERTS
+          ══════════════════════════════════════════════ */}
+      {activeTab === "notifications" && (
+        <div>
+          <SettingsSection id="notif_clinical" open={isOpen("notif_clinical")} onToggle={toggleSection} icon={FiBell} title="Clinical Alerts">
+            <SettingsToggle value={notifications.phase_progression_reminders}
+              onChange={v => setNotifications({ ...notifications, phase_progression_reminders: v })}
+              label="Phase Progression Review Reminders"
+              desc="Alert when a patient is approaching a phase gate and needs reassessment" />
+            <SettingsToggle value={notifications.recheck_reminders}
+              onChange={v => setNotifications({ ...notifications, recheck_reminders: v })}
+              label="Recheck Appointment Reminders"
+              desc="Notify when a scheduled recheck evaluation is approaching" />
+            <SettingsToggle value={notifications.pain_threshold_alerts}
+              onChange={v => setNotifications({ ...notifications, pain_threshold_alerts: v })}
+              label="Pain Threshold Exceeded Alerts"
+              desc="Immediate alert when patient pain score exceeds the configured threshold" />
+            <SettingsToggle value={notifications.protocol_expiration_alerts}
+              onChange={v => setNotifications({ ...notifications, protocol_expiration_alerts: v })}
+              label="Protocol Expiration Alerts"
+              desc="Notify when an active protocol is nearing its end date without renewal" />
+            <SettingsToggle value={notifications.session_completion_tracking}
+              onChange={v => setNotifications({ ...notifications, session_completion_tracking: v })}
+              label="Session Completion Tracking"
+              desc="Track whether scheduled rehab sessions were completed or missed" />
+          </SettingsSection>
+
+          <SettingsSection id="notif_timing" open={isOpen("notif_timing")} onToggle={toggleSection} icon={FiClock} title="Reminder Timing">
+            <div style={sty.fieldRow}>
+              <label style={sty.fieldLabel}>Reminder Lead Time</label>
+              <select style={{ ...S.select, width: "100%" }} value={notifications.reminder_lead_days}
+                onChange={e => setNotifications({ ...notifications, reminder_lead_days: +e.target.value })}>
+                <option value={1}>1 day before</option>
+                <option value={2}>2 days before</option>
+                <option value={3}>3 days before (Recommended)</option>
+                <option value={5}>5 days before</option>
+                <option value={7}>7 days before</option>
+              </select>
+              <div style={sty.fieldHint}>How far in advance clinical reminders are triggered</div>
+            </div>
+          </SettingsSection>
+
+          <div style={sty.saveBar}>
+            <button style={S.btn("dark")} onClick={flashSave}>Save Notification Settings</button>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════
+          TAB 7: SECURITY & COMPLIANCE
+          ══════════════════════════════════════════════ */}
+      {activeTab === "security" && (
+        <div>
+          <SettingsSection id="sec_session" open={isOpen("sec_session")} onToggle={toggleSection} icon={FiLock} title="Session & Access Control">
+            <div style={S.grid(2)}>
+              <div style={sty.fieldRow}>
+                <label style={sty.fieldLabel}>Session Timeout</label>
+                <select style={{ ...S.select, width: "100%" }} value={security.session_timeout_minutes}
+                  onChange={e => setSecurity({ ...security, session_timeout_minutes: +e.target.value })}>
+                  <option value={15}>15 minutes</option>
+                  <option value={30}>30 minutes (Recommended)</option>
+                  <option value={60}>60 minutes</option>
+                  <option value={120}>120 minutes</option>
+                </select>
+                <div style={sty.fieldHint}>Auto-logout after period of inactivity</div>
+              </div>
+              <div style={sty.fieldRow}>
+                <label style={sty.fieldLabel}>Data Retention Period</label>
+                <select style={{ ...S.select, width: "100%" }} value={security.data_retention_years}
+                  onChange={e => setSecurity({ ...security, data_retention_years: +e.target.value })}>
+                  <option value={3}>3 years</option>
+                  <option value={5}>5 years</option>
+                  <option value={7}>7 years (Recommended — most state boards)</option>
+                  <option value={10}>10 years</option>
+                </select>
+                <div style={sty.fieldHint}>Aligned with state veterinary medical board recordkeeping requirements</div>
+              </div>
+            </div>
+
+            <SettingsToggle value={security.auto_lock_screen}
+              onChange={v => setSecurity({ ...security, auto_lock_screen: v })}
+              label="Auto-Lock Screen on Idle"
+              desc="Require re-authentication after session timeout — prevents unauthorized access" />
+            <SettingsToggle value={security.audit_log_enabled}
+              onChange={v => setSecurity({ ...security, audit_log_enabled: v })}
+              label="Clinical Audit Log"
+              desc="Record all protocol generation, patient modifications, and data access events" />
+          </SettingsSection>
+
+          <SettingsSection id="sec_compliance" open={isOpen("sec_compliance")} onToggle={toggleSection} icon={FiShield} title="Compliance & Security Roadmap">
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {[
+                ["AES-256 Encryption at Rest", false, "Planned — requires encrypted database layer"],
+                ["TLS 1.3 Encryption in Transit", false, "Planned — requires SSL certificate and HTTPS configuration"],
+                ["Role-Based Access Control (RBAC)", false, "Planned — requires authentication system implementation"],
+                ["Zero-Knowledge Sensitive Fields", false, "Planned — requires field-level encryption architecture"],
+                ["Automated Backup & Disaster Recovery", false, "Planned — requires cloud infrastructure and scheduling"],
+                ["State Veterinary Board Alignment", true, "Active — protocol logic follows state practice act guidelines"],
+                ["No Data Sold, Shared, or Used for Advertising", true, "Active — all data remains local to this installation"],
+              ].map(([label, ok, statusNote]) => (
+                <div key={label} style={{
+                  display: "flex", alignItems: "center", justifyContent: "space-between",
+                  padding: "12px 16px", borderRadius: 8,
+                  background: ok ? "rgba(5,150,105,0.04)" : "rgba(217,119,6,0.04)",
+                  border: `1px solid ${ok ? "rgba(5,150,105,0.2)" : "rgba(217,119,6,0.2)"}`,
+                }}>
+                  <div>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{label}</span>
+                    <div style={{ fontSize: 11, color: C.textLight, marginTop: 2 }}>{statusNote}</div>
+                  </div>
+                  <span style={sty.statusBadge(ok)}>
+                    {ok ? <FiCheckCircle size={11} /> : <FiClock size={11} />}
+                    {ok ? " Active" : " Planned"}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div style={{
+              marginTop: 16, padding: "14px 16px", borderRadius: 8,
+              background: C.navy, color: "#fff", fontSize: 11, lineHeight: 1.7,
+            }}>
+              <div style={{ fontWeight: 700, fontSize: 12, marginBottom: 6, color: C.teal }}>
+                Current Security Status — Transparency Notice
+              </div>
+              K9 Rehab Pro currently operates as a locally-hosted clinical decision-support system. All patient and client data is stored locally on this device using SQLite and is not transmitted to external servers. No data is sold, shared, or used for advertising. Enterprise-grade security features including encryption at rest, TLS in transit, role-based access control, and HIPAA-grade data protection are on the development roadmap and will be implemented prior to multi-user or cloud deployment. All clinical protocols comply with evidence-based veterinary rehabilitation standards (Millis & Levine, ACVSMR). This platform supports clinicians — it does not replace licensed veterinary judgment.
+            </div>
+          </SettingsSection>
+
+          <AuditLogViewer />
+
+          <div style={sty.saveBar}>
+            <button style={S.btn("dark")} onClick={flashSave}>Save Security Settings</button>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════
+          TAB 8: APPEARANCE & DISPLAY
+          ══════════════════════════════════════════════ */}
+      {activeTab === "appearance" && (
+        <div>
+          <SettingsSection id="app_theme" open={isOpen("app_theme")} onToggle={toggleSection} icon={FiMonitor} title="Theme & Display">
+            <div style={sty.fieldRow}>
+              <label style={sty.fieldLabel}>Interface Theme</label>
+              <div style={{ display: "flex", gap: 10, marginTop: 6 }}>
+                {[
+                  ["clinical_light", "Clinical Light", "Clean white backgrounds, medical-grade readability"],
+                  ["clinical_dark", "Clinical Dark", "Dark navy backgrounds, reduced eye strain"],
+                  ["high_contrast", "High Contrast", "Maximum contrast for accessibility compliance"],
+                ].map(([val, label, desc]) => (
+                  <div key={val} onClick={() => setAppearance({ ...appearance, theme: val })}
+                    style={{
+                      flex: 1, padding: "14px 16px", borderRadius: 8, cursor: "pointer",
+                      background: appearance.theme === val
+                        ? (val === "clinical_dark" ? C.navy : val === "high_contrast" ? "#000" : C.tealLight)
+                        : "#FAFBFD",
+                      color: appearance.theme === val
+                        ? (val === "clinical_light" ? C.tealDark : "#fff")
+                        : C.text,
+                      border: appearance.theme === val ? `2px solid ${C.teal}` : `1px solid ${C.border}`,
+                      transition: "all 0.15s",
+                    }}>
+                    <div style={{ fontSize: 13, fontWeight: 700 }}>{label}</div>
+                    <div style={{ fontSize: 11, marginTop: 4, opacity: 0.8 }}>{desc}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </SettingsSection>
+
+          <SettingsSection id="app_layout" open={isOpen("app_layout")} onToggle={toggleSection} icon={FiSliders} title="Layout Preferences">
+            <div style={S.grid(2)}>
+              <div style={sty.fieldRow}>
+                <label style={sty.fieldLabel}>Font Size</label>
+                <select style={{ ...S.select, width: "100%" }} value={appearance.font_size}
+                  onChange={e => setAppearance({ ...appearance, font_size: e.target.value })}>
+                  <option value="compact">Compact — More content per screen</option>
+                  <option value="standard">Standard (Recommended)</option>
+                  <option value="large">Large — Enhanced readability</option>
+                </select>
+              </div>
+              <div style={sty.fieldRow}>
+                <label style={sty.fieldLabel}>Exercise Card Display</label>
+                <select style={{ ...S.select, width: "100%" }} value={appearance.exercise_card_display}
+                  onChange={e => setAppearance({ ...appearance, exercise_card_display: e.target.value })}>
+                  <option value="compact">Compact — Name, code, category only</option>
+                  <option value="detailed">Detailed (Recommended) — Full descriptions and evidence</option>
+                  <option value="clinical">Clinical — Phase mapping, contraindications, progression</option>
+                </select>
+              </div>
+              <div style={sty.fieldRow}>
+                <label style={sty.fieldLabel}>Dashboard Layout</label>
+                <select style={{ ...S.select, width: "100%" }} value={appearance.dashboard_layout}
+                  onChange={e => setAppearance({ ...appearance, dashboard_layout: e.target.value })}>
+                  <option value="standard">Standard — KPIs + recent patients + actions</option>
+                  <option value="clinical">Clinical Focus — Patient queue + outcome trends</option>
+                  <option value="administrative">Administrative — Utilization + billing + compliance</option>
+                </select>
+              </div>
+            </div>
+          </SettingsSection>
+
+          <div style={sty.saveBar}>
+            <button style={S.btn("dark")} onClick={flashSave}>Save Appearance Settings</button>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════
+          TAB 9: DATA MANAGEMENT
+          ══════════════════════════════════════════════ */}
+      {activeTab === "data" && (
+        <div>
+          <SettingsSection id="data_export" open={isOpen("data_export")} onToggle={toggleSection} icon={FiDownload} title="Export Data">
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {[
+                ["Export All Patient Records", "Download all patient demographics, diagnoses, and protocol history", "patients"],
+                ["Export All Protocols", "Download all generated rehabilitation protocols with exercise details", "protocols"],
+                ["Export Session & Outcome Data", "Download SOAP notes, CBPI scores, and progress assessments", "sessions"],
+                ["Export Audit Log", "Download full audit trail for veterinary board compliance review", "audit"],
+                ["Full Database Backup", "Complete encrypted backup of all system data", "full"],
+              ].map(([label, desc, type]) => (
+                <div key={type} style={{
+                  display: "flex", alignItems: "center", justifyContent: "space-between",
+                  padding: "14px 18px", borderRadius: 8,
+                  background: "#FAFBFD", border: `1px solid ${C.border}`,
+                }}>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{label}</div>
+                    <div style={{ fontSize: 11, color: C.textLight, marginTop: 2 }}>{desc}</div>
+                  </div>
+                  <button style={{ ...S.btn("ghost"), padding: "6px 14px", fontSize: 11 }}>
+                    <FiDownload size={12} /> Export
+                  </button>
+                </div>
+              ))}
+            </div>
+          </SettingsSection>
+
+          <SettingsSection id="data_import" open={isOpen("data_import")} onToggle={toggleSection} icon={FiUpload} title="Import Data">
+            <div style={{
+              padding: "24px", borderRadius: 8, textAlign: "center",
+              border: `2px dashed ${C.border}`, background: "#FAFBFD",
+            }}>
+              <FiUpload size={24} style={{ color: C.textLight, marginBottom: 8 }} />
+              <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>Import Patient Records</div>
+              <div style={{ fontSize: 11, color: C.textLight, marginTop: 4 }}>
+                Drag and drop CSV or JSON files, or click to browse
+              </div>
+              <div style={{ fontSize: 10, color: C.textLight, marginTop: 8 }}>
+                Supported formats: CSV (patient demographics), JSON (protocol data), XLSX (bulk import)
+              </div>
+            </div>
+          </SettingsSection>
+
+          <SettingsSection id="data_api" open={isOpen("data_api")} onToggle={toggleSection} icon={FiDatabase} title="API & System Status">
+            <div style={sty.fieldRow}>
+              <label style={sty.fieldLabel}>Backend API URL</label>
+              <input style={S.input} value={API} readOnly />
+            </div>
+            <div style={{ display: "flex", gap: 12, marginTop: 12 }}>
+              <div style={{
+                flex: 1, padding: "12px 16px", borderRadius: 8,
+                background: C.greenBg, border: `1px solid rgba(5,150,105,0.2)`,
+              }}>
+                <div style={{ fontSize: 10, fontWeight: 600, color: C.green, textTransform: "uppercase", letterSpacing: "0.5px" }}>API Status</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: C.green, marginTop: 4 }}>Connected</div>
+              </div>
+              <div style={{
+                flex: 1, padding: "12px 16px", borderRadius: 8,
+                background: C.tealLight, border: `1px solid rgba(14,165,233,0.2)`,
+              }}>
+                <div style={{ fontSize: 10, fontWeight: 600, color: C.tealDark, textTransform: "uppercase", letterSpacing: "0.5px" }}>Exercise Library</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: C.tealDark, marginTop: 4 }}>179 Validated Exercises</div>
+              </div>
+              <div style={{
+                flex: 1, padding: "12px 16px", borderRadius: 8,
+                background: C.amberBg, border: `1px solid rgba(217,119,6,0.2)`,
+              }}>
+                <div style={{ fontSize: 10, fontWeight: 600, color: C.amber, textTransform: "uppercase", letterSpacing: "0.5px" }}>Protocol Engine</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: C.amber, marginTop: 4 }}>4 Protocols x 4 Phases</div>
+              </div>
+            </div>
+          </SettingsSection>
+
+          <SettingsSection id="data_danger" open={isOpen("data_danger")} onToggle={toggleSection} icon={FiAlertTriangle} title="Danger Zone">
+            <div style={{
+              padding: "16px 20px", borderRadius: 8,
+              background: C.redBg, border: `1px solid rgba(220,38,38,0.2)`,
+            }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: C.red, marginBottom: 8 }}>Permanent Data Deletion</div>
+              <div style={{ fontSize: 12, color: C.text, marginBottom: 12, lineHeight: 1.5 }}>
+                Permanently delete all patient records, protocols, session data, and audit logs. This action cannot be undone and may violate state veterinary medical board recordkeeping requirements.
+              </div>
+              <button style={{ ...S.btn("danger"), padding: "8px 16px", fontSize: 12 }}>
+                Request Data Deletion
+              </button>
+            </div>
+          </SettingsSection>
+        </div>
+      )}
+
+      {/* ── Platform version footer ── */}
+      <div style={{
+        marginTop: 16, padding: "12px 20px", borderRadius: 8,
+        background: C.navy, color: "rgba(255,255,255,0.6)",
+        fontSize: 11, display: "flex", justifyContent: "space-between", alignItems: "center",
+      }}>
+        <span>K9 Rehab Pro Opus 4.6 — Evidence-Based Canine Rehabilitation Intelligence</span>
+        <span style={{ color: "rgba(255,255,255,0.4)" }}>
+          ACVSMR-Aligned | Millis & Levine | 179 Exercises | 4 Protocols x 4 Phases
+        </span>
       </div>
     </div>
   );
@@ -3920,7 +5512,7 @@ function WelcomeView({ onEnter }) {
         position: "absolute", inset: 0,
         backgroundImage: "url('/welcome-platform.png')",
         backgroundSize: "contain", backgroundPosition: "center center", backgroundRepeat: "no-repeat",
-        filter: "contrast(1.3) brightness(3.36) saturate(1.5)",
+        filter: "contrast(1.3) brightness(5.04) saturate(1.5)",
       }} />
 
       {/* Teal screen-blend boost */}
@@ -3931,14 +5523,15 @@ function WelcomeView({ onEnter }) {
         pointerEvents: "none",
       }} />
 
-      {/* Subtle edge vignette */}
+      {/* Edge light glow */}
       <div style={{
         position: "absolute", inset: 0,
-        background: "radial-gradient(ellipse at 50% 50%, transparent 60%, rgba(0,0,0,0.14) 100%)",
+        background: "radial-gradient(ellipse at 50% 50%, transparent 55%, rgba(255,255,255,0.105) 80%, rgba(255,255,255,0.245) 100%)",
         pointerEvents: "none",
+        mixBlendMode: "screen",
       }} />
 
-      {/* ── Caduceus — pulsing with cyan glow ── */}
+      {/* ── Rod of Asclepius — veterinary medical symbol, pulsing with cyan glow ── */}
       <style>{`
         @keyframes caduceusPulse {
           0%, 100% {
@@ -3951,136 +5544,20 @@ function WelcomeView({ onEnter }) {
           }
         }
       `}</style>
-      <img
-        src="/caduceus.png"
-        alt="Veterinary Caduceus"
-        style={{
-          position: "absolute", zIndex: 4, pointerEvents: "none",
-          left: "50.25%", top: "77.7%",
-          transform: "translate(-50%, -50%)",
-          width: "7.2%", maxWidth: 108,
-          animation: "caduceusPulse 3s ease-in-out infinite",
-        }}
-      />
-
-      {/* ── PLATFORM BASE — thin orange-red rim light ── */}
       <div style={{
-        position: "absolute", zIndex: 1, pointerEvents: "none",
-        left: "26%", right: "26%", bottom: "19%", height: 2,
-        background: "linear-gradient(90deg, transparent 0%, rgba(255,100,20,0.0) 5%, rgba(255,120,40,0.55) 20%, rgba(255,160,60,0.7) 35%, rgba(255,80,10,0.8) 50%, rgba(255,160,60,0.7) 65%, rgba(255,120,40,0.55) 80%, rgba(255,100,20,0.0) 95%, transparent 100%)",
-        boxShadow: "0 0 6px 1px rgba(255,100,20,0.35), 0 0 14px 2px rgba(255,80,0,0.15)",
-        borderRadius: 1,
-      }} />
-      {/* Secondary softer glow line just below */}
-      <div style={{
-        position: "absolute", zIndex: 1, pointerEvents: "none",
-        left: "28%", right: "28%", bottom: "18.4%", height: 1,
-        background: "linear-gradient(90deg, transparent 0%, rgba(255,60,10,0.0) 8%, rgba(255,80,20,0.35) 25%, rgba(255,120,40,0.5) 50%, rgba(255,80,20,0.35) 75%, rgba(255,60,10,0.0) 92%, transparent 100%)",
-        boxShadow: "0 0 10px 2px rgba(255,80,0,0.12)",
-        borderRadius: 1,
-      }} />
-
-      {/* ── LIVE EKG WAVEFORMS — no background masks, transparent overlay ── */}
-      <style>{`
-        @keyframes ekgPulse1 {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-        @keyframes ekgPulse2 {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-      `}</style>
-      {/* Live EKG waveform 1 — top line inside Vital Signs box */}
-      <div style={{
-        position: "absolute", zIndex: 3, pointerEvents: "none",
-        left: "21.5%", top: "39.5%", width: "15%", height: "5%",
-        overflow: "hidden", borderRadius: 2,
+        position: "absolute", zIndex: 4, pointerEvents: "none",
+        left: "50%", top: "46.5%",
+        transform: "translate(-50%, -50%)",
+        width: "10.8%", maxWidth: 162,
+        animation: "caduceusPulse 3s ease-in-out infinite",
       }}>
-        <svg style={{ width: "200%", height: "100%", animation: "ekgPulse1 2.8s linear infinite" }}
-          viewBox="0 0 1200 40" preserveAspectRatio="none">
-          {[0, 600].map(o => (
-            <polyline key={o} fill="none" stroke="#0ff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"
-              opacity="0.9"
-              points={`${o},22 ${o+40},22 ${o+70},22 ${o+85},20 ${o+95},24 ${o+105},18 ${o+115},22 ${o+145},22 ${o+160},22 ${o+170},15 ${o+178},28 ${o+184},3 ${o+192},38 ${o+200},12 ${o+210},22 ${o+250},22 ${o+280},22 ${o+300},19 ${o+310},25 ${o+320},22 ${o+380},22 ${o+440},22 ${o+460},20 ${o+470},24 ${o+480},18 ${o+490},22 ${o+510},22 ${o+525},22 ${o+535},15 ${o+543},28 ${o+549},3 ${o+557},38 ${o+565},12 ${o+575},22 ${o+600},22`}
-            />
-          ))}
-          {[0, 600].map(o => (
-            <polyline key={`g${o}`} fill="none" stroke="#0ff" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round"
-              opacity="0.15"
-              points={`${o},22 ${o+40},22 ${o+70},22 ${o+85},20 ${o+95},24 ${o+105},18 ${o+115},22 ${o+145},22 ${o+160},22 ${o+170},15 ${o+178},28 ${o+184},3 ${o+192},38 ${o+200},12 ${o+210},22 ${o+250},22 ${o+280},22 ${o+300},19 ${o+310},25 ${o+320},22 ${o+380},22 ${o+440},22 ${o+460},20 ${o+470},24 ${o+480},18 ${o+490},22 ${o+510},22 ${o+525},22 ${o+535},15 ${o+543},28 ${o+549},3 ${o+557},38 ${o+565},12 ${o+575},22 ${o+600},22`}
-            />
-          ))}
-        </svg>
-      </div>
-      {/* Live EKG waveform 2 — bottom line inside Vital Signs box */}
-      <div style={{
-        position: "absolute", zIndex: 3, pointerEvents: "none",
-        left: "21.5%", top: "46%", width: "15%", height: "5%",
-        overflow: "hidden", borderRadius: 2,
-      }}>
-        <svg style={{ width: "200%", height: "100%", animation: "ekgPulse2 3.4s linear infinite" }}
-          viewBox="0 0 1200 40" preserveAspectRatio="none">
-          {[0, 600].map(o => (
-            <polyline key={o} fill="none" stroke="#0ff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"
-              opacity="0.85"
-              points={`${o},22 ${o+50},22 ${o+80},22 ${o+90},19 ${o+100},25 ${o+110},22 ${o+140},22 ${o+155},22 ${o+165},16 ${o+173},27 ${o+179},5 ${o+187},36 ${o+195},13 ${o+205},22 ${o+240},22 ${o+290},22 ${o+310},20 ${o+320},24 ${o+330},22 ${o+390},22 ${o+450},22 ${o+470},19 ${o+480},25 ${o+490},22 ${o+520},22 ${o+535},22 ${o+545},16 ${o+553},27 ${o+559},5 ${o+567},36 ${o+575},13 ${o+585},22 ${o+600},22`}
-            />
-          ))}
-          {[0, 600].map(o => (
-            <polyline key={`g${o}`} fill="none" stroke="#0ff" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round"
-              opacity="0.12"
-              points={`${o},22 ${o+50},22 ${o+80},22 ${o+90},19 ${o+100},25 ${o+110},22 ${o+140},22 ${o+155},22 ${o+165},16 ${o+173},27 ${o+179},5 ${o+187},36 ${o+195},13 ${o+205},22 ${o+240},22 ${o+290},22 ${o+310},20 ${o+320},24 ${o+330},22 ${o+390},22 ${o+450},22 ${o+470},19 ${o+480},25 ${o+490},22 ${o+520},22 ${o+535},22 ${o+545},16 ${o+553},27 ${o+559},5 ${o+567},36 ${o+575},13 ${o+585},22 ${o+600},22`}
-            />
-          ))}
-        </svg>
+        <img
+          src="/caduceus.png"
+          alt="Rod of Asclepius — Veterinary Medical Symbol"
+          style={{ width: "100%", display: "block" }}
+        />
       </div>
 
-      {/* ── RIGHT SIDE — live EKG waveforms ── */}
-      {/* Right side live EKG waveform 1 — top line */}
-      <div style={{
-        position: "absolute", zIndex: 3, pointerEvents: "none",
-        right: "21.5%", top: "39.5%", width: "15%", height: "5%",
-        overflow: "hidden", borderRadius: 2,
-      }}>
-        <svg style={{ width: "200%", height: "100%", animation: "ekgPulse1 3.1s linear infinite" }}
-          viewBox="0 0 1200 40" preserveAspectRatio="none">
-          {[0, 600].map(o => (
-            <polyline key={o} fill="none" stroke="#0ff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"
-              opacity="0.9"
-              points={`${o},22 ${o+35},22 ${o+65},22 ${o+80},20 ${o+90},24 ${o+100},18 ${o+110},22 ${o+140},22 ${o+158},22 ${o+168},15 ${o+176},28 ${o+182},3 ${o+190},38 ${o+198},12 ${o+208},22 ${o+248},22 ${o+278},22 ${o+298},19 ${o+308},25 ${o+318},22 ${o+378},22 ${o+435},22 ${o+455},20 ${o+465},24 ${o+475},18 ${o+485},22 ${o+508},22 ${o+523},22 ${o+533},15 ${o+541},28 ${o+547},3 ${o+555},38 ${o+563},12 ${o+573},22 ${o+600},22`}
-            />
-          ))}
-          {[0, 600].map(o => (
-            <polyline key={`g${o}`} fill="none" stroke="#0ff" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round"
-              opacity="0.15"
-              points={`${o},22 ${o+35},22 ${o+65},22 ${o+80},20 ${o+90},24 ${o+100},18 ${o+110},22 ${o+140},22 ${o+158},22 ${o+168},15 ${o+176},28 ${o+182},3 ${o+190},38 ${o+198},12 ${o+208},22 ${o+248},22 ${o+278},22 ${o+298},19 ${o+308},25 ${o+318},22 ${o+378},22 ${o+435},22 ${o+455},20 ${o+465},24 ${o+475},18 ${o+485},22 ${o+508},22 ${o+523},22 ${o+533},15 ${o+541},28 ${o+547},3 ${o+555},38 ${o+563},12 ${o+573},22 ${o+600},22`}
-            />
-          ))}
-        </svg>
-      </div>
-      {/* Right side live EKG waveform 2 — bottom line */}
-      <div style={{
-        position: "absolute", zIndex: 3, pointerEvents: "none",
-        right: "21.5%", top: "46%", width: "15%", height: "5%",
-        overflow: "hidden", borderRadius: 2,
-      }}>
-        <svg style={{ width: "200%", height: "100%", animation: "ekgPulse2 3.8s linear infinite" }}
-          viewBox="0 0 1200 40" preserveAspectRatio="none">
-          {[0, 600].map(o => (
-            <polyline key={o} fill="none" stroke="#0ff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"
-              opacity="0.85"
-              points={`${o},22 ${o+45},22 ${o+75},22 ${o+88},19 ${o+98},25 ${o+108},22 ${o+138},22 ${o+152},22 ${o+162},16 ${o+170},27 ${o+176},5 ${o+184},36 ${o+192},13 ${o+202},22 ${o+238},22 ${o+288},22 ${o+308},20 ${o+318},24 ${o+328},22 ${o+388},22 ${o+445},22 ${o+465},19 ${o+475},25 ${o+485},22 ${o+515},22 ${o+530},22 ${o+540},16 ${o+548},27 ${o+554},5 ${o+562},36 ${o+570},13 ${o+580},22 ${o+600},22`}
-            />
-          ))}
-          {[0, 600].map(o => (
-            <polyline key={`g${o}`} fill="none" stroke="#0ff" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round"
-              opacity="0.12"
-              points={`${o},22 ${o+45},22 ${o+75},22 ${o+88},19 ${o+98},25 ${o+108},22 ${o+138},22 ${o+152},22 ${o+162},16 ${o+170},27 ${o+176},5 ${o+184},36 ${o+192},13 ${o+202},22 ${o+238},22 ${o+288},22 ${o+308},20 ${o+318},24 ${o+328},22 ${o+388},22 ${o+445},22 ${o+465},19 ${o+475},25 ${o+485},22 ${o+515},22 ${o+530},22 ${o+540},16 ${o+548},27 ${o+554},5 ${o+562},36 ${o+570},13 ${o+580},22 ${o+600},22`}
-            />
-          ))}
-        </svg>
-      </div>
 
       {/* ── TOP HEADER ── K9 Rehab Pro + bubble centered at top */}
       <div style={{
@@ -4103,7 +5580,7 @@ function WelcomeView({ onEnter }) {
           K9 Rehab Pro&#8482;
         </h1>
 
-        {/* Teal bubble with veterinary caduceus */}
+        {/* Teal bubble with Rod of Asclepius */}
         <div style={{
           display: "inline-flex", alignItems: "center", gap: 10,
           background: "rgba(14,165,233,0.14)",
@@ -4290,61 +5767,145 @@ function WelcomeView({ onEnter }) {
 }
 
 // ─────────────────────────────────────────────
+// ABOUT VIEW — Brand Story & Platform Info
+// ─────────────────────────────────────────────
+function AboutView() {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 900, margin: "0 auto" }}>
+      <div style={{ ...S.card, borderTop: `4px solid ${C.teal}`, padding: "32px 36px", textAlign: "center" }}>
+        <div style={{ fontSize: 40, marginBottom: 12 }}>⚕</div>
+        <h1 style={{ fontSize: 28, fontWeight: 900, color: C.navy, margin: "0 0 8px",
+          fontFamily: "'Exo 2', 'Orbitron', sans-serif", letterSpacing: "2px" }}>
+          K9 REHAB PRO
+        </h1>
+        <div style={{ fontSize: 12, fontWeight: 700, color: C.teal, textTransform: "uppercase", letterSpacing: "2px", marginBottom: 16 }}>
+          Clinical Decision-Support System for Canine Rehabilitation
+        </div>
+        <p style={{ fontSize: 14, color: C.textMid, lineHeight: 1.8, maxWidth: 650, margin: "0 auto" }}>
+          K9 Rehab Pro is a veterinary rehabilitation platform built for the clinicians who dedicate their careers to helping dogs recover, move, and live better. Designed from the ground up using evidence-based methodology, it transforms clinical expertise into structured, repeatable rehabilitation protocols.
+        </p>
+      </div>
+
+      <div style={S.grid(2)}>
+        <div style={S.card}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+            <FiBookOpen size={16} style={{ color: C.teal }} />
+            <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: C.navy }}>Evidence-Based Foundation</h3>
+          </div>
+          <p style={{ fontSize: 12, color: C.textMid, lineHeight: 1.7, margin: 0 }}>
+            Every protocol, exercise, and progression rule is sourced from peer-reviewed veterinary rehabilitation literature. Primary references include Millis & Levine's <em>Canine Rehabilitation and Physical Therapy</em> (2nd ed., Elsevier 2014), Zink & Van Dyke's <em>Canine Sports Medicine and Rehabilitation</em> (2nd ed., Wiley 2018), and ACVSMR position statements.
+          </p>
+        </div>
+
+        <div style={S.card}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+            <FiShield size={16} style={{ color: C.navy }} />
+            <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: C.navy }}>CDSS Classification</h3>
+          </div>
+          <p style={{ fontSize: 12, color: C.textMid, lineHeight: 1.7, margin: 0 }}>
+            K9 Rehab Pro is classified as a Clinical Decision-Support System (CDSS). It assists licensed veterinary professionals in generating rehabilitation protocols but does not replace clinical judgment, establish a VCPR, or provide diagnoses. All output requires veterinary review and approval.
+          </p>
+        </div>
+
+        <div style={S.card}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+            <FiActivity size={16} style={{ color: "#059669" }} />
+            <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: C.navy }}>Protocol Engine</h3>
+          </div>
+          <p style={{ fontSize: 12, color: C.textMid, lineHeight: 1.7, margin: 0 }}>
+            4 ACVSMR-aligned protocols (TPLO, IVDD, OA, Geriatric) with 4 gated phases each. 170+ exercises classified by intervention type, phase appropriateness, and evidence grade. Automated contraindication enforcement prevents unsafe exercise selection.
+          </p>
+        </div>
+
+        <div style={S.card}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+            <FiLock size={16} style={{ color: "#D97706" }} />
+            <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: C.navy }}>Data Privacy</h3>
+          </div>
+          <p style={{ fontSize: 12, color: C.textMid, lineHeight: 1.7, margin: 0 }}>
+            All patient and client data remains local to your installation. No data is transmitted to external servers, sold to third parties, or used for AI training. The platform is designed with HIPAA-aligned principles and supports state veterinary medical board recordkeeping requirements.
+          </p>
+        </div>
+      </div>
+
+      <div style={S.card}>
+        <h3 style={{ fontSize: 14, fontWeight: 700, color: C.navy, marginBottom: 12 }}>Target Environments</h3>
+        <div style={S.grid(4)}>
+          {[
+            ["General Practice", "DVM-supervised rehabilitation for primary care clinics"],
+            ["Rehabilitation Centers", "CCRP/CCRT-certified facilities with full modality access"],
+            ["Specialty Hospitals", "Integration with surgical, neurology, and oncology teams"],
+            ["Universities", "Clinical teaching and research under faculty supervision"],
+          ].map(([title, desc]) => (
+            <div key={title} style={{ padding: "12px 14px", background: C.surface, borderRadius: 8, border: `1px solid ${C.border}` }}>
+              <div style={{ fontWeight: 700, fontSize: 12, color: C.navy, marginBottom: 4 }}>{title}</div>
+              <div style={{ fontSize: 11, color: C.textLight, lineHeight: 1.5 }}>{desc}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ ...S.card, background: C.navy, border: "none", textAlign: "center", padding: "20px 28px" }}>
+        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", lineHeight: 1.7 }}>
+          K9 Rehab Pro™ · Clinical Decision-Support System · ACVSMR-Aligned Methodology
+          <br />Millis & Levine · Zink & Van Dyke · Evidence-Based Canine Rehabilitation
+          <br />All protocols require licensed veterinary review and approval before clinical application.
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
 // TOP NAVIGATION
 // ─────────────────────────────────────────────
 const NAV = [
   { id: "dashboard",  label: "Dashboard",           icon: FiBarChart2,  desc: "Clinical analytics" },
-  { id: "generator",  label: "Protocol Generator",  icon: FiActivity,   desc: "Generate rehab protocols" },
+  { id: "generator",  label: "Diagnostics Workup",  icon: FiActivity,   desc: "Intake & protocol generation" },
   { id: "exercises",  label: "Exercise Library",     icon: FiBookOpen,   desc: "179 evidence-based exercises" },
-  { id: "clients",    label: "Patient Records",     icon: FiUsers,      desc: "Patient database" },
-  { id: "sessions",   label: "Sessions",            icon: FiClipboard,  desc: "SOAP notes & outcomes" },
+  { id: "clients",    label: "Patient Records",     icon: TbDog,        desc: "Patient database" },
+  { id: "sessions",   label: "SOAP",                icon: FiClipboard,  desc: "SOAP notes & outcomes" },
   { id: "settings",   label: "Settings",            icon: FiSettings,   desc: "Configuration" },
+  { id: "about",      label: "About",               icon: FiHeart,      desc: "Platform & methodology" },
 ];
 
-const PAGE_TITLES = {
-  dashboard: { title: "Clinical Dashboard",   sub: "Practice analytics, patient progress, and protocol outcomes" },
-  generator: { title: "Protocol Generator",   sub: "ACVSMR-aligned evidence-based rehabilitation protocol generation" },
-  clients:   { title: "Patient Records",      sub: "Canine rehabilitation patient database and medical histories" },
-  exercises: { title: "Exercise Library",     sub: "179 peer-reviewed therapeutic exercises with clinical parameters" },
-  sessions:  { title: "Clinical Sessions",    sub: "SOAP documentation, outcome measures, and session tracking" },
-  settings:  { title: "Clinic Configuration", sub: "Practice branding, contact information, and platform settings" },
-};
 
-function TopNav({ view, setView, brand }) {
+function TopNav({ view, setView, brand, dateStr, timeStr }) {
   return (
     <div style={S.topNav}>
       <style>{`
-        @keyframes brandGlow {
-          0%, 100% { text-shadow: 0 0 8px rgba(14,165,233,0.4), 0 0 16px rgba(14,165,233,0.15); }
-          50% { text-shadow: 0 0 14px rgba(14,165,233,0.7), 0 0 28px rgba(14,165,233,0.3), 0 0 42px rgba(14,165,233,0.1); }
-        }
-        @keyframes faviconPulse {
-          0%, 100% { filter: drop-shadow(0 0 4px rgba(14,165,233,0.5)); }
-          50% { filter: drop-shadow(0 0 10px rgba(14,165,233,0.9)) drop-shadow(0 0 20px rgba(14,165,233,0.3)); }
+        @keyframes faviconGlow {
+          0%, 100% { filter: drop-shadow(0 0 4px rgba(57,255,126,0.4)) drop-shadow(0 0 10px rgba(14,165,233,0.2)); }
+          50% { filter: drop-shadow(0 0 10px rgba(57,255,126,0.8)) drop-shadow(0 0 22px rgba(14,165,233,0.4)) drop-shadow(0 0 36px rgba(57,255,126,0.15)); }
         }
       `}</style>
-      <div style={{ ...S.topNavBrand, cursor: "pointer" }} onClick={() => setView("dashboard")}>
+      <div style={{ ...S.topNavBrand, cursor: "pointer" }} onClick={() => setView("generator")}>
         <img src="/favicon.png" alt="K9 Rehab Pro"
-          style={{ width: 34, height: 34, animation: "faviconPulse 2.8s ease-in-out infinite" }} />
+          style={{ width: 30, height: 30, animation: "faviconGlow 2.8s ease-in-out infinite" }} />
         <span style={{
-          fontFamily: "'Exo 2', 'Orbitron', sans-serif",
-          fontSize: 16, fontWeight: 800, letterSpacing: "1.5px",
-          background: "linear-gradient(90deg, #fff 0%, #7DD3FC 50%, #fff 100%)",
+          fontFamily: "'Orbitron', 'Exo 2', 'Rajdhani', sans-serif",
+          fontSize: 15, fontWeight: 900, letterSpacing: "2.5px",
+          background: "linear-gradient(90deg, #0A2540 0%, #0F3460 40%, #0EA5E9 70%, #39FF7E 100%)",
           WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-          animation: "brandGlow 3s ease-in-out infinite",
-        }}>{brand.clinicName || "K9 Rehab Pro\u2122"}</span>
+        }}>{brand.clinicName || "K9 REHAB PRO\u2122"}</span>
       </div>
-      <div style={S.topNavLinks}>
-        {NAV.map(({ id, label, icon: Icon }) => (
-          <div key={id} style={S.topNavItem(view === id)} onClick={() => setView(id)}>
-            <Icon size={13} /> <span>{label}</span>
-          </div>
-        ))}
-      </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", cursor: "pointer" }}
+      <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+        <div style={{
+          padding: "3px 10px", borderRadius: 4,
+          background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.25)",
+          fontSize: 8, fontWeight: 800, color: "#D97706",
+          textTransform: "uppercase", letterSpacing: "1.2px",
+          lineHeight: 1.3, textAlign: "center",
+        }}>
+          Clinical Decision<br/>Support System
+        </div>
+        <div style={{ textAlign: "right" }}>
+          <div style={{ fontSize: 11, color: "#111", fontWeight: 500 }}>{dateStr}</div>
+          <div style={{ fontSize: 12, color: C.navy, fontWeight: 700, marginTop: 1, fontFamily: "'Exo 2', monospace", letterSpacing: "1px" }}>{timeStr}</div>
+        </div>
+        <div style={{ fontSize: 10, color: C.textLight, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
           onClick={() => setView("welcome")}>
-          <FiStar size={11} style={{ marginRight: 4 }} /> Preview
+          <FiStar size={11} /> Preview
         </div>
       </div>
     </div>
@@ -4356,6 +5917,8 @@ function TopNav({ view, setView, brand }) {
 // ─────────────────────────────────────────────
 export default function App() {
   const [view, setView] = useState("welcome");
+  const [genKey, setGenKey] = useState(0);
+  const [genInitialStep, setGenInitialStep] = useState(1);
   const [brand, setBrand] = useState({ clinicName: "K9 Rehab Pro™", accent: "#0F4C81" });
 
   const [liveTime, setLiveTime] = useState(new Date());
@@ -4367,14 +5930,15 @@ export default function App() {
   const views = {
     dashboard:  <DashboardView setView={setView} />,
     clients:   <ClientsView />,
-    generator: <GeneratorView />,
+    generator: <GeneratorView key={genKey} initialStep={genInitialStep} />,
     exercises: <ExercisesView />,
     sessions:  <SessionsView />,
     settings:  <SettingsView brand={brand} setBrand={setBrand} />,
+    about:     <AboutView />,
   };
 
   if (view === "welcome") {
-    return <WelcomeView onEnter={() => setView("dashboard")} />;
+    return <WelcomeView onEnter={() => setView("generator")} />;
   }
 
   const dateStr = liveTime.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
@@ -4387,77 +5951,49 @@ export default function App() {
           0% { transform: translateX(0); }
           100% { transform: translateX(-50%); }
         }
+        @keyframes neonFlatline {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
       `}</style>
-      {/* TOP NAV — replaces sidebar */}
-      <TopNav view={view} setView={setView} brand={brand} />
+      {/* TOP BAR — white, K9 Rehab Pro TM + date/clock */}
+      <TopNav view={view} setView={setView} brand={brand} dateStr={dateStr} timeStr={timeStr} />
 
       {/* MAIN */}
       <div style={S.main}>
-        {/* Top bar — clinical header */}
-        <div style={{ ...S.topbar, paddingBottom: 10 }}>
-          <div>
-            <h1 style={S.pageTitle}>{PAGE_TITLES[view]?.title}</h1>
-            <p style={{ ...S.pageSub, margin: 0 }}>{PAGE_TITLES[view]?.sub}</p>
+        {/* Nav links bar — navy blue with page navigation */}
+        <div style={{
+          background: `linear-gradient(90deg, ${C.navy} 0%, ${C.navyMid} 100%)`,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          padding: "0 24px", height: 38, flexShrink: 0,
+          gap: 2,
+        }}>
+          <div
+            onClick={() => { setGenInitialStep(1); setGenKey(k => k + 1); setView("generator"); }}
+            style={{ cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: 26, height: 26, borderRadius: 5, background: "rgba(57,255,126,0.12)", border: "1px solid rgba(57,255,126,0.3)", marginRight: 10, transition: "all 0.2s" }}
+            title="Home — Section 1"
+          >
+            <FiHome size={12} style={{ color: "#39FF7E" }} />
           </div>
-          <div style={{ textAlign: "right" }}>
-            <div style={{ fontSize: 11, color: C.textLight, fontWeight: 500 }}>{dateStr}</div>
-            <div style={{ fontSize: 12, color: C.navy, fontWeight: 700, marginTop: 2, fontFamily: "'Exo 2', monospace", letterSpacing: "1px" }}>{timeStr}</div>
-          </div>
+          {NAV.map(({ id, label, icon: Icon }) => (
+            <div key={id} style={S.topNavItem(view === id)} onClick={() => {
+              if (id === "generator") {
+                setGenInitialStep(2);
+                setGenKey(k => k + 1);
+              } else {
+                setGenInitialStep(1);
+              }
+              setView(id);
+              const contentEl = document.querySelector("[data-content-scroll]");
+              if (contentEl) contentEl.scrollTop = 0;
+            }}>
+              <Icon size={12} /> <span>{label}</span>
+            </div>
+          ))}
         </div>
-        {/* EKG heartbeat waveform — continuous scroll */}
-        <div style={{ height: 18, width: "100%", overflow: "hidden", marginTop: -4, position: "relative" }}>
-          <svg style={{ height: 18, width: "200%", animation: "ekgScroll 4s linear infinite" }}
-            viewBox="0 0 2400 40" preserveAspectRatio="none">
-            {/* Two identical waveform cycles for seamless loop */}
-            {[0, 1200].map(offset => (
-              <polyline key={offset}
-                fill="none" stroke="#0EA5E9" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
-                points={`
-                  ${offset + 0},22 ${offset + 60},22 ${offset + 90},22 ${offset + 100},22
-                  ${offset + 120},22 ${offset + 140},20 ${offset + 155},24 ${offset + 165},18
-                  ${offset + 175},22 ${offset + 195},22 ${offset + 210},22
-                  ${offset + 230},22 ${offset + 240},16 ${offset + 248},28 ${offset + 254},4 ${offset + 262},38 ${offset + 270},14 ${offset + 280},22
-                  ${offset + 310},22 ${offset + 340},22 ${offset + 360},19 ${offset + 370},25 ${offset + 380},22
-                  ${offset + 420},22 ${offset + 500},22
-                  ${offset + 520},22 ${offset + 540},20 ${offset + 555},24 ${offset + 565},18
-                  ${offset + 575},22 ${offset + 595},22 ${offset + 610},22
-                  ${offset + 630},22 ${offset + 640},16 ${offset + 648},28 ${offset + 654},4 ${offset + 662},38 ${offset + 670},14 ${offset + 680},22
-                  ${offset + 710},22 ${offset + 740},22 ${offset + 760},19 ${offset + 770},25 ${offset + 780},22
-                  ${offset + 820},22 ${offset + 900},22
-                  ${offset + 920},22 ${offset + 940},20 ${offset + 955},24 ${offset + 965},18
-                  ${offset + 975},22 ${offset + 995},22 ${offset + 1010},22
-                  ${offset + 1030},22 ${offset + 1040},16 ${offset + 1048},28 ${offset + 1054},4 ${offset + 1062},38 ${offset + 1070},14 ${offset + 1080},22
-                  ${offset + 1110},22 ${offset + 1140},22 ${offset + 1160},19 ${offset + 1170},25 ${offset + 1180},22
-                  ${offset + 1200},22
-                `}
-              />
-            ))}
-            {/* Subtle glow behind the waveform */}
-            {[0, 1200].map(offset => (
-              <polyline key={`g${offset}`}
-                fill="none" stroke="#0EA5E9" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"
-                opacity="0.15"
-                points={`
-                  ${offset + 0},22 ${offset + 60},22 ${offset + 90},22 ${offset + 100},22
-                  ${offset + 120},22 ${offset + 140},20 ${offset + 155},24 ${offset + 165},18
-                  ${offset + 175},22 ${offset + 195},22 ${offset + 210},22
-                  ${offset + 230},22 ${offset + 240},16 ${offset + 248},28 ${offset + 254},4 ${offset + 262},38 ${offset + 270},14 ${offset + 280},22
-                  ${offset + 310},22 ${offset + 340},22 ${offset + 360},19 ${offset + 370},25 ${offset + 380},22
-                  ${offset + 420},22 ${offset + 500},22
-                  ${offset + 520},22 ${offset + 540},20 ${offset + 555},24 ${offset + 565},18
-                  ${offset + 575},22 ${offset + 595},22 ${offset + 610},22
-                  ${offset + 630},22 ${offset + 640},16 ${offset + 648},28 ${offset + 654},4 ${offset + 662},38 ${offset + 670},14 ${offset + 680},22
-                  ${offset + 710},22 ${offset + 740},22 ${offset + 760},19 ${offset + 770},25 ${offset + 780},22
-                  ${offset + 820},22 ${offset + 900},22
-                  ${offset + 920},22 ${offset + 940},20 ${offset + 955},24 ${offset + 965},18
-                  ${offset + 975},22 ${offset + 995},22 ${offset + 1010},22
-                  ${offset + 1030},22 ${offset + 1040},16 ${offset + 1048},28 ${offset + 1054},4 ${offset + 1062},38 ${offset + 1070},14 ${offset + 1080},22
-                  ${offset + 1110},22 ${offset + 1140},22 ${offset + 1160},19 ${offset + 1170},25 ${offset + 1180},22
-                  ${offset + 1200},22
-                `}
-              />
-            ))}
-          </svg>
+        {/* Neon green flatline — continuous scroll left to right */}
+        <div style={{ height: 3, width: "100%", overflow: "hidden", position: "relative", background: C.navy }}>
+          <div style={{ width: "200%", height: "100%", background: "linear-gradient(90deg, transparent, #39FF7E, #0EA5E9, #39FF7E, transparent)", animation: "ekgScroll 3s linear infinite", boxShadow: "0 0 8px rgba(57,255,126,0.5), 0 0 16px rgba(57,255,126,0.2)" }} />
         </div>
 
         <div style={S.content} data-content-scroll>

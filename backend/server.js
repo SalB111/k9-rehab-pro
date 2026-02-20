@@ -7,7 +7,7 @@ const express = require('express');
 const cors = require('cors');
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
-const { selectExercisesForWeek, PROTOCOL_DEFINITIONS } = require('./protocol-generator'); // ✅ ACVSMR-aligned 4-protocol system
+const { selectExercisesForWeek, PROTOCOL_DEFINITIONS, validateIntake, getExcludedCodes } = require('./protocol-generator'); // ✅ ACVSMR-aligned 4-protocol system
 const { ALL_EXERCISES, getExerciseByCode, searchExercises } = require('./all-exercises');
 const { INTERVENTION_TYPES, REHAB_PHASES, PRIMARY_INDICATIONS } = require('./exercise-taxonomy');
 const {
@@ -36,6 +36,48 @@ const PORT = 3000;
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// ============================================================================
+// AUDIT LOG — Must-Have #8: Compliance audit trail
+// ============================================================================
+
+function logAudit(db, entry) {
+  const { action, resource_type, resource_id, user_label, ip_address,
+          request_method, request_path, status_code, detail } = entry;
+  db.run(
+    `INSERT INTO audit_log (action, resource_type, resource_id, user_label,
+      ip_address, request_method, request_path, status_code, detail)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [action, resource_type || null, resource_id || null, user_label || 'system',
+     ip_address || null, request_method || null, request_path || null,
+     status_code || null, detail || null],
+    (err) => { if (err) console.error('Audit log write error:', err); }
+  );
+}
+
+// Audit middleware — logs all mutating API requests (POST, PUT, DELETE)
+app.use('/api', (req, res, next) => {
+  if (['POST', 'PUT', 'DELETE'].includes(req.method)) {
+    const originalJson = res.json.bind(res);
+    res.json = function(body) {
+      // Only access db if it's initialized (declared below)
+      if (typeof db !== 'undefined') {
+        logAudit(db, {
+          action: `${req.method} ${req.path}`,
+          resource_type: req.path.split('/').filter(Boolean)[1] || 'unknown',
+          user_label: req.headers['x-user-label'] || 'clinician',
+          ip_address: req.ip,
+          request_method: req.method,
+          request_path: req.originalUrl,
+          status_code: res.statusCode,
+          detail: body?.error ? `Error: ${body.error}` : (body?.message || 'OK')
+        });
+      }
+      return originalJson(body);
+    };
+  }
+  next();
+});
 
 // Database setup
 const db = new sqlite3.Database('./database.db', (err) => {
@@ -734,6 +776,12 @@ app.post('/api/patients', (req, res) => {
 app.post('/api/generate-protocol', (req, res) => {
   const formData = req.body;
 
+  // Validate intake before proceeding
+  const validation = validateIntake(formData);
+  if (!validation.valid) {
+    return res.status(400).json({ error: 'Intake validation failed', details: validation.errors });
+  }
+
   // First, create the patient
   db.run(
     `INSERT INTO patients (
@@ -773,6 +821,11 @@ app.post('/api/generate-protocol', (req, res) => {
 
       // Generate protocol based on condition
       generateProtocol(formData, patientId, (protocol) => {
+        // Attach red-flag warnings if any
+        if (validation.warnings && validation.warnings.length > 0) {
+          protocol.red_flag_warnings = validation.warnings;
+        }
+
         // Save protocol
         db.run(
           'INSERT INTO protocols (patient_id, protocol_data) VALUES (?, ?)',
@@ -1185,6 +1238,68 @@ app.get('/api/v1/programs/conditions/:condition/phases', (req, res) => {
   res.json({ success: true, data: phases });
 });
 
+
+// ============================================================================
+// AUDIT LOG ENDPOINTS — Must-Have #8
+// ============================================================================
+
+// GET /api/audit-log — retrieve audit entries (newest first, limit 200)
+app.get('/api/audit-log', (req, res) => {
+  const limit = Math.min(parseInt(req.query.limit) || 200, 1000);
+  const offset = parseInt(req.query.offset) || 0;
+  db.all(
+    `SELECT * FROM audit_log ORDER BY id DESC LIMIT ? OFFSET ?`,
+    [limit, offset],
+    (err, rows) => {
+      if (err) return res.status(500).json({ error: err.message });
+      db.get('SELECT COUNT(*) as total FROM audit_log', (err2, countRow) => {
+        res.json({ total: countRow?.total || 0, limit, offset, entries: rows || [] });
+      });
+    }
+  );
+});
+
+// GET /api/audit-log/stats — summary counts by action
+app.get('/api/audit-log/stats', (req, res) => {
+  db.all(
+    `SELECT action, COUNT(*) as count, MAX(timestamp) as last_occurrence
+     FROM audit_log GROUP BY action ORDER BY count DESC`,
+    (err, rows) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ stats: rows || [] });
+    }
+  );
+});
+
+// GET /api/audit-log/export — CSV export for board investigations (Must-Have #1.6)
+app.get('/api/audit-log/export', (req, res) => {
+  db.all('SELECT * FROM audit_log ORDER BY id DESC', (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    const headers = ['id','timestamp','action','resource_type','resource_id','user_label','ip_address','request_method','request_path','status_code','detail'];
+    const csvRows = [headers.join(',')];
+    for (const row of (rows || [])) {
+      csvRows.push(headers.map(h => {
+        const val = row[h] != null ? String(row[h]).replace(/"/g, '""') : '';
+        return `"${val}"`;
+      }).join(','));
+    }
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename=k9_rehab_audit_log_${new Date().toISOString().slice(0,10)}.csv`);
+    res.send(csvRows.join('\n'));
+  });
+});
+
+// DELETE /api/audit-log/purge — retention enforcement (keeps entries within retention period)
+app.delete('/api/audit-log/purge', (req, res) => {
+  const retentionYears = parseInt(req.query.years) || 7;
+  db.run(
+    `DELETE FROM audit_log WHERE timestamp < datetime('now', '-${retentionYears} years')`,
+    function(err) {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ purged: this.changes, retentionYears });
+    }
+  );
+});
 
 // ============================================================================
 // START SERVER

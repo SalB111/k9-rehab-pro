@@ -484,6 +484,146 @@ function getPhaseForWeek(weekNum, totalWeeks, protocolType) {
 // Returns ALL exercises for the current phase (per clinical protocol)
 // Each patient gets the complete phase prescription, not a rotating subset
 // ============================================================================
+// ============================================================================
+// INTAKE VALIDATION
+// Ensures required fields are present before protocol generation
+// ============================================================================
+function validateIntake(formData) {
+  const errors = [];
+  const warnings = [];
+
+  // Required fields
+  if (!formData.diagnosis)       errors.push('Diagnosis is required');
+  if (!formData.affectedRegion)  errors.push('Affected region is required');
+  if (!formData.patientName)     errors.push('Patient name is required');
+
+  // Pain score — block if >= 8
+  const painScore = parseInt(formData.painScore || formData.painLevel, 10);
+  if (!isNaN(painScore) && painScore >= 8) {
+    errors.push(`Pain score ${painScore}/10 exceeds safe threshold for protocol generation. Stabilize pain before initiating rehabilitation.`);
+  }
+
+  // RED-FLAG: Neurological deficit detection
+  const neuroFields = [formData.neuroProprioception, formData.neuroWithdrawal, formData.neuroDeepPain, formData.neuroMotorGrade];
+  const neuroText = neuroFields.filter(Boolean).join(' ').toLowerCase();
+  if (neuroText.includes('absent') || neuroText.includes('none') || neuroText.includes('0/5') || neuroText.includes('grade 0')) {
+    warnings.push('RED FLAG: Absent neurological function detected. Verify deep pain perception and motor grade before initiating weight-bearing exercises.');
+  }
+  if (formData.neuroDeepPain && formData.neuroDeepPain.toLowerCase().includes('absent')) {
+    errors.push('Deep pain perception absent. Protocol generation blocked. Immediate veterinary neurological evaluation required.');
+  }
+
+  // RED-FLAG: Post-op complication detection
+  const incision = (formData.incisionStatus || '').toLowerCase();
+  if (incision.includes('dehisc') || incision.includes('infected') || incision.includes('open') || incision.includes('draining')) {
+    errors.push(`Post-operative complication detected (incision: ${formData.incisionStatus}). Resolve surgical site issue before initiating rehabilitation.`);
+  }
+
+  // RED-FLAG: Post-op timing
+  if (formData.surgeryDate && formData.treatmentApproach === 'surgical') {
+    const daysSinceOp = Math.floor((Date.now() - new Date(formData.surgeryDate).getTime()) / 86400000);
+    if (daysSinceOp < 0) {
+      warnings.push('Surgery date is in the future. Protocol will generate for pre-surgical planning.');
+    }
+  }
+
+  // RED-FLAG: Lameness severity
+  const lameness = parseInt(formData.lamenessGrade, 10);
+  if (!isNaN(lameness) && lameness >= 5) {
+    warnings.push('Lameness grade 5 (non-weight-bearing). Protocol will restrict to passive and non-weight-bearing exercises only.');
+  }
+
+  // RED-FLAG: Complication keywords in medical history
+  const historyText = (formData.medicalHistory || '').toLowerCase() + ' ' + (formData.complicationsNoted || '').toLowerCase();
+  const flagKeywords = ['seroma', 'implant failure', 'implant migration', 'non-union', 'osteomyelitis', 'septic'];
+  for (const kw of flagKeywords) {
+    if (historyText.includes(kw)) {
+      warnings.push(`RED FLAG: "${kw}" noted in history. Verify complication is resolved before advancing weight-bearing phases.`);
+      break;
+    }
+  }
+
+  return { valid: errors.length === 0, errors, warnings };
+}
+
+
+// ============================================================================
+// CONTRAINDICATION ENFORCEMENT
+// Cross-checks patient conditions against exercise-level contraindications
+// ============================================================================
+const CONTRAINDICATION_MAP = {
+  // Patient condition keywords → exercise codes to EXCLUDE
+  'cardiac':       ['UNDERWATER_TREAD', 'POOL_SWIM', 'WATER_WALKING', 'WATER_RETRIEVE', 'TREADMILL_WALK', 'JOGGING'],
+  'heart':         ['UNDERWATER_TREAD', 'POOL_SWIM', 'WATER_WALKING', 'WATER_RETRIEVE', 'TREADMILL_WALK', 'JOGGING'],
+  'respiratory':   ['UNDERWATER_TREAD', 'POOL_SWIM', 'WATER_WALKING', 'WATER_RETRIEVE'],
+  'seizure':       ['UNDERWATER_TREAD', 'POOL_SWIM', 'WATER_WALKING', 'WATER_RETRIEVE'],
+  'epilepsy':      ['UNDERWATER_TREAD', 'POOL_SWIM', 'WATER_WALKING', 'WATER_RETRIEVE'],
+  'open wound':    ['UNDERWATER_TREAD', 'POOL_SWIM', 'WATER_WALKING', 'WATER_RETRIEVE', 'US_PULSED'],
+  'infection':     ['UNDERWATER_TREAD', 'POOL_SWIM', 'WATER_WALKING', 'WATER_RETRIEVE'],
+  'neoplasia':     ['US_PULSED', 'LASER_IV'],
+  'cancer':        ['US_PULSED', 'LASER_IV'],
+  'tumor':         ['US_PULSED', 'LASER_IV'],
+  'pregnant':      ['US_PULSED', 'NMES_QUAD', 'TENS_THERAPY', 'PEMF_THERAPY', 'SHOCKWAVE'],
+  'pacemaker':     ['NMES_QUAD', 'TENS_THERAPY', 'PEMF_THERAPY', 'SHOCKWAVE'],
+  'implant':       ['SHOCKWAVE', 'US_PULSED'],
+  'non-ambulatory':['TREADMILL_WALK', 'JOGGING', 'CAVALETTI', 'STAIR_CLIMBING', 'HILL_WALKING'],
+  'fracture unstable': ['WEIGHT_SHIFTING', 'BALANCE_BOARD', 'CAVALETTI', 'STAIR_CLIMBING'],
+};
+
+function getExcludedCodes(formData) {
+  const excluded = new Set();
+  const fields = [
+    formData.contraindications || '',
+    formData.diagnosis || '',
+    formData.medicalHistory || '',
+    formData.medications || '',
+    formData.mobilityLevel || '',
+  ].join(' ').toLowerCase();
+
+  for (const [keyword, codes] of Object.entries(CONTRAINDICATION_MAP)) {
+    if (fields.includes(keyword)) {
+      codes.forEach(code => excluded.add(code));
+    }
+  }
+  return excluded;
+}
+
+
+// ============================================================================
+// EVIDENCE CITATION MAP
+// Maps exercise codes to primary evidence references
+// ============================================================================
+const EVIDENCE_MAP = {
+  'PROM_STIFLE':      'Millis & Levine, Ch. 9 — Therapeutic Exercises',
+  'PROM_HIP':         'Millis & Levine, Ch. 9 — Range of Motion',
+  'JOINT_MOB_G1':     'Millis & Levine, Ch. 10 — Joint Mobilization',
+  'COLD_THERAPY':     'Millis & Levine, Ch. 6 — Cryotherapy',
+  'ASSISTED_STANDING':'Millis & Levine, Ch. 9 — Weight Bearing',
+  'LASER_IV':         'Millis & Levine, Ch. 8 — Photobiomodulation; Pryor & Millis 2015',
+  'NMES_QUAD':        'Millis & Levine, Ch. 12 — Electrical Stimulation; Johnson et al. 1997',
+  'PEMF_THERAPY':     'Millis & Levine, Ch. 13 — Electromagnetic Therapy',
+  'TENS_THERAPY':     'Millis & Levine, Ch. 12 — TENS; Levine & Bockstahler 2014',
+  'US_PULSED':        'Millis & Levine, Ch. 7 — Therapeutic Ultrasound',
+  'SHOCKWAVE':        'Millis & Levine, Ch. 14 — Extracorporeal Shockwave',
+  'UNDERWATER_TREAD': 'Millis & Levine, Ch. 15 — Aquatic Therapy; Monk et al. 2006',
+  'POOL_SWIM':        'Millis & Levine, Ch. 15 — Aquatic Therapy',
+  'WATER_WALKING':    'Millis & Levine, Ch. 15 — Aquatic Therapy',
+  'WEIGHT_SHIFTING':  'Millis & Levine, Ch. 9 — Active Exercises',
+  'SIT_TO_STAND':     'Millis & Levine, Ch. 9 — Strengthening; Zink & Van Dyke 2013',
+  'CAVALETTI':        'Millis & Levine, Ch. 9 — Gait Training',
+  'BALANCE_BOARD':    'Millis & Levine, Ch. 9 — Proprioception',
+  'TREADMILL_WALK':   'Millis & Levine, Ch. 9 — Controlled Gait',
+  'STAIR_CLIMBING':   'Millis & Levine, Ch. 9 — Functional Exercises',
+  'HILL_WALKING':     'Millis & Levine, Ch. 9 — Incline Training',
+};
+
+
+// ============================================================================
+// EXERCISE SELECTION FOR EACH WEEK
+// Returns ALL exercises for the current phase (per clinical protocol)
+// Each patient gets the complete phase prescription, not a rotating subset
+// Includes: equipment gating, contraindication enforcement, evidence citations
+// ============================================================================
 function selectExercisesForWeek(weekNum, totalWeeks, allExercises, formData) {
   const protocolType = getProtocolType(
     formData.diagnosis,
@@ -516,6 +656,9 @@ function selectExercisesForWeek(weekNum, totalWeeks, allExercises, formData) {
     'SHOCKWAVE':    formData.modalityShockwave
   };
 
+  // CONTRAINDICATION ENFORCEMENT — cross-check patient conditions
+  const excludedCodes = getExcludedCodes(formData);
+
   // Select exercises for this phase
   const selectedExercises = [];
 
@@ -528,6 +671,9 @@ function selectExercisesForWeek(weekNum, totalWeeks, allExercises, formData) {
       const hasModality = modalityGates[rx.code] === true || modalityGates[rx.code] === 'true';
       if (!hasModality) continue;
     }
+
+    // CONTRAINDICATION CHECK — skip exercises contraindicated for this patient
+    if (excludedCodes.has(rx.code)) continue;
 
     // Look up exercise in database
     const dbExercise = exercisesByCode[rx.code];
@@ -551,7 +697,9 @@ function selectExercisesForWeek(weekNum, totalWeeks, allExercises, formData) {
       red_flags: dbExercise.red_flags,
       contraindications: dbExercise.contraindications,
       difficulty_level: dbExercise.difficulty_level,
-      notes: dbExercise.notes || null
+      notes: dbExercise.notes || null,
+      // EVIDENCE CITATION — attach reference per exercise
+      evidence_citation: EVIDENCE_MAP[rx.code] || 'Millis & Levine, Canine Rehabilitation and Physical Therapy',
     });
   }
 
@@ -597,5 +745,8 @@ module.exports = {
   selectExercisesForWeek,
   getProtocolType,
   getPhaseForWeek,
-  PROTOCOL_DEFINITIONS
+  validateIntake,
+  getExcludedCodes,
+  PROTOCOL_DEFINITIONS,
+  EVIDENCE_MAP
 };
