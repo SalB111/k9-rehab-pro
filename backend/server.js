@@ -20,6 +20,13 @@ const {
   getVideoStats
 } = require('./video-references');
 const {
+  getStoryboardByCode,
+  getStoryboardFrames,
+  getStoryboardScript,
+  getExercisesWithStoryboards,
+  getStoryboardStats
+} = require('./storyboard-references');
+const {
   initializeDatabase: initDB,
   seedExerciseLibrary,
   ExerciseLibraryDB
@@ -1053,6 +1060,62 @@ app.get('/api/videos/stats', (req, res) => {
       success: false,
       error: error.message
     });
+  }
+});
+
+// ============================================================================
+// STORYBOARD ENDPOINTS — Frame-by-frame exercise demonstrations
+// ============================================================================
+
+// GET /api/storyboards — list all exercises with storyboards
+app.get('/api/storyboards', (req, res) => {
+  try {
+    res.json({ success: true, data: getExercisesWithStoryboards() });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// GET /api/storyboards/stats — storyboard library statistics
+app.get('/api/storyboards/stats', (req, res) => {
+  try {
+    res.json({ success: true, data: getStoryboardStats() });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// GET /api/storyboards/:exerciseCode — full storyboard data for one exercise
+app.get('/api/storyboards/:exerciseCode', (req, res) => {
+  try {
+    const data = getStoryboardByCode(req.params.exerciseCode);
+    if (!data) return res.status(404).json({ success: false, error: 'Storyboard not found for this exercise code' });
+    res.json({ success: true, data });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// GET /api/storyboards/:exerciseCode/frames — frames array only
+app.get('/api/storyboards/:exerciseCode/frames', (req, res) => {
+  try {
+    const frames = getStoryboardFrames(req.params.exerciseCode);
+    if (!frames) return res.status(404).json({ success: false, error: 'Storyboard not found for this exercise code' });
+    res.json({ success: true, data: frames });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// GET /api/storyboards/:exerciseCode/script — script by ?mode=client|clinician
+app.get('/api/storyboards/:exerciseCode/script', (req, res) => {
+  try {
+    const mode = req.query.mode || 'client';
+    const script = getStoryboardScript(req.params.exerciseCode, mode);
+    if (!script) return res.status(404).json({ success: false, error: 'Storyboard not found for this exercise code' });
+    res.json({ success: true, mode, data: script });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 

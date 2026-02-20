@@ -15,6 +15,7 @@ const {
 const { EXERCISE_EVIDENCE_MAP, CORE_REFERENCES } = require('./evidence-references');
 
 const { getVideosByExerciseCode } = require('./video-references');
+const { getStoryboardByCode } = require('./storyboard-references');
 
 // ============================================================================
 // CATEGORY TO INTERVENTION TYPE MAPPING
@@ -166,6 +167,13 @@ function enhanceExercise(exercise) {
     teaching_time: '15-20 minutes',
     video_available: videoMetadata !== null && videoMetadata.angles && videoMetadata.angles.length > 0,
     video_metadata: videoMetadata, // Full video metadata including angles, annotations, transcripts
+    storyboard_available: !!getStoryboardByCode(exercise.code),
+    storyboard_metadata: getStoryboardByCode(exercise.code) ? {
+      frame_count: getStoryboardByCode(exercise.code).frames.length,
+      has_client_script: !!getStoryboardByCode(exercise.code).client_script,
+      has_clinician_script: !!getStoryboardByCode(exercise.code).clinician_script,
+      version: getStoryboardByCode(exercise.code).version,
+    } : null,
     handout_available: false,
     key_teaching_points: [
       'Always warm up before starting',
