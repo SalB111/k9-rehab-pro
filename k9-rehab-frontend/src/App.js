@@ -16,6 +16,53 @@ import K9_ICONS, { getK9Icon } from "./K9Icons";
 const API = process.env.REACT_APP_API_URL || "http://localhost:3000/api";
 
 // ─────────────────────────────────────────────
+// AXIOS AUTH INTERCEPTOR
+// ─────────────────────────────────────────────
+let _axiosAuthInterceptorId = null;
+let _axiosResInterceptorId = null;
+
+function setupAxiosAuth(token, onUnauthorized) {
+  // Clear previous interceptors
+  if (_axiosAuthInterceptorId !== null) {
+    axios.interceptors.request.eject(_axiosAuthInterceptorId);
+  }
+  if (_axiosResInterceptorId !== null) {
+    axios.interceptors.response.eject(_axiosResInterceptorId);
+  }
+  // Request interceptor — inject Bearer token
+  _axiosAuthInterceptorId = axios.interceptors.request.use(
+    (config) => {
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
+    },
+    (error) => Promise.reject(error)
+  );
+  // Response interceptor — handle 401
+  _axiosResInterceptorId = axios.interceptors.response.use(
+    (response) => response,
+    (error) => {
+      if (error.response && error.response.status === 401) {
+        onUnauthorized();
+      }
+      return Promise.reject(error);
+    }
+  );
+}
+
+function clearAxiosAuth() {
+  if (_axiosAuthInterceptorId !== null) {
+    axios.interceptors.request.eject(_axiosAuthInterceptorId);
+    _axiosAuthInterceptorId = null;
+  }
+  if (_axiosResInterceptorId !== null) {
+    axios.interceptors.response.eject(_axiosResInterceptorId);
+    _axiosResInterceptorId = null;
+  }
+}
+
+// ─────────────────────────────────────────────
 // MEDICAL-GRADE DESIGN SYSTEM
 // Inspired by clinical EHR platforms (eVetPractice, Shepherd, IDEXX Neo)
 // Typography: Inter for body, Exo 2 for brand accents
@@ -458,6 +505,8 @@ function ClientsView() {
   const [clients, setClients] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: "", breed: "", age: "", weight: "", sex: "Male", condition: "", client_name: "", client_email: "", client_phone: "" });
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     axios.get(`${API}/patients`).then(r => setClients(r.data)).catch(() => {});
@@ -471,6 +520,39 @@ function ClientsView() {
     axios.get(`${API}/patients`).then(r => setClients(r.data));
   };
 
+  const toggleSelect = (id) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filtered.length && filtered.length > 0) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filtered.map(c => c.id)));
+    }
+  };
+
+  const deleteSelected = async () => {
+    if (selectedIds.size === 0) return;
+    const count = selectedIds.size;
+    if (!window.confirm(`Are you sure you want to delete ${count} patient${count > 1 ? "s" : ""}? This cannot be undone.`)) return;
+    setDeleting(true);
+    try {
+      await axios.post(`${API}/patients/delete-batch`, { ids: Array.from(selectedIds) });
+      setSelectedIds(new Set());
+      const r = await axios.get(`${API}/patients`);
+      setClients(r.data);
+    } catch (err) {
+      alert(err.response?.data?.error || "Delete failed");
+    }
+    setDeleting(false);
+  };
+
   const [search, setSearch] = useState("");
   const filtered = clients.filter(c =>
     !search || (c.name || "").toLowerCase().includes(search.toLowerCase()) ||
@@ -478,6 +560,7 @@ function ClientsView() {
     (c.client_name || "").toLowerCase().includes(search.toLowerCase()) ||
     (c.condition || "").toLowerCase().includes(search.toLowerCase())
   );
+  const allSelected = filtered.length > 0 && selectedIds.size === filtered.length;
 
   return (
     <div>
@@ -499,9 +582,20 @@ function ClientsView() {
               value={search} onChange={e => setSearch(e.target.value)} />
           </div>
         </div>
-        <button style={S.btn("dark")} onClick={() => setShowForm(!showForm)}>
-          <span style={{ fontSize: 14 }}>⚕</span> Register Patient
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          {selectedIds.size > 0 && (
+            <button style={{
+              ...S.btn("dark"),
+              background: C.red, color: "#fff",
+              opacity: deleting ? 0.6 : 1,
+            }} onClick={deleteSelected} disabled={deleting}>
+              <FiAlertTriangle size={13} /> {deleting ? "Deleting..." : `Delete ${selectedIds.size} Selected`}
+            </button>
+          )}
+          <button style={S.btn("dark")} onClick={() => setShowForm(!showForm)}>
+            <span style={{ fontSize: 14 }}>⚕</span> Register Patient
+          </button>
+        </div>
       </div>
 
       {showForm && (
@@ -563,6 +657,15 @@ function ClientsView() {
         <table style={S.table}>
           <thead>
             <tr>
+              <th style={{ ...S.th, width: 40, textAlign: "center", padding: "10px 0" }}>
+                <input
+                  type="checkbox"
+                  checked={allSelected}
+                  onChange={toggleSelectAll}
+                  style={{ cursor: "pointer", width: 15, height: 15, accentColor: C.teal }}
+                  title={allSelected ? "Deselect all" : "Select all"}
+                />
+              </th>
               {["Patient", "Owner / Contact", "Signalment", "Condition", "Registered", ""].map(h => (
                 <th key={h} style={S.th}>{h}</th>
               ))}
@@ -570,13 +673,25 @@ function ClientsView() {
           </thead>
           <tbody>
             {filtered.length === 0 ? (
-              <tr><td colSpan={6} style={{ ...S.td, textAlign: "center", color: C.textLight, padding: 48 }}>
+              <tr><td colSpan={7} style={{ ...S.td, textAlign: "center", color: C.textLight, padding: 48 }}>
                 {search ? "No patients match your search" : "No patients registered — use the button above to add your first patient"}
               </td></tr>
             ) : filtered.map(c => (
-              <tr key={c.id} style={{ cursor: "pointer", transition: "background 0.1s" }}
-                onMouseEnter={e => e.currentTarget.style.background = C.bg}
-                onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+              <tr key={c.id} style={{
+                cursor: "pointer", transition: "background 0.1s",
+                background: selectedIds.has(c.id) ? "rgba(14,165,233,0.06)" : "transparent",
+              }}
+                onMouseEnter={e => { if (!selectedIds.has(c.id)) e.currentTarget.style.background = C.bg; }}
+                onMouseLeave={e => { if (!selectedIds.has(c.id)) e.currentTarget.style.background = "transparent"; }}>
+                <td style={{ ...S.td, textAlign: "center", padding: "10px 0" }}
+                  onClick={(e) => { e.stopPropagation(); toggleSelect(c.id); }}>
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.has(c.id)}
+                    onChange={() => toggleSelect(c.id)}
+                    style={{ cursor: "pointer", width: 15, height: 15, accentColor: C.teal }}
+                  />
+                </td>
                 <td style={S.td}>
                   <div style={{ fontWeight: 600, color: C.navy }}>{c.name}</div>
                   <div style={{ fontSize: 10, color: C.textLight, marginTop: 2 }}>ID: {c.id}</div>
@@ -6058,6 +6173,240 @@ function EKGMonitor() {
 }
 
 // ─────────────────────────────────────────────
+// LOGIN VIEW — JWT Authentication Gate
+// ─────────────────────────────────────────────
+function LoginView({ onLogin, onRegister }) {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [isFirstUser, setIsFirstUser] = useState(false);
+  const [serverDown, setServerDown] = useState(false);
+
+  useEffect(() => {
+    // Check if backend is up and if any users exist
+    axios.get(`${API}/auth/status`)
+      .then(res => {
+        if (res.data && !res.data.has_users) {
+          setIsFirstUser(true);
+          setIsRegistering(true);
+        }
+      })
+      .catch(() => setServerDown(true));
+  }, []);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    let result;
+    if (isRegistering) {
+      result = await onRegister(username, password, displayName || username);
+    } else {
+      result = await onLogin(username, password);
+    }
+    setLoading(false);
+    if (!result.success) {
+      setError(result.message);
+    }
+  };
+
+  return (
+    <div style={{
+      position: "fixed", inset: 0, zIndex: 2000,
+      display: "flex", alignItems: "center", justifyContent: "center",
+      background: `linear-gradient(135deg, ${C.navy} 0%, #0F3460 50%, #1a1a2e 100%)`,
+      fontFamily: "'Inter', -apple-system, sans-serif",
+    }}>
+      {/* Subtle grid overlay */}
+      <div style={{
+        position: "absolute", inset: 0, opacity: 0.03,
+        backgroundImage: "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)",
+        backgroundSize: "40px 40px",
+      }} />
+
+      <div style={{ width: 420, zIndex: 1 }}>
+        {/* Logo */}
+        <div style={{ textAlign: "center", marginBottom: 32 }}>
+          <div style={{
+            width: 64, height: 64, borderRadius: 16,
+            background: `linear-gradient(135deg, ${C.teal}, #39FF7E)`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            margin: "0 auto 16px", boxShadow: "0 0 30px rgba(14,165,233,0.3), 0 0 60px rgba(57,255,126,0.15)",
+          }}>
+            <FiShield size={28} color="#fff" />
+          </div>
+          <h1 style={{
+            fontFamily: "'Orbitron', 'Exo 2', sans-serif",
+            fontSize: 22, fontWeight: 900, letterSpacing: 3,
+            background: "linear-gradient(90deg, #fff 0%, #0EA5E9 50%, #39FF7E 100%)",
+            WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+            margin: 0,
+          }}>K9 REHAB PRO\u2122</h1>
+          <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 11, marginTop: 6, letterSpacing: 1 }}>
+            EVIDENCE-BASED REHABILITATION PROTOCOLS
+          </p>
+        </div>
+
+        {/* Login Card */}
+        <div style={{
+          background: "rgba(255,255,255,0.06)", backdropFilter: "blur(20px)",
+          border: "1px solid rgba(255,255,255,0.1)", borderRadius: 16,
+          padding: 32, boxShadow: "0 20px 60px rgba(0,0,0,0.3)",
+        }}>
+          <h2 style={{
+            color: "#fff", fontSize: 18, fontWeight: 700, margin: "0 0 20px",
+            display: "flex", alignItems: "center", gap: 8,
+          }}>
+            <FiLock size={16} color={C.teal} />
+            {isRegistering ? (isFirstUser ? "Create Admin Account" : "Create Account") : "Sign In"}
+          </h2>
+
+          {isFirstUser && isRegistering && (
+            <div style={{
+              background: "rgba(14,165,233,0.15)", border: `1px solid rgba(14,165,233,0.3)`,
+              borderRadius: 8, padding: "10px 14px", marginBottom: 16,
+            }}>
+              <p style={{ color: C.teal, fontSize: 12, margin: 0 }}>
+                Welcome! Create the first admin account to get started.
+              </p>
+            </div>
+          )}
+
+          {serverDown && (
+            <div style={{
+              background: "rgba(220,38,38,0.15)", border: "1px solid rgba(220,38,38,0.3)",
+              borderRadius: 8, padding: "10px 14px", marginBottom: 16,
+            }}>
+              <p style={{ color: "#f87171", fontSize: 12, margin: 0, display: "flex", alignItems: "center", gap: 6 }}>
+                <FiAlertTriangle size={14} /> Cannot connect to server. Is the backend running?
+              </p>
+            </div>
+          )}
+
+          {error && (
+            <div style={{
+              background: "rgba(220,38,38,0.15)", border: "1px solid rgba(220,38,38,0.3)",
+              borderRadius: 8, padding: "10px 14px", marginBottom: 16,
+            }}>
+              <p style={{ color: "#f87171", fontSize: 12, margin: 0, display: "flex", alignItems: "center", gap: 6 }}>
+                <FiAlertTriangle size={14} /> {error}
+              </p>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit}>
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ display: "block", color: "rgba(255,255,255,0.7)", fontSize: 11, fontWeight: 600, marginBottom: 6, letterSpacing: 0.5 }}>
+                USERNAME
+              </label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                style={{
+                  width: "100%", padding: "10px 14px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.15)",
+                  background: "rgba(255,255,255,0.06)", color: "#fff", fontSize: 14,
+                  outline: "none", boxSizing: "border-box", transition: "border-color 0.2s",
+                }}
+                onFocus={(e) => e.target.style.borderColor = C.teal}
+                onBlur={(e) => e.target.style.borderColor = "rgba(255,255,255,0.15)"}
+                placeholder="Enter username"
+                required
+                autoFocus
+              />
+            </div>
+
+            {isRegistering && (
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ display: "block", color: "rgba(255,255,255,0.7)", fontSize: 11, fontWeight: 600, marginBottom: 6, letterSpacing: 0.5 }}>
+                  DISPLAY NAME
+                </label>
+                <input
+                  type="text"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  style={{
+                    width: "100%", padding: "10px 14px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.15)",
+                    background: "rgba(255,255,255,0.06)", color: "#fff", fontSize: 14,
+                    outline: "none", boxSizing: "border-box", transition: "border-color 0.2s",
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = C.teal}
+                  onBlur={(e) => e.target.style.borderColor = "rgba(255,255,255,0.15)"}
+                  placeholder="Dr. Smith"
+                />
+              </div>
+            )}
+
+            <div style={{ marginBottom: 24 }}>
+              <label style={{ display: "block", color: "rgba(255,255,255,0.7)", fontSize: 11, fontWeight: 600, marginBottom: 6, letterSpacing: 0.5 }}>
+                PASSWORD
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                style={{
+                  width: "100%", padding: "10px 14px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.15)",
+                  background: "rgba(255,255,255,0.06)", color: "#fff", fontSize: 14,
+                  outline: "none", boxSizing: "border-box", transition: "border-color 0.2s",
+                }}
+                onFocus={(e) => e.target.style.borderColor = C.teal}
+                onBlur={(e) => e.target.style.borderColor = "rgba(255,255,255,0.15)"}
+                placeholder={isRegistering ? "Minimum 8 characters" : "Enter password"}
+                required
+                minLength={isRegistering ? 8 : undefined}
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading || serverDown}
+              style={{
+                width: "100%", padding: "12px 0", borderRadius: 8, border: "none",
+                background: `linear-gradient(135deg, ${C.teal}, #39FF7E)`,
+                color: C.navy, fontSize: 14, fontWeight: 800, letterSpacing: 1,
+                cursor: loading || serverDown ? "not-allowed" : "pointer",
+                opacity: loading || serverDown ? 0.5 : 1,
+                transition: "all 0.2s",
+                boxShadow: "0 4px 20px rgba(14,165,233,0.3)",
+              }}
+            >
+              {loading ? "Please wait..." : isRegistering ? "CREATE ACCOUNT" : "SIGN IN"}
+            </button>
+          </form>
+
+          {!isFirstUser && (
+            <p style={{ textAlign: "center", color: "rgba(255,255,255,0.4)", fontSize: 12, marginTop: 16 }}>
+              {isRegistering ? (
+                <span>Already have an account?{" "}
+                  <span onClick={() => { setIsRegistering(false); setError(""); }}
+                    style={{ color: C.teal, cursor: "pointer", fontWeight: 600 }}>
+                    Sign In
+                  </span>
+                </span>
+              ) : (
+                <span>Need an account? Contact your administrator.</span>
+              )}
+            </p>
+          )}
+        </div>
+
+        {/* Security badge */}
+        <div style={{ textAlign: "center", marginTop: 24, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+          <FiShield size={12} color="rgba(255,255,255,0.25)" />
+          <span style={{ color: "rgba(255,255,255,0.25)", fontSize: 10, letterSpacing: 1 }}>
+            SECURED WITH JWT AUTHENTICATION
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
 // WELCOME / SPLASH VIEW
 // ─────────────────────────────────────────────
 function WelcomeView({ onEnter, onAbout }) {
@@ -6329,7 +6678,7 @@ const NAV = [
 ];
 
 
-function TopNav({ view, setView, brand, dateStr, timeStr }) {
+function TopNav({ view, setView, brand, dateStr, timeStr, currentUser, onLogout }) {
   return (
     <div style={S.topNav}>
       <style>{`
@@ -6353,10 +6702,28 @@ function TopNav({ view, setView, brand, dateStr, timeStr }) {
           <div style={{ fontSize: 11, color: "#111", fontWeight: 500 }}>{dateStr}</div>
           <div style={{ fontSize: 12, color: C.navy, fontWeight: 700, marginTop: 1, fontFamily: "'Exo 2', monospace", letterSpacing: "1px" }}>{timeStr}</div>
         </div>
-        <div style={{ fontSize: 10, color: C.textLight, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
-          onClick={() => setView("welcome")}>
-          <FiStar size={11} /> Preview
-        </div>
+        {currentUser && (
+          <div style={{ display: "flex", alignItems: "center", gap: 10, borderLeft: `1px solid ${C.border}`, paddingLeft: 12 }}>
+            <div style={{ textAlign: "right" }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: C.navy }}>{currentUser.display_name || currentUser.username}</div>
+              <div style={{ fontSize: 9, fontWeight: 600, color: C.teal, textTransform: "uppercase", letterSpacing: 1 }}>{currentUser.role}</div>
+            </div>
+            <div
+              onClick={onLogout}
+              style={{
+                cursor: "pointer", display: "flex", alignItems: "center", gap: 4,
+                padding: "4px 10px", borderRadius: 6, fontSize: 10, fontWeight: 600,
+                color: C.textLight, border: `1px solid ${C.border}`,
+                transition: "all 0.2s",
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = C.red; e.currentTarget.style.borderColor = C.red; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = C.textLight; e.currentTarget.style.borderColor = C.border; }}
+              title="Sign Out"
+            >
+              <FiLock size={10} /> Sign Out
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -6371,11 +6738,63 @@ export default function App() {
   const [genInitialStep, setGenInitialStep] = useState(1);
   const [brand, setBrand] = useState({ clinicName: "K9 Rehab Pro™", accent: "#0F4C81" });
 
+  // ── Authentication State ──
+  const [authToken, setAuthToken] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
+
+  // Configure axios interceptor when token changes
+  useEffect(() => {
+    if (authToken) {
+      setupAxiosAuth(authToken, () => {
+        // On 401: force logout
+        setAuthToken(null);
+        setCurrentUser(null);
+      });
+    } else {
+      clearAxiosAuth();
+    }
+  }, [authToken]);
+
+  const handleLogin = async (username, password) => {
+    try {
+      const res = await axios.post(`${API}/auth/login`, { username, password });
+      setAuthToken(res.data.token);
+      setCurrentUser(res.data.user);
+      return { success: true };
+    } catch (err) {
+      return { success: false, message: err.response?.data?.error || "Login failed" };
+    }
+  };
+
+  const handleRegister = async (username, password, displayName) => {
+    try {
+      const res = await axios.post(`${API}/auth/register`, {
+        username, password, display_name: displayName,
+      });
+      setAuthToken(res.data.token);
+      setCurrentUser(res.data.user);
+      return { success: true };
+    } catch (err) {
+      return { success: false, message: err.response?.data?.error || "Registration failed" };
+    }
+  };
+
+  const handleLogout = () => {
+    setAuthToken(null);
+    setCurrentUser(null);
+    setView("welcome");
+  };
+
   const [liveTime, setLiveTime] = useState(new Date());
   useEffect(() => {
     const timer = setInterval(() => setLiveTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // ── Auth Gate — must be logged in ──
+  if (!authToken) {
+    return <LoginView onLogin={handleLogin} onRegister={handleRegister} />;
+  }
 
   const views = {
     home:       <GeneratorView key={genKey} initialStep={1} />,
@@ -6408,7 +6827,7 @@ export default function App() {
         }
       `}</style>
       {/* TOP BAR — white, K9 Rehab Pro TM + date/clock */}
-      <TopNav view={view} setView={setView} brand={brand} dateStr={dateStr} timeStr={timeStr} />
+      <TopNav view={view} setView={setView} brand={brand} dateStr={dateStr} timeStr={timeStr} currentUser={currentUser} onLogout={handleLogout} />
 
       {/* MAIN */}
       <div style={S.main}>

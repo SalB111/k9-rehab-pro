@@ -3,8 +3,12 @@
 // Supporting futuristic frontend with grouped conditions and full exercises
 // ============================================================================
 
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const { selectExercisesForWeek, PROTOCOL_DEFINITIONS, validateIntake, getExcludedCodes } = require('./protocol-generator'); // ✅ ACVSMR-aligned 4-protocol system
@@ -37,13 +41,48 @@ const {
   getAvailableConditions,
   getPhasesForCondition
 } = require('./protocol-rules');
+const {
+  initializeUsersTable,
+  getUserCount,
+  findUserByUsername,
+  createUser,
+  verifyPassword,
+  generateToken,
+  requireAuth,
+  requireRole
+} = require('./auth');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
-// Middleware
-app.use(cors());
-app.use(express.json());
+// ── Security Middleware ──
+app.use(helmet());
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || 'http://localhost:3001',
+  credentials: true,
+}));
+app.use(express.json({ limit: process.env.BODY_LIMIT || '10kb' }));
+
+// Rate limiting — general (100 req / 15 min per IP)
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later' },
+});
+app.use('/api', generalLimiter);
+
+// Rate limiting — strict for auth endpoints (5 req / 15 min per IP)
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many login attempts, please try again later' },
+});
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
 
 // ============================================================================
 // AUDIT LOG — Must-Have #8: Compliance audit trail
@@ -73,7 +112,7 @@ app.use('/api', (req, res, next) => {
         logAudit(db, {
           action: `${req.method} ${req.path}`,
           resource_type: req.path.split('/').filter(Boolean)[1] || 'unknown',
-          user_label: req.headers['x-user-label'] || 'clinician',
+          user_label: req.user ? req.user.username : 'anonymous',
           ip_address: req.ip,
           request_method: req.method,
           request_path: req.originalUrl,
@@ -87,17 +126,27 @@ app.use('/api', (req, res, next) => {
   next();
 });
 
+// ── Error sanitization helper ──
+function safeError(err) {
+  return process.env.NODE_ENV === 'development' ? err.message : 'Internal server error';
+}
+
 // Database setup
 const db = new sqlite3.Database('./database.db', (err) => {
   if (err) {
-    console.error('❌ Database connection error:', err);
+    console.error('Database connection error:', err);
   } else {
-    console.log('✅ Connected to SQLite database');
+    console.log('\u2705 Connected to SQLite database');
     initializeDatabase();
     // Initialize new exercise library v2.0
-    initDB().then(() => seedExerciseLibrary()).catch(err => console.error('❌ Exercise library initialization error:', err));
+    initDB().then(() => seedExerciseLibrary()).catch(err => console.error('Exercise library initialization error:', err));
+    // Initialize users table for authentication
+    initializeUsersTable(db).catch(err => console.error('Users table error:', err));
   }
 });
+
+// Authentication middleware — applied to all /api routes (skips PUBLIC_ROUTES)
+app.use('/api', requireAuth(db));
 
 // ============================================================================
 // DATABASE INITIALIZATION
@@ -497,6 +546,119 @@ function seedExercisesOLD() {
 }
 
 // ============================================================================
+// AUTHENTICATION ROUTES
+// ============================================================================
+
+// POST /api/auth/register — Create new user (first user = admin, no auth required)
+app.post('/api/auth/register', async (req, res) => {
+  try {
+    const { username, password, role, display_name } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Username and password required' });
+    }
+    if (password.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters' });
+    }
+
+    const userCount = await getUserCount(db);
+
+    // After first user, only admins can register new users
+    if (userCount > 0) {
+      if (!req.user) {
+        return res.status(403).json({ error: 'Registration requires admin authentication' });
+      }
+      if (req.user.role !== 'admin') {
+        return res.status(403).json({ error: 'Only admins can create new users' });
+      }
+    }
+
+    // First user is always admin
+    const userRole = userCount === 0 ? 'admin' : (role || 'clinician');
+
+    const user = await createUser(db, {
+      username,
+      password,
+      role: userRole,
+      display_name,
+    });
+
+    const token = generateToken(user);
+
+    res.status(201).json({
+      message: 'User created successfully',
+      user: { id: user.id, username: user.username, role: user.role },
+      token,
+    });
+  } catch (err) {
+    if (err.message && err.message.includes('UNIQUE constraint failed')) {
+      return res.status(409).json({ error: 'Username already exists' });
+    }
+    console.error('Registration error:', err);
+    res.status(500).json({ error: 'Registration failed' });
+  }
+});
+
+// POST /api/auth/login — Authenticate user and return JWT
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Username and password required' });
+    }
+
+    const user = await findUserByUsername(db, username);
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    const validPassword = await verifyPassword(password, user.password_hash);
+    if (!validPassword) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    const token = generateToken({
+      id: user.id,
+      username: user.username,
+      role: user.role,
+    });
+
+    res.json({
+      message: 'Login successful',
+      user: {
+        id: user.id,
+        username: user.username,
+        role: user.role,
+        display_name: user.display_name,
+      },
+      token,
+    });
+  } catch (err) {
+    console.error('Login error:', err);
+    res.status(500).json({ error: 'Login failed' });
+  }
+});
+
+// GET /api/auth/me — Get current user info
+app.get('/api/auth/me', (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Not authenticated' });
+  }
+  res.json({ user: req.user });
+});
+
+// GET /api/auth/status — Check if any users exist (for first-user detection)
+app.get('/api/auth/status', async (req, res) => {
+  try {
+    const count = await getUserCount(db);
+    res.json({ has_users: count > 0 });
+  } catch (err) {
+    res.status(500).json({ error: 'Status check failed' });
+  }
+});
+
+// ============================================================================
 // API ROUTES
 // ============================================================================
 
@@ -509,7 +671,7 @@ app.get('/api/health', (req, res) => {
 app.get('/api/conditions', (req, res) => {
   db.all('SELECT * FROM conditions ORDER BY category, name', (err, rows) => {
     if (err) {
-      res.status(500).json({ error: err.message });
+      res.status(500).json({ error: safeError(err) });
     } else {
       res.json(rows);
     }
@@ -520,7 +682,7 @@ app.get('/api/conditions', (req, res) => {
 app.get('/api/conditions/grouped', (req, res) => {
   db.all('SELECT * FROM conditions ORDER BY category, name', (err, rows) => {
     if (err) {
-      res.status(500).json({ error: err.message });
+      res.status(500).json({ error: safeError(err) });
     } else {
       // Group by category
       const grouped = rows.reduce((acc, condition) => {
@@ -542,7 +704,7 @@ app.get('/api/exercises', (req, res) => {
     res.json(ALL_EXERCISES);
   } catch (error) {
     console.error('❌ Error fetching exercises:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: safeError(error) });
   }
 });
 
@@ -561,7 +723,7 @@ app.get('/api/exercises/by-intervention/:type', (req, res) => {
     res.json(filtered);
   } catch (error) {
     console.error('❌ Error filtering by intervention type:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: safeError(error) });
   }
 });
 
@@ -577,7 +739,7 @@ app.get('/api/exercises/by-phase/:phase', (req, res) => {
     res.json(filtered);
   } catch (error) {
     console.error('❌ Error filtering by phase:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: safeError(error) });
   }
 });
 
@@ -593,7 +755,7 @@ app.get('/api/exercises/by-indication/:indication', (req, res) => {
     res.json(filtered);
   } catch (error) {
     console.error('❌ Error filtering by indication:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: safeError(error) });
   }
 });
 
@@ -608,7 +770,7 @@ app.get('/api/exercises/by-evidence-grade/:grade', (req, res) => {
     res.json(filtered);
   } catch (error) {
     console.error('❌ Error filtering by evidence grade:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: safeError(error) });
   }
 });
 
@@ -690,7 +852,7 @@ app.get('/api/exercises/search', (req, res) => {
     res.json(filtered);
   } catch (error) {
     console.error('❌ Error in advanced search:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: safeError(error) });
   }
 });
 
@@ -705,7 +867,7 @@ app.get('/api/exercises/:code', (req, res) => {
     }
   } catch (error) {
     console.error('❌ Error fetching exercise:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: safeError(error) });
   }
 });
 
@@ -730,7 +892,7 @@ app.get('/api/taxonomy', (req, res) => {
     });
   } catch (error) {
     console.error('❌ Error fetching taxonomy:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: safeError(error) });
   }
 });
 
@@ -738,7 +900,7 @@ app.get('/api/taxonomy', (req, res) => {
 app.get('/api/patients', (req, res) => {
   db.all('SELECT * FROM patients ORDER BY created_at DESC', (err, rows) => {
     if (err) {
-      res.status(500).json({ error: err.message });
+      res.status(500).json({ error: safeError(err) });
     } else {
       res.json(rows);
     }
@@ -772,7 +934,7 @@ app.post('/api/patients', (req, res) => {
     ],
     function(err) {
       if (err) {
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ error: safeError(err) });
       } else {
         res.json({ id: this.lastID, message: 'Patient created successfully' });
       }
@@ -784,7 +946,7 @@ app.post('/api/patients', (req, res) => {
 app.delete('/api/patients/:id', (req, res) => {
   db.run('DELETE FROM patients WHERE id = ?', [req.params.id], function(err) {
     if (err) {
-      res.status(500).json({ error: err.message });
+      res.status(500).json({ error: safeError(err) });
     } else if (this.changes === 0) {
       res.status(404).json({ error: 'Patient not found' });
     } else {
@@ -793,8 +955,8 @@ app.delete('/api/patients/:id', (req, res) => {
   });
 });
 
-// Delete multiple patients
-app.post('/api/patients/delete-batch', (req, res) => {
+// Delete multiple patients (admin-only)
+app.post('/api/patients/delete-batch', requireRole('admin'), (req, res) => {
   const { ids } = req.body;
   if (!ids || !Array.isArray(ids) || ids.length === 0) {
     return res.status(400).json({ error: 'No patient IDs provided' });
@@ -802,7 +964,7 @@ app.post('/api/patients/delete-batch', (req, res) => {
   const placeholders = ids.map(() => '?').join(',');
   db.run(`DELETE FROM patients WHERE id IN (${placeholders})`, ids, function(err) {
     if (err) {
-      res.status(500).json({ error: err.message });
+      res.status(500).json({ error: safeError(err) });
     } else {
       res.json({ message: `${this.changes} patient(s) deleted`, deleted: this.changes });
     }
@@ -851,7 +1013,7 @@ app.post('/api/generate-protocol', (req, res) => {
     ],
     function(err) {
       if (err) {
-        return res.status(500).json({ error: err.message });
+        return res.status(500).json({ error: safeError(err) });
       }
 
       const patientId = this.lastID;
@@ -909,7 +1071,7 @@ app.get('/api/videos/:exerciseCode', (req, res) => {
     console.error('❌ Error fetching video metadata:', error);
     res.status(500).json({
       success: false,
-      error: error.message
+      error: safeError(error)
     });
   }
 });
@@ -927,7 +1089,7 @@ app.get('/api/instructors', (req, res) => {
     console.error('❌ Error fetching instructors:', error);
     res.status(500).json({
       success: false,
-      error: error.message
+      error: safeError(error)
     });
   }
 });
@@ -956,7 +1118,7 @@ app.get('/api/instructors/:instructorId', (req, res) => {
     console.error('❌ Error fetching instructor:', error);
     res.status(500).json({
       success: false,
-      error: error.message
+      error: safeError(error)
     });
   }
 });
@@ -1002,7 +1164,7 @@ app.get('/api/video-transcripts/:exerciseCode', (req, res) => {
     console.error('❌ Error fetching transcript:', error);
     res.status(500).json({
       success: false,
-      error: error.message
+      error: safeError(error)
     });
   }
 });
@@ -1038,7 +1200,7 @@ app.get('/api/exercises/with-videos', (req, res) => {
     console.error('❌ Error fetching exercises with videos:', error);
     res.status(500).json({
       success: false,
-      error: error.message
+      error: safeError(error)
     });
   }
 });
@@ -1068,7 +1230,7 @@ app.get('/api/videos/by-instructor/:instructorId', (req, res) => {
     console.error('❌ Error fetching videos by instructor:', error);
     res.status(500).json({
       success: false,
-      error: error.message
+      error: safeError(error)
     });
   }
 });
@@ -1088,7 +1250,7 @@ app.get('/api/videos/stats', (req, res) => {
     console.error('❌ Error fetching video stats:', error);
     res.status(500).json({
       success: false,
-      error: error.message
+      error: safeError(error)
     });
   }
 });
@@ -1102,7 +1264,7 @@ app.get('/api/storyboards', (req, res) => {
   try {
     res.json({ success: true, data: getExercisesWithStoryboards() });
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ success: false, error: safeError(error) });
   }
 });
 
@@ -1111,7 +1273,7 @@ app.get('/api/storyboards/stats', (req, res) => {
   try {
     res.json({ success: true, data: getStoryboardStats() });
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ success: false, error: safeError(error) });
   }
 });
 
@@ -1124,7 +1286,7 @@ app.get('/api/storyboards/:exerciseCode', (req, res) => {
     if (!data) return res.status(404).json({ success: false, error: 'Storyboard not found for this exercise code' });
     res.json({ success: true, data });
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ success: false, error: safeError(error) });
   }
 });
 
@@ -1137,7 +1299,7 @@ app.get('/api/storyboards/:exerciseCode/frames', (req, res) => {
     if (!sb) return res.status(404).json({ success: false, error: 'Storyboard not found for this exercise code' });
     res.json({ success: true, data: sb.frames });
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ success: false, error: safeError(error) });
   }
 });
 
@@ -1151,7 +1313,7 @@ app.get('/api/storyboards/:exerciseCode/script', (req, res) => {
     if (!sb) return res.status(404).json({ success: false, error: 'Storyboard not found for this exercise code' });
     res.json({ success: true, mode, data: mode === 'clinician' ? sb.clinician_script : sb.client_script });
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ success: false, error: safeError(error) });
   }
 });
 
@@ -1234,7 +1396,7 @@ app.get('/api/v1/exercises', async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching exercises:', error);
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ success: false, error: safeError(error) });
   }
 });
 
@@ -1248,7 +1410,7 @@ app.get('/api/v1/exercises/:id', async (req, res) => {
     res.json({ success: true, data: exercise });
   } catch (error) {
     console.error('Error fetching exercise:', error);
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ success: false, error: safeError(error) });
   }
 });
 
@@ -1259,7 +1421,7 @@ app.get('/api/v1/domains', async (req, res) => {
     res.json({ success: true, count: domains.length, data: domains });
   } catch (error) {
     console.error('Error fetching domains:', error);
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ success: false, error: safeError(error) });
   }
 });
 
@@ -1270,7 +1432,7 @@ app.get('/api/v1/phases', async (req, res) => {
     res.json({ success: true, count: phases.length, data: phases });
   } catch (error) {
     console.error('Error fetching phases:', error);
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ success: false, error: safeError(error) });
   }
 });
 
@@ -1281,7 +1443,7 @@ app.get('/api/v1/tiers', async (req, res) => {
     res.json({ success: true, count: tiers.length, data: tiers });
   } catch (error) {
     console.error('Error fetching tiers:', error);
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ success: false, error: safeError(error) });
   }
 });
 
@@ -1319,7 +1481,7 @@ app.post('/api/v1/programs/generate', async (req, res) => {
     });
   } catch (error) {
     console.error('Error generating program:', error);
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ success: false, error: safeError(error) });
   }
 });
 
@@ -1350,7 +1512,7 @@ app.get('/api/audit-log', (req, res) => {
     `SELECT * FROM audit_log ORDER BY id DESC LIMIT ? OFFSET ?`,
     [limit, offset],
     (err, rows) => {
-      if (err) return res.status(500).json({ error: err.message });
+      if (err) return res.status(500).json({ error: safeError(err) });
       db.get('SELECT COUNT(*) as total FROM audit_log', (err2, countRow) => {
         res.json({ total: countRow?.total || 0, limit, offset, entries: rows || [] });
       });
@@ -1364,7 +1526,7 @@ app.get('/api/audit-log/stats', (req, res) => {
     `SELECT action, COUNT(*) as count, MAX(timestamp) as last_occurrence
      FROM audit_log GROUP BY action ORDER BY count DESC`,
     (err, rows) => {
-      if (err) return res.status(500).json({ error: err.message });
+      if (err) return res.status(500).json({ error: safeError(err) });
       res.json({ stats: rows || [] });
     }
   );
@@ -1373,7 +1535,7 @@ app.get('/api/audit-log/stats', (req, res) => {
 // GET /api/audit-log/export — CSV export for board investigations (Must-Have #1.6)
 app.get('/api/audit-log/export', (req, res) => {
   db.all('SELECT * FROM audit_log ORDER BY id DESC', (err, rows) => {
-    if (err) return res.status(500).json({ error: err.message });
+    if (err) return res.status(500).json({ error: safeError(err) });
     const headers = ['id','timestamp','action','resource_type','resource_id','user_label','ip_address','request_method','request_path','status_code','detail'];
     const csvRows = [headers.join(',')];
     for (const row of (rows || [])) {
@@ -1388,13 +1550,19 @@ app.get('/api/audit-log/export', (req, res) => {
   });
 });
 
-// DELETE /api/audit-log/purge — retention enforcement (keeps entries within retention period)
-app.delete('/api/audit-log/purge', (req, res) => {
+// DELETE /api/audit-log/purge — retention enforcement (admin-only)
+app.delete('/api/audit-log/purge', requireRole('admin'), (req, res) => {
   const retentionYears = parseInt(req.query.years) || 7;
+  if (retentionYears < 1 || retentionYears > 99) {
+    return res.status(400).json({ error: 'Retention years must be between 1 and 99' });
+  }
+  const cutoffDate = new Date();
+  cutoffDate.setFullYear(cutoffDate.getFullYear() - retentionYears);
   db.run(
-    `DELETE FROM audit_log WHERE timestamp < datetime('now', '-${retentionYears} years')`,
+    'DELETE FROM audit_log WHERE timestamp < ?',
+    [cutoffDate.toISOString()],
     function(err) {
-      if (err) return res.status(500).json({ error: err.message });
+      if (err) return res.status(500).json({ error: safeError(err) });
       res.json({ purged: this.changes, retentionYears });
     }
   );
