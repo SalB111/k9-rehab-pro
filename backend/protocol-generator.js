@@ -422,6 +422,14 @@ const PROTOCOL_DEFINITIONS = {
 function getProtocolType(diagnosis, affectedRegion, treatmentApproach) {
   const d = (diagnosis || '').toLowerCase();
   const r = (affectedRegion || '').toLowerCase();
+  const t = (treatmentApproach || '').toLowerCase();
+
+  // ── PALLIATIVE → GERIATRIC PROTOCOL ──
+  // If clinician selects palliative approach, route to geriatric/comfort protocol
+  // regardless of diagnosis (palliative intent overrides condition-based routing)
+  if (t === 'palliative') {
+    return 'geriatric';
+  }
 
   // ── TPLO / STIFLE POST-SURGICAL ──
   if (d.includes('tplo') || d.includes('tta') ||
@@ -553,8 +561,9 @@ function validateIntake(formData) {
 // ============================================================================
 const CONTRAINDICATION_MAP = {
   // Patient condition keywords → exercise codes to EXCLUDE
-  'cardiac':       ['UNDERWATER_TREAD', 'POOL_SWIM', 'WATER_WALKING', 'WATER_RETRIEVE', 'TREADMILL_WALK', 'JOGGING'],
-  'heart':         ['UNDERWATER_TREAD', 'POOL_SWIM', 'WATER_WALKING', 'WATER_RETRIEVE', 'TREADMILL_WALK', 'JOGGING'],
+  // Codes aligned to PROTOCOL_DEFINITIONS exercise codes
+  'cardiac':       ['UNDERWATER_TREAD', 'POOL_SWIM', 'WATER_WALKING', 'WATER_RETRIEVE', 'SLOW_TROT', 'STAIR_CLIMB', 'HILL_CLIMB'],
+  'heart':         ['UNDERWATER_TREAD', 'POOL_SWIM', 'WATER_WALKING', 'WATER_RETRIEVE', 'SLOW_TROT', 'STAIR_CLIMB', 'HILL_CLIMB'],
   'respiratory':   ['UNDERWATER_TREAD', 'POOL_SWIM', 'WATER_WALKING', 'WATER_RETRIEVE'],
   'seizure':       ['UNDERWATER_TREAD', 'POOL_SWIM', 'WATER_WALKING', 'WATER_RETRIEVE'],
   'epilepsy':      ['UNDERWATER_TREAD', 'POOL_SWIM', 'WATER_WALKING', 'WATER_RETRIEVE'],
@@ -566,18 +575,18 @@ const CONTRAINDICATION_MAP = {
   'pregnant':      ['US_PULSED', 'NMES_QUAD', 'TENS_THERAPY', 'PEMF_THERAPY', 'SHOCKWAVE'],
   'pacemaker':     ['NMES_QUAD', 'TENS_THERAPY', 'PEMF_THERAPY', 'SHOCKWAVE'],
   'implant':       ['SHOCKWAVE', 'US_PULSED'],
-  'non-ambulatory':['TREADMILL_WALK', 'JOGGING', 'CAVALETTI', 'STAIR_CLIMBING', 'HILL_WALKING'],
-  'fracture unstable': ['WEIGHT_SHIFTING', 'BALANCE_BOARD', 'CAVALETTI', 'STAIR_CLIMBING'],
+  'non-ambulatory':['SLOW_TROT', 'SLOW_WALK', 'CAVALETTI_RAILS', 'CAVALETTI_VAR', 'STAIR_CLIMB', 'HILL_CLIMB', 'BACKWARD_HILL', 'POLE_WEAVE', 'FIGURE_8', 'UNEVEN_TERRAIN'],
+  'fracture unstable': ['WEIGHT_SHIFT', 'WOBBLE_BOARD', 'WOBBLE_BOARD_ADV', 'BALANCE_PAD', 'BOSU_STAND', 'CAVALETTI_RAILS', 'CAVALETTI_VAR', 'STAIR_CLIMB', 'PERTURBATION', 'PERTURBATION_ADV'],
 };
 
 function getExcludedCodes(formData) {
   const excluded = new Set();
   const fields = [
-    formData.contraindications || '',
     formData.diagnosis || '',
     formData.medicalHistory || '',
-    formData.medications || '',
+    formData.currentMedications || '',
     formData.mobilityLevel || '',
+    formData.specialInstructions || '',
   ].join(' ').toLowerCase();
 
   for (const [keyword, codes] of Object.entries(CONTRAINDICATION_MAP)) {
@@ -642,18 +651,22 @@ function selectExercisesForWeek(weekNum, totalWeeks, allExercises, formData) {
   const exercisesByCode = {};
   allExercises.forEach(ex => { exercisesByCode[ex.code] = ex; });
 
-  // Gate aquatic exercises by clinic availability
-  const hasAquatic = formData.aquaticAccess === true || formData.aquaticAccess === 'true';
+  // Gate aquatic exercises by clinic availability (aquaticAccess OR modalityUWTM)
+  const hasAquatic = formData.aquaticAccess === true || formData.aquaticAccess === 'true'
+    || formData.modalityUWTM === true || formData.modalityUWTM === 'true';
   const aquaticCodes = new Set(['UNDERWATER_TREAD', 'POOL_SWIM', 'WATER_WALKING', 'WATER_RETRIEVE']);
 
   // Gate modality exercises by clinic equipment
   const modalityGates = {
-    'LASER_IV':     formData.modalityLaser,
-    'TENS_THERAPY': formData.modalityTENS,
-    'NMES_QUAD':    formData.modalityNMES,
-    'US_PULSED':    formData.modalityTherapeuticUS,
-    'PEMF_THERAPY': formData.modalityPulsedEMF,
-    'SHOCKWAVE':    formData.modalityShockwave
+    'LASER_IV':      formData.modalityLaser,
+    'TENS_THERAPY':  formData.modalityTENS,
+    'NMES_QUAD':     formData.modalityNMES,
+    'US_PULSED':     formData.modalityTherapeuticUS,
+    'US_CONTINUOUS': formData.modalityTherapeuticUS,
+    'PEMF_THERAPY':  formData.modalityPulsedEMF,
+    'SHOCKWAVE':     formData.modalityShockwave,
+    'COLD_THERAPY':  formData.modalityCryotherapy,
+    'HEAT_THERAPY':  formData.modalityHeatTherapy
   };
 
   // CONTRAINDICATION ENFORCEMENT — cross-check patient conditions
@@ -685,7 +698,7 @@ function selectExercisesForWeek(weekNum, totalWeeks, allExercises, formData) {
       category: dbExercise.category,
       description: dbExercise.description,
       sets: rx.sets,
-      reps: rx.sets,  // Using the document's prescription format
+      reps: parseReps(rx.sets),  // Parsed reps count from prescription
       frequency: rx.frequency,
       duration_minutes: parseDuration(rx.sets),
       progression: rx.progression,
@@ -737,6 +750,23 @@ function parseDuration(setsStr) {
   return 10;
 }
 
+// Parse reps count from prescription string (e.g. "10-15 reps/joint" → "10-15")
+function parseReps(setsStr) {
+  if (!setsStr) return null;
+  // Match "X-Y reps" or "X reps"
+  const repMatch = setsStr.match(/(\d+)(?:-(\d+))?\s*reps/i);
+  if (repMatch) return repMatch[2] ? `${repMatch[1]}-${repMatch[2]}` : repMatch[1];
+  // Match "X-Y circles/passes/steps/laps"
+  const countMatch = setsStr.match(/(\d+)(?:-(\d+))?\s*(circles|passes|steps|laps|times)/i);
+  if (countMatch) return countMatch[2] ? `${countMatch[1]}-${countMatch[2]}` : countMatch[1];
+  // Match "X-Y x N sets" pattern — reps is the first number group
+  const sxrMatch = setsStr.match(/^(\d+)(?:-(\d+))?\s*x\s*\d+/i);
+  if (sxrMatch) return sxrMatch[2] ? `${sxrMatch[1]}-${sxrMatch[2]}` : sxrMatch[1];
+  // Duration-based (min/sec) — no reps applicable
+  if (/\d+\s*(min|sec|minutes|seconds)/i.test(setsStr)) return null;
+  return null;
+}
+
 
 // ============================================================================
 // EXPORTS
@@ -748,5 +778,6 @@ module.exports = {
   validateIntake,
   getExcludedCodes,
   PROTOCOL_DEFINITIONS,
-  EVIDENCE_MAP
+  EVIDENCE_MAP,
+  parseReps
 };

@@ -40,6 +40,16 @@ const CORE_REFERENCES = {
     url: 'https://www.wiley.com/en-us/Canine+Sports+Medicine+and+Rehabilitation-p-9780813813585'
   },
 
+  MCCAULEY_VANDYKE_2018: {
+    id: 'MV2018',
+    citation: 'McCauley L, Van Dyke JB. Therapeutic exercise. In: Zink MC, Van Dyke JB, eds. Canine Sports Medicine and Rehabilitation. 2nd ed. Hoboken: Wiley-Blackwell; 2018:pp 177-207.',
+    type: 'Textbook',
+    evidence_grade: 'A',
+    topics: ['Therapeutic exercise', 'Athletic foundations', 'Conditioning', 'Strength', 'Body awareness', 'Flexibility', 'Endurance'],
+    key_findings: 'Systematic athletic foundation exercises — digging, sits-to-stands, cookie stretches, backward walking, rocker boards — build core strength, proprioception, and flexibility as prerequisites for sport-specific conditioning and rehabilitation',
+    url: 'https://www.wiley.com/en-us/Canine+Sports+Medicine+and+Rehabilitation%2C+2nd+Edition-p-9781119380382'
+  },
+
   // ========================================================================
   // PROM & PASSIVE THERAPY
   // ========================================================================
@@ -534,7 +544,7 @@ const CORE_REFERENCES = {
 };
 
 // ============================================================================
-// EVIDENCE-TO-EXERCISE MAPPING — ALL 195 EXERCISE CODES
+// EVIDENCE-TO-EXERCISE MAPPING — ALL 209 EXERCISE CODES
 // ============================================================================
 const EXERCISE_EVIDENCE_MAP = {
 
@@ -799,7 +809,50 @@ const EXERCISE_EVIDENCE_MAP = {
   HERDING_HIPS:          ['HIP_DYSPLASIA_STUDY', 'GIANT_BREED_OA', 'ZINK_VANDYKE_2013'],
   SPORTING_SHOULDER:     ['ZINK_VANDYKE_2013', 'FRACTURE_REHAB', 'MILLIS_LEVINE_2014'],
   TOY_BREED:             ['MILLIS_LEVINE_2014', 'MCGONAGLE_2018'],
-  SIGHTHOUND_SPECIAL:    ['ZINK_VANDYKE_2013', 'MILLIS_LEVINE_2014']
+  SIGHTHOUND_SPECIAL:    ['ZINK_VANDYKE_2013', 'MILLIS_LEVINE_2014'],
+
+  // --------------------------------------------------------------------------
+  // ATHLETIC FOUNDATIONS: GENERAL REHAB (30 exercises)
+  // Sources: Zink & Van Dyke 2013, McCauley & Van Dyke 2018
+  // --------------------------------------------------------------------------
+
+  // Strength (15)
+  AF_DIG:                  ['MCCAULEY_VANDYKE_2018', 'ZINK_VANDYKE_2013'],
+  AF_HIGH_FIVE_WAVE:       ['MCCAULEY_VANDYKE_2018', 'ZINK_VANDYKE_2013', 'BALANCE_STUDY'],
+  AF_SNOOPYS:              ['MCCAULEY_VANDYKE_2018', 'ZINK_VANDYKE_2013'],
+  AF_ABDOM_COOKIE:         ['MCCAULEY_VANDYKE_2018', 'ZINK_VANDYKE_2013'],
+  AF_ROCKERBOARD:          ['MCCAULEY_VANDYKE_2018', 'ZINK_VANDYKE_2013', 'WOBBLE_BOARD_STUDY'],
+  AF_ROLL_OVER:            ['MCCAULEY_VANDYKE_2018', 'ZINK_VANDYKE_2013'],
+  AF_SIT_TO_STAND:         ['MCCAULEY_VANDYKE_2018', 'ZINK_VANDYKE_2013', 'SIT_STAND_STUDY'],
+  AF_BEG_STAND_BEG:        ['MCCAULEY_VANDYKE_2018', 'ZINK_VANDYKE_2013'],
+  AF_PEABODYS:             ['MCCAULEY_VANDYKE_2018', 'ZINK_VANDYKE_2013'],
+  AF_WALK_BACKWARD:        ['MCCAULEY_VANDYKE_2018', 'ZINK_VANDYKE_2013', 'HILL_WALK_STUDY'],
+  AF_RETRIEVE_UPHILL:      ['MCCAULEY_VANDYKE_2018', 'ZINK_VANDYKE_2013', 'HILL_WALK_STUDY'],
+  AF_STAND_DOWN_STAND:     ['MCCAULEY_VANDYKE_2018', 'ZINK_VANDYKE_2013', 'SIT_STAND_STUDY'],
+  AF_TUG:                  ['MCCAULEY_VANDYKE_2018', 'ZINK_VANDYKE_2013'],
+  AF_CRAWL:                ['MCCAULEY_VANDYKE_2018', 'ZINK_VANDYKE_2013'],
+  AF_RETRIEVE_LAND_WATER:  ['MCCAULEY_VANDYKE_2018', 'ZINK_VANDYKE_2013', 'SWIMMING_STUDY'],
+
+  // Body Awareness (4)
+  AF_STEP_OVER_POLES:      ['MCCAULEY_VANDYKE_2018', 'ZINK_VANDYKE_2013', 'CAVALETTI_STUDY'],
+  AF_STEP_THROUGH_LADDER:  ['MCCAULEY_VANDYKE_2018', 'ZINK_VANDYKE_2013', 'CAVALETTI_STUDY'],
+  AF_RANDOM_GROUND_POLES:  ['MCCAULEY_VANDYKE_2018', 'ZINK_VANDYKE_2013', 'CAVALETTI_STUDY'],
+  AF_SPINS:                ['MCCAULEY_VANDYKE_2018', 'ZINK_VANDYKE_2013', 'BALANCE_STUDY'],
+
+  // Stretch (5)
+  AF_COOKIE_STRETCHES:     ['MCCAULEY_VANDYKE_2018', 'ZINK_VANDYKE_2013', 'STRETCHING_MILLIS'],
+  AF_PLAY_BOW:             ['MCCAULEY_VANDYKE_2018', 'ZINK_VANDYKE_2013', 'STRETCHING_MILLIS'],
+  AF_CAT_STRETCH:          ['MCCAULEY_VANDYKE_2018', 'ZINK_VANDYKE_2013', 'STRETCHING_MILLIS'],
+  AF_SPINE_STRETCH:        ['MCCAULEY_VANDYKE_2018', 'ZINK_VANDYKE_2013', 'STRETCHING_MILLIS'],
+  AF_PASSIVE_ROM:          ['MCCAULEY_VANDYKE_2018', 'ZINK_VANDYKE_2013', 'PROM_CCL'],
+
+  // Endurance (6)
+  AF_TROT_ON_LEASH:        ['MCCAULEY_VANDYKE_2018', 'ZINK_VANDYKE_2013', 'SPORT_CONDITIONING'],
+  AF_TREADMILL:            ['MCCAULEY_VANDYKE_2018', 'ZINK_VANDYKE_2013', 'SPORT_CONDITIONING'],
+  AF_PULL_SCOOTER:         ['MCCAULEY_VANDYKE_2018', 'ZINK_VANDYKE_2013', 'SPORT_CONDITIONING'],
+  AF_TROT_POWERED_SCOOTER: ['MCCAULEY_VANDYKE_2018', 'ZINK_VANDYKE_2013', 'SPORT_CONDITIONING'],
+  AF_INLINE_SKATING_TROT:  ['MCCAULEY_VANDYKE_2018', 'ZINK_VANDYKE_2013', 'SPORT_CONDITIONING'],
+  AF_SWIM_LONG_DISTANCE:   ['MCCAULEY_VANDYKE_2018', 'ZINK_VANDYKE_2013', 'SWIMMING_STUDY']
 };
 
 module.exports = {

@@ -120,7 +120,7 @@ function initializeDatabase() {
         lameness_grade INTEGER DEFAULT 0,
         body_condition_score INTEGER DEFAULT 5,
         pain_level INTEGER DEFAULT 5,
-        mobility_level INTEGER DEFAULT 5,
+        mobility_level TEXT DEFAULT 'Moderate',
         current_medications TEXT,
         medical_history TEXT,
         special_instructions TEXT,

@@ -11,6 +11,7 @@ import {
   FiSliders, FiArrowUp
 } from "react-icons/fi";
 import { TbDog } from "react-icons/tb";
+import K9_ICONS, { getK9Icon } from "./K9Icons";
 
 const API = process.env.REACT_APP_API_URL || "http://localhost:3000/api";
 
@@ -636,10 +637,12 @@ const EXERCISE_CATEGORY_ICONS = {
 };
 function getExCategoryIcon(ex) {
   const cat = ex.category || ex.intervention_type || "";
+  // Try SVG icon first from K9Icons
+  const SvgIcon = getK9Icon(cat);
   for (const [key, val] of Object.entries(EXERCISE_CATEGORY_ICONS)) {
-    if (cat.toLowerCase().includes(key.toLowerCase())) return val;
+    if (cat.toLowerCase().includes(key.toLowerCase())) return { ...val, SvgIcon };
   }
-  return { icon: "🔬", bg: "#F1F5F9", color: "#475569" };
+  return { icon: "🔬", bg: "#F1F5F9", color: "#475569", SvgIcon };
 }
 
 function ProtocolExCard({ entry, onRemove, onOpenStoryboard }) {
@@ -659,10 +662,10 @@ function ProtocolExCard({ entry, onRemove, onOpenStoryboard }) {
           <div style={{ display: "flex", gap: 10, flex: 1, cursor: "pointer" }} onClick={() => setOpen(o => !o)}>
             {/* Category icon badge */}
             <div style={{
-              width: 36, height: 36, borderRadius: 8, background: catIcon.bg,
+              width: 36, height: 36, borderRadius: 8, background: catIcon.SvgIcon ? "#0A0A0A" : catIcon.bg,
               display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 18, flexShrink: 0, border: `1px solid ${catIcon.color}22`
-            }}>{catIcon.icon}</div>
+              fontSize: 18, flexShrink: 0, border: `1px solid ${catIcon.SvgIcon ? "#222" : catIcon.color + "22"}`
+            }}>{catIcon.SvgIcon ? <catIcon.SvgIcon size={28} /> : catIcon.icon}</div>
             <div>
               <div style={{ fontWeight: 700, fontSize: 13, color: "#1A202C", marginBottom: 6 }}>
                 {ex.name || "Exercise"}
@@ -888,7 +891,7 @@ function GeneratorView({ initialStep }) {
   const [form, setForm] = useState({
     patientName: "", breed: "", age: "", dob: "",
     weightKg: "", weightLbs: "", sex: "Male Intact",
-    diagnosis: "TPLO", affectedRegion: "Left Stifle",
+    diagnosis: "", affectedRegion: "",
     lamenessGrade: "2", bodyConditionScore: "5",
     painLevel: "3", mobilityLevel: "Limited",
     currentMedications: "", medsLastGiven: "", medicalHistory: "",
@@ -1230,6 +1233,8 @@ function GeneratorView({ initialStep }) {
   const generate = async () => {
     if (!form.patientName.trim()) { setError("Patient name is required"); return; }
     if (!form.diagnosis) { setError("Please select a diagnosis"); return; }
+    if (!form.affectedRegion) { setError("Please select an affected region"); return; }
+    if (!complianceAgreed) { setError("Please acknowledge the Compliance & Data Protection Notice"); return; }
 
     setLoading(true); setShowVideo(true); setError(null); setProtocol(null);
 
@@ -3763,25 +3768,26 @@ function ExerciseCard({ e, onOpenStoryboard }) {
   );
 }
 
-// Category icon/color map
+// Category icon/color map — SVG icons from K9Icons.js, emoji fallback
 const CAT_META = {
-  "Passive Therapy":          { color: "#EBF8FF", text: "#2B6CB0", icon: "🤲" },
-  "Active Assisted":          { color: "#E6FFFA", text: "#2C7A7B", icon: "🦮" },
-  "Strengthening":            { color: "#F0FFF4", text: "#276749", icon: "💪" },
-  "Balance & Proprioception": { color: "#FAF5FF", text: "#6B46C1", icon: "⚖️" },
-  "Aquatic Therapy":          { color: "#EBF8FF", text: "#2C5282", icon: "🌊" },
-  "Hydrotherapy":             { color: "#E0F2FE", text: "#075985", icon: "🏊" },
-  "Therapeutic Modalities":   { color: "#FFF7ED", text: "#C05621", icon: "⚡" },
-  "Manual Therapy":           { color: "#FFF5F5", text: "#C53030", icon: "👐" },
-  "Functional Training":      { color: "#FFFAF0", text: "#975A16", icon: "🏃" },
-  "Geriatric Care":           { color: "#F7FAFC", text: "#4A5568", icon: "🐾" },
-  "Post-Surgical":            { color: "#FFF5F5", text: "#C53030", icon: "🩺" },
-  "Neurological Rehab":       { color: "#FAF5FF", text: "#553C9A", icon: "🧠" },
-  "Sport Conditioning":       { color: "#F0FFF4", text: "#22543D", icon: "🏅" },
-  "Complementary Therapy":    { color: "#FFFFF0", text: "#744210", icon: "🌿" },
-  "Pediatric Rehabilitation": { color: "#FFF5F5", text: "#702459", icon: "🐶" },
-  "Palliative Care":          { color: "#F7FAFC", text: "#2D3748", icon: "❤️" },
-  "Breed-Specific":           { color: "#FFFAF0", text: "#7B341E", icon: "🦴" },
+  "Passive Therapy":          { color: "#EBF8FF", text: "#2B6CB0", icon: "🤲", SvgIcon: getK9Icon("Passive Therapy") },
+  "Active Assisted":          { color: "#E6FFFA", text: "#2C7A7B", icon: "🦮", SvgIcon: getK9Icon("Active Assisted") },
+  "Strengthening":            { color: "#F0FFF4", text: "#276749", icon: "💪", SvgIcon: getK9Icon("Strengthening") },
+  "Balance & Proprioception": { color: "#FAF5FF", text: "#6B46C1", icon: "⚖️", SvgIcon: getK9Icon("Balance & Proprioception") },
+  "Aquatic Therapy":          { color: "#EBF8FF", text: "#2C5282", icon: "🌊", SvgIcon: getK9Icon("Aquatic Therapy") },
+  "Hydrotherapy":             { color: "#E0F2FE", text: "#075985", icon: "🏊", SvgIcon: getK9Icon("Hydrotherapy") },
+  "Therapeutic Modalities":   { color: "#FFF7ED", text: "#C05621", icon: "⚡", SvgIcon: getK9Icon("Therapeutic Modalities") },
+  "Manual Therapy":           { color: "#FFF5F5", text: "#C53030", icon: "👐", SvgIcon: getK9Icon("Manual Therapy") },
+  "Functional Training":      { color: "#FFFAF0", text: "#975A16", icon: "🏃", SvgIcon: getK9Icon("Functional Training") },
+  "Geriatric Care":           { color: "#F7FAFC", text: "#4A5568", icon: "🐾", SvgIcon: getK9Icon("Geriatric Care") },
+  "Post-Surgical":            { color: "#FFF5F5", text: "#C53030", icon: "🩺", SvgIcon: getK9Icon("Post-Surgical") },
+  "Neurological Rehab":       { color: "#FAF5FF", text: "#553C9A", icon: "🧠", SvgIcon: getK9Icon("Neurological Rehab") },
+  "Sport Conditioning":       { color: "#F0FFF4", text: "#22543D", icon: "🏅", SvgIcon: getK9Icon("Sport Conditioning") },
+  "Complementary Therapy":    { color: "#FFFFF0", text: "#744210", icon: "🌿", SvgIcon: getK9Icon("Complementary Therapy") },
+  "Pediatric Rehabilitation": { color: "#FFF5F5", text: "#702459", icon: "🐶", SvgIcon: getK9Icon("Pediatric Rehabilitation") },
+  "Palliative Care":          { color: "#F7FAFC", text: "#2D3748", icon: "❤️", SvgIcon: getK9Icon("Palliative Care") },
+  "Breed-Specific":           { color: "#FFFAF0", text: "#7B341E", icon: "🦴", SvgIcon: getK9Icon("Breed-Specific") },
+  "Athletic Foundations":      { color: "#E0F7FA", text: "#0E7490", icon: "🏋️", SvgIcon: getK9Icon("Athletic Foundations") },
 };
 
 // ─────────────────────────────────────────────
@@ -4251,7 +4257,13 @@ function ExercisesView() {
               }}
               onMouseEnter={e => { e.currentTarget.style.background = "rgba(14,165,233,0.25)"; e.currentTarget.style.borderColor = C.teal; }}
               onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)"; }}>
-                <span style={{ fontSize: 14 }}>{meta.icon}</span>
+                {meta.SvgIcon ? (
+                  <span style={{ display: "inline-flex", background: "#0A0A0A", borderRadius: 4, padding: 2 }}>
+                    <meta.SvgIcon size={20} />
+                  </span>
+                ) : (
+                  <span style={{ fontSize: 14 }}>{meta.icon}</span>
+                )}
                 {cat}
                 {count > 0 && <span style={{ background: "rgba(255,255,255,0.12)", borderRadius: 10, padding: "2px 8px", fontSize: 10, fontWeight: 700 }}>{count}</span>}
               </button>
@@ -4281,7 +4293,13 @@ function ExercisesView() {
                 padding: "14px 20px", background: C.navy, cursor: "pointer",
               }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ fontSize: 20 }}>{meta.icon}</span>
+                {meta.SvgIcon ? (
+                  <span style={{ display: "inline-flex", background: "#0A0A0A", borderRadius: 6, padding: 3 }}>
+                    <meta.SvgIcon size={28} />
+                  </span>
+                ) : (
+                  <span style={{ fontSize: 20 }}>{meta.icon}</span>
+                )}
                 <div>
                   <span style={{ fontWeight: 800, fontSize: 14, color: "#fff" }}>{cat}</span>
                   <span style={{ marginLeft: 8, fontSize: 12, color: "rgba(255,255,255,0.6)" }}>

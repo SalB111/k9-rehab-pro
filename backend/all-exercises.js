@@ -17,6 +17,7 @@ const EXERCISES_PART6 = require('./exercises-part6');
 const EXERCISES_PART7 = require('./exercises-part7');
 const EXERCISES_PART8 = require('./exercises-part8');
 const EXERCISES_PART9 = require('./exercises-part9');
+const EXERCISES_PART10 = require('./exercises-part10');
 
 // ============================================================================
 // MEDICAL-GRADE ENHANCEMENT SYSTEM
@@ -59,7 +60,8 @@ const ALL_EXERCISES_RAW = [
   ...EXERCISES_PART6,  // 10 exercises - Home Care & Maintenance Programs
   ...EXERCISES_PART7,  // 80 exercises - Advanced Hydrotherapy, Geriatric, Neuro, Post-Surgical
   ...EXERCISES_PART8,  // 35 exercises - Sport Conditioning & Complementary Therapies
-  ...EXERCISES_PART9   // 20 exercises - Pediatric, Palliative, Breed-Specific
+  ...EXERCISES_PART9,  // 20 exercises - Pediatric, Palliative, Breed-Specific
+  ...EXERCISES_PART10  // 30 exercises - Athletic Foundations: General Rehab
 ];
 
 const ALL_EXERCISES_BASE = ALL_EXERCISES_RAW.filter(ex => !DUPLICATE_CODES.has(ex.code));
