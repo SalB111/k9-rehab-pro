@@ -21,6 +21,7 @@ const {
 } = require('./video-references');
 const {
   getStoryboardByCode,
+  getOrGenerateStoryboard,
   getStoryboardFrames,
   getStoryboardScript,
   getExercisesWithStoryboards,
@@ -1117,7 +1118,9 @@ app.get('/api/storyboards/stats', (req, res) => {
 // GET /api/storyboards/:exerciseCode — full storyboard data for one exercise
 app.get('/api/storyboards/:exerciseCode', (req, res) => {
   try {
-    const data = getStoryboardByCode(req.params.exerciseCode);
+    const code = req.params.exerciseCode;
+    const exercise = getExerciseByCode(code);
+    const data = getOrGenerateStoryboard(code, exercise);
     if (!data) return res.status(404).json({ success: false, error: 'Storyboard not found for this exercise code' });
     res.json({ success: true, data });
   } catch (error) {
@@ -1128,9 +1131,11 @@ app.get('/api/storyboards/:exerciseCode', (req, res) => {
 // GET /api/storyboards/:exerciseCode/frames — frames array only
 app.get('/api/storyboards/:exerciseCode/frames', (req, res) => {
   try {
-    const frames = getStoryboardFrames(req.params.exerciseCode);
-    if (!frames) return res.status(404).json({ success: false, error: 'Storyboard not found for this exercise code' });
-    res.json({ success: true, data: frames });
+    const code = req.params.exerciseCode;
+    const exercise = getExerciseByCode(code);
+    const sb = getOrGenerateStoryboard(code, exercise);
+    if (!sb) return res.status(404).json({ success: false, error: 'Storyboard not found for this exercise code' });
+    res.json({ success: true, data: sb.frames });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
@@ -1139,10 +1144,12 @@ app.get('/api/storyboards/:exerciseCode/frames', (req, res) => {
 // GET /api/storyboards/:exerciseCode/script — script by ?mode=client|clinician
 app.get('/api/storyboards/:exerciseCode/script', (req, res) => {
   try {
+    const code = req.params.exerciseCode;
     const mode = req.query.mode || 'client';
-    const script = getStoryboardScript(req.params.exerciseCode, mode);
-    if (!script) return res.status(404).json({ success: false, error: 'Storyboard not found for this exercise code' });
-    res.json({ success: true, mode, data: script });
+    const exercise = getExerciseByCode(code);
+    const sb = getOrGenerateStoryboard(code, exercise);
+    if (!sb) return res.status(404).json({ success: false, error: 'Storyboard not found for this exercise code' });
+    res.json({ success: true, mode, data: mode === 'clinician' ? sb.clinician_script : sb.client_script });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }

@@ -705,11 +705,11 @@ const STORYBOARD_LIBRARY = {
 
     // ── 5. Equipment Needed ──
     equipment_needed: [
-      'Short leash (4-6 ft, no retractable leads)',
-      'Properly fitted body harness with rear-end support handle',
-      'Hindquarter support sling (if needed)',
-      'Non-slip surface (grass, rubber matting, indoor carpet)',
-      'Booties (if surfaces are slippery or cold)',
+      { item: 'Short leash (4-6 ft, no retractable leads)', required: true },
+      { item: 'Properly fitted body harness with rear-end support handle', required: true },
+      { item: 'Hindquarter support sling (if needed)', required: false },
+      { item: 'Non-slip surface (grass, rubber matting, indoor carpet)', required: true },
+      { item: 'Booties (if surfaces are slippery or cold)', required: false },
     ],
 
     // ── 6. Handler Setup ──
@@ -717,14 +717,14 @@ const STORYBOARD_LIBRARY = {
 
     // ── 7. Step-by-Step Movement Breakdown ──
     movement_breakdown: [
-      'Pre-walk assessment — Palpate surgical site for heat, swelling, or pain response. Assess resting comfort level. Confirm pain medication was administered per schedule.',
-      'Harness and sling application — Fit harness snugly, attach sling if weight-bearing is tentative. Confirm leash is short and non-retractable.',
-      'Threshold exit — Guide dog from rest area to walking surface. No stairs — use ramp or carry if needed.',
-      'Initial standing pause — Allow dog to stand and weight-shift for 10-15 seconds before walking. Observe limb placement.',
-      'Slow forward walking — Walk in straight lines only at the dog\'s chosen pace. Duration: 3-5 min (week 1), 5-10 min (weeks 2-3). Flat, even surface only.',
-      'Controlled turns — Wide, sweeping turns only. No tight pivots. Turn away from the surgical limb to reduce rotational stress on the stifle.',
-      'Rest monitoring — Pause every 1-2 minutes. Assess lameness, breathing, engagement. If lameness worsens, end session.',
-      'Return and cool-down — Walk slowly back. Apply cold therapy (cryotherapy) 10-15 minutes post-walk to surgical stifle.',
+      { step: 1, action: 'Pre-walk assessment — Palpate surgical site for heat, swelling, or pain response. Assess resting comfort level. Confirm pain medication was administered per schedule.', muscle_focus: null, joint_motion: null },
+      { step: 2, action: 'Harness and sling application — Fit harness snugly, attach sling if weight-bearing is tentative. Confirm leash is short and non-retractable.', muscle_focus: null, joint_motion: null },
+      { step: 3, action: 'Threshold exit — Guide dog from rest area to walking surface. No stairs — use ramp or carry if needed.', muscle_focus: null, joint_motion: null },
+      { step: 4, action: 'Initial standing pause — Allow dog to stand and weight-shift for 10-15 seconds before walking. Observe limb placement.', muscle_focus: 'Quadriceps, gluteals (isometric hold)', joint_motion: 'Static weight-bearing through stifle and hip' },
+      { step: 5, action: 'Slow forward walking — Walk in straight lines only at the dog\'s chosen pace. Duration: 3-5 min (week 1), 5-10 min (weeks 2-3). Flat, even surface only.', muscle_focus: 'Quadriceps, hamstrings, gastrocnemius (cyclic activation)', joint_motion: 'Stifle flexion-extension through gait cycle' },
+      { step: 6, action: 'Controlled turns — Wide, sweeping turns only. No tight pivots. Turn away from the surgical limb to reduce rotational stress on the stifle.', muscle_focus: 'Hip abductors/adductors during arc', joint_motion: 'Minimized tibial rotation during wide arc' },
+      { step: 7, action: 'Rest monitoring — Pause every 1-2 minutes. Assess lameness, breathing, engagement. If lameness worsens, end session.', muscle_focus: null, joint_motion: null },
+      { step: 8, action: 'Return and cool-down — Walk slowly back. Apply cold therapy (cryotherapy) 10-15 minutes post-walk to surgical stifle.', muscle_focus: null, joint_motion: null },
     ],
 
     // ── 8. Storyboard Frames ──
@@ -732,123 +732,151 @@ const STORYBOARD_LIBRARY = {
       {
         frame_number: 1,
         frame_title: 'Pre-Walk Assessment & Harness Fit',
+        frame_description: 'Incision check, harness application, and pain assessment before ambulation',
         dog_action: 'Dog is in lateral or sternal recumbency. Remains still during incision check and harness application. Transitions to standing with handler support.',
         handler_action: 'Palpate surgical stifle for heat, swelling, and pain response. Apply body harness with rear-support handle. Attach short, non-retractable leash. Apply hindquarter sling if weight-bearing is tentative.',
         clinical_cues: 'Assess incision integrity — no dehiscence, erythema, or discharge. Note resting pain score. Confirm analgesic schedule is current. Palpate quadriceps for early atrophy signs.',
         safety_notes: 'Do not proceed if incision is draining, swelling has increased, or dog vocalizes on palpation. Confirm surgeon clearance for ambulation.',
+        duration_seconds: 8,
+        status: FRAME_STATUS.FREE,
         svg_indicators: [
-          { type: 'hand_placement', label: 'Incision palpation zone', x: 55, y: 50, radius: 18 },
-          { type: 'hand_placement', label: 'Quadriceps assessment', x: 50, y: 60, radius: 15 },
+          { type: SVG_INDICATOR_TYPES.HAND_PLACEMENT, x: 55, y: 50, label: 'Incision palpation zone', color: '#0EA5E9' },
+          { type: SVG_INDICATOR_TYPES.HAND_PLACEMENT, x: 50, y: 60, label: 'Quadriceps assessment', color: '#0EA5E9' },
         ],
       },
       {
         frame_number: 2,
         frame_title: 'Assisted Stand & Static Weight Shift',
+        frame_description: 'Supported standing with voluntary weight distribution assessment',
         dog_action: 'Dog rises to standing with assistance if needed. Bears weight on all four limbs. May show toe-touching on surgical limb initially. Holds standing position for 10-15 seconds.',
         handler_action: 'Support dog via sling or harness handle. Allow voluntary weight-shifting. Do not force full weight-bearing. Observe limb placement — paw should be plantigrade, not knuckling.',
         clinical_cues: 'Look for voluntary toe-touch to partial weight-bearing. Assess base of support width — widened stance may indicate pain or instability. Note any muscle tremor in the surgical limb.',
         safety_notes: 'If dog cannot achieve toe-touch weight-bearing by post-op day 5, notify surgeon. Do not force the limb down. Watch for compensatory overloading of contralateral hind limb.',
+        duration_seconds: 12,
+        status: FRAME_STATUS.FREE,
         svg_indicators: [
-          { type: 'force_vector', label: 'Reduced WB surgical limb', x1: 60, y1: 75, x2: 60, y2: 95 },
-          { type: 'force_vector', label: 'Compensatory WB contralateral', x1: 40, y1: 75, x2: 40, y2: 95 },
-          { type: 'joint_pivot', label: 'Stifle joint', x: 58, y: 65, radius: 6 },
+          { type: SVG_INDICATOR_TYPES.FORCE_VECTOR, x: 60, y: 75, dx: 0, dy: 20, label: 'Reduced WB surgical limb', color: '#D97706' },
+          { type: SVG_INDICATOR_TYPES.FORCE_VECTOR, x: 40, y: 75, dx: 0, dy: 20, label: 'Compensatory WB contralateral', color: '#DC2626' },
+          { type: SVG_INDICATOR_TYPES.JOINT_PIVOT, x: 58, y: 65, label: 'Stifle joint', color: '#D97706' },
         ],
       },
       {
         frame_number: 3,
         frame_title: 'Slow Forward Walking — Straight Line',
+        frame_description: 'Controlled straight-line ambulation at slow, deliberate pace',
         dog_action: 'Dog walks forward at a slow, deliberate pace on flat, non-slip surface. Stride length may be shortened on surgical side. Consistent four-beat gait pattern encouraged.',
         handler_action: 'Walk on surgical side of dog. Hold leash short with 12 inches of slack maximum. Match the dog\'s pace — never pull forward. If using sling, provide 10-20% body weight support. Walk in straight lines only.',
         clinical_cues: 'Monitor stride symmetry — shortened swing phase on surgical limb is expected in week 1. Watch for progressive limb use during the session. Count stride cycles for objective tracking. Normal for dog to shift weight cranially away from surgical limb.',
         safety_notes: 'No trotting, no running, no off-leash. Flat surfaces only — no curbs, grades, or uneven terrain. If lameness increases during the walk, stop immediately and return to rest. Duration: 3-5 min (week 1), 5-10 min (weeks 2-3).',
+        duration_seconds: 8,
+        status: FRAME_STATUS.FREE,
         svg_indicators: [
-          { type: 'force_vector', label: 'Gait direction', x1: 30, y1: 50, x2: 70, y2: 50 },
-          { type: 'flexion_arc', label: 'Stifle swing phase 40-60°', cx: 58, cy: 62, radius: 20, startAngle: -30, endAngle: 30 },
-          { type: 'force_vector', label: 'Reduced ground reaction force', x1: 60, y1: 80, x2: 60, y2: 95 },
-          { type: 'muscle_highlight', label: 'Quadriceps activation', cx: 55, cy: 55, rx: 8, ry: 18 },
+          { type: SVG_INDICATOR_TYPES.FORCE_VECTOR, x: 30, y: 50, dx: 40, dy: 0, label: 'Gait direction', color: '#39FF7E' },
+          { type: SVG_INDICATOR_TYPES.FLEXION_ARC, x: 58, y: 62, angle_start: -30, angle_end: 30, label: 'Stifle swing phase 40-60°', color: '#0EA5E9' },
+          { type: SVG_INDICATOR_TYPES.FORCE_VECTOR, x: 60, y: 80, dx: 0, dy: 15, label: 'Reduced ground reaction force', color: '#D97706' },
+          { type: SVG_INDICATOR_TYPES.MUSCLE_HIGHLIGHT, region: 'quadriceps', x: 55, y: 55, rx: 8, ry: 18, label: 'Quadriceps activation', color: 'rgba(14,165,233,0.25)' },
         ],
       },
       {
         frame_number: 4,
         frame_title: 'Controlled Wide Turn',
+        frame_description: 'Wide sweeping arc away from the surgical limb',
         dog_action: 'Dog follows handler through a wide, sweeping arc. Maintains slow pace through the turn. Weight remains distributed — no sudden pivoting.',
         handler_action: 'Guide dog through a wide turn, arcing away from the surgical limb. Minimum turn radius of 6-8 feet. No U-turns, no tight circles. Use treats at nose level to guide direction smoothly without leash jerking.',
         clinical_cues: 'Turning away from the surgical limb reduces rotational torque on the healing tibial osteotomy. Watch for circumduction or limb abduction during the arc — may indicate stifle guarding or pain.',
         safety_notes: 'Never pivot. Never turn sharply toward the surgical limb. If the dog resists turning, do not force — walk forward and attempt a wider arc. Avoid figure-8s and circle walking during Phase 1.',
+        duration_seconds: 6,
+        status: FRAME_STATUS.FREE,
         svg_indicators: [
-          { type: 'flexion_arc', label: 'Wide turn arc ≥6 ft radius', cx: 50, cy: 50, radius: 35, startAngle: -45, endAngle: 45 },
-          { type: 'force_vector', label: 'Turn direction (away from surgical limb)', x1: 50, y1: 50, x2: 75, y2: 30 },
-          { type: 'joint_pivot', label: 'Stifle — minimize rotation', x: 58, y: 65, radius: 8 },
+          { type: SVG_INDICATOR_TYPES.FLEXION_ARC, x: 50, y: 50, angle_start: -45, angle_end: 45, label: 'Wide turn arc ≥6 ft radius', color: '#0EA5E9' },
+          { type: SVG_INDICATOR_TYPES.FORCE_VECTOR, x: 50, y: 50, dx: 25, dy: -20, label: 'Turn direction (away from surgical limb)', color: '#39FF7E' },
+          { type: SVG_INDICATOR_TYPES.JOINT_PIVOT, x: 58, y: 65, label: 'Stifle — minimize rotation', color: '#DC2626' },
         ],
       },
       {
         frame_number: 5,
         frame_title: 'Return & Post-Walk Cryotherapy',
+        frame_description: 'Return to rest area with post-ambulation cold therapy application',
         dog_action: 'Dog walks slowly back to rest area. Settles into sternal or lateral recumbency. Accepts cold pack application to surgical stifle.',
         handler_action: 'Guide dog back at same slow pace. Assist to lying position. Apply cold therapy (ice pack wrapped in thin towel) to lateral and medial aspects of surgical stifle for 10-15 minutes. Remove harness and sling. Offer water.',
         clinical_cues: 'Post-walk cryotherapy reduces inflammatory response and controls post-exercise swelling. Assess limb use during return — should be equal to or better than start. Note any reluctance to lie down (may indicate discomfort).',
         safety_notes: 'Never apply ice directly to skin — always use a barrier layer. Monitor for cold intolerance (pulling away, shivering). Remove after 15 minutes maximum to prevent tissue damage. Log walk duration, lameness score, and any observations.',
+        duration_seconds: 8,
+        status: FRAME_STATUS.FREE,
         svg_indicators: [
-          { type: 'hand_placement', label: 'Cryotherapy — lateral stifle', x: 60, y: 60, radius: 15 },
-          { type: 'hand_placement', label: 'Cryotherapy — medial stifle', x: 45, y: 60, radius: 15 },
+          { type: SVG_INDICATOR_TYPES.HAND_PLACEMENT, x: 60, y: 60, label: 'Cryotherapy — lateral stifle', color: '#0EA5E9' },
+          { type: SVG_INDICATOR_TYPES.HAND_PLACEMENT, x: 45, y: 60, label: 'Cryotherapy — medial stifle', color: '#0EA5E9' },
         ],
       },
     ],
 
     // ── 9. On-Screen Clinical Overlays ──
     overlay_groups: {
-      arrows: [
-        'Forward gait direction arrow along walking path',
-        'Weight-bearing force vector from paw through stifle (vertical, reduced magnitude on surgical side)',
-        'Wide turn arc direction indicator showing sweep away from surgical limb',
-      ],
-      joint_angle_indicators: [
-        'Stifle flexion angle during swing phase (expected 40-60° in early post-op)',
-        'Stifle extension angle at stance phase (expected 130-150°, may be limited)',
-        'Hock angle during push-off phase',
-      ],
-      weight_shift_indicators: [
-        'Reduced weight-bearing shading on surgical hind limb (lighter = less load)',
-        'Compensatory increased loading on contralateral hind limb',
-        'Cranial weight shift indicator (forward lean common in early post-op)',
-      ],
-      good_form_labels: [
-        'Plantigrade paw placement — full pad contact',
-        'Four-beat walk pattern maintained',
-        'Even, slow pace with no rushing',
-        'Handler positioned on surgical side',
-        'Short leash with minimal slack',
-      ],
-      common_mistake_labels: [
-        'Retractable leash allowing uncontrolled acceleration',
-        'Walking too fast for post-op stage',
-        'Tight turns toward surgical limb',
-        'Walking on slippery flooring (tile, hardwood)',
-        'Session exceeding time limit causing fatigue',
-      ],
-      safety_warnings: [
-        'STOP if lameness worsens during walk',
-        'No stairs — use ramp or carry',
-        'No off-leash activity during Phase 1',
-        'Monitor incision after every session',
-        'Apply cryotherapy within 5 minutes post-walk',
-      ],
+      arrows: {
+        label: 'Movement Arrows',
+        description: 'Gait direction and force vectors along walking path',
+        default_visible: true,
+        color: '#39FF7E',
+      },
+      joint_angles: {
+        label: 'Joint Angles',
+        description: 'Stifle flexion/extension arcs during gait cycle',
+        default_visible: true,
+        color: '#0EA5E9',
+      },
+      weight_shift: {
+        label: 'Weight Distribution',
+        description: 'Limb loading asymmetry and compensatory patterns',
+        default_visible: false,
+        color: '#D97706',
+      },
+      good_form: {
+        label: 'Good Form',
+        description: 'Correct technique markers for handler and patient',
+        default_visible: false,
+        color: '#059669',
+      },
+      common_mistakes: {
+        label: 'Common Mistakes',
+        description: 'Frequent handler errors and gait deviations',
+        default_visible: false,
+        color: '#D97706',
+      },
+      safety_warnings: {
+        label: 'Safety Alerts',
+        description: 'Critical stop signals and post-op precautions',
+        default_visible: true,
+        color: '#DC2626',
+      },
     },
 
     // ── 10. Branding Layer ──
     branding: {
-      neon_accents: 'Teal (#0EA5E9) frame borders, green (#10B981) safety-pass indicators, amber (#F59E0B) caution highlights on surgical limb overlays',
-      rod_of_asclepius: 'Top-right corner of each frame, 32x32px, white on deep blue (#0F4C81) circular badge, 60% opacity',
-      watermark: 'K9 REHAB PRO — center of frame viewer at 8% opacity, diagonal, non-removable',
-      color_palette: 'Deep Blue #0F4C81, Teal #0EA5E9, Green #10B981, Amber #F59E0B, Red #EF4444',
-      typography: 'Inter 600 for frame titles, Inter 400 for body text, JetBrains Mono for clinical measurements',
+      neon_accent: '#39FF7E',
+      secondary_accent: '#0EA5E9',
+      watermark_text: 'K9 Rehab Pro\u2122',
+      watermark_opacity: 0.08,
+      watermark_position: 'bottom-right',
+      asclepius_symbol: true,
+      asclepius_position: 'top-left',
+      font_title: "'Exo 2', sans-serif",
+      font_body: "'Inter', -apple-system, sans-serif",
+      color_palette: { navy: '#0A2540', teal: '#0EA5E9', green: '#059669', neon: '#39FF7E' },
     },
 
     // ── 11. Client-Friendly Script ──
-    client_script: 'This short walk helps your dog begin using the surgical leg safely. Keep the leash short and walk slowly — let your dog set the pace. Only walk on flat, non-slip surfaces like grass or carpet. Week one, keep walks to 3-5 minutes, just for bathroom trips. Weeks two and three, you can slowly increase to 5-10 minutes. Always walk in straight lines and make only wide turns. After every walk, apply a cold pack wrapped in a towel to the knee area for 10-15 minutes. If your dog starts limping more during the walk, stop right away and head back. No running, no stairs, no playing — just calm, slow walking.',
+    client_script: {
+      duration_range: '20-30 seconds',
+      text: 'This short walk helps your dog begin using the surgical leg safely. Keep the leash short and walk slowly — let your dog set the pace. Only walk on flat, non-slip surfaces like grass or carpet. Week one, keep walks to 3-5 minutes, just for bathroom trips. Weeks two and three, you can slowly increase to 5-10 minutes. Always walk in straight lines and make only wide turns. After every walk, apply a cold pack wrapped in a towel to the knee area for 10-15 minutes. If your dog starts limping more during the walk, stop right away and head back. No running, no stairs, no playing — just calm, slow walking.',
+      key_phrases: ['walk slowly', 'let your dog set the pace', 'stop right away', 'cold pack', 'no running, no stairs'],
+    },
 
     // ── 12. Clinician-Level Script ──
-    clinician_script: 'Controlled leash ambulation initiates at post-op day 3-5 following TPLO, beginning with elimination walks (3-5 min) and progressing to therapeutic sessions (5-10 min) by weeks 2-3. Handler positions ipsilateral to the surgical limb with a fixed 4-6 ft lead. Hindquarter sling provides 10-20% BW support for dogs with < 50% weight-bearing. Walking surface must be flat, non-slip, and obstacle-free. Turns are wide arcs (minimum 6-8 ft radius), always directed away from the surgical limb to minimize tibial rotational forces on the healing osteotomy. Post-ambulation cryotherapy (10-15 min) is applied to control inflammatory response. Monitor for progressive limb use, stride length symmetry, and pain scoring at each session. Red flags: worsening lameness during ambulation, knuckling, complete non-weight bearing beyond day 5, incision complications. Progression to Phase 2 walking (15-20 min, gentle inclines) begins at week 4 pending radiographic confirmation of osteotomy healing.',
+    clinician_script: {
+      duration_range: '20-40 seconds',
+      text: 'Controlled leash ambulation initiates at post-op day 3-5 following TPLO, beginning with elimination walks (3-5 min) and progressing to therapeutic sessions (5-10 min) by weeks 2-3. Handler positions ipsilateral to the surgical limb with a fixed 4-6 ft lead. Hindquarter sling provides 10-20% BW support for dogs with < 50% weight-bearing. Walking surface must be flat, non-slip, and obstacle-free. Turns are wide arcs (minimum 6-8 ft radius), always directed away from the surgical limb to minimize tibial rotational forces on the healing osteotomy. Post-ambulation cryotherapy (10-15 min) is applied to control inflammatory response. Monitor for progressive limb use, stride length symmetry, and pain scoring at each session. Red flags: worsening lameness during ambulation, knuckling, complete non-weight bearing beyond day 5, incision complications. Progression to Phase 2 walking (15-20 min, gentle inclines) begins at week 4 pending radiographic confirmation of osteotomy healing.',
+      key_phrases: ['ipsilateral', 'tibial rotational forces', 'cryotherapy', 'progressive limb use', 'radiographic confirmation'],
+    },
 
     // ── 13. UI Layout (defined in StoryboardPlayer component) ──
 
@@ -862,20 +890,273 @@ const STORYBOARD_LIBRARY = {
 
 
 // ============================================================================
+// AUTO-STORYBOARD GENERATOR
+// Converts any exercise's existing data (steps, setup, equipment, good_form,
+// common_mistakes, red_flags, contraindications, description) into the full
+// 14-point storyboard specification. Used as fallback when no hand-authored
+// storyboard exists in STORYBOARD_LIBRARY.
+// ============================================================================
+
+// Category-specific accent colors for auto-generated storyboards
+const CATEGORY_ACCENTS = {
+  'Passive Therapy':             '#0EA5E9',
+  'Active Assisted':             '#10B981',
+  'Strengthening':               '#F59E0B',
+  'Balance & Proprioception':    '#8B5CF6',
+  'Aquatic Therapy':             '#06B6D4',
+  'Hydrotherapy':                '#06B6D4',
+  'Manual Therapy':              '#059669',
+  'Therapeutic Modalities':      '#EC4899',
+  'Functional Training':         '#EF4444',
+  'Sport Conditioning':          '#F97316',
+  'Geriatric Care':              '#6366F1',
+  'Neurological Rehab':          '#A855F7',
+  'Post-Surgical':               '#DC2626',
+  'Pediatric Rehabilitation':    '#22D3EE',
+  'Palliative Care':             '#A78BFA',
+  'Complementary Therapy':       '#14B8A6',
+  'Breed-Specific':              '#F472B6',
+  'Athletic Foundations':        '#39FF7E',
+};
+
+function extractFrameTitle(text) {
+  if (!text) return 'Exercise Step';
+  // Try natural break: first clause before comma, dash, period, or semicolon
+  const breakMatch = text.match(/^([^,.\-—;:]+)/);
+  let title = breakMatch ? breakMatch[1].trim() : text.substring(0, 45).trim();
+  // Remove leading filler words
+  title = title.replace(/^(slowly|gently|carefully|gradually|then|next|now|and)\s+/i, '');
+  // Cap at 50 chars
+  if (title.length > 50) title = title.substring(0, 47) + '...';
+  // Title case
+  return title.replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function generateAutoStoryboard(exercise) {
+  if (!exercise || !exercise.code) return null;
+
+  const code = exercise.code;
+  const name = exercise.name || code;
+  const category = exercise.category || 'General';
+  const categorySlug = category.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  const accent = CATEGORY_ACCENTS[category] || '#0EA5E9';
+
+  // ── 4. Contraindications — parse from comma/semicolon-delimited string ──
+  const contraindicationsList = exercise.contraindications
+    ? exercise.contraindications.split(/[,;]/).map(s => s.trim()).filter(s => s.length > 3)
+    : ['No specific contraindications documented — apply clinical judgment'];
+
+  // ── 5. Equipment — map string array to { item, required } objects ──
+  const equipmentNeeded = (exercise.equipment || []).map((item, i) => ({
+    item,
+    required: i < 2,  // First two items are typically essential
+  }));
+  if (equipmentNeeded.length === 0) {
+    equipmentNeeded.push({ item: 'Non-slip surface', required: true });
+  }
+
+  // ── 7. Movement breakdown from steps ──
+  const movementBreakdown = (exercise.steps || []).map((step, i) => ({
+    step: i + 1,
+    action: step,
+    muscle_focus: null,
+    joint_motion: null,
+  }));
+
+  // ── 8. Frames — build from setup + steps, capped at 6 ──
+  const rawFrames = [];
+
+  // Frame 1: Setup/Positioning
+  if (exercise.setup) {
+    rawFrames.push({
+      title: 'Setup & Positioning',
+      desc: exercise.setup,
+      isSetup: true,
+    });
+  }
+
+  // Remaining frames from steps
+  (exercise.steps || []).forEach(step => {
+    rawFrames.push({
+      title: extractFrameTitle(step),
+      desc: step,
+      isSetup: false,
+    });
+  });
+
+  // Cap at 6 frames
+  const cappedFrames = rawFrames.slice(0, 6);
+  const goodForm = exercise.good_form || [];
+  const mistakes = exercise.common_mistakes || [];
+  const redFlags = exercise.red_flags || [];
+
+  const frames = cappedFrames.map((rf, i) => ({
+    frame_number: i + 1,
+    frame_title: rf.title,
+    frame_description: rf.desc,
+    dog_action: rf.isSetup
+      ? 'Patient positioned as described. Relaxed and comfortable.'
+      : rf.desc,
+    handler_action: rf.isSetup
+      ? rf.desc
+      : 'Follow step instructions. Maintain proper technique throughout.',
+    clinical_cues: goodForm[i] || goodForm[0] || 'Monitor patient comfort and response throughout.',
+    safety_notes: redFlags[i] || redFlags[0] || 'Stop if patient shows signs of pain or distress.',
+    duration_seconds: rf.isSetup ? 5 : 6,
+    status: FRAME_STATUS.FREE,
+    svg_indicators: [],
+  }));
+
+  // If no frames at all, create a minimal single frame
+  if (frames.length === 0) {
+    frames.push({
+      frame_number: 1,
+      frame_title: name,
+      frame_description: exercise.description || 'Perform exercise as described.',
+      dog_action: 'Patient in appropriate position for this exercise.',
+      handler_action: exercise.description || 'Follow clinical guidelines for this exercise.',
+      clinical_cues: goodForm[0] || 'Monitor patient comfort and response throughout.',
+      safety_notes: redFlags[0] || 'Stop if patient shows signs of pain or distress.',
+      duration_seconds: 6,
+      status: FRAME_STATUS.FREE,
+      svg_indicators: [],
+    });
+  }
+
+  // ── 9. Standard overlay groups ──
+  const overlay_groups = {
+    arrows: {
+      label: 'Movement Arrows',
+      description: 'Direction of limb or body motion during each phase',
+      default_visible: true,
+      color: '#39FF7E',
+    },
+    joint_angles: {
+      label: 'Joint Angles',
+      description: 'Goniometric measurements and ROM arcs',
+      default_visible: true,
+      color: '#0EA5E9',
+    },
+    weight_shift: {
+      label: 'Weight Distribution',
+      description: 'Center of mass and load-bearing indicators',
+      default_visible: false,
+      color: '#D97706',
+    },
+    good_form: {
+      label: 'Good Form',
+      description: 'Correct technique confirmation labels',
+      default_visible: false,
+      color: '#059669',
+    },
+    common_mistakes: {
+      label: 'Common Mistakes',
+      description: 'Warning labels for frequent errors',
+      default_visible: false,
+      color: '#D97706',
+    },
+    safety_warnings: {
+      label: 'Safety Alerts',
+      description: 'Critical safety warnings and stop signals',
+      default_visible: true,
+      color: '#DC2626',
+    },
+  };
+
+  // ── 10. Branding ──
+  const branding = {
+    neon_accent: accent,
+    secondary_accent: '#0EA5E9',
+    watermark_text: 'K9 Rehab Pro\u2122',
+    watermark_opacity: 0.08,
+    watermark_position: 'bottom-right',
+    asclepius_symbol: true,
+    asclepius_position: 'top-left',
+    font_title: "'Exo 2', sans-serif",
+    font_body: "'Inter', -apple-system, sans-serif",
+    color_palette: { navy: '#0A2540', teal: '#0EA5E9', green: '#059669', neon: '#39FF7E' },
+  };
+
+  // ── 11. Client script — plain-language summary ──
+  const clientSteps = (exercise.steps || []).slice(0, 4).map((s, i) => `Step ${i + 1}: ${s}`).join(' ');
+  const clientText = `This exercise is called "${name}". ${exercise.description || ''} Here is what to do: ${exercise.setup || 'Position your dog comfortably.'} ${clientSteps} ${redFlags.length > 0 ? 'Important: ' + redFlags[0] : 'Stop if your dog shows signs of pain or discomfort.'} Always follow your veterinarian\'s guidance.`;
+  const client_script = {
+    duration_range: '20-30 seconds',
+    text: clientText.replace(/\s+/g, ' ').trim(),
+    key_phrases: ['stop', 'veterinarian', 'comfort', 'slowly'].filter(kp =>
+      clientText.toLowerCase().includes(kp)
+    ).concat(['follow your veterinarian\'s guidance']),
+  };
+
+  // ── 12. Clinician script — clinical-grade summary ──
+  const clinGoodForm = goodForm.length > 0 ? ' Key technique points: ' + goodForm.join('. ') + '.' : '';
+  const clinMistakes = mistakes.length > 0 ? ' Common errors: ' + mistakes.join('. ') + '.' : '';
+  const clinProgression = exercise.progression ? ' Progression: ' + exercise.progression : '';
+  const clinContra = contraindicationsList.length > 0 ? ' Contraindications: ' + contraindicationsList.join('; ') + '.' : '';
+  const clinText = `${name} — ${category}. ${exercise.description || ''}${clinGoodForm}${clinMistakes}${clinProgression}${clinContra}`;
+  const clinician_script = {
+    duration_range: '20-40 seconds',
+    text: clinText.replace(/\s+/g, ' ').trim(),
+    key_phrases: [name, category, 'contraindication'].filter(kp =>
+      clinText.toLowerCase().includes(kp.toLowerCase())
+    ),
+  };
+
+  // ── Full 14-point storyboard ──
+  return {
+    exercise_code: code,
+    exercise_name: name,
+    version: '1.0-auto',
+    last_updated: '2026-02-21',
+    auto_generated: true,
+    clinical_purpose: exercise.description || '',
+    indications: [`${category} — as indicated per clinical assessment and patient evaluation`],
+    contraindications: contraindicationsList,
+    equipment_needed: equipmentNeeded,
+    handler_setup: exercise.setup || 'Follow standard positioning for this exercise category.',
+    movement_breakdown: movementBreakdown,
+    frames,
+    overlay_groups,
+    branding,
+    client_script,
+    clinician_script,
+    file_naming: {
+      convention: `${categorySlug}-${code.toLowerCase()}-storyboard-v1`,
+      format_rule: '{category_slug}-{exercise_code_lower}-storyboard-v{version}',
+    },
+  };
+}
+
+// ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
+
+// Cache for auto-generated storyboards (avoids regenerating on every call)
+const _autoStoryboardCache = {};
 
 function getStoryboardByCode(exerciseCode) {
   return STORYBOARD_LIBRARY[exerciseCode] || null;
 }
 
-function getStoryboardFrames(exerciseCode) {
-  const sb = STORYBOARD_LIBRARY[exerciseCode];
+function getOrGenerateStoryboard(exerciseCode, exerciseData) {
+  // Manual storyboard takes priority
+  const manual = STORYBOARD_LIBRARY[exerciseCode];
+  if (manual) return manual;
+  // Auto-generate from exercise data
+  if (!exerciseData) return null;
+  if (_autoStoryboardCache[exerciseCode]) return _autoStoryboardCache[exerciseCode];
+  const auto = generateAutoStoryboard(exerciseData);
+  if (auto) _autoStoryboardCache[exerciseCode] = auto;
+  return auto;
+}
+
+function getStoryboardFrames(exerciseCode, exerciseData) {
+  const sb = getOrGenerateStoryboard(exerciseCode, exerciseData);
   return sb ? sb.frames : null;
 }
 
-function getStoryboardScript(exerciseCode, mode) {
-  const sb = STORYBOARD_LIBRARY[exerciseCode];
+function getStoryboardScript(exerciseCode, mode, exerciseData) {
+  const sb = getOrGenerateStoryboard(exerciseCode, exerciseData);
   if (!sb) return null;
   if (mode === 'clinician') return sb.clinician_script;
   return sb.client_script;
@@ -912,6 +1193,8 @@ module.exports = {
   FRAME_STATUS,
   SVG_INDICATOR_TYPES,
   getStoryboardByCode,
+  getOrGenerateStoryboard,
+  generateAutoStoryboard,
   getStoryboardFrames,
   getStoryboardScript,
   getExercisesWithStoryboards,
