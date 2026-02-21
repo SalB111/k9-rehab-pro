@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import {
   FiUsers, FiActivity, FiBookOpen, FiClipboard,
@@ -8,7 +8,7 @@ import {
   FiBarChart2, FiClock, FiPlus, FiArrowRight,
   FiShield, FiDownload, FiUpload, FiLock, FiMonitor,
   FiPrinter, FiBell, FiAward, FiTool, FiDatabase,
-  FiSliders
+  FiSliders, FiArrowUp
 } from "react-icons/fi";
 import { TbDog } from "react-icons/tb";
 
@@ -177,6 +177,34 @@ function DashboardView({ setView }) {
   const [exercises, setExercises] = useState([]);
   const [loading, setLoading] = useState(true);
   const [apiOk, setApiOk] = useState(false);
+  const [selectedPatients, setSelectedPatients] = useState(new Set());
+  const [deleting, setDeleting] = useState(false);
+
+  const togglePatient = (id) => {
+    setSelectedPatients(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+  const toggleAll = () => {
+    if (selectedPatients.size === patients.length) {
+      setSelectedPatients(new Set());
+    } else {
+      setSelectedPatients(new Set(patients.map(p => p.id)));
+    }
+  };
+  const deleteSelected = async () => {
+    if (selectedPatients.size === 0) return;
+    if (!window.confirm(`Delete ${selectedPatients.size} patient(s)? This cannot be undone.`)) return;
+    setDeleting(true);
+    try {
+      await axios.post(`${API}/patients/delete-batch`, { ids: Array.from(selectedPatients) });
+      setPatients(prev => prev.filter(p => !selectedPatients.has(p.id)));
+      setSelectedPatients(new Set());
+    } catch (e) { console.error('Delete failed:', e); }
+    setDeleting(false);
+  };
 
   useEffect(() => {
     Promise.all([
@@ -220,23 +248,23 @@ function DashboardView({ setView }) {
       {/* ── KPI STAT CARDS ── */}
       <div style={S.grid(4)}>
         {[
-          { label: "Active Patients", value: patients.length, img: "/Beau.png", color: C.teal, bg: C.tealLight },
-          { label: "Protocols Available", value: "4 × 4 Phases", icon: FiActivity, color: "#7C3AED", bg: "#EDE9FE" },
-          { label: "Exercise Library", value: exercises.length, img: "/2.png", color: C.navy, bg: "#DBEAFE" },
-          { label: "Unique Conditions", value: Object.keys(conditionCounts).length || "—", icon: FiBarChart2, color: C.amber, bg: C.amberBg },
+          { label: "Active Patients", value: patients.length, img: "/2.png", color: C.teal, bg: C.tealLight },
+          { label: "Protocols Available", value: "4 × 4 Phases", icon: FiFileText, color: "#7C3AED", bg: "#EDE9FE" },
+          { label: "Exercise Library", value: exercises.length, img: "/Beau.png", color: C.navy, bg: "#DBEAFE" },
+          { label: "Unique Conditions", value: Object.keys(conditionCounts).length || "—", icon: TbDog, color: C.amber, bg: C.amberBg },
         ].map((stat, i) => (
           <div key={i} style={{
             ...S.card, padding: "20px 24px",
-            borderLeft: `4px solid ${stat.color}`,
+            border: `2px solid ${C.navy}`, borderLeft: `4px solid ${stat.color}`,
           }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
               <div>
                 <div style={{ fontSize: 10, fontWeight: 700, color: C.textLight, textTransform: "uppercase", letterSpacing: "0.8px" }}>{stat.label}</div>
                 <div style={{ fontSize: 28, fontWeight: 800, color: C.navy, marginTop: 4 }}>{stat.value}</div>
               </div>
-              <div style={{ width: 44, height: 44, borderRadius: 10, background: stat.bg, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+              <div style={{ width: stat.img ? 55 : 44, height: stat.img ? 55 : 44, borderRadius: 10, background: stat.bg, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
                 {stat.img
-                  ? <img src={stat.img} alt={stat.label} style={{ width: 44, height: 44, objectFit: "cover", borderRadius: 10 }} />
+                  ? <img src={stat.img} alt={stat.label} style={{ width: 55, height: 55, objectFit: "cover", borderRadius: 10 }} />
                   : <stat.icon size={20} style={{ color: stat.color }} />
                 }
               </div>
@@ -246,19 +274,16 @@ function DashboardView({ setView }) {
       </div>
 
       {/* ── QUICK ACTIONS ── */}
-      <div style={{ ...S.card, display: "flex", gap: 12, alignItems: "center", padding: "16px 24px", flexWrap: "wrap" }}>
+      <div style={{ ...S.card, border: `2px solid ${C.navy}`, display: "flex", gap: 12, alignItems: "center", padding: "16px 24px", flexWrap: "wrap" }}>
         <span style={{ fontSize: 11, fontWeight: 700, color: C.textLight, textTransform: "uppercase", letterSpacing: "0.8px", marginRight: 8 }}>Quick Actions</span>
-        <button style={{ ...S.btn("primary"), boxShadow: "0 0 12px rgba(14,165,233,0.3)" }} onClick={() => setView("generator")}>
-          <FiPlus size={14} /> New Protocol
+        <button style={{ ...S.btn("primary"), background: C.navy, boxShadow: "none" }} onClick={() => setView("clients")}>
+          <FiUsers size={14} /> Patient Records
         </button>
-        <button style={S.btn("dark")} onClick={() => setView("clients")}>
-          <FiUsers size={14} /> Register Patient
-        </button>
-        <button style={S.btn("ghost")} onClick={() => setView("exercises")}>
+        <button style={{ ...S.btn("primary"), background: C.navy, boxShadow: "none" }} onClick={() => setView("exercises")}>
           <FiBookOpen size={14} /> Exercise Library
         </button>
-        <button style={S.btn("ghost")} onClick={() => setView("sessions")}>
-          <FiClipboard size={14} /> New Session
+        <button style={{ ...S.btn("primary"), background: C.navy, boxShadow: "none" }} onClick={() => setView("sessions")}>
+          <FiClipboard size={14} /> SOAP
         </button>
       </div>
 
@@ -266,9 +291,29 @@ function DashboardView({ setView }) {
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16 }}>
 
         {/* LEFT: Recent Patients */}
-        <div style={{ ...S.card, padding: 0, overflow: "hidden" }}>
+        <div style={{ ...S.card, border: `2px solid ${C.navy}`, padding: 0, overflow: "hidden" }}>
           <div style={{ padding: "14px 20px", borderBottom: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: C.navy, textTransform: "uppercase", letterSpacing: "0.5px" }}>Recent Patients</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: C.navy, textTransform: "uppercase", letterSpacing: "0.5px" }}>Recent Patients</div>
+              {selectedPatients.size > 0 && (
+                <button onClick={deleteSelected} disabled={deleting}
+                  style={{ ...S.btn("primary"), background: "#EF4444", fontSize: 10, padding: "4px 10px", display: "flex", alignItems: "center", gap: 4 }}>
+                  <FiX size={10} /> {deleting ? "Deleting..." : `Delete ${selectedPatients.size}`}
+                </button>
+              )}
+              {patients.length > 0 && selectedPatients.size === 0 && (
+                <button onClick={toggleAll}
+                  style={{ fontSize: 10, color: C.textLight, background: "none", border: `1px solid ${C.border}`, borderRadius: 4, padding: "3px 8px", cursor: "pointer" }}>
+                  Select All
+                </button>
+              )}
+              {selectedPatients.size > 0 && (
+                <button onClick={() => setSelectedPatients(new Set())}
+                  style={{ fontSize: 10, color: C.textLight, background: "none", border: `1px solid ${C.border}`, borderRadius: 4, padding: "3px 8px", cursor: "pointer" }}>
+                  Deselect
+                </button>
+              )}
+            </div>
             <span style={{ fontSize: 11, color: C.teal, cursor: "pointer", fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}
               onClick={() => setView("clients")}>View All <FiArrowRight size={11} /></span>
           </div>
@@ -281,14 +326,24 @@ function DashboardView({ setView }) {
           ) : (
             <table style={S.table}>
               <thead>
-                <tr>{["Patient", "Breed", "Condition", "Registered"].map(h =>
-                  <th key={h} style={S.th}>{h}</th>)}</tr>
+                <tr>
+                  <th style={{ ...S.th, width: 32, textAlign: "center" }}>
+                    <input type="checkbox" checked={patients.length > 0 && selectedPatients.size === patients.length}
+                      onChange={toggleAll} style={{ cursor: "pointer", accentColor: C.teal }} />
+                  </th>
+                  {["Patient", "Breed", "Condition", "Registered"].map(h =>
+                  <th key={h} style={S.th}>{h}</th>)}
+                </tr>
               </thead>
               <tbody>
                 {patients.slice(0, 8).map(p => (
-                  <tr key={p.id} style={{ transition: "background 0.1s" }}
-                    onMouseEnter={e => e.currentTarget.style.background = C.bg}
-                    onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                  <tr key={p.id} style={{ transition: "background 0.1s", background: selectedPatients.has(p.id) ? "rgba(14,165,233,0.06)" : "transparent" }}
+                    onMouseEnter={e => { if (!selectedPatients.has(p.id)) e.currentTarget.style.background = C.bg; }}
+                    onMouseLeave={e => { if (!selectedPatients.has(p.id)) e.currentTarget.style.background = "transparent"; }}>
+                    <td style={{ ...S.td, width: 32, textAlign: "center" }}>
+                      <input type="checkbox" checked={selectedPatients.has(p.id)}
+                        onChange={() => togglePatient(p.id)} style={{ cursor: "pointer", accentColor: C.teal }} />
+                    </td>
                     <td style={S.td}>
                       <div style={{ fontWeight: 600, color: C.navy, fontSize: 13 }}>{p.name}</div>
                       <div style={{ fontSize: 10, color: C.textLight }}>Owner: {p.client_name || "—"}</div>
@@ -311,7 +366,7 @@ function DashboardView({ setView }) {
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
           {/* Condition Distribution */}
-          <div style={S.card}>
+          <div style={{ ...S.card, border: `2px solid ${C.navy}` }}>
             <div style={{ marginBottom: 14 }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: C.navy, textTransform: "uppercase", letterSpacing: "0.5px", paddingBottom: 8 }}>Condition Distribution</div>
               <div style={{ height: 2, width: "100%", overflow: "hidden", borderRadius: 1 }}><div style={{ width: "200%", height: "100%", background: "linear-gradient(90deg, transparent, #39FF7E, #0EA5E9, #39FF7E, transparent)", animation: "neonFlatline 3s linear infinite" }} /></div>
@@ -334,7 +389,7 @@ function DashboardView({ setView }) {
           </div>
 
           {/* Platform Status */}
-          <div style={S.card}>
+          <div style={{ ...S.card, border: `2px solid ${C.navy}` }}>
             <div style={{ marginBottom: 14 }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: C.navy, textTransform: "uppercase", letterSpacing: "0.5px", paddingBottom: 8 }}>Platform Status</div>
               <div style={{ height: 2, width: "100%", overflow: "hidden", borderRadius: 1 }}><div style={{ width: "200%", height: "100%", background: "linear-gradient(90deg, transparent, #39FF7E, #0EA5E9, #39FF7E, transparent)", animation: "neonFlatline 3s linear infinite" }} /></div>
@@ -359,7 +414,7 @@ function DashboardView({ setView }) {
       </div>
 
       {/* ── PROTOCOL ENGINE BAR ── */}
-      <div style={{ ...S.card, padding: "16px 24px" }}>
+      <div style={{ ...S.card, border: `2px solid ${C.navy}`, padding: "16px 24px" }}>
         <div style={{ fontSize: 10, fontWeight: 700, color: C.textLight, textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 12 }}>
           ACVSMR-Aligned Protocol Engine — 4 Evidence-Based Pathways
         </div>
@@ -1570,8 +1625,7 @@ function GeneratorView({ initialStep }) {
           <div>
             <label style={S.label}>Affected Region</label>
             <select style={{ ...S.select, width: "100%", border: "1.5px solid #3A4A5C" }} value={form.affectedRegion} onChange={e => setField("affectedRegion", e.target.value)}>
-              <optgroup label="Stifle">{REGIONS.filter(r => r.includes("Stifle")).map(r => <option key={r}>{r}</option>)}</optgroup>
-              <optgroup label="Hip">{REGIONS.filter(r => r.includes("Hip")).map(r => <option key={r}>{r}</option>)}</optgroup>
+              <optgroup label="Hind Limb">{REGIONS.filter(r => r.includes("Stifle") || r.includes("Hip")).map(r => <option key={r}>{r}</option>)}</optgroup>
               <optgroup label="Forelimb">{REGIONS.filter(r => r.includes("Elbow") || r.includes("Shoulder")).map(r => <option key={r}>{r}</option>)}</optgroup>
               <optgroup label="Spine">{REGIONS.filter(r => r.includes("Spine")).map(r => <option key={r}>{r}</option>)}</optgroup>
               <optgroup label="Other"><option>Multiple Joints</option></optgroup>
@@ -2452,12 +2506,16 @@ function GeneratorView({ initialStep }) {
             {/* Decorative top accent */}
             <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 4, background: "linear-gradient(90deg, #0F4C81, #0EA5E9, #10B981)" }} />
 
-            <div style={{ ...S.sectionHeader(), marginTop: 4 }}>
+            <div style={{ ...S.sectionHeader(), marginTop: 4, marginBottom: 0 }}>
               <FiCheckCircle size={14} style={{ color: "#0EA5E9" }} /> PRE-PROTOCOL SUMMARY
+            </div>
+            {/* Neon flatline under header */}
+            <div style={{ height: 3, width: "100%", overflow: "hidden", marginTop: 8, marginBottom: 16, borderRadius: 2 }}>
+              <div style={{ width: "200%", height: "100%", background: "linear-gradient(90deg, transparent, #39FF7E, #0EA5E9, #39FF7E, transparent)", animation: "neonFlatline 3s linear infinite", boxShadow: "0 0 8px rgba(57,255,126,0.5), 0 0 16px rgba(57,255,126,0.2)" }} />
             </div>
 
             {/* Patient & Diagnosis Row */}
-            <div style={S.grid(3)}>
+            <div style={{ ...S.grid(3), gap: 16 }}>
               {/* Patient Info Card */}
               <div style={{ background: "rgba(255,255,255,0.05)", border: "1.5px solid #3A4A5C", borderRadius: 10, padding: "14px 16px" }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: "#7DD3FC", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 8 }}>Patient</div>
@@ -2518,7 +2576,7 @@ function GeneratorView({ initialStep }) {
             </div>
 
             {/* Exercise Availability Row */}
-            <div style={{ marginTop: 16, background: "rgba(255,255,255,0.05)", border: "1.5px solid #3A4A5C", borderRadius: 10, padding: "14px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ marginTop: 20, background: "rgba(255,255,255,0.05)", border: "1.5px solid #3A4A5C", borderRadius: 10, padding: "14px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div>
                 <div style={{ fontSize: 10, fontWeight: 700, color: "#7DD3FC", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 6 }}>Exercise Library Available</div>
                 <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
@@ -2546,7 +2604,7 @@ function GeneratorView({ initialStep }) {
             </div>
 
             {/* Rehab Goals & Protocol Config Row */}
-            <div style={{ marginTop: 12, display: "flex", gap: 12 }}>
+            <div style={{ marginTop: 20, display: "flex", gap: 16 }}>
               {/* Rehab Goals */}
               <div style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: "1.5px solid #3A4A5C", borderRadius: 10, padding: "12px 16px" }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: "#7DD3FC", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 6 }}>Rehab Goals</div>
@@ -2579,7 +2637,7 @@ function GeneratorView({ initialStep }) {
 
             {/* Objective Measurements Summary */}
             {(form.circumferenceAffected || form.romFlexion || form.muscleCondition !== "Normal" || +form.jointEffusion > 0) && (
-              <div style={{ marginTop: 12, background: "rgba(255,255,255,0.05)", border: "1.5px solid #3A4A5C", borderRadius: 10, padding: "12px 16px" }}>
+              <div style={{ marginTop: 20, background: "rgba(255,255,255,0.05)", border: "1.5px solid #3A4A5C", borderRadius: 10, padding: "12px 16px" }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: "#7DD3FC", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 6 }}>Baseline Measurements</div>
                 <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
                   {form.circumferenceAffected && form.circumferenceContralateral && (
@@ -2597,7 +2655,7 @@ function GeneratorView({ initialStep }) {
 
             {/* Missing Info Warnings */}
             {(!form.patientName || !form.diagnosis || !form.treatmentApproach || (form.rehabGoals || []).length === 0) && (
-              <div style={{ marginTop: 12, padding: "10px 16px", background: "#FEF3C7", border: "1.5px solid #D97706", borderRadius: 8, display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ marginTop: 20, padding: "10px 16px", background: "#FEF3C7", border: "1.5px solid #D97706", borderRadius: 8, display: "flex", alignItems: "center", gap: 8 }}>
                 <FiAlertTriangle size={14} style={{ color: "#D97706" }} />
                 <span style={{ fontSize: 11, fontWeight: 600, color: "#92400E" }}>
                   Missing recommended fields:
@@ -3468,10 +3526,18 @@ function EvidenceSection({ grade, refs }) {
 // ─────────────────────────────────────────────
 function ExerciseCard({ e, onOpenStoryboard }) {
   const [open, setOpen] = useState(false);
+  const cardTopRef = useRef(null);
   const diffColor = e.difficulty_level === "Easy" ? "green" : e.difficulty_level === "Advanced" ? "orange" : "blue";
 
+  const closeCard = () => {
+    setOpen(false);
+    setTimeout(() => {
+      cardTopRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }, 50);
+  };
+
   return (
-    <div style={{
+    <div ref={cardTopRef} style={{
       background: "#fff", borderRadius: 12, border: "1px solid #E2E8F0",
       boxShadow: "0 1px 3px rgba(0,0,0,0.07)", overflow: "hidden",
       transition: "box-shadow 0.15s", gridColumn: open ? "1 / -1" : undefined
@@ -3677,6 +3743,20 @@ function ExerciseCard({ e, onOpenStoryboard }) {
               <FiMonitor size={14} /> View Exercise Storyboard
             </button>
           )}
+
+          {/* Close Card Button */}
+          <button onClick={(ev) => { ev.stopPropagation(); closeCard(); }}
+            style={{
+              marginTop: 16, width: "100%", padding: "10px 16px", borderRadius: 8,
+              background: C.navy, border: `1.5px solid ${C.navy}`, cursor: "pointer",
+              color: "#fff", fontSize: 12, fontWeight: 700,
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+              transition: "all 0.15s",
+            }}
+            onMouseEnter={ev => { ev.currentTarget.style.background = "#0B3A66"; ev.currentTarget.style.borderColor = C.teal; }}
+            onMouseLeave={ev => { ev.currentTarget.style.background = C.navy; ev.currentTarget.style.borderColor = C.navy; }}>
+            <FiChevronDown size={14} style={{ transform: "rotate(180deg)" }} /> Close
+          </button>
         </div>
       )}
     </div>
@@ -4069,6 +4149,7 @@ function ExercisesView() {
   const [filterDiff, setFilterDiff] = useState("");
   const [collapsedCats, setCollapsedCats] = useState({});
   const [showStoryboard, setShowStoryboard] = useState(null);
+  const catRefs = useRef({});
 
   useEffect(() => {
     axios.get(`${API}/exercises`).then(r => setExercises(r.data)).catch(() => {});
@@ -4092,53 +4173,96 @@ function ExercisesView() {
   const toggleCat = (cat) =>
     setCollapsedCats(prev => ({ ...prev, [cat]: !prev[cat] }));
 
+  const scrollToCat = (cat) => {
+    setCollapsedCats(prev => ({ ...prev, [cat]: false }));
+    setTimeout(() => {
+      catRefs.current[cat]?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 50);
+  };
+
   const isSearching = search || filterCat || filterDiff;
+
+  const easyCount = exercises.filter(e => e.difficulty_level === "Easy").length;
+  const modCount = exercises.filter(e => e.difficulty_level === "Moderate").length;
+  const advCount = exercises.filter(e => e.difficulty_level === "Advanced").length;
 
   return (
     <div>
       {/* Storyboard Player Modal */}
       {showStoryboard && <StoryboardPlayer exerciseCode={showStoryboard} onClose={() => setShowStoryboard(null)} />}
-      {/* Toolbar */}
-      <div style={{ ...S.card, display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-        <div style={{ position: "relative", flex: 1, minWidth: 200 }}>
-          <FiSearch size={14} style={{ position: "absolute", left: 10, top: 10, color: "#A0AEC0" }} />
-          <input style={{ ...S.input, paddingLeft: 32 }} placeholder="Search exercises by name or description…"
-            value={search} onChange={e => setSearch(e.target.value)} />
+      {/* Search Toolbar */}
+      <div style={{ ...S.card, background: C.navy, border: `2px solid ${C.navy}`, padding: "16px 20px" }}>
+        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+          <div style={{ position: "relative", flex: 1, minWidth: 200 }}>
+            <FiSearch size={14} style={{ position: "absolute", left: 12, top: 11, color: "rgba(255,255,255,0.4)" }} />
+            <input style={{ ...S.input, paddingLeft: 34, background: "rgba(255,255,255,0.08)", border: "1.5px solid rgba(255,255,255,0.15)", color: "#fff", height: 38 }} placeholder="Search exercises by name or description…"
+              value={search} onChange={e => setSearch(e.target.value)} />
+          </div>
+          <select style={{ ...S.select, background: "rgba(255,255,255,0.08)", border: "1.5px solid rgba(255,255,255,0.15)", color: "#fff", height: 38 }} value={filterCat} onChange={e => setFilterCat(e.target.value)}>
+            <option value="">All Categories</option>
+            {categories.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+          <select style={{ ...S.select, background: "rgba(255,255,255,0.08)", border: "1.5px solid rgba(255,255,255,0.15)", color: "#fff", height: 38 }} value={filterDiff} onChange={e => setFilterDiff(e.target.value)}>
+            <option value="">All Levels</option>
+            {["Easy","Moderate","Advanced"].map(d => <option key={d} value={d}>{d}</option>)}
+          </select>
+          <span style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", whiteSpace: "nowrap", fontWeight: 600 }}>
+            {filtered.length} / {exercises.length}
+          </span>
         </div>
-        <select style={S.select} value={filterCat} onChange={e => setFilterCat(e.target.value)}>
-          <option value="">All Categories</option>
-          {categories.map(c => <option key={c} value={c}>{c}</option>)}
-        </select>
-        <select style={S.select} value={filterDiff} onChange={e => setFilterDiff(e.target.value)}>
-          <option value="">All Levels</option>
-          {["Easy","Moderate","Advanced"].map(d => <option key={d} value={d}>{d}</option>)}
-        </select>
-        <span style={{ fontSize: 13, color: "#A0AEC0", whiteSpace: "nowrap" }}>
-          {filtered.length} / {exercises.length}
-        </span>
       </div>
 
-      {/* Stats strip */}
-      {!isSearching && exercises.length > 0 && (
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
-          {["Easy","Moderate","Advanced"].map(d => {
-            const count = exercises.filter(e => e.difficulty_level === d).length;
-            const color = d === "Easy" ? "green" : d === "Advanced" ? "orange" : "blue";
-            return (
-              <div key={d} style={{ ...S.card, margin: 0, padding: "10px 18px", flex: 1,
-                textAlign: "center", minWidth: 80, cursor: "pointer" }}
-                onClick={() => setFilterDiff(prev => prev === d ? "" : d)}>
-                <div style={{ fontSize: 20, fontWeight: 800, color: S.badge(color).color }}>{count}</div>
-                <div style={{ fontSize: 11, color: "#A0AEC0", marginTop: 2 }}>{d}</div>
+      {/* Exercise Categories + Difficulty Counts */}
+      <div style={{ ...S.card, background: C.navy, border: `2px solid ${C.navy}`, padding: 20 }}>
+        {/* Header row: title + difficulty counts */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+          <div style={{ fontSize: 12, fontWeight: 800, color: "#fff", textTransform: "uppercase", letterSpacing: "1px" }}>
+            Exercise Categories
+          </div>
+          <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
+            {[
+              { label: "Easy", count: easyCount, color: "#10B981" },
+              { label: "Moderate", count: modCount, color: "#0EA5E9" },
+              { label: "Advanced", count: advCount, color: "#F59E0B" },
+            ].map(d => (
+              <div key={d.label} onClick={() => setFilterDiff(prev => prev === d.label ? "" : d.label)}
+                style={{ display: "flex", alignItems: "baseline", gap: 5, cursor: "pointer", transition: "opacity 0.15s", opacity: filterDiff && filterDiff !== d.label ? 0.4 : 1 }}>
+                <span style={{ fontSize: 18, fontWeight: 800, color: d.color, lineHeight: 1 }}>{d.count}</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.7)", textTransform: "uppercase", letterSpacing: "0.5px" }}>{d.label}</span>
               </div>
+            ))}
+          </div>
+        </div>
+        <div style={{ height: 3, width: "100%", overflow: "hidden", marginBottom: 14, borderRadius: 2 }}>
+          <div style={{ width: "200%", height: "100%", background: "linear-gradient(90deg, transparent, #39FF7E, #0EA5E9, #39FF7E, transparent)", animation: "neonFlatline 3s linear infinite" }} />
+        </div>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
+          {categories.map(cat => {
+            const meta = CAT_META[cat] || { icon: "📋" };
+            const count = grouped[cat]?.length || 0;
+            return (
+              <button key={cat} onClick={() => scrollToCat(cat)} style={{
+                display: "flex", alignItems: "center", gap: 6,
+                padding: "8px 14px", borderRadius: 8, cursor: "pointer",
+                background: "rgba(255,255,255,0.06)", border: "1.5px solid rgba(255,255,255,0.12)",
+                color: "#fff", fontSize: 12, fontWeight: 600,
+                transition: "all 0.15s",
+                opacity: count > 0 ? 1 : 0.4,
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = "rgba(14,165,233,0.25)"; e.currentTarget.style.borderColor = C.teal; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)"; }}>
+                <span style={{ fontSize: 14 }}>{meta.icon}</span>
+                {cat}
+                {count > 0 && <span style={{ background: "rgba(255,255,255,0.12)", borderRadius: 10, padding: "2px 8px", fontSize: 10, fontWeight: 700 }}>{count}</span>}
+              </button>
             );
           })}
         </div>
-      )}
+      </div>
 
       {/* Category sections */}
       {Object.entries(grouped).length === 0 && (
-        <div style={{ ...S.card, textAlign: "center", color: "#A0AEC0", padding: 48 }}>
+        <div style={{ ...S.card, border: `2px solid ${C.navy}`, textAlign: "center", color: "#A0AEC0", padding: 48 }}>
           No exercises match your search
         </div>
       )}
@@ -4148,20 +4272,19 @@ function ExercisesView() {
         const isCollapsed = collapsedCats[cat];
 
         return (
-          <div key={cat} style={{ ...S.card, padding: 0, overflow: "hidden", marginBottom: 12 }}>
+          <div key={cat} ref={el => catRefs.current[cat] = el} style={{ ...S.card, background: C.navy, border: `2px solid ${C.navy}`, padding: 0, overflow: "hidden", marginBottom: 12 }}>
             {/* Category header */}
             <div
               onClick={() => toggleCat(cat)}
               style={{
                 display: "flex", alignItems: "center", justifyContent: "space-between",
-                padding: "14px 20px", background: meta.color, cursor: "pointer",
-                borderBottom: isCollapsed ? "none" : `2px solid ${meta.text}22`
+                padding: "14px 20px", background: C.navy, cursor: "pointer",
               }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <span style={{ fontSize: 20 }}>{meta.icon}</span>
                 <div>
-                  <span style={{ fontWeight: 700, fontSize: 14, color: meta.text }}>{cat}</span>
-                  <span style={{ marginLeft: 8, fontSize: 12, color: meta.text + "99" }}>
+                  <span style={{ fontWeight: 800, fontSize: 14, color: "#fff" }}>{cat}</span>
+                  <span style={{ marginLeft: 8, fontSize: 12, color: "rgba(255,255,255,0.6)" }}>
                     {exList.length} exercise{exList.length !== 1 ? "s" : ""}
                   </span>
                 </div>
@@ -4175,10 +4298,14 @@ function ExercisesView() {
                       fontSize: 10 }}>{n} {d}</span>;
                   })}
                 </div>
-                <span style={{ color: meta.text, fontSize: 14, fontWeight: 700 }}>
+                <span style={{ color: "#fff", fontSize: 14, fontWeight: 700 }}>
                   {isCollapsed ? "▼" : "▲"}
                 </span>
               </div>
+            </div>
+            {/* Neon flatline under header */}
+            <div style={{ height: 3, width: "100%", overflow: "hidden" }}>
+              <div style={{ width: "200%", height: "100%", background: "linear-gradient(90deg, transparent, #39FF7E, #0EA5E9, #39FF7E, transparent)", animation: "neonFlatline 3s linear infinite" }} />
             </div>
 
             {/* Exercise grid */}
@@ -4186,6 +4313,19 @@ function ExercisesView() {
               <div style={{ padding: 16 }}>
                 <div style={S.grid(3)}>
                   {exList.map(e => <ExerciseCard key={e.code} e={e} onOpenStoryboard={setShowStoryboard} />)}
+                </div>
+                <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 12 }}>
+                  <button onClick={() => { const el = document.querySelector('[data-content-scroll]'); if (el) el.scrollTo({ top: 0, behavior: "smooth" }); else window.scrollTo({ top: 0, behavior: "smooth" }); }} style={{
+                    display: "flex", alignItems: "center", gap: 6,
+                    padding: "7px 16px", borderRadius: 8, cursor: "pointer",
+                    background: "rgba(255,255,255,0.08)", border: "1.5px solid rgba(255,255,255,0.15)",
+                    color: "#fff", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px",
+                    transition: "all 0.15s",
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = "rgba(14,165,233,0.25)"; e.currentTarget.style.borderColor = C.teal; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)"; }}>
+                    <FiArrowUp size={13} /> Back to Top
+                  </button>
                 </div>
               </div>
             )}
@@ -4553,27 +4693,35 @@ function SessionsView() {
 // ─────────────────────────────────────────────
 const settingsStyles = {
   sectionCard: {
-    background: "#fff", borderRadius: 10, border: `1px solid ${C.border}`,
-    marginBottom: 12, overflow: "visible",
-    boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+    background: C.navy, borderRadius: 10, border: `2px solid ${C.navy}`,
+    marginBottom: 12, overflow: "hidden",
+    boxShadow: "0 2px 8px rgba(15,76,129,0.15)",
   },
   sectionHeader: (open) => ({
     display: "flex", alignItems: "center", justifyContent: "space-between",
     padding: "14px 20px", cursor: "pointer",
-    background: open ? C.navy : "#FAFBFD",
-    borderBottom: open ? `1px solid ${C.navyMid}` : "none",
+    background: C.navy,
     borderRadius: open ? "10px 10px 0 0" : 10,
     transition: "background 0.2s ease, color 0.2s ease",
   }),
-  sectionTitle: (open) => ({
+  sectionTitle: () => ({
     display: "flex", alignItems: "center", gap: 10,
-    fontSize: 13, fontWeight: 700, color: open ? "#fff" : C.navy,
-    letterSpacing: "0.3px",
+    fontSize: 13, fontWeight: 800, color: "#fff",
+    letterSpacing: "0.8px", textTransform: "uppercase",
   }),
-  sectionBody: { padding: "20px 24px", position: "relative", zIndex: 1, overflow: "visible" },
+  sectionBody: { padding: "20px 24px", position: "relative", zIndex: 1, overflow: "visible", background: C.navy },
+  neonLine: {
+    height: 3, width: "100%", overflow: "hidden", position: "relative",
+  },
+  neonLineInner: {
+    width: "200%", height: "100%",
+    background: "linear-gradient(90deg, transparent, #39FF7E, #0EA5E9, #39FF7E, transparent)",
+    animation: "neonFlatline 3s linear infinite",
+    boxShadow: "0 0 8px rgba(57,255,126,0.5), 0 0 16px rgba(57,255,126,0.2)",
+  },
   toggleRow: {
     display: "flex", alignItems: "center", justifyContent: "space-between",
-    padding: "10px 0", borderBottom: `1px solid ${C.borderLight}`,
+    padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.1)",
   },
   toggleTrack: (on) => ({
     display: "inline-flex", alignItems: "center", justifyContent: on ? "flex-end" : "flex-start",
@@ -4593,8 +4741,8 @@ function SettingsToggle({ value, onChange, label, desc }) {
   return (
     <div style={settingsStyles.toggleRow}>
       <div>
-        <div style={{ fontSize: 13, fontWeight: 500, color: C.text }}>{label}</div>
-        {desc && <div style={{ fontSize: 11, color: C.textLight, marginTop: 2 }}>{desc}</div>}
+        <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{label}</div>
+        {desc && <div style={{ fontSize: 11, color: "rgba(255,255,255,0.6)", marginTop: 2 }}>{desc}</div>}
       </div>
       <div style={settingsStyles.toggleTrack(value)} onClick={() => onChange(!value)}>
         <div style={settingsStyles.toggleDot} />
@@ -4607,17 +4755,24 @@ function SettingsSection({ id, icon: Icon, title, open, onToggle, children }) {
   return (
     <div style={settingsStyles.sectionCard}>
       <div style={settingsStyles.sectionHeader(open)} onClick={() => onToggle(id)}>
-        <div style={settingsStyles.sectionTitle(open)}>
+        <div style={settingsStyles.sectionTitle()}>
           <Icon size={16} />
           {title}
         </div>
         <FiChevronDown size={16} style={{
-          color: open ? "#fff" : C.textLight,
+          color: "#fff",
           transform: open ? "rotate(0deg)" : "rotate(-90deg)",
           transition: "transform 0.2s ease",
         }} />
       </div>
-      {open && <div style={settingsStyles.sectionBody}>{children}</div>}
+      {open && (
+        <>
+          <div style={settingsStyles.neonLine}>
+            <div style={settingsStyles.neonLineInner} />
+          </div>
+          <div style={settingsStyles.sectionBody}>{children}</div>
+        </>
+      )}
     </div>
   );
 }
@@ -4883,16 +5038,16 @@ function SettingsView({ setBrand }) {
       fontSize: 11, fontWeight: 600, letterSpacing: "0.3px",
       background: active ? C.navy : "transparent",
       color: active ? "#fff" : C.textMid,
-      border: active ? "none" : `1px solid ${C.border}`,
+      border: `2px solid ${C.navy}`,
       transition: "all 0.2s ease",
     }),
     fieldRow: { marginBottom: 16 },
     fieldLabel: {
-      fontSize: 11, fontWeight: 600, color: C.textMid,
+      fontSize: 11, fontWeight: 700, color: "#fff",
       textTransform: "uppercase", letterSpacing: "0.6px",
       marginBottom: 6, display: "block",
     },
-    fieldHint: { fontSize: 11, color: C.textLight, marginTop: 4 },
+    fieldHint: { fontSize: 11, color: "rgba(255,255,255,0.5)", marginTop: 4 },
     statusBadge: (ok) => ({
       display: "inline-flex", alignItems: "center", gap: 4,
       padding: "4px 12px", borderRadius: 20, fontSize: 10, fontWeight: 700,
@@ -4902,7 +5057,7 @@ function SettingsView({ setBrand }) {
     }),
     saveBar: {
       display: "flex", alignItems: "center", gap: 16,
-      padding: "16px 0", borderTop: `1px solid ${C.border}`, marginTop: 8,
+      padding: "16px 0", borderTop: `1px solid rgba(255,255,255,0.1)`, marginTop: 8,
     },
   };
 
@@ -4939,7 +5094,11 @@ function SettingsView({ setBrand }) {
       {/* ── Tab bar ── */}
       <div style={sty.tabBar}>
         {TABS.map(t => (
-          <div key={t.id} style={sty.tab(activeTab === t.id)} onClick={() => setActiveTab(t.id)}>
+          <div key={t.id} style={sty.tab(activeTab === t.id)} onClick={() => {
+            setActiveTab(t.id);
+            const el = document.querySelector("[data-content-scroll]");
+            if (el) el.scrollTop = 0;
+          }}>
             <t.icon size={13} />
             {t.label}
           </div>
@@ -5113,10 +5272,10 @@ function SettingsView({ setBrand }) {
                       }));
                     }} style={{
                       padding: "6px 14px", borderRadius: 6, cursor: "pointer",
-                      fontSize: 12, fontWeight: 600, letterSpacing: "0.3px",
-                      background: active ? C.navy : "#F1F5F9",
-                      color: active ? "#fff" : C.textMid,
-                      border: active ? `1px solid ${C.navyLight}` : `1px solid ${C.border}`,
+                      fontSize: 12, fontWeight: 700, letterSpacing: "0.3px",
+                      background: active ? "#0EA5E9" : "rgba(255,255,255,0.08)",
+                      color: "#fff",
+                      border: active ? `1px solid #0EA5E9` : `1px solid rgba(255,255,255,0.2)`,
                       transition: "all 0.15s",
                     }}>
                       {cred}
@@ -5143,20 +5302,20 @@ function SettingsView({ setBrand }) {
                     }} style={{
                       display: "flex", alignItems: "center", gap: 10,
                       padding: "10px 16px", borderRadius: 8, cursor: "pointer",
-                      background: active ? "rgba(10,37,64,0.06)" : "#FAFBFD",
-                      border: active ? `2px solid ${C.navy}` : `1px solid ${C.border}`,
+                      background: active ? "rgba(14,165,233,0.15)" : "rgba(255,255,255,0.05)",
+                      border: active ? `2px solid #0EA5E9` : `1px solid rgba(255,255,255,0.15)`,
                       transition: "all 0.15s",
                     }}>
                       <div style={{
                         width: 18, height: 18, borderRadius: 4,
-                        background: active ? C.navy : "#fff",
-                        border: active ? "none" : `2px solid ${C.border}`,
+                        background: active ? "#0EA5E9" : "rgba(255,255,255,0.1)",
+                        border: active ? "none" : `2px solid rgba(255,255,255,0.3)`,
                         display: "flex", alignItems: "center", justifyContent: "center",
                         color: "#fff", fontSize: 11,
                       }}>
                         {active && "✓"}
                       </div>
-                      <span style={{ fontSize: 13, fontWeight: active ? 600 : 400, color: C.text }}>{cert}</span>
+                      <span style={{ fontSize: 13, fontWeight: active ? 700 : 500, color: "#fff" }}>{cert}</span>
                     </div>
                   );
                 })}
@@ -5177,9 +5336,9 @@ function SettingsView({ setBrand }) {
         <div>
           <div style={{
             padding: "12px 16px", marginBottom: 12, borderRadius: 8,
-            background: C.amberBg, border: `1px solid ${C.amber}`,
+            background: "rgba(245,158,11,0.1)", border: `1px solid rgba(245,158,11,0.4)`,
             display: "flex", alignItems: "center", gap: 8,
-            fontSize: 12, color: C.amber, fontWeight: 500,
+            fontSize: 12, color: "#FBBF24", fontWeight: 600,
           }}>
             <FiAlertTriangle size={14} />
             Equipment settings gate protocol generation — exercises requiring unavailable equipment will be excluded automatically
@@ -5246,13 +5405,13 @@ function SettingsView({ setBrand }) {
                 <div key={key} style={{
                   display: "flex", alignItems: "center", justifyContent: "space-between",
                   padding: "10px 14px", borderRadius: 8,
-                  background: equipment[key] ? "rgba(16,185,129,0.06)" : "#FAFBFD",
-                  border: equipment[key] ? `1px solid rgba(16,185,129,0.3)` : `1px solid ${C.border}`,
+                  background: equipment[key] ? "rgba(16,185,129,0.12)" : "rgba(255,255,255,0.05)",
+                  border: equipment[key] ? `1px solid rgba(16,185,129,0.4)` : `1px solid rgba(255,255,255,0.15)`,
                   transition: "all 0.15s",
                 }}>
                   <div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{label}</div>
-                    <div style={{ fontSize: 10, color: C.textLight, marginTop: 2 }}>{desc}</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{label}</div>
+                    <div style={{ fontSize: 10, color: "rgba(255,255,255,0.5)", marginTop: 2 }}>{desc}</div>
                   </div>
                   <div style={settingsStyles.toggleTrack(equipment[key])} onClick={() => setEquipment({ ...equipment, [key]: !equipment[key] })}>
                     <div style={settingsStyles.toggleDot} />
@@ -5264,7 +5423,7 @@ function SettingsView({ setBrand }) {
 
           <div style={sty.saveBar}>
             <button style={S.btn("dark")} onClick={flashSave}>Save Equipment Profile</button>
-            <span style={{ fontSize: 12, color: C.textLight }}>
+            <span style={{ fontSize: 12, color: "rgba(255,255,255,0.6)" }}>
               {Object.values(equipment).filter(Boolean).length} of {Object.keys(equipment).length} items available
             </span>
           </div>
@@ -5288,13 +5447,13 @@ function SettingsView({ setBrand }) {
                   <div key={val} onClick={() => setProtocolDefaults({ ...protocolDefaults, progression_philosophy: val })}
                     style={{
                       flex: 1, padding: "14px 16px", borderRadius: 8, cursor: "pointer",
-                      background: protocolDefaults.progression_philosophy === val ? C.navy : "#FAFBFD",
-                      color: protocolDefaults.progression_philosophy === val ? "#fff" : C.text,
-                      border: protocolDefaults.progression_philosophy === val ? `2px solid ${C.navyLight}` : `1px solid ${C.border}`,
+                      background: protocolDefaults.progression_philosophy === val ? "#0EA5E9" : "rgba(255,255,255,0.05)",
+                      color: "#fff",
+                      border: protocolDefaults.progression_philosophy === val ? `2px solid #0EA5E9` : `1px solid rgba(255,255,255,0.2)`,
                       transition: "all 0.15s",
                     }}>
                     <div style={{ fontSize: 13, fontWeight: 700 }}>{label}</div>
-                    <div style={{ fontSize: 11, marginTop: 4, opacity: 0.8 }}>{desc}</div>
+                    <div style={{ fontSize: 11, marginTop: 4, opacity: 0.7 }}>{desc}</div>
                   </div>
                 ))}
               </div>
@@ -5563,12 +5722,12 @@ function SettingsView({ setBrand }) {
                 <div key={label} style={{
                   display: "flex", alignItems: "center", justifyContent: "space-between",
                   padding: "12px 16px", borderRadius: 8,
-                  background: ok ? "rgba(5,150,105,0.04)" : "rgba(217,119,6,0.04)",
-                  border: `1px solid ${ok ? "rgba(5,150,105,0.2)" : "rgba(217,119,6,0.2)"}`,
+                  background: ok ? "rgba(16,185,129,0.1)" : "rgba(245,158,11,0.08)",
+                  border: `1px solid ${ok ? "rgba(16,185,129,0.3)" : "rgba(245,158,11,0.3)"}`,
                 }}>
                   <div>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{label}</span>
-                    <div style={{ fontSize: 11, color: C.textLight, marginTop: 2 }}>{statusNote}</div>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{label}</span>
+                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginTop: 2 }}>{statusNote}</div>
                   </div>
                   <span style={sty.statusBadge(ok)}>
                     {ok ? <FiCheckCircle size={11} /> : <FiClock size={11} />}
@@ -5613,17 +5772,13 @@ function SettingsView({ setBrand }) {
                   <div key={val} onClick={() => setAppearance({ ...appearance, theme: val })}
                     style={{
                       flex: 1, padding: "14px 16px", borderRadius: 8, cursor: "pointer",
-                      background: appearance.theme === val
-                        ? (val === "clinical_dark" ? C.navy : val === "high_contrast" ? "#000" : C.tealLight)
-                        : "#FAFBFD",
-                      color: appearance.theme === val
-                        ? (val === "clinical_light" ? C.tealDark : "#fff")
-                        : C.text,
-                      border: appearance.theme === val ? `2px solid ${C.teal}` : `1px solid ${C.border}`,
+                      background: appearance.theme === val ? "#0EA5E9" : "rgba(255,255,255,0.05)",
+                      color: "#fff",
+                      border: appearance.theme === val ? `2px solid #0EA5E9` : `1px solid rgba(255,255,255,0.2)`,
                       transition: "all 0.15s",
                     }}>
                     <div style={{ fontSize: 13, fontWeight: 700 }}>{label}</div>
-                    <div style={{ fontSize: 11, marginTop: 4, opacity: 0.8 }}>{desc}</div>
+                    <div style={{ fontSize: 11, marginTop: 4, opacity: 0.7 }}>{desc}</div>
                   </div>
                 ))}
               </div>
@@ -5685,11 +5840,11 @@ function SettingsView({ setBrand }) {
                 <div key={type} style={{
                   display: "flex", alignItems: "center", justifyContent: "space-between",
                   padding: "14px 18px", borderRadius: 8,
-                  background: "#FAFBFD", border: `1px solid ${C.border}`,
+                  background: "rgba(255,255,255,0.05)", border: `1px solid rgba(255,255,255,0.15)`,
                 }}>
                   <div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{label}</div>
-                    <div style={{ fontSize: 11, color: C.textLight, marginTop: 2 }}>{desc}</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{label}</div>
+                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginTop: 2 }}>{desc}</div>
                   </div>
                   <button style={{ ...S.btn("ghost"), padding: "6px 14px", fontSize: 11 }}>
                     <FiDownload size={12} /> Export
@@ -5702,14 +5857,14 @@ function SettingsView({ setBrand }) {
           <SettingsSection id="data_import" open={isOpen("data_import")} onToggle={toggleSection} icon={FiUpload} title="Import Data">
             <div style={{
               padding: "24px", borderRadius: 8, textAlign: "center",
-              border: `2px dashed ${C.border}`, background: "#FAFBFD",
+              border: `2px dashed rgba(255,255,255,0.25)`, background: "rgba(255,255,255,0.03)",
             }}>
-              <FiUpload size={24} style={{ color: C.textLight, marginBottom: 8 }} />
-              <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>Import Patient Records</div>
-              <div style={{ fontSize: 11, color: C.textLight, marginTop: 4 }}>
+              <FiUpload size={24} style={{ color: "rgba(255,255,255,0.4)", marginBottom: 8 }} />
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>Import Patient Records</div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginTop: 4 }}>
                 Drag and drop CSV or JSON files, or click to browse
               </div>
-              <div style={{ fontSize: 10, color: C.textLight, marginTop: 8 }}>
+              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", marginTop: 8 }}>
                 Supported formats: CSV (patient demographics), JSON (protocol data), XLSX (bulk import)
               </div>
             </div>
@@ -5723,24 +5878,24 @@ function SettingsView({ setBrand }) {
             <div style={{ display: "flex", gap: 12, marginTop: 12 }}>
               <div style={{
                 flex: 1, padding: "12px 16px", borderRadius: 8,
-                background: C.greenBg, border: `1px solid rgba(5,150,105,0.2)`,
+                background: "rgba(16,185,129,0.12)", border: `1px solid rgba(16,185,129,0.3)`,
               }}>
-                <div style={{ fontSize: 10, fontWeight: 600, color: C.green, textTransform: "uppercase", letterSpacing: "0.5px" }}>API Status</div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: C.green, marginTop: 4 }}>Connected</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "#10B981", textTransform: "uppercase", letterSpacing: "0.5px" }}>API Status</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: "#10B981", marginTop: 4 }}>Connected</div>
               </div>
               <div style={{
                 flex: 1, padding: "12px 16px", borderRadius: 8,
-                background: C.tealLight, border: `1px solid rgba(14,165,233,0.2)`,
+                background: "rgba(14,165,233,0.12)", border: `1px solid rgba(14,165,233,0.3)`,
               }}>
-                <div style={{ fontSize: 10, fontWeight: 600, color: C.tealDark, textTransform: "uppercase", letterSpacing: "0.5px" }}>Exercise Library</div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: C.tealDark, marginTop: 4 }}>179 Validated Exercises</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "#0EA5E9", textTransform: "uppercase", letterSpacing: "0.5px" }}>Exercise Library</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: "#0EA5E9", marginTop: 4 }}>179 Validated Exercises</div>
               </div>
               <div style={{
                 flex: 1, padding: "12px 16px", borderRadius: 8,
-                background: C.amberBg, border: `1px solid rgba(217,119,6,0.2)`,
+                background: "rgba(245,158,11,0.1)", border: `1px solid rgba(245,158,11,0.3)`,
               }}>
-                <div style={{ fontSize: 10, fontWeight: 600, color: C.amber, textTransform: "uppercase", letterSpacing: "0.5px" }}>Protocol Engine</div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: C.amber, marginTop: 4 }}>4 Protocols x 4 Phases</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "#FBBF24", textTransform: "uppercase", letterSpacing: "0.5px" }}>Protocol Engine</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: "#FBBF24", marginTop: 4 }}>4 Protocols x 4 Phases</div>
               </div>
             </div>
           </SettingsSection>
@@ -5887,162 +6042,43 @@ function EKGMonitor() {
 // ─────────────────────────────────────────────
 // WELCOME / SPLASH VIEW
 // ─────────────────────────────────────────────
-function WelcomeView({ onEnter }) {
+function WelcomeView({ onEnter, onAbout }) {
   const [hovering, setHovering] = React.useState(false);
+  const [aboutHover, setAboutHover] = React.useState(false);
 
   return (
     <div style={{
       position: "fixed", inset: 0, zIndex: 1000,
       background: "#030c18",
     }}>
-      {/* ── BACKGROUND IMAGE — 50% brighter ── */}
-      <div style={{
-        position: "absolute", inset: 0,
-        backgroundImage: "url('/welcome-platform.png')",
-        backgroundSize: "contain", backgroundPosition: "center center", backgroundRepeat: "no-repeat",
-        filter: "contrast(1.3) brightness(5.04) saturate(1.5)",
-      }} />
-
-      {/* Teal screen-blend boost */}
-      <div style={{
-        position: "absolute", inset: 0,
-        background: "radial-gradient(ellipse at 50% 52%, rgba(0,210,255,0.10) 0%, transparent 68%)",
-        mixBlendMode: "screen",
-        pointerEvents: "none",
-      }} />
-
-      {/* Edge light glow */}
-      <div style={{
-        position: "absolute", inset: 0,
-        background: "radial-gradient(ellipse at 50% 50%, transparent 55%, rgba(255,255,255,0.105) 80%, rgba(255,255,255,0.245) 100%)",
-        pointerEvents: "none",
-        mixBlendMode: "screen",
-      }} />
-
-      {/* ── Rod of Asclepius — veterinary medical symbol, pulsing with cyan glow ── */}
+      {/* ── Keyframes ── */}
       <style>{`
-        @keyframes caduceusPulse {
-          0%, 100% {
-            filter: drop-shadow(0 0 10px rgba(14,165,233,0.79)) drop-shadow(0 0 25px rgba(14,165,233,0.31));
-            transform: translate(-50%, -50%) scale(1);
-          }
-          50% {
-            filter: drop-shadow(0 0 22px rgba(14,165,233,1)) drop-shadow(0 0 48px rgba(14,165,233,0.70)) drop-shadow(0 0 78px rgba(14,165,233,0.24));
-            transform: translate(-50%, -50%) scale(1.04);
-          }
-        }
-      `}</style>
-      <div style={{
-        position: "absolute", zIndex: 4, pointerEvents: "none",
-        left: "50%", top: "46.5%",
-        transform: "translate(-50%, -50%)",
-        width: "10.8%", maxWidth: 162,
-        animation: "caduceusPulse 3s ease-in-out infinite",
-      }}>
-        <img
-          src="/caduceus.png"
-          alt="Rod of Asclepius — Veterinary Medical Symbol"
-          style={{ width: "100%", display: "block" }}
-        />
-      </div>
-
-
-      {/* ── TOP HEADER ── K9 Rehab Pro + bubble centered at top */}
-      <div style={{
-        position: "absolute", top: 0, left: 0, right: 0, zIndex: 3,
-        display: "flex", flexDirection: "column", alignItems: "center",
-        paddingTop: 28,
-      }}>
-        {/* Brand title — futuristic Exo 2 font, reduced size */}
-        <h1 style={{
-          fontFamily: "'Exo 2', 'Orbitron', 'Segoe UI', sans-serif",
-          fontSize: 38, fontWeight: 900, margin: "0 0 12px",
-          color: "#fff", letterSpacing: "4px", lineHeight: 1,
-          textTransform: "uppercase",
-          textShadow:
-            "0 0 20px rgba(14,165,233,0.8), " +
-            "0 0 40px rgba(14,165,233,0.4), " +
-            "0 2px 0 rgba(0,80,140,0.9), " +
-            "0 4px 8px rgba(0,0,0,0.6)",
-        }}>
-          K9 Rehab Pro&#8482;
-        </h1>
-
-        {/* Teal bubble with Rod of Asclepius */}
-        <div style={{
-          display: "inline-flex", alignItems: "center", gap: 10,
-          background: "rgba(14,165,233,0.14)",
-          border: "1px solid rgba(14,165,233,0.45)",
-          borderRadius: 40, padding: "7px 22px",
-          backdropFilter: "blur(10px)",
-          color: "#0EA5E9", fontSize: 12, fontWeight: 700,
-          letterSpacing: "1.4px", textTransform: "uppercase",
-        }}>
-          {/* Rod of Asclepius — veterinary symbol, CSS 3D depth */}
-          <span style={{
-            fontSize: 18, lineHeight: 1, display: "inline-block",
-            color: "#38BDF8",
-            textShadow:
-              "0 1px 0 #0c8ac0, " +
-              "0 2px 0 #0a7aad, " +
-              "0 3px 0 #085e8a, " +
-              "0 4px 6px rgba(0,0,0,0.5), " +
-              "0 0 12px rgba(56,189,248,0.8)",
-            filter: "drop-shadow(0 0 6px rgba(14,165,233,0.9))",
-          }}>⚕</span>
-          Evidence-Based Canine Exercise Protocols
-        </div>
-      </div>
-
-      {/* All welcome-screen keyframes */}
-      <style>{`
-        /* ── Button pulse glow ── */
         @keyframes welcomePulse {
-          0%, 100% {
-            box-shadow: 0 0 14px rgba(14,165,233,0.45), 0 0 28px rgba(14,165,233,0.2), inset 0 0 12px rgba(14,165,233,0.08);
-          }
-          50% {
-            box-shadow: 0 0 28px rgba(14,165,233,0.75), 0 0 56px rgba(14,165,233,0.35), 0 0 80px rgba(14,165,233,0.15), inset 0 0 20px rgba(14,165,233,0.12);
-          }
+          0%, 100% { box-shadow: 0 0 14px rgba(14,165,233,0.45), 0 0 28px rgba(14,165,233,0.2), inset 0 0 12px rgba(14,165,233,0.08); }
+          50% { box-shadow: 0 0 28px rgba(14,165,233,0.75), 0 0 56px rgba(14,165,233,0.35), 0 0 80px rgba(14,165,233,0.15), inset 0 0 20px rgba(14,165,233,0.12); }
         }
-        .welcome-enter-btn {
-          animation: welcomePulse 2.4s ease-in-out infinite;
-        }
-        .welcome-enter-btn:hover {
-          animation: none !important;
-          box-shadow: 0 0 40px rgba(14,165,233,0.8), 0 0 70px rgba(14,165,233,0.4) !important;
-        }
+        .welcome-enter-btn { animation: welcomePulse 2.4s ease-in-out infinite; }
+        .welcome-enter-btn:hover { animation: none !important; box-shadow: 0 0 40px rgba(14,165,233,0.8), 0 0 70px rgba(14,165,233,0.4) !important; }
 
-        /* ── Electric scan lines ── */
+        @keyframes pulseWave {
+          0% { stroke-dashoffset: 600; }
+          100% { stroke-dashoffset: 0; }
+        }
+        @keyframes vitalGlow {
+          0%, 100% { opacity: 0.7; }
+          50% { opacity: 1; }
+        }
         @keyframes sweepDown1 {
-          0%   { transform: translateY(-4px); opacity: 0; }
-          4%   { opacity: 0.85; }
-          96%  { opacity: 0.65; }
+          0% { transform: translateY(-4px); opacity: 0; }
+          4% { opacity: 0.85; }
+          96% { opacity: 0.65; }
           100% { transform: translateY(100vh); opacity: 0; }
         }
         @keyframes sweepDown2 {
-          0%   { transform: translateY(-4px); opacity: 0; }
-          4%   { opacity: 0.4; }
-          96%  { opacity: 0.28; }
+          0% { transform: translateY(-4px); opacity: 0; }
+          4% { opacity: 0.4; }
+          96% { opacity: 0.28; }
           100% { transform: translateY(100vh); opacity: 0; }
-        }
-        @keyframes sweepDown3 {
-          0%   { transform: translateY(-4px); opacity: 0; }
-          4%   { opacity: 0.55; }
-          96%  { opacity: 0.4; }
-          100% { transform: translateY(100vh); opacity: 0; }
-        }
-        @keyframes sweepRight1 {
-          0%   { transform: translateX(-4px); opacity: 0; }
-          4%   { opacity: 0.6; }
-          96%  { opacity: 0.45; }
-          100% { transform: translateX(100vw); opacity: 0; }
-        }
-        @keyframes sweepRight2 {
-          0%   { transform: translateX(-4px); opacity: 0; }
-          4%   { opacity: 0.3; }
-          96%  { opacity: 0.2; }
-          100% { transform: translateX(100vw); opacity: 0; }
         }
         @keyframes boltFlash {
           0%, 80%, 100% { opacity: 0; }
@@ -6053,70 +6089,96 @@ function WelcomeView({ onEnter }) {
         }
       `}</style>
 
-      {/* ── Electric pulse overlay — pointer-events none so it never blocks clicks ── */}
-      <div style={{ position: "absolute", inset: 0, zIndex: 2, overflow: "hidden", pointerEvents: "none" }}>
+      {/* ── BACKGROUND IMAGE ── */}
+      <div style={{
+        position: "absolute", inset: 0,
+        backgroundImage: "url('/welcome-lab.png')",
+        backgroundSize: "cover", backgroundPosition: "center center", backgroundRepeat: "no-repeat",
+      }} />
 
-        {/* Scan line 1 — sharp bright, fast (3.2s) */}
+      {/* Subtle teal glow over platform center */}
+      <div style={{
+        position: "absolute", inset: 0,
+        background: "radial-gradient(ellipse at 50% 55%, rgba(0,210,255,0.08) 0%, transparent 60%)",
+        pointerEvents: "none",
+      }} />
+
+      {/* ── Electric scan overlay ── */}
+      <div style={{ position: "absolute", inset: 0, zIndex: 2, overflow: "hidden", pointerEvents: "none" }}>
         <div style={{
           position: "absolute", top: 0, left: 0, right: 0, height: 1,
-          background: "linear-gradient(to right, transparent 0%, rgba(14,165,233,0.0) 5%, rgba(14,165,233,0.7) 35%, rgba(96,220,255,0.95) 50%, rgba(14,165,233,0.7) 65%, rgba(14,165,233,0.0) 95%, transparent 100%)",
+          background: "linear-gradient(to right, transparent 5%, rgba(14,165,233,0.7) 35%, rgba(96,220,255,0.95) 50%, rgba(14,165,233,0.7) 65%, transparent 95%)",
           boxShadow: "0 0 6px 1px rgba(14,165,233,0.55)",
           animation: "sweepDown1 3.2s linear infinite",
-          animationDelay: "0s",
         }} />
-
-        {/* Scan line 2 — dimmer, slower (6.8s) */}
         <div style={{
           position: "absolute", top: 0, left: 0, right: 0, height: 1,
-          background: "linear-gradient(to right, transparent 0%, rgba(56,189,248,0.0) 10%, rgba(56,189,248,0.45) 40%, rgba(56,189,248,0.6) 50%, rgba(56,189,248,0.45) 60%, rgba(56,189,248,0.0) 90%, transparent 100%)",
-          animation: "sweepDown2 6.8s linear infinite",
-          animationDelay: "1.9s",
+          background: "linear-gradient(to right, transparent 10%, rgba(56,189,248,0.45) 40%, rgba(56,189,248,0.6) 50%, rgba(56,189,248,0.45) 60%, transparent 90%)",
+          animation: "sweepDown2 6.8s linear infinite", animationDelay: "1.9s",
         }} />
-
-        {/* Scan line 3 — medium, medium-speed (5.1s) */}
         <div style={{
-          position: "absolute", top: 0, left: 0, right: 0, height: 2,
-          background: "linear-gradient(to right, transparent 0%, rgba(14,165,233,0.0) 15%, rgba(14,165,233,0.5) 45%, rgba(14,165,233,0.65) 50%, rgba(14,165,233,0.5) 55%, rgba(14,165,233,0.0) 85%, transparent 100%)",
-          boxShadow: "0 0 10px 2px rgba(14,165,233,0.25)",
-          animation: "sweepDown3 5.1s linear infinite",
-          animationDelay: "4.3s",
-        }} />
-
-        {/* Vertical sweep 1 — left to right, slow (7.5s) */}
-        <div style={{
-          position: "absolute", left: 0, top: 0, bottom: 0, width: 1,
-          background: "linear-gradient(to bottom, transparent 0%, rgba(14,165,233,0.0) 8%, rgba(14,165,233,0.55) 35%, rgba(96,220,255,0.8) 50%, rgba(14,165,233,0.55) 65%, rgba(14,165,233,0.0) 92%, transparent 100%)",
-          boxShadow: "0 0 6px 1px rgba(14,165,233,0.4)",
-          animation: "sweepRight1 7.5s linear infinite",
-          animationDelay: "2.6s",
-        }} />
-
-        {/* Vertical sweep 2 — dim, faster (4.4s) */}
-        <div style={{
-          position: "absolute", left: 0, top: 0, bottom: 0, width: 1,
-          background: "linear-gradient(to bottom, transparent 0%, rgba(56,189,248,0.0) 15%, rgba(56,189,248,0.35) 40%, rgba(56,189,248,0.5) 50%, rgba(56,189,248,0.35) 60%, rgba(56,189,248,0.0) 85%, transparent 100%)",
-          animation: "sweepRight2 4.4s linear infinite",
-          animationDelay: "0.7s",
-        }} />
-
-        {/* Edge bolt flash — brief crackle every ~5s */}
-        <div style={{
-          position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
+          position: "absolute", inset: 0,
           background: "radial-gradient(ellipse at 50% 55%, rgba(14,165,233,0.06) 0%, transparent 70%)",
-          animation: "boltFlash 5.3s ease-in-out infinite",
-          animationDelay: "1.1s",
-        }} />
-        <div style={{
-          position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
-          background: "radial-gradient(ellipse at 50% 55%, rgba(96,220,255,0.05) 0%, transparent 65%)",
-          animation: "boltFlash 7.2s ease-in-out infinite",
-          animationDelay: "3.5s",
+          animation: "boltFlash 5.3s ease-in-out infinite", animationDelay: "1.1s",
         }} />
       </div>
 
-      {/* ── BOTTOM RIGHT ── Enter Platform button — bubble style */}
+      {/* ── K9 REHAB PRO — center top ── */}
       <div style={{
-        position: "absolute", bottom: 48, right: 52, zIndex: 3,
+        position: "absolute", top: 0, left: 0, right: 0, zIndex: 3,
+        display: "flex", flexDirection: "column", alignItems: "center",
+        paddingTop: 36,
+      }}>
+        <h1 style={{
+          fontFamily: "'Exo 2', 'Orbitron', 'Segoe UI', sans-serif",
+          fontSize: 52, fontWeight: 900, margin: "0 0 10px",
+          color: "#fff", letterSpacing: "6px", lineHeight: 1,
+          textTransform: "uppercase",
+          textShadow:
+            "0 0 24px rgba(14,165,233,0.9), " +
+            "0 0 48px rgba(14,165,233,0.5), " +
+            "0 2px 0 rgba(0,80,140,0.9), " +
+            "0 4px 10px rgba(0,0,0,0.7)",
+        }}>
+          K9 REHAB PRO
+        </h1>
+        <div style={{
+          fontSize: 13, fontWeight: 700, color: "rgba(14,165,233,0.85)",
+          letterSpacing: "2.5px", textTransform: "uppercase",
+          textShadow: "0 0 12px rgba(14,165,233,0.5)",
+        }}>
+          Evidence-Based Canine Exercise Protocols
+        </div>
+      </div>
+
+      {/* ── ABOUT BUTTON — bottom left ── */}
+      <div style={{ position: "absolute", bottom: 48, left: 52, zIndex: 3 }}>
+        <button
+          onClick={onAbout}
+          onMouseEnter={() => setAboutHover(true)}
+          onMouseLeave={() => setAboutHover(false)}
+          style={{
+            fontFamily: "'Exo 2', sans-serif",
+            display: "inline-flex", alignItems: "center", gap: 8,
+            background: aboutHover ? "rgba(14,165,233,0.28)" : "rgba(14,165,233,0.12)",
+            border: "1px solid rgba(14,165,233,0.5)",
+            borderRadius: 40, padding: "10px 26px",
+            backdropFilter: "blur(12px)",
+            color: "#0EA5E9", fontSize: 13, fontWeight: 700,
+            letterSpacing: "1.6px", textTransform: "uppercase",
+            cursor: "pointer",
+            transition: "background 0.22s, transform 0.22s",
+            transform: aboutHover ? "translateY(-2px)" : "none",
+            boxShadow: aboutHover ? "0 0 24px rgba(14,165,233,0.5)" : "0 0 10px rgba(14,165,233,0.2)",
+          }}
+        >
+          <FiBookOpen size={15} /> About
+        </button>
+      </div>
+
+      {/* ── ENTER PLATFORM — center bottom ── */}
+      <div style={{
+        position: "absolute", bottom: 48, left: "50%", transform: "translateX(-50%)", zIndex: 3,
       }}>
         <button
           className="welcome-enter-btn"
@@ -6126,27 +6188,18 @@ function WelcomeView({ onEnter }) {
           style={{
             fontFamily: "'Exo 2', sans-serif",
             display: "inline-flex", alignItems: "center", gap: 10,
-            background: hovering
-              ? "rgba(14,165,233,0.28)"
-              : "rgba(14,165,233,0.14)",
+            background: hovering ? "rgba(14,165,233,0.28)" : "rgba(14,165,233,0.14)",
             border: "1px solid rgba(14,165,233,0.55)",
             borderRadius: 40,
             backdropFilter: "blur(12px)",
-            color: "#0EA5E9", fontSize: 13, fontWeight: 700,
-            padding: "10px 28px",
+            color: "#0EA5E9", fontSize: 14, fontWeight: 700,
+            padding: "12px 36px",
             cursor: "pointer",
-            letterSpacing: "1.6px", textTransform: "uppercase",
+            letterSpacing: "2px", textTransform: "uppercase",
             transition: "background 0.22s, transform 0.22s",
             transform: hovering ? "translateY(-2px)" : "none",
           }}
         >
-          <span style={{
-            fontSize: 16, lineHeight: 1,
-            textShadow:
-              "0 1px 0 #0c8ac0, 0 2px 0 #0a7aad, " +
-              "0 3px 4px rgba(0,0,0,0.4), 0 0 10px rgba(56,189,248,0.8)",
-            filter: "drop-shadow(0 0 4px rgba(14,165,233,0.9))",
-          }}>⚕</span>
           Enter Platform →
         </button>
       </div>
@@ -6160,64 +6213,64 @@ function WelcomeView({ onEnter }) {
 function AboutView() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 900, margin: "0 auto" }}>
-      <div style={{ ...S.card, borderTop: `4px solid ${C.teal}`, padding: "32px 36px", textAlign: "center" }}>
-        <div style={{ fontSize: 40, marginBottom: 12 }}>⚕</div>
+      <div style={{ ...S.card, border: `2px solid ${C.navy}`, borderTop: `4px solid ${C.teal}`, padding: "32px 36px", textAlign: "center" }}>
+        <img src="/caduceus.png" alt="Rod of Asclepius" style={{ width: 64, height: 64, marginBottom: 12, objectFit: "contain" }} />
         <h1 style={{ fontSize: 28, fontWeight: 900, color: C.navy, margin: "0 0 8px",
           fontFamily: "'Exo 2', 'Orbitron', sans-serif", letterSpacing: "2px" }}>
           K9 REHAB PRO
         </h1>
-        <div style={{ fontSize: 12, fontWeight: 700, color: C.teal, textTransform: "uppercase", letterSpacing: "2px", marginBottom: 16 }}>
-          Clinical Decision-Support System for Canine Rehabilitation
+        <div style={{ fontSize: 12, fontWeight: 700, color: "#0EA5E9", textTransform: "uppercase", letterSpacing: "2px", marginBottom: 16, textShadow: "0 0 8px rgba(14,165,233,0.4)" }}>
+          Clinical Decision-Support System for Evidence-Based Canine Exercise Protocols
         </div>
-        <p style={{ fontSize: 14, color: C.textMid, lineHeight: 1.8, maxWidth: 650, margin: "0 auto" }}>
+        <p style={{ fontSize: 14, color: "#111", lineHeight: 1.8, maxWidth: 650, margin: "0 auto" }}>
           K9 Rehab Pro is a veterinary rehabilitation platform built for the clinicians who dedicate their careers to helping dogs recover, move, and live better. Designed from the ground up using evidence-based methodology, it transforms clinical expertise into structured, repeatable rehabilitation protocols.
         </p>
       </div>
 
       <div style={S.grid(2)}>
-        <div style={S.card}>
+        <div style={{ ...S.card, border: `2px solid ${C.navy}` }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
             <FiBookOpen size={16} style={{ color: C.teal }} />
-            <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: C.navy }}>Evidence-Based Foundation</h3>
+            <h3 style={{ margin: 0, fontSize: 14, fontWeight: 900, color: "#000" }}>Evidence-Based Foundation</h3>
           </div>
-          <p style={{ fontSize: 12, color: C.textMid, lineHeight: 1.7, margin: 0 }}>
+          <p style={{ fontSize: 12, color: "#111", lineHeight: 1.7, margin: 0 }}>
             Every protocol, exercise, and progression rule is sourced from peer-reviewed veterinary rehabilitation literature. Primary references include Millis & Levine's <em>Canine Rehabilitation and Physical Therapy</em> (2nd ed., Elsevier 2014), Zink & Van Dyke's <em>Canine Sports Medicine and Rehabilitation</em> (2nd ed., Wiley 2018), and ACVSMR position statements.
           </p>
         </div>
 
-        <div style={S.card}>
+        <div style={{ ...S.card, border: `2px solid ${C.navy}` }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
             <FiShield size={16} style={{ color: C.navy }} />
-            <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: C.navy }}>CDSS Classification</h3>
+            <h3 style={{ margin: 0, fontSize: 14, fontWeight: 900, color: "#000" }}>CDSS Classification</h3>
           </div>
-          <p style={{ fontSize: 12, color: C.textMid, lineHeight: 1.7, margin: 0 }}>
+          <p style={{ fontSize: 12, color: "#111", lineHeight: 1.7, margin: 0 }}>
             K9 Rehab Pro is classified as a Clinical Decision-Support System (CDSS). It assists licensed veterinary professionals in generating rehabilitation protocols but does not replace clinical judgment, establish a VCPR, or provide diagnoses. All output requires veterinary review and approval.
           </p>
         </div>
 
-        <div style={S.card}>
+        <div style={{ ...S.card, border: `2px solid ${C.navy}` }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
             <FiActivity size={16} style={{ color: "#059669" }} />
-            <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: C.navy }}>Protocol Engine</h3>
+            <h3 style={{ margin: 0, fontSize: 14, fontWeight: 900, color: "#000" }}>Protocol Engine</h3>
           </div>
-          <p style={{ fontSize: 12, color: C.textMid, lineHeight: 1.7, margin: 0 }}>
+          <p style={{ fontSize: 12, color: "#111", lineHeight: 1.7, margin: 0 }}>
             4 ACVSMR-aligned protocols (TPLO, IVDD, OA, Geriatric) with 4 gated phases each. 170+ exercises classified by intervention type, phase appropriateness, and evidence grade. Automated contraindication enforcement prevents unsafe exercise selection.
           </p>
         </div>
 
-        <div style={S.card}>
+        <div style={{ ...S.card, border: `2px solid ${C.navy}` }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
             <FiLock size={16} style={{ color: "#D97706" }} />
-            <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: C.navy }}>Data Privacy</h3>
+            <h3 style={{ margin: 0, fontSize: 14, fontWeight: 900, color: "#000" }}>Data Privacy</h3>
           </div>
-          <p style={{ fontSize: 12, color: C.textMid, lineHeight: 1.7, margin: 0 }}>
+          <p style={{ fontSize: 12, color: "#111", lineHeight: 1.7, margin: 0 }}>
             All patient and client data remains local to your installation. No data is transmitted to external servers, sold to third parties, or used for AI training. The platform is designed with HIPAA-aligned principles and supports state veterinary medical board recordkeeping requirements.
           </p>
         </div>
       </div>
 
-      <div style={S.card}>
-        <h3 style={{ fontSize: 14, fontWeight: 700, color: C.navy, marginBottom: 12 }}>Target Environments</h3>
+      <div style={{ ...S.card, border: `2px solid ${C.navy}` }}>
+        <h3 style={{ fontSize: 14, fontWeight: 900, color: "#000", marginBottom: 12 }}>Target Environments</h3>
         <div style={S.grid(4)}>
           {[
             ["General Practice", "DVM-supervised rehabilitation for primary care clinics"],
@@ -6225,18 +6278,18 @@ function AboutView() {
             ["Specialty Hospitals", "Integration with surgical, neurology, and oncology teams"],
             ["Universities", "Clinical teaching and research under faculty supervision"],
           ].map(([title, desc]) => (
-            <div key={title} style={{ padding: "12px 14px", background: C.surface, borderRadius: 8, border: `1px solid ${C.border}` }}>
-              <div style={{ fontWeight: 700, fontSize: 12, color: C.navy, marginBottom: 4 }}>{title}</div>
-              <div style={{ fontSize: 11, color: C.textLight, lineHeight: 1.5 }}>{desc}</div>
+            <div key={title} style={{ padding: "12px 14px", background: C.surface, borderRadius: 8, border: `2px solid ${C.navy}` }}>
+              <div style={{ fontWeight: 900, fontSize: 12, color: "#000", marginBottom: 4 }}>{title}</div>
+              <div style={{ fontSize: 11, color: "#111", lineHeight: 1.5 }}>{desc}</div>
             </div>
           ))}
         </div>
       </div>
 
-      <div style={{ ...S.card, background: C.navy, border: "none", textAlign: "center", padding: "20px 28px" }}>
-        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", lineHeight: 1.7 }}>
+      <div style={{ ...S.card, background: C.navy, border: `2px solid ${C.navy}`, textAlign: "center", padding: "20px 28px" }}>
+        <div style={{ fontSize: 11, color: "#FFFFFF", lineHeight: 1.7 }}>
           K9 Rehab Pro™ · Clinical Decision-Support System · ACVSMR-Aligned Methodology
-          <br />Millis & Levine · Zink & Van Dyke · Evidence-Based Canine Rehabilitation
+          <br />Evidence-Based Canine Rehabilitation Exercise Protocols
           <br />All protocols require licensed veterinary review and approval before clinical application.
         </div>
       </div>
@@ -6278,15 +6331,6 @@ function TopNav({ view, setView, brand, dateStr, timeStr }) {
         }}>{brand.clinicName || "K9 REHAB PRO\u2122"}</span>
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-        <div style={{
-          padding: "3px 10px", borderRadius: 4,
-          background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.25)",
-          fontSize: 8, fontWeight: 800, color: "#D97706",
-          textTransform: "uppercase", letterSpacing: "1.2px",
-          lineHeight: 1.3, textAlign: "center",
-        }}>
-          Clinical Decision<br/>Support System
-        </div>
         <div style={{ textAlign: "right" }}>
           <div style={{ fontSize: 11, color: "#111", fontWeight: 500 }}>{dateStr}</div>
           <div style={{ fontSize: 12, color: C.navy, fontWeight: 700, marginTop: 1, fontFamily: "'Exo 2', monospace", letterSpacing: "1px" }}>{timeStr}</div>
@@ -6316,6 +6360,7 @@ export default function App() {
   }, []);
 
   const views = {
+    home:       <GeneratorView key={genKey} initialStep={1} />,
     dashboard:  <DashboardView setView={setView} />,
     clients:   <ClientsView />,
     generator: <GeneratorView key={genKey} initialStep={genInitialStep} />,
@@ -6326,7 +6371,7 @@ export default function App() {
   };
 
   if (view === "welcome") {
-    return <WelcomeView onEnter={() => setView("generator")} />;
+    return <WelcomeView onEnter={() => setView("home")} onAbout={() => setView("about")} />;
   }
 
   const dateStr = liveTime.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
@@ -6357,9 +6402,9 @@ export default function App() {
           gap: 2,
         }}>
           <div
-            onClick={() => { setGenInitialStep(1); setGenKey(k => k + 1); setView("generator"); }}
-            style={{ cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: 26, height: 26, borderRadius: 5, background: "rgba(57,255,126,0.12)", border: "1px solid rgba(57,255,126,0.3)", marginRight: 10, transition: "all 0.2s" }}
-            title="Home — Section 1"
+            onClick={() => { setGenKey(k => k + 1); setView("home"); const el = document.querySelector("[data-content-scroll]"); if (el) el.scrollTop = 0; }}
+            style={{ cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: 26, height: 26, borderRadius: 5, background: view === "home" ? "rgba(57,255,126,0.25)" : "rgba(57,255,126,0.12)", border: `1px solid ${view === "home" ? "rgba(57,255,126,0.6)" : "rgba(57,255,126,0.3)"}`, marginRight: 10, transition: "all 0.2s" }}
+            title="Home — Section 1 Intake"
           >
             <FiHome size={12} style={{ color: "#39FF7E" }} />
           </div>

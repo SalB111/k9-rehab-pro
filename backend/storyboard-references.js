@@ -669,6 +669,195 @@ const STORYBOARD_LIBRARY = {
       format_rule: '{category_slug}-{exercise_code_lower}-storyboard-v{version}',
     },
   },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // EXERCISE 4: TPLO EARLY-STAGE CONTROLLED LEASH WALK
+  // ═══════════════════════════════════════════════════════════════════════════
+  TPLO_LEASH_WALK: {
+    exercise_code: 'TPLO_LEASH_WALK',
+    version: '1.0',
+    last_updated: '2026-02-20',
+
+    // ── 1. Exercise Name ──
+    exercise_name: 'TPLO Early-Stage Controlled Leash Walk',
+
+    // ── 2. Clinical Purpose ──
+    clinical_purpose: 'Encourage controlled, partial weight-bearing ambulation during the acute post-operative phase (weeks 1-3) following TPLO surgery. Promotes early limb use to prevent quadriceps atrophy and stifle capsular fibrosis, stimulates articular cartilage nutrition via cyclic loading, and maintains cardiovascular baseline — all within strict tissue-healing constraints. Per Millis & Levine, controlled leash walking is the first active exercise introduced post-TPLO, progressing from elimination-only walks (week 1) to short therapeutic sessions (weeks 2-3).',
+
+    // ── 3. Indications ──
+    indications: [
+      'Post-TPLO surgery — weeks 1-3 (Phase 1: Protection/Early Motion)',
+      'Post-lateral suture stabilization — weeks 2-4',
+      'Post-TTA — weeks 1-3',
+      'Any early post-op stifle case cleared for toe-touch weight bearing',
+      'Surgeon clearance confirmed',
+    ],
+
+    // ── 4. Contraindications ──
+    contraindications: [
+      'Implant complications (loosening, palpable hardware, infection)',
+      'Incision dehiscence or active wound drainage',
+      'Complete non-weight bearing beyond post-op day 5',
+      'Uncontrolled pain (pain score > 3/5)',
+      'Concurrent unstable fracture',
+      'Surgeon-imposed strict cage rest without walking clearance',
+    ],
+
+    // ── 5. Equipment Needed ──
+    equipment_needed: [
+      'Short leash (4-6 ft, no retractable leads)',
+      'Properly fitted body harness with rear-end support handle',
+      'Hindquarter support sling (if needed)',
+      'Non-slip surface (grass, rubber matting, indoor carpet)',
+      'Booties (if surfaces are slippery or cold)',
+    ],
+
+    // ── 6. Handler Setup ──
+    handler_setup: 'Handler positions on the surgical side of the dog. Leash held short with minimal slack — no more than 12 inches of play. If a support sling is used, handler cradles sling under the abdomen just cranial to the stifle, providing 10-20% body weight support as needed. Pace is deliberately slow — matching the dog\'s willingness, never pulling forward. Handler watches for toe-touching, knuckling, or gait deviation on every stride cycle.',
+
+    // ── 7. Step-by-Step Movement Breakdown ──
+    movement_breakdown: [
+      'Pre-walk assessment — Palpate surgical site for heat, swelling, or pain response. Assess resting comfort level. Confirm pain medication was administered per schedule.',
+      'Harness and sling application — Fit harness snugly, attach sling if weight-bearing is tentative. Confirm leash is short and non-retractable.',
+      'Threshold exit — Guide dog from rest area to walking surface. No stairs — use ramp or carry if needed.',
+      'Initial standing pause — Allow dog to stand and weight-shift for 10-15 seconds before walking. Observe limb placement.',
+      'Slow forward walking — Walk in straight lines only at the dog\'s chosen pace. Duration: 3-5 min (week 1), 5-10 min (weeks 2-3). Flat, even surface only.',
+      'Controlled turns — Wide, sweeping turns only. No tight pivots. Turn away from the surgical limb to reduce rotational stress on the stifle.',
+      'Rest monitoring — Pause every 1-2 minutes. Assess lameness, breathing, engagement. If lameness worsens, end session.',
+      'Return and cool-down — Walk slowly back. Apply cold therapy (cryotherapy) 10-15 minutes post-walk to surgical stifle.',
+    ],
+
+    // ── 8. Storyboard Frames ──
+    frames: [
+      {
+        frame_number: 1,
+        frame_title: 'Pre-Walk Assessment & Harness Fit',
+        dog_action: 'Dog is in lateral or sternal recumbency. Remains still during incision check and harness application. Transitions to standing with handler support.',
+        handler_action: 'Palpate surgical stifle for heat, swelling, and pain response. Apply body harness with rear-support handle. Attach short, non-retractable leash. Apply hindquarter sling if weight-bearing is tentative.',
+        clinical_cues: 'Assess incision integrity — no dehiscence, erythema, or discharge. Note resting pain score. Confirm analgesic schedule is current. Palpate quadriceps for early atrophy signs.',
+        safety_notes: 'Do not proceed if incision is draining, swelling has increased, or dog vocalizes on palpation. Confirm surgeon clearance for ambulation.',
+        svg_indicators: [
+          { type: 'hand_placement', label: 'Incision palpation zone', x: 55, y: 50, radius: 18 },
+          { type: 'hand_placement', label: 'Quadriceps assessment', x: 50, y: 60, radius: 15 },
+        ],
+      },
+      {
+        frame_number: 2,
+        frame_title: 'Assisted Stand & Static Weight Shift',
+        dog_action: 'Dog rises to standing with assistance if needed. Bears weight on all four limbs. May show toe-touching on surgical limb initially. Holds standing position for 10-15 seconds.',
+        handler_action: 'Support dog via sling or harness handle. Allow voluntary weight-shifting. Do not force full weight-bearing. Observe limb placement — paw should be plantigrade, not knuckling.',
+        clinical_cues: 'Look for voluntary toe-touch to partial weight-bearing. Assess base of support width — widened stance may indicate pain or instability. Note any muscle tremor in the surgical limb.',
+        safety_notes: 'If dog cannot achieve toe-touch weight-bearing by post-op day 5, notify surgeon. Do not force the limb down. Watch for compensatory overloading of contralateral hind limb.',
+        svg_indicators: [
+          { type: 'force_vector', label: 'Reduced WB surgical limb', x1: 60, y1: 75, x2: 60, y2: 95 },
+          { type: 'force_vector', label: 'Compensatory WB contralateral', x1: 40, y1: 75, x2: 40, y2: 95 },
+          { type: 'joint_pivot', label: 'Stifle joint', x: 58, y: 65, radius: 6 },
+        ],
+      },
+      {
+        frame_number: 3,
+        frame_title: 'Slow Forward Walking — Straight Line',
+        dog_action: 'Dog walks forward at a slow, deliberate pace on flat, non-slip surface. Stride length may be shortened on surgical side. Consistent four-beat gait pattern encouraged.',
+        handler_action: 'Walk on surgical side of dog. Hold leash short with 12 inches of slack maximum. Match the dog\'s pace — never pull forward. If using sling, provide 10-20% body weight support. Walk in straight lines only.',
+        clinical_cues: 'Monitor stride symmetry — shortened swing phase on surgical limb is expected in week 1. Watch for progressive limb use during the session. Count stride cycles for objective tracking. Normal for dog to shift weight cranially away from surgical limb.',
+        safety_notes: 'No trotting, no running, no off-leash. Flat surfaces only — no curbs, grades, or uneven terrain. If lameness increases during the walk, stop immediately and return to rest. Duration: 3-5 min (week 1), 5-10 min (weeks 2-3).',
+        svg_indicators: [
+          { type: 'force_vector', label: 'Gait direction', x1: 30, y1: 50, x2: 70, y2: 50 },
+          { type: 'flexion_arc', label: 'Stifle swing phase 40-60°', cx: 58, cy: 62, radius: 20, startAngle: -30, endAngle: 30 },
+          { type: 'force_vector', label: 'Reduced ground reaction force', x1: 60, y1: 80, x2: 60, y2: 95 },
+          { type: 'muscle_highlight', label: 'Quadriceps activation', cx: 55, cy: 55, rx: 8, ry: 18 },
+        ],
+      },
+      {
+        frame_number: 4,
+        frame_title: 'Controlled Wide Turn',
+        dog_action: 'Dog follows handler through a wide, sweeping arc. Maintains slow pace through the turn. Weight remains distributed — no sudden pivoting.',
+        handler_action: 'Guide dog through a wide turn, arcing away from the surgical limb. Minimum turn radius of 6-8 feet. No U-turns, no tight circles. Use treats at nose level to guide direction smoothly without leash jerking.',
+        clinical_cues: 'Turning away from the surgical limb reduces rotational torque on the healing tibial osteotomy. Watch for circumduction or limb abduction during the arc — may indicate stifle guarding or pain.',
+        safety_notes: 'Never pivot. Never turn sharply toward the surgical limb. If the dog resists turning, do not force — walk forward and attempt a wider arc. Avoid figure-8s and circle walking during Phase 1.',
+        svg_indicators: [
+          { type: 'flexion_arc', label: 'Wide turn arc ≥6 ft radius', cx: 50, cy: 50, radius: 35, startAngle: -45, endAngle: 45 },
+          { type: 'force_vector', label: 'Turn direction (away from surgical limb)', x1: 50, y1: 50, x2: 75, y2: 30 },
+          { type: 'joint_pivot', label: 'Stifle — minimize rotation', x: 58, y: 65, radius: 8 },
+        ],
+      },
+      {
+        frame_number: 5,
+        frame_title: 'Return & Post-Walk Cryotherapy',
+        dog_action: 'Dog walks slowly back to rest area. Settles into sternal or lateral recumbency. Accepts cold pack application to surgical stifle.',
+        handler_action: 'Guide dog back at same slow pace. Assist to lying position. Apply cold therapy (ice pack wrapped in thin towel) to lateral and medial aspects of surgical stifle for 10-15 minutes. Remove harness and sling. Offer water.',
+        clinical_cues: 'Post-walk cryotherapy reduces inflammatory response and controls post-exercise swelling. Assess limb use during return — should be equal to or better than start. Note any reluctance to lie down (may indicate discomfort).',
+        safety_notes: 'Never apply ice directly to skin — always use a barrier layer. Monitor for cold intolerance (pulling away, shivering). Remove after 15 minutes maximum to prevent tissue damage. Log walk duration, lameness score, and any observations.',
+        svg_indicators: [
+          { type: 'hand_placement', label: 'Cryotherapy — lateral stifle', x: 60, y: 60, radius: 15 },
+          { type: 'hand_placement', label: 'Cryotherapy — medial stifle', x: 45, y: 60, radius: 15 },
+        ],
+      },
+    ],
+
+    // ── 9. On-Screen Clinical Overlays ──
+    overlay_groups: {
+      arrows: [
+        'Forward gait direction arrow along walking path',
+        'Weight-bearing force vector from paw through stifle (vertical, reduced magnitude on surgical side)',
+        'Wide turn arc direction indicator showing sweep away from surgical limb',
+      ],
+      joint_angle_indicators: [
+        'Stifle flexion angle during swing phase (expected 40-60° in early post-op)',
+        'Stifle extension angle at stance phase (expected 130-150°, may be limited)',
+        'Hock angle during push-off phase',
+      ],
+      weight_shift_indicators: [
+        'Reduced weight-bearing shading on surgical hind limb (lighter = less load)',
+        'Compensatory increased loading on contralateral hind limb',
+        'Cranial weight shift indicator (forward lean common in early post-op)',
+      ],
+      good_form_labels: [
+        'Plantigrade paw placement — full pad contact',
+        'Four-beat walk pattern maintained',
+        'Even, slow pace with no rushing',
+        'Handler positioned on surgical side',
+        'Short leash with minimal slack',
+      ],
+      common_mistake_labels: [
+        'Retractable leash allowing uncontrolled acceleration',
+        'Walking too fast for post-op stage',
+        'Tight turns toward surgical limb',
+        'Walking on slippery flooring (tile, hardwood)',
+        'Session exceeding time limit causing fatigue',
+      ],
+      safety_warnings: [
+        'STOP if lameness worsens during walk',
+        'No stairs — use ramp or carry',
+        'No off-leash activity during Phase 1',
+        'Monitor incision after every session',
+        'Apply cryotherapy within 5 minutes post-walk',
+      ],
+    },
+
+    // ── 10. Branding Layer ──
+    branding: {
+      neon_accents: 'Teal (#0EA5E9) frame borders, green (#10B981) safety-pass indicators, amber (#F59E0B) caution highlights on surgical limb overlays',
+      rod_of_asclepius: 'Top-right corner of each frame, 32x32px, white on deep blue (#0F4C81) circular badge, 60% opacity',
+      watermark: 'K9 REHAB PRO — center of frame viewer at 8% opacity, diagonal, non-removable',
+      color_palette: 'Deep Blue #0F4C81, Teal #0EA5E9, Green #10B981, Amber #F59E0B, Red #EF4444',
+      typography: 'Inter 600 for frame titles, Inter 400 for body text, JetBrains Mono for clinical measurements',
+    },
+
+    // ── 11. Client-Friendly Script ──
+    client_script: 'This short walk helps your dog begin using the surgical leg safely. Keep the leash short and walk slowly — let your dog set the pace. Only walk on flat, non-slip surfaces like grass or carpet. Week one, keep walks to 3-5 minutes, just for bathroom trips. Weeks two and three, you can slowly increase to 5-10 minutes. Always walk in straight lines and make only wide turns. After every walk, apply a cold pack wrapped in a towel to the knee area for 10-15 minutes. If your dog starts limping more during the walk, stop right away and head back. No running, no stairs, no playing — just calm, slow walking.',
+
+    // ── 12. Clinician-Level Script ──
+    clinician_script: 'Controlled leash ambulation initiates at post-op day 3-5 following TPLO, beginning with elimination walks (3-5 min) and progressing to therapeutic sessions (5-10 min) by weeks 2-3. Handler positions ipsilateral to the surgical limb with a fixed 4-6 ft lead. Hindquarter sling provides 10-20% BW support for dogs with < 50% weight-bearing. Walking surface must be flat, non-slip, and obstacle-free. Turns are wide arcs (minimum 6-8 ft radius), always directed away from the surgical limb to minimize tibial rotational forces on the healing osteotomy. Post-ambulation cryotherapy (10-15 min) is applied to control inflammatory response. Monitor for progressive limb use, stride length symmetry, and pain scoring at each session. Red flags: worsening lameness during ambulation, knuckling, complete non-weight bearing beyond day 5, incision complications. Progression to Phase 2 walking (15-20 min, gentle inclines) begins at week 4 pending radiographic confirmation of osteotomy healing.',
+
+    // ── 13. UI Layout (defined in StoryboardPlayer component) ──
+
+    // ── 14. File Naming Convention ──
+    file_naming: {
+      convention: 'postop-tplo_early_leash_walk-storyboard-v1',
+      format_rule: '{category_slug}-{exercise_code_lower}-storyboard-v{version}',
+    },
+  },
 };
 
 

@@ -779,6 +779,35 @@ app.post('/api/patients', (req, res) => {
   );
 });
 
+// Delete a single patient
+app.delete('/api/patients/:id', (req, res) => {
+  db.run('DELETE FROM patients WHERE id = ?', [req.params.id], function(err) {
+    if (err) {
+      res.status(500).json({ error: err.message });
+    } else if (this.changes === 0) {
+      res.status(404).json({ error: 'Patient not found' });
+    } else {
+      res.json({ message: 'Patient deleted', id: req.params.id });
+    }
+  });
+});
+
+// Delete multiple patients
+app.post('/api/patients/delete-batch', (req, res) => {
+  const { ids } = req.body;
+  if (!ids || !Array.isArray(ids) || ids.length === 0) {
+    return res.status(400).json({ error: 'No patient IDs provided' });
+  }
+  const placeholders = ids.map(() => '?').join(',');
+  db.run(`DELETE FROM patients WHERE id IN (${placeholders})`, ids, function(err) {
+    if (err) {
+      res.status(500).json({ error: err.message });
+    } else {
+      res.json({ message: `${this.changes} patient(s) deleted`, deleted: this.changes });
+    }
+  });
+});
+
 // GENERATE PROTOCOL - THE MAIN ENDPOINT
 app.post('/api/generate-protocol', (req, res) => {
   const formData = req.body;
