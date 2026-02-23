@@ -51,6 +51,8 @@ const {
   requireAuth,
   requireRole
 } = require('./auth');
+const AIService = require('./ai-service');
+const createAIRouter = require('./ai-routes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -61,7 +63,7 @@ app.use(cors({
   origin: process.env.CORS_ORIGIN || 'http://localhost:3001',
   credentials: true,
 }));
-app.use(express.json({ limit: process.env.BODY_LIMIT || '10kb' }));
+app.use(express.json({ limit: process.env.BODY_LIMIT || '50kb' }));
 
 // Rate limiting — general (100 req / 15 min per IP)
 const generalLimiter = rateLimit({
@@ -148,6 +150,12 @@ const db = new sqlite3.Database('./database.db', (err) => {
 // Authentication middleware — applied to all /api routes (skips PUBLIC_ROUTES)
 app.use('/api', requireAuth(db));
 
+// ── Vet AI Service & Routes ──
+const aiService = new AIService(db);
+const aiRouter = createAIRouter(db, aiService, requireAuth);
+app.use('/api/ai', aiRouter);
+console.log('🤖 Vet AI routes mounted at /api/ai');
+
 // ============================================================================
 // DATABASE INITIALIZATION
 // ============================================================================
@@ -231,7 +239,59 @@ function initializeDatabase() {
       )
     `);
 
-    console.log('✅ Database tables initialized');
+    // AI Conversations table
+    db.run(`
+      CREATE TABLE IF NOT EXISTS ai_conversations (
+        id TEXT PRIMARY KEY,
+        user_id INTEGER NOT NULL,
+        title TEXT,
+        patient_id INTEGER,
+        context_type TEXT DEFAULT 'general',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id),
+        FOREIGN KEY (patient_id) REFERENCES patients(id)
+      )
+    `);
+
+    // AI Messages table
+    db.run(`
+      CREATE TABLE IF NOT EXISTS ai_messages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        conversation_id TEXT NOT NULL,
+        role TEXT NOT NULL,
+        content TEXT NOT NULL,
+        structured_data TEXT,
+        tool_calls TEXT,
+        token_count INTEGER DEFAULT 0,
+        provider TEXT,
+        model TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (conversation_id) REFERENCES ai_conversations(id) ON DELETE CASCADE
+      )
+    `);
+
+    // AI Usage tracking table
+    db.run(`
+      CREATE TABLE IF NOT EXISTS ai_usage (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        conversation_id TEXT,
+        provider TEXT NOT NULL,
+        model TEXT NOT NULL,
+        input_tokens INTEGER DEFAULT 0,
+        output_tokens INTEGER DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+      )
+    `);
+
+    // AI table indexes
+    db.run('CREATE INDEX IF NOT EXISTS idx_ai_conversations_user ON ai_conversations(user_id)');
+    db.run('CREATE INDEX IF NOT EXISTS idx_ai_messages_conversation ON ai_messages(conversation_id)');
+    db.run('CREATE INDEX IF NOT EXISTS idx_ai_usage_user ON ai_usage(user_id)');
+
+    console.log('✅ Database tables initialized (including AI tables)');
     seedInitialData();
   });
 }

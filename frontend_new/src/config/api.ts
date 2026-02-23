@@ -13,3 +13,5 @@ export const CORE_API_BASE_URL = stripTrailingSlash(
 export const EXERCISES_API_BASE_URL = stripTrailingSlash(
   env.VITE_EXERCISES_API_BASE_URL || CORE_API_BASE_URL
 );
+
+export const AI_API_BASE_URL = `${CORE_API_BASE_URL}/ai`;
