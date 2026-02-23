@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node:*)",
+      "Read(//c/Users/sbona/Downloads/**)",
+      "Bash(# Copy landing page image back cp \"\"/c/k9 _rehab_pro_3d/reference_pngs/PLATFORM SEQU/1Scene 1_ A large fut.png\"\" /c/Users/sbona/k9-rehab-pro/k9-rehab-frontend/build/welcome-lab.png # Kill existing http-server and restart tasklist)"
+    ]
+  }
+}
