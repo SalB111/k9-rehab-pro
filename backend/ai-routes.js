@@ -188,6 +188,30 @@ function createAIRouter(db, aiService, requireAuth) {
     }
   });
 
+  // ─── Storyboard Animation ───
+
+  router.get('/storyboard/:code/animation', async (req, res) => {
+    try {
+      const { getOrGenerateStoryboard } = require('./storyboard-references');
+      const { generateAnimationData } = require('./ai-storyboard-animator');
+
+      const storyboard = getOrGenerateStoryboard(req.params.code);
+      if (!storyboard) {
+        return res.status(404).json({ error: 'Storyboard not found for exercise: ' + req.params.code });
+      }
+
+      const animationData = generateAnimationData(storyboard);
+      if (!animationData) {
+        return res.status(500).json({ error: 'Failed to generate animation data' });
+      }
+
+      res.json(animationData);
+    } catch (err) {
+      console.error('🔴 Storyboard animation error:', err.message);
+      res.status(500).json({ error: 'Failed to load storyboard animation' });
+    }
+  });
+
   // ─── Suggestions ───
 
   router.get('/suggestions', (req, res) => {

@@ -137,6 +137,16 @@ export async function streamMessage(
   }
 }
 
+// ─── Storyboard Animation ───
+
+export async function getStoryboardAnimation(exerciseCode: string): Promise<unknown> {
+  const res = await fetch(`${AI_API_BASE_URL}/storyboard/${exerciseCode}/animation`, {
+    headers: getAuthHeaders()
+  });
+  if (!res.ok) throw new Error('Failed to load storyboard animation');
+  return res.json();
+}
+
 // ─── Suggestions ───
 
 export async function getSuggestions(contextType?: string): Promise<AISuggestion[]> {
