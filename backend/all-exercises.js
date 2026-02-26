@@ -46,6 +46,7 @@ const DUPLICATE_CODES = new Set([
   'GENTLE_PROM',       // → use PROM_STIFLE
   'SENIOR_WALK',       // → use SLOW_WALK
   'NEURO_PROM',        // → use PROM_STIFLE
+  'WHEEL_BARREL',      // → use WHEELBARROW (spelling fix)
 ]);
 
 // ============================================================================

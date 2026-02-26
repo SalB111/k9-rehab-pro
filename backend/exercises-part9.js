@@ -1092,6 +1092,606 @@ const EXERCISES_PART9 = [
     progression: 'Maintain throughout athletic career. Appropriate conditioning for purpose. Careful retirement. Senior management',
     contraindications: 'Determined by individual health status',
     difficulty_level: 'Advanced'
+  },
+
+  // ════════════════════════════════════════════════════════════════════════════
+  // SOURCE-OF-TRUTH ALIGNMENT EXERCISES
+  // canine_rehab_protocols.docx — exercises required by protocol definitions
+  // ════════════════════════════════════════════════════════════════════════════
+
+  {
+    code: 'STAIR_DESCEND',
+    name: 'Stair Descending (Controlled)',
+    category: 'Active Therapeutic',
+    description: 'Controlled stair descent for eccentric muscle strengthening of the quadriceps and hip extensors. Descending stairs requires coordinated eccentric contraction to control body weight against gravity, building functional strength for daily living activities.',
+    equipment: ['Stairs with non-slip surface', 'Leash', 'Harness or sling (if needed)', 'Non-slip stair treads recommended'],
+    setup: 'Select stairs with non-slip surface and good footing. Handler positions on the downhill side for safety. For post-surgical patients, use a sling or harness for initial support.',
+    steps: [
+      'Position dog at top of stairs on leash',
+      'Handler descends one step ahead or alongside',
+      'Allow dog to step down one step at a time',
+      'Ensure controlled, deliberate placement of each foot',
+      'Pause between steps if needed for balance',
+      'Maintain slow, steady pace throughout descent',
+      'Complete 3-5 flights with rest between'
+    ],
+    good_form: [
+      'Controlled, deliberate step-down on each stair',
+      'Even weight distribution between limbs',
+      'No rushing or jumping multiple stairs',
+      'Steady head position, looking forward'
+    ],
+    common_mistakes: [
+      'Allowing dog to rush or bound down stairs',
+      'Stairs too steep for current ability level',
+      'No handler support when needed',
+      'Too many flights without rest breaks'
+    ],
+    red_flags: [
+      'Bunny-hopping down stairs (avoiding limb use)',
+      'Visible pain or vocalization during descent',
+      'Loss of balance or stumbling',
+      'Refusal to descend (may indicate pain or fear)'
+    ],
+    progression: 'Increase number of flights. Remove sling support. Add slight speed increase. Progress to outdoor/uneven stairs.',
+    contraindications: 'Non-weight-bearing status, acute post-surgical (< 6 weeks TPLO), severe ataxia, unstable fractures, severe cardiac/respiratory compromise',
+    difficulty_level: 'Moderate'
+  },
+
+  {
+    code: 'DIAGONAL_WALK',
+    name: 'Diagonal Walking',
+    category: 'Active Therapeutic',
+    description: 'Cross-body coordination exercise where the dog walks in diagonal patterns to engage contralateral limb pairs simultaneously. Promotes core stabilization, spinal health, and neuromotor coordination — especially valuable for IVDD maintenance and spinal rehab.',
+    equipment: ['Non-slip surface', 'Leash', 'Cones or markers (optional)', 'Treats for motivation'],
+    setup: 'Set up a clear, non-slip walking area. Optional: place cones in a diagonal grid pattern to guide the path. Handler walks alongside to direct diagonal movement.',
+    steps: [
+      'Begin walking forward in a straight line',
+      'Gently guide dog to walk at a 45-degree diagonal angle',
+      'Maintain diagonal path for 10-20 steps',
+      'Reverse direction to walk the opposite diagonal',
+      'Encourage deliberate, slow foot placement',
+      'Alternate left and right diagonal patterns',
+      'Complete 2 sets of 10-20 steps each direction'
+    ],
+    good_form: [
+      'Smooth, coordinated gait with cross-body engagement',
+      'Core visibly engaged (no swaying trunk)',
+      'Equal stride length on all four limbs',
+      'Controlled, purposeful movement'
+    ],
+    common_mistakes: [
+      'Moving too fast (loses coordination benefit)',
+      'Walking straight instead of true diagonal',
+      'Handler pulling rather than guiding',
+      'Session too long causing fatigue'
+    ],
+    red_flags: [
+      'Worsening ataxia during exercise',
+      'Scuffing or knuckling of paws',
+      'Pain on spinal palpation after exercise',
+      'Reluctance or resistance to directional changes'
+    ],
+    progression: 'Increase distance. Tighter diagonal angles. Add slight incline. Vary surface texture.',
+    contraindications: 'Acute disc herniation, severe ataxia, non-ambulatory status, acute spinal pain',
+    difficulty_level: 'Moderate'
+  },
+
+  {
+    code: 'JOG_LEASH',
+    name: 'Jogging (Controlled Leash)',
+    category: 'Active Therapeutic',
+    description: 'Controlled on-leash jogging at a pace faster than trot but slower than full run. Builds cardiovascular fitness, normalizes gait speed, and prepares for return to unrestricted activity. Used in the final phase of post-surgical rehabilitation.',
+    equipment: ['Flat collar or harness', 'Standard 4-6 foot leash', 'Level, non-slip surface', 'Appropriate footwear for handler'],
+    setup: 'Select a flat, even surface (grass field, rubberized track, or smooth path). Ensure dog has been warmed up with 5-10 minutes of walking. Handler must be able to jog comfortably alongside.',
+    steps: [
+      'Begin with 5-minute controlled walk warm-up',
+      'Gradually increase pace to a steady jog',
+      'Maintain consistent speed (handler sets pace)',
+      'Jog for 1-2 minute intervals initially',
+      'Intersperse with 2-minute walking recovery',
+      'Monitor gait symmetry throughout',
+      'Complete 5-8 jog/walk intervals',
+      'End with 5-minute cool-down walk'
+    ],
+    good_form: [
+      'Symmetrical gait at jogging speed',
+      'Relaxed head and neck carriage',
+      'Even stride length all four limbs',
+      'No visible favoring of surgical limb'
+    ],
+    common_mistakes: [
+      'Starting jogging before cleared by veterinarian',
+      'Pace too fast (should be controlled, not sprinting)',
+      'Inadequate warm-up before jogging',
+      'Jogging on hard surfaces (asphalt/concrete)'
+    ],
+    red_flags: [
+      'Lameness visible at jog that was absent at walk',
+      'Head bob indicating weight-bearing asymmetry',
+      'Reluctance to maintain pace',
+      'Post-exercise soreness lasting > 24 hours'
+    ],
+    progression: 'Increase jog interval duration. Reduce walk recovery time. Add gentle inclines. Increase total session time.',
+    contraindications: 'Not cleared for Phase 4, visible lameness at walk or trot, less than 12 weeks post-TPLO, incomplete bone healing, pain score > 3/10',
+    difficulty_level: 'Advanced'
+  },
+
+  {
+    code: 'LAND_TREADMILL',
+    name: 'Land Treadmill Walking/Trotting',
+    category: 'Active Therapeutic',
+    description: 'Controlled walking or trotting on a motorized land treadmill for consistent-pace gait training. Allows precise speed control, eliminates terrain variables, enables indoor training, and facilitates gait observation. Different from underwater treadmill — no buoyancy support.',
+    equipment: ['Canine or human treadmill (low-speed capable)', 'Side rails or safety leash attachment', 'Non-slip treadmill belt', 'Treats for motivation'],
+    setup: 'Introduce treadmill while OFF first. Allow dog to stand on stationary belt. Secure with a short safety leash to overhead point — never tighten around neck. Start at slowest speed setting.',
+    steps: [
+      'Position dog on stationary treadmill',
+      'Start belt at slowest speed setting',
+      'Allow dog to find rhythm at walking pace',
+      'Gradually increase speed as comfort allows',
+      'Maintain controlled walk for 5-10 minutes initially',
+      'For trotting: increase speed smoothly after warm-up',
+      'Monitor gait quality and limb symmetry throughout',
+      'Cool down by gradually reducing speed',
+      'Stop belt and allow dog to step off'
+    ],
+    good_form: [
+      'Comfortable, relaxed gait on the belt',
+      'Symmetrical stride length and timing',
+      'Head forward, not looking down at belt',
+      'Consistent pace without surging or lagging'
+    ],
+    common_mistakes: [
+      'Speed too fast for current ability',
+      'No warm-up period on treadmill',
+      'Leaving dog unattended on treadmill',
+      'Belt too narrow for dog size'
+    ],
+    red_flags: [
+      'Panicking or scrambling on the belt',
+      'Drifting to one side consistently',
+      'Gait asymmetry developing during session',
+      'Excessive panting or distress signs'
+    ],
+    progression: 'Increase duration. Gradually increase speed. Progress from walk to trot intervals. Add incline if treadmill supports it.',
+    contraindications: 'Extreme anxiety, non-weight-bearing status, acute post-surgical (< 2 weeks), severe cardiac/respiratory compromise, vestibular disease',
+    difficulty_level: 'Moderate'
+  },
+
+  {
+    code: 'FETCH_CONTROLLED',
+    name: 'Retrieve / Fetch (Controlled Distance)',
+    category: 'Active Therapeutic',
+    description: 'Controlled land-based fetch at short distances to develop sprint acceleration and deceleration control. Used in final rehabilitation phases to restore functional activity patterns. Distance is strictly limited to prevent overexertion on the surgical limb.',
+    equipment: ['Tennis ball or soft toy', 'Flat, non-slip surface (grass preferred)', 'Long leash for safety (20-30 ft)', 'Treats for recall'],
+    setup: 'Select a flat grass surface free of holes or obstacles. Attach long line for safety. Mark a maximum distance with a cone. Keep throws low and straight — no high tosses.',
+    steps: [
+      'Warm up with 5-minute controlled walk',
+      'Position dog at starting point on long line',
+      'Throw toy/ball short distance (5-10 feet initially)',
+      'Allow controlled trot to retrieve',
+      'Call dog back — should return at controlled pace',
+      'Rest 30-60 seconds between throws',
+      'Complete 3-5 throws per session',
+      'Cool down with 5-minute walk'
+    ],
+    good_form: [
+      'Controlled acceleration to retrieve object',
+      'Smooth deceleration on pickup',
+      'Even gait during return',
+      'No limping or head-bobbing at any speed'
+    ],
+    common_mistakes: [
+      'Throwing too far before cleared',
+      'Allowing high-speed sprinting',
+      'Playing on hard/slippery surfaces',
+      'Too many repetitions causing fatigue'
+    ],
+    red_flags: [
+      'Limping after any retrieve',
+      'Refusing to bear weight after running',
+      'Head bob visible during acceleration',
+      'Post-session lameness lasting > 2 hours'
+    ],
+    progression: 'Increase distance gradually. Add slight direction changes. Progress to off-leash in enclosed area when cleared.',
+    contraindications: 'Not cleared for Phase 4, visible lameness, less than 12 weeks post-surgery, incomplete bone healing, pain score > 3/10',
+    difficulty_level: 'Advanced'
+  },
+
+  {
+    code: 'PROM_STIFLE_SPEC',
+    name: 'Passive ROM — Stifle Flexion/Extension (Targeted)',
+    category: 'Passive Therapy',
+    description: 'Stifle-specific passive range of motion focusing on controlled flexion and extension of the stifle joint. Higher frequency than general PROM due to stifle-specific adhesion risk post-TPLO. Emphasis on maintaining full flexion/extension arc and transitioning to active-assisted movement.',
+    equipment: ['Non-slip mat or padded surface', 'Warm pack (optional, for pre-treatment)'],
+    setup: 'Position dog in lateral recumbency with affected limb up. Apply gentle warm pack to stifle for 2-3 minutes before starting if indicated. Handler supports proximal and distal to the stifle joint.',
+    steps: [
+      'Stabilize femur with one hand proximal to stifle',
+      'Grasp tibia distal to stifle with the other hand',
+      'Slowly flex stifle through comfortable range',
+      'Hold at end-range flexion for 5-10 seconds',
+      'Slowly extend stifle through comfortable range',
+      'Hold at end-range extension for 5-10 seconds',
+      'Complete 10-15 full flexion/extension cycles',
+      'Monitor for pain response throughout'
+    ],
+    good_form: [
+      'Smooth, controlled movement through full available arc',
+      'No crepitus or catching during motion',
+      'Dog remains relaxed during the exercise',
+      'End-range holds without guarding'
+    ],
+    common_mistakes: [
+      'Forcing ROM past pain threshold',
+      'Moving too quickly through the arc',
+      'Not stabilizing femur during movement',
+      'Skipping warm-up on stiff joints'
+    ],
+    red_flags: [
+      'Acute pain response or vocalization',
+      'Crepitus indicating hardware complication',
+      'Progressive loss of ROM between sessions',
+      'Effusion increase after PROM session'
+    ],
+    progression: 'Transition to active-assisted ROM. Increase end-range hold time. Add gentle overpressure at end-range.',
+    contraindications: 'Acute surgical site inflammation, hardware failure suspected, severe effusion, fracture instability',
+    difficulty_level: 'Easy'
+  },
+
+  {
+    code: 'WEIGHT_SHIFT_CC',
+    name: 'Weight-Shift Standing (Cranial/Caudal)',
+    category: 'Active Therapeutic',
+    description: 'Controlled forward and backward weight shifting to load forelimbs and hindlimbs alternately. Complements lateral weight shifting by challenging the sagittal plane. Promotes hind limb loading awareness and pelvic stabilization, especially important post-TPLO and for OA patients.',
+    equipment: ['Non-slip mat', 'Treats or toy for motivation', 'Handler support if needed'],
+    setup: 'Position dog in square standing stance on non-slip surface. Handler stands beside the dog with treats positioned to guide forward/backward shifting.',
+    steps: [
+      'Position dog in square, even stance',
+      'Hold treat low and forward to encourage forward weight shift (forelimb loading)',
+      'Hold position for 2-3 seconds',
+      'Move treat backward past chest to encourage backward weight shift (hindlimb loading)',
+      'Hold position for 2-3 seconds',
+      'Repeat 5-10 cranial/caudal shifts per set',
+      'Complete 2-3 sets with brief rest between'
+    ],
+    good_form: [
+      'Visible weight transfer between forelimbs and hindlimbs',
+      'Feet remain planted during the shift',
+      'Core engaged, no trunk sway',
+      'Equal loading of left and right within the shifted direction'
+    ],
+    common_mistakes: [
+      'Dog stepping forward/backward instead of shifting weight',
+      'Treats held too far away (causes walking, not shifting)',
+      'Not holding shifted position long enough',
+      'Ignoring asymmetric loading patterns'
+    ],
+    red_flags: [
+      'Consistent refusal to load hindlimbs',
+      'Trembling or shaking during holds',
+      'Shifting weight OFF the affected limb',
+      'Pain posturing during backward shifts'
+    ],
+    progression: 'Uneven surface. Longer holds (5-10 sec). Add gentle perturbation during hold.',
+    contraindications: 'Non-weight-bearing status, acute post-surgical (< 2 weeks), severe pain, unstable fracture',
+    difficulty_level: 'Easy'
+  },
+
+  // ============================================================================
+  // SOURCE-OF-TRUTH AUDIT (Feb 2026) — New distinct exercise codes
+  // These replace conflated mappings identified during clinical audit
+  // ============================================================================
+
+  {
+    code: 'STRETCH_ILIO',
+    name: 'Stretching - Passive Iliopsoas',
+    category: 'Passive Therapy',
+    description: 'Passive stretching of the iliopsoas (hip flexor) muscle to improve hip extension range. The handler holds the limb in sustained extension to lengthen the iliopsoas muscle-tendon unit. Distinct from myofascial release — this targets muscle length through prolonged low-load stretch, not fascial adhesion release.',
+    equipment: ['Non-slip mat or padded surface', 'Warm pack (optional, pre-treatment)'],
+    setup: 'Position dog in lateral recumbency with affected side up. Apply warm pack to hip flexor region for 2-3 minutes if indicated. Handler supports the femur proximal to the stifle.',
+    steps: [
+      'Apply warm pack to hip flexor region for 2-3 minutes',
+      'Stabilize pelvis with one hand',
+      'Grasp femur proximal to stifle with other hand',
+      'Slowly extend hip joint caudally into extension',
+      'Hold at end-range extension for 15-30 seconds',
+      'Release slowly and allow limb to return to neutral',
+      'Repeat 3-5 times per session',
+      'Monitor for pain response — stop if guarding occurs'
+    ],
+    good_form: [
+      'Sustained, gentle stretch at end-range without bouncing',
+      'Dog remains relaxed throughout the hold',
+      'Measurable improvement in hip extension over sessions',
+      'Pelvis remains stabilized during stretch'
+    ],
+    common_mistakes: [
+      'Bouncing or pulsing instead of sustained hold',
+      'Not holding stretch long enough (< 15 sec)',
+      'Allowing pelvic rotation to compensate',
+      'Stretching cold tissue without warm-up'
+    ],
+    red_flags: [
+      'Acute pain response during stretch',
+      'Progressive loss of ROM between sessions',
+      'Muscle spasm during hold',
+      'Post-stretch soreness lasting > 4 hours'
+    ],
+    progression: 'Increase hold duration to 30 seconds. Increase extension range as tissue accommodates. Progress to active-assisted stretching.',
+    contraindications: 'Acute iliopsoas strain, hip luxation risk, unstable pelvic fracture, severe hip dysplasia with subluxation',
+    difficulty_level: 'Easy'
+  },
+
+  {
+    code: 'ROCKER_BOARD',
+    name: 'Rocker Board Standing',
+    category: 'Balance & Proprioception',
+    description: 'Standing on a uni-planar rocker board that tilts in one plane only (side-to-side or front-to-back). Provides a controlled, intermediate balance challenge between flat surface and multi-planar wobble board. Targets lateral or sagittal-plane stabilizers depending on board orientation.',
+    equipment: ['Rocker board (uni-planar)', 'Non-slip surface or yoga mat underneath', 'Treats for motivation', 'Handler for support'],
+    setup: 'Place rocker board on non-slip surface. Orient the rocker axis based on target plane (perpendicular to dog for lateral challenge, parallel for front-to-back challenge). Position handler at side for support.',
+    steps: [
+      'Lure dog onto rocker board with all four feet',
+      'Allow dog to find equilibrium on the tilting surface',
+      'Hold position for 20-30 seconds initially',
+      'Observe weight shifting as board rocks',
+      'Handler provides minimal support at shoulders/hips if needed',
+      'Rest 30 seconds between sets',
+      'Complete 3 sets per session'
+    ],
+    good_form: [
+      'Controlled weight shifts to maintain balance',
+      'Head and spine aligned during tilting',
+      'Four-point contact maintained on board',
+      'Smooth recovery when board tips'
+    ],
+    common_mistakes: [
+      'Dog jumping off instead of correcting balance',
+      'Handler providing too much support',
+      'Board placed on slippery surface',
+      'Sessions too long causing fatigue'
+    ],
+    red_flags: [
+      'Consistent falling off board',
+      'Trembling or shaking indicating fatigue',
+      'Pain response during weight shifting',
+      'Inability to maintain standing position'
+    ],
+    progression: 'Increase hold time. Combine with weight shifts. Add gentle perturbation from handler. Progress to multi-planar wobble board when stable.',
+    contraindications: 'Non-weight-bearing status, acute post-surgical (< 6 weeks for balance work), severe vestibular disease, fracture instability',
+    difficulty_level: 'Intermediate'
+  },
+
+  {
+    code: 'TRAMPOLINE_STAND',
+    name: 'Trampoline Standing',
+    category: 'Balance & Proprioception',
+    description: 'Standing on a small rehabilitation mini-trampoline surface for proprioceptive challenge. The compliant, bouncy surface creates a unique unstable environment that challenges postural reflexes and joint stabilizers differently than foam or balance boards. Especially valuable for geriatric patients to improve reactive balance.',
+    equipment: ['Rehabilitation mini-trampoline (small, firm)', 'Non-slip surrounds', 'Treats for motivation', 'Handler for safety'],
+    setup: 'Place mini-trampoline on non-slip floor. Position handler at side ready to support dog. Have treats ready to maintain dog on the trampoline surface.',
+    steps: [
+      'Lure dog onto trampoline surface with treats',
+      'Allow dog to acclimate to the surface compliance',
+      'Hold standing position for 20-45 seconds',
+      'Handler may induce gentle bouncing by pressing edge of trampoline',
+      'Observe postural corrections and stabilization responses',
+      'Rest between sets',
+      'Complete 3 sets per session'
+    ],
+    good_form: [
+      'Stable standing with all four feet on trampoline surface',
+      'Active postural corrections visible',
+      'Dog engages core musculature for stabilization',
+      'Relaxed, confident posture (not bracing)'
+    ],
+    common_mistakes: [
+      'Trampoline too bouncy for patient level',
+      'Dog allowed to jump off repeatedly',
+      'Handler bounce too aggressive',
+      'Not supervising closely enough for falls'
+    ],
+    red_flags: [
+      'Panic or anxiety on the surface',
+      'Falling off with inability to self-correct',
+      'Visible pain during weight bearing',
+      'Fatigue-induced trembling or collapse'
+    ],
+    progression: 'Increase standing duration. Add handler-induced gentle bouncing. Add treat-reaching challenges while on surface.',
+    contraindications: 'Non-weight-bearing status, severe vestibular disease, cognitive dysfunction causing anxiety, severe OA (KL Grade 4), fracture instability',
+    difficulty_level: 'Intermediate'
+  },
+
+  {
+    code: 'LADDER_WALK',
+    name: 'Ladder Walking',
+    category: 'Balance & Proprioception',
+    description: 'Walking through a ground ladder (laid flat) to enforce rhythmic, sequential foot placement in defined spacing. Each rung requires conscious limb placement, training proprioceptive awareness and motor planning. Distinct from cavaletti rails (which clear vertical obstacles) — ladder walking targets horizontal foot targeting between rungs.',
+    equipment: ['Ground ladder (flat or agility ladder)', 'Non-slip surface', 'Treats for motivation', 'Leash for pacing control'],
+    setup: 'Lay ladder flat on non-slip surface. Ensure rungs are evenly spaced. Position handler at head with leash and treats to guide pace.',
+    steps: [
+      'Position dog at one end of the ladder',
+      'Lure dog forward slowly with treats at nose level',
+      'Encourage placement of each foot between rungs',
+      'Maintain slow, deliberate pace through entire ladder',
+      'Reward at the end of each pass',
+      'Walk back through or circle around for next pass',
+      'Complete 3-5 passes per session'
+    ],
+    good_form: [
+      'Each foot placed deliberately between rungs without touching',
+      'Consistent stride rhythm throughout the ladder',
+      'Head neutral, not reaching excessively for treats',
+      'Even weight distribution on all four limbs'
+    ],
+    common_mistakes: [
+      'Rushing through the ladder',
+      'Stepping on rungs instead of between them',
+      'Ladder on slippery surface causing movement',
+      'Rung spacing too tight for patient size'
+    ],
+    red_flags: [
+      'Repeated tripping on rungs',
+      'Inability to coordinate limb placement',
+      'Dragging limbs through rungs (neurological sign)',
+      'Pain response or lameness during exercise'
+    ],
+    progression: 'Vary rung spacing. Increase speed slightly. Add curved or angled ladder. Elevate ladder slightly off ground for additional challenge.',
+    contraindications: 'Non-weight-bearing status, severe ataxia without handler support, crate rest required, acute neurological deterioration',
+    difficulty_level: 'Intermediate'
+  },
+
+  {
+    code: 'BOSU_FRONT',
+    name: 'BOSU Ball Standing (Front Feet Only)',
+    category: 'Balance & Proprioception',
+    description: 'Front feet placed on a BOSU ball (dome side up) while hind feet remain on stable ground. Specifically targets forelimb proprioception, scapular stabilization, and cranial core activation. The cranial weight-shift position challenges shoulder stabilizers and thoracic spine control. Used in IVDD recovery for neuromotor re-education of the forelimbs.',
+    equipment: ['BOSU ball (dome side up)', 'Non-slip surface', 'Treats', 'Handler for support'],
+    setup: 'Place BOSU ball dome-up on non-slip surface. Position handler at side for support. Have treats ready at nose height to lure front feet placement.',
+    steps: [
+      'Lure dog to place front feet on BOSU dome',
+      'Hind feet remain on stable ground surface',
+      'Allow dog to find balance on the unstable surface',
+      'Hold position for 20-45 seconds',
+      'Handler supports at shoulders if needed initially',
+      'Rest between sets',
+      'Complete 3 sets per session'
+    ],
+    good_form: [
+      'Both front feet centered on dome surface',
+      'Active scapular stabilization visible',
+      'Core engagement with slight thoracic flexion',
+      'Hind feet stable and evenly weighted'
+    ],
+    common_mistakes: [
+      'Front feet too far forward on dome edge',
+      'Dog sliding off due to incorrect paw placement',
+      'Handler providing too much support',
+      'Hind feet stepping forward onto BOSU'
+    ],
+    red_flags: [
+      'Forelimb trembling indicating excessive fatigue',
+      'Pain response in neck or thoracic region',
+      'Inability to maintain front paw contact',
+      'Neurological deterioration during exercise'
+    ],
+    progression: 'Increase hold time. Add perturbation at shoulders. Add treat reaching while balancing. Progress to all four feet on BOSU.',
+    contraindications: 'Non-weight-bearing (forelimbs), cervical instability, acute spinal cord compression, severe forelimb weakness',
+    difficulty_level: 'Intermediate'
+  },
+
+  {
+    code: 'BOSU_HIND',
+    name: 'BOSU Ball Standing (Hind Feet Only)',
+    category: 'Balance & Proprioception',
+    description: 'Hind feet placed on a BOSU ball (dome side up) while front feet remain on stable ground. Specifically targets hindlimb proprioception, hip/stifle stabilization, and caudal core activation. The caudal weight-shift position challenges pelvic stabilizers and hip extensors. Critical for post-TPLO recovery to rebuild stifle joint stability.',
+    equipment: ['BOSU ball (dome side up)', 'Non-slip surface', 'Treats', 'Handler for support'],
+    setup: 'Place BOSU ball dome-up on non-slip surface. Position dog facing away from BOSU. Lure dog to back hind feet onto dome. Handler ready at hips for support.',
+    steps: [
+      'Position dog in front of BOSU ball',
+      'Lure dog backward to place hind feet on BOSU dome',
+      'Front feet remain on stable ground surface',
+      'Allow dog to find balance with hindlimbs on unstable surface',
+      'Hold position for 20-45 seconds',
+      'Handler supports at hips if needed initially',
+      'Rest between sets',
+      'Complete 3 sets per session'
+    ],
+    good_form: [
+      'Both hind feet centered on dome surface',
+      'Active pelvic stabilization visible',
+      'Core engagement with slight lumbar flexion',
+      'Even weight bearing on both hind limbs'
+    ],
+    common_mistakes: [
+      'Hind feet too far back on dome edge',
+      'Dog compensating by shifting weight cranially',
+      'Handler providing too much hip support',
+      'Allowing dog to sit instead of standing'
+    ],
+    red_flags: [
+      'Hindlimb trembling or giving way',
+      'Visible stifle valgus under loading',
+      'Pain response in surgical limb',
+      'Asymmetric weight bearing on BOSU'
+    ],
+    progression: 'Increase hold time. Add perturbation at hips. Add gentle lateral shifts. Progress to all four feet on BOSU.',
+    contraindications: 'Non-weight-bearing (hindlimbs), acute post-TPLO (< 6 weeks), patellar luxation with instability, severe hip dysplasia',
+    difficulty_level: 'Intermediate'
+  },
+
+  {
+    code: 'CAVALETTI_ELEV',
+    name: 'Cavaletti - Elevated Height',
+    category: 'Cavaletti & Obstacle',
+    description: 'Walking over cavaletti rails set at elevated height to increase joint flexion demand during stepping. Higher rail height forces greater stifle, hip, and hock flexion compared to standard-height cavaletti. Targets ROM improvement and strengthening through increased range demand. Distinct from CAVALETTI_RAILS (low height for gait patterning).',
+    equipment: ['Cavaletti rail set (adjustable height)', 'Non-slip surface', 'Treats', 'Leash for pacing'],
+    setup: 'Set cavaletti rails at elevated height appropriate for dog size (approximately hock height or slightly above). Space rails 1-1.5 body lengths apart. Place on non-slip surface.',
+    steps: [
+      'Position dog at the start of the cavaletti line',
+      'Lead dog slowly over the elevated rails',
+      'Encourage deliberate, high-stepping gait',
+      'Maintain slow, controlled pace throughout',
+      'Reward at the end of each pass',
+      'Complete 3-5 passes per set, 2 sets per session'
+    ],
+    good_form: [
+      'Clean clearance of each rail without touching',
+      'Exaggerated joint flexion during stepping',
+      'Consistent stride length between rails',
+      'Head and spine aligned during exercise'
+    ],
+    common_mistakes: [
+      'Rails set too high for current ability',
+      'Pace too fast — rushing reduces joint flexion benefit',
+      'Spacing too tight causing shortened stride',
+      'Not adjusting height for dog size'
+    ],
+    red_flags: [
+      'Consistent rail contact indicating insufficient ROM',
+      'Tripping or stumbling',
+      'Pain response during high-stepping',
+      'Post-exercise lameness or stiffness'
+    ],
+    progression: 'Increase height incrementally. Vary rail spacing. Add slight incline. Combine with curved path.',
+    contraindications: 'Non-weight-bearing status, severe ROM limitation, acute joint inflammation, crate rest required',
+    difficulty_level: 'Intermediate'
+  },
+
+  {
+    code: 'CAVALETTI_WEAVE',
+    name: 'Cavaletti - Weave Pattern',
+    category: 'Cavaletti & Obstacle',
+    description: 'Walking through cavaletti rails arranged in a weave or curved pattern to add lateral weight shifting challenge. Combines the stepping demands of cavaletti with directional changes. Targets multi-directional proprioception, lateral stabilization, and dynamic balance during locomotion. Used as an advanced cavaletti progression.',
+    equipment: ['Cavaletti rail set', 'Non-slip surface', 'Treats', 'Leash for pacing'],
+    setup: 'Arrange cavaletti rails in a curved or offset pattern creating a weave path. Rail height at standard or slightly elevated. Ensure adequate spacing for the turn radius.',
+    steps: [
+      'Position dog at the start of the weave pattern',
+      'Lead dog through the curved path at slow, controlled pace',
+      'Encourage smooth directional changes between rails',
+      'Maintain consistent pace throughout the weave',
+      'Reward at the end of each complete pass',
+      'Complete 3-5 passes per session'
+    ],
+    good_form: [
+      'Smooth directional transitions between rails',
+      'Clean rail clearance maintained during turns',
+      'Balanced weight distribution through curves',
+      'Engaged core throughout the pattern'
+    ],
+    common_mistakes: [
+      'Pattern too tight for dog size',
+      'Pace too fast through curves',
+      'Cutting corners instead of following the weave',
+      'Rails knocked by dragging limbs on turns'
+    ],
+    red_flags: [
+      'Loss of balance during directional changes',
+      'Consistent rail contact on turns',
+      'Lameness visible during lateral weight shifting',
+      'Refusal or anxiety approaching the pattern'
+    ],
+    progression: 'Tighter weave pattern. Increase speed slightly. Add elevation to rails. Combine with speed variation.',
+    contraindications: 'Non-weight-bearing status, severe ataxia, acute vestibular disease, crate rest required',
+    difficulty_level: 'Advanced'
   }
 ];
 

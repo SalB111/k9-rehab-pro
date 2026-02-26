@@ -10,3 +10,4 @@ Object.entries(byCategory).forEach(([cat, codes]) => {
   console.log('\n' + cat + ':');
   codes.forEach(c => console.log('  ' + c));
 });
+Microsoft.QuickAction.WiFiremove what ytou 

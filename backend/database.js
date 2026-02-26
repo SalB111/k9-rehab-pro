@@ -6,8 +6,8 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
-// Database file path
-const DB_PATH = path.join(__dirname, 'k9_rehab_pro.db');
+// Database file path — consolidated into single database.db
+const DB_PATH = path.join(__dirname, 'database.db');
 
 // Initialize database connection
 const db = new sqlite3.Database(DB_PATH, (err) => {

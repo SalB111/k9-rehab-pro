@@ -42,14 +42,24 @@ const STORYBOARD_LIBRARY = {
   // ═══════════════════════════════════════════════════════════════════════════
   PROM_STIFLE: {
     exercise_code: 'PROM_STIFLE',
-    version: '1.0',
-    last_updated: '2026-02-20',
+    version: '1.1',
+    last_updated: '2026-02-25',
+
+    // ── Breed Model ──
+    breed_model: {
+      breed: 'French Bulldog',
+      weight_lbs: 26,
+      size: 'small',
+      build: 'compact brachycephalic',
+      temperament: 'calm and compliant',
+      category_assignment: 'Passive Therapy',
+    },
 
     // ── 1. Exercise Name ──
     exercise_name: 'Passive Range of Motion — Stifle',
 
     // ── 2. Clinical Purpose ──
-    clinical_purpose: 'Maintain joint mobility, prevent adhesion formation, promote synovial fluid circulation, and reduce pain via gate-control mechanism. Critical intervention in acute and subacute post-CCL recovery to prevent joint contracture and muscle atrophy.',
+    clinical_purpose: 'Maintain joint mobility, prevent adhesion formation, promote synovial fluid circulation, and reduce pain via gate-control mechanism. Critical intervention in acute and subacute post-CCL recovery to prevent joint contracture and muscle atrophy. Demonstrated with French Bulldog (26 lbs, compact brachycephalic build). Scale handler positioning for smaller frame.',
 
     // ── 3. Indications ──
     indications: [
@@ -59,6 +69,7 @@ const STORYBOARD_LIBRARY = {
       'Joint contracture prevention during immobilization',
       'Muscle atrophy mitigation during restricted activity',
       'Post-meniscectomy recovery',
+      'Breed model: French Bulldog — compact brachycephalic, calm and compliant',
     ],
 
     // ── 4. Contraindications ──
@@ -80,7 +91,7 @@ const STORYBOARD_LIBRARY = {
     ],
 
     // ── 6. Handler Setup ──
-    handler_setup: 'Kneel or sit at the patient\'s side. Ensure the dog is in comfortable lateral recumbency on a padded surface with the affected limb uppermost. Position yourself so your proximal hand can stabilize the femur while your distal hand controls the tibia just above the hock. Assess baseline comfort and pain level before beginning.',
+    handler_setup: 'Kneel or sit at the patient\'s side. Ensure the dog is in comfortable lateral recumbency on a padded surface with the affected limb uppermost. Position yourself so your proximal hand can stabilize the femur while your distal hand controls the tibia just above the hock. Assess baseline comfort and pain level before beginning. Breed model: French Bulldog (26 lbs, small). This breed is compact brachycephalic with a calm and compliant temperament — use gentle, proportionate hand placement for small frame. Monitor respiratory effort (brachycephalic consideration).',
 
     // ── 7. Step-by-Step Movement Breakdown ──
     movement_breakdown: [
@@ -99,7 +110,7 @@ const STORYBOARD_LIBRARY = {
         frame_number: 1,
         frame_title: 'Patient Positioning',
         frame_description: 'Lateral recumbency setup on padded surface',
-        dog_action: 'Lying in lateral recumbency, affected limb uppermost, body relaxed and supported',
+        dog_action: 'French Bulldog (26 lbs, compact brachycephalic) lying in lateral recumbency, affected limb uppermost, body relaxed and supported. Patient is calm and compliant.',
         handler_action: 'Kneeling at patient\'s side, assessing comfort, preparing hand placement',
         clinical_cues: 'Verify patient comfort and relaxation before beginning. Assess baseline pain level. Check for swelling or warmth at the stifle.',
         safety_notes: 'Ensure non-slip surface. Support body with towel rolls if needed. Never restrain forcefully — patient must be relaxed.',
@@ -232,14 +243,14 @@ const STORYBOARD_LIBRARY = {
     // ── 11. Client-Friendly Script (20-30 seconds) ──
     client_script: {
       duration_range: '20-30 seconds',
-      text: "This exercise gently moves your dog's knee joint to help it heal properly after surgery. Have your dog lie comfortably on their side with the surgical leg on top. Place one hand on their thigh to hold it steady and your other hand below the knee. Slowly bend the knee toward the chest — take about 3 to 5 seconds. Hold for 5 seconds at the point where you feel gentle resistance, then slowly straighten it back out. Do this 10 to 15 times, 2 to 3 times a day. Stop immediately if your dog cries, pulls away, or tenses up. Call your veterinarian if you notice increased swelling, warmth, or limping after the exercise.",
+      text: "This exercise gently moves your dog's knee joint to help it heal properly after surgery. Demonstrated here with a French Bulldog (26 lbs). Your dog may need adjusted positioning based on their size and build. Have your dog lie comfortably on their side with the surgical leg on top. Place one hand on their thigh to hold it steady and your other hand below the knee. Slowly bend the knee toward the chest — take about 3 to 5 seconds. Hold for 5 seconds at the point where you feel gentle resistance, then slowly straighten it back out. Do this 10 to 15 times, 2 to 3 times a day. Stop immediately if your dog cries, pulls away, or tenses up. Call your veterinarian if you notice increased swelling, warmth, or limping after the exercise.",
       key_phrases: ['gently', 'slowly', 'stop immediately', 'call your veterinarian'],
     },
 
     // ── 12. Clinician-Level Script (20-40 seconds) ──
     clinician_script: {
       duration_range: '20-40 seconds',
-      text: "Passive range of motion of the stifle joint. Position the patient in lateral recumbency with the affected limb uppermost. Stabilize the femur with your proximal hand at the distal third. Grasp the tibia just proximal to the hock with your distal hand. Perform controlled flexion through the available pain-free range at 3 to 5 seconds per arc. Assess end-feel quality — soft tissue stretch is expected; bone-on-bone contact is abnormal and requires documentation. Hold at end-range for 5 to 10 seconds. Return to neutral at the same controlled speed. Complete 10 to 15 repetitions, 2 to 3 times daily during the acute phase. Document ROM using goniometry at each session. Contraindicated within 48 hours post-surgery, during acute septic arthritis, or with unstabilized fractures. Evidence base: Marsolais et al. 2003 demonstrated 40% reduction in post-surgical complications with early passive ROM. Millis & Levine Chapter 14 — Therapeutic Exercises.",
+      text: "Passive range of motion of the stifle joint. Breed model: French Bulldog (26 lbs, small, compact brachycephalic). Temperament: calm and compliant. Adjust technique for patient body type and conformation — monitor respiratory effort in brachycephalic breeds. Position the patient in lateral recumbency with the affected limb uppermost. Stabilize the femur with your proximal hand at the distal third. Grasp the tibia just proximal to the hock with your distal hand. Perform controlled flexion through the available pain-free range at 3 to 5 seconds per arc. Assess end-feel quality — soft tissue stretch is expected; bone-on-bone contact is abnormal and requires documentation. Hold at end-range for 5 to 10 seconds. Return to neutral at the same controlled speed. Complete 10 to 15 repetitions, 2 to 3 times daily during the acute phase. Document ROM using goniometry at each session. Contraindicated within 48 hours post-surgery, during acute septic arthritis, or with unstabilized fractures. Evidence base: Marsolais et al. 2003 demonstrated 40% reduction in post-surgical complications with early passive ROM. Millis & Levine Chapter 14 — Therapeutic Exercises.",
       key_phrases: ['end-feel', 'goniometry', 'pain-free range', 'contraindicated', 'Marsolais et al. 2003'],
     },
 
@@ -256,14 +267,24 @@ const STORYBOARD_LIBRARY = {
   // ═══════════════════════════════════════════════════════════════════════════
   SIT_STAND: {
     exercise_code: 'SIT_STAND',
-    version: '1.0',
-    last_updated: '2026-02-20',
+    version: '1.1',
+    last_updated: '2026-02-25',
+
+    // ── Breed Model ──
+    breed_model: {
+      breed: 'Pembroke Welsh Corgi',
+      weight_lbs: 28,
+      size: 'small',
+      build: 'long body, short limbs',
+      temperament: 'willing and food-motivated',
+      category_assignment: 'Active Assisted',
+    },
 
     // ── 1. Exercise Name ──
     exercise_name: 'Sit-to-Stand Transitions',
 
     // ── 2. Clinical Purpose ──
-    clinical_purpose: 'Rebuild hindlimb strength, particularly quadriceps and gluteal muscle groups. Promotes controlled weight shifting through the pelvic limbs, improves stifle and hip extension, and retrains functional movement patterns essential for daily activities.',
+    clinical_purpose: 'Rebuild hindlimb strength, particularly quadriceps and gluteal muscle groups. Promotes controlled weight shifting through the pelvic limbs, improves stifle and hip extension, and retrains functional movement patterns essential for daily activities. Demonstrated with Pembroke Welsh Corgi (28 lbs, long body with short limbs). Scale handler positioning for smaller frame — chondrodystrophic conformation requires attention to spinal alignment during transitions.',
 
     // ── 3. Indications ──
     indications: [
@@ -274,6 +295,7 @@ const STORYBOARD_LIBRARY = {
       'Geriatric muscle atrophy — hindlimb weakness',
       'Neurologic patients — proprioceptive retraining (with assistance)',
       'General conditioning and fitness maintenance',
+      'Breed model: Pembroke Welsh Corgi — long body, short limbs, willing and food-motivated',
     ],
 
     // ── 4. Contraindications ──
@@ -295,7 +317,7 @@ const STORYBOARD_LIBRARY = {
     ],
 
     // ── 6. Handler Setup ──
-    handler_setup: 'Stand or kneel directly in front of the dog. Hold treat at the dog\'s nose level. Ensure the dog is on a non-slip surface with adequate space. If the patient requires assistance, position a support sling under the abdomen. The handler should be able to observe the hindquarters during the entire exercise for symmetry assessment.',
+    handler_setup: 'Stand or kneel directly in front of the dog. Hold treat at the dog\'s nose level. Ensure the dog is on a non-slip surface with adequate space. If the patient requires assistance, position a support sling under the abdomen. The handler should be able to observe the hindquarters during the entire exercise for symmetry assessment. Breed model: Pembroke Welsh Corgi (28 lbs, small). This breed has long body with short limbs and a willing, food-motivated temperament — use gentle, proportionate hand placement for small frame. Treat luring is highly effective with this breed. Monitor spinal alignment due to chondrodystrophic conformation.',
 
     // ── 7. Step-by-Step Movement Breakdown ──
     movement_breakdown: [
@@ -313,7 +335,7 @@ const STORYBOARD_LIBRARY = {
         frame_number: 1,
         frame_title: 'Square Sit Position',
         frame_description: 'Starting position — symmetrical sit with both hindlimbs tucked',
-        dog_action: 'Sitting squarely with weight evenly distributed on both hindlimbs. Both hocks tucked symmetrically under the body.',
+        dog_action: 'Pembroke Welsh Corgi (28 lbs, long body, short limbs) sitting squarely with weight evenly distributed on both hindlimbs. Both hocks tucked symmetrically under the body. Patient is willing and food-motivated.',
         handler_action: 'Standing or kneeling in front. Assessing sit symmetry — does the dog favor one side? Hold treat ready at nose level.',
         clinical_cues: 'A "lazy sit" (one limb kicked out) indicates discomfort or weakness on the tucked side. Document sit symmetry as baseline.',
         safety_notes: 'Ensure non-slip surface. If dog cannot achieve a square sit, modify to assisted sit with sling before progressing.',
@@ -448,14 +470,14 @@ const STORYBOARD_LIBRARY = {
     // ── 11. Client-Friendly Script (20-30 seconds) ──
     client_script: {
       duration_range: '20-30 seconds',
-      text: "This exercise strengthens your dog's back legs by having them practice standing up from a sit. Start with your dog sitting on a non-slip surface. Hold a treat at nose level and slowly move it forward and up so your dog stands up to follow it. Let them stand for 2 to 3 seconds, give the treat, then guide them back into a sit by moving the treat down. Do 5 to 10 repetitions, 2 times a day. Watch that your dog pushes up with their back legs — not pulling with their front legs. Stop if your dog seems tired, sore, or starts collapsing into the sit instead of lowering slowly.",
+      text: "This exercise strengthens your dog's back legs by having them practice standing up from a sit. Demonstrated here with a Pembroke Welsh Corgi (28 lbs). Your dog may need adjusted positioning based on their size and build. Start with your dog sitting on a non-slip surface. Hold a treat at nose level and slowly move it forward and up so your dog stands up to follow it. Let them stand for 2 to 3 seconds, give the treat, then guide them back into a sit by moving the treat down. Do 5 to 10 repetitions, 2 times a day. Watch that your dog pushes up with their back legs — not pulling with their front legs. Stop if your dog seems tired, sore, or starts collapsing into the sit instead of lowering slowly.",
       key_phrases: ['back legs', 'slowly', 'non-slip surface', 'stop if tired'],
     },
 
     // ── 12. Clinician-Level Script (20-40 seconds) ──
     clinician_script: {
       duration_range: '20-40 seconds',
-      text: "Sit-to-stand transitions targeting concentric and eccentric quadriceps and gluteal loading. Position the patient in a square sit on a non-slip surface. Use a treat lure to guide into standing — the lure moves forward and slightly upward to encourage hindlimb drive rather than forelimb pulling. Peak loading occurs during the mid-transition phase when the stifle is at approximately 90 degrees of flexion. Hold the stand for 2 to 3 seconds, then lure back into a controlled sit. The eccentric descent is equally therapeutic — watch for plop sitting which indicates quadriceps fatigue. Start with 5 repetitions and progress to 10 to 15 as the patient builds strength. Monitor for sit symmetry as a marker of limb preference. Contraindicated in the acute post-surgical phase and with pain scores exceeding 6 out of 10. Millis & Levine Chapter 16 — Active Therapeutic Exercises.",
+      text: "Sit-to-stand transitions targeting concentric and eccentric quadriceps and gluteal loading. Breed model: Pembroke Welsh Corgi (28 lbs, small, long body, short limbs). Temperament: willing and food-motivated. Adjust technique for patient body type and conformation — chondrodystrophic builds require monitoring of spinal alignment during transitions. Position the patient in a square sit on a non-slip surface. Use a treat lure to guide into standing — the lure moves forward and slightly upward to encourage hindlimb drive rather than forelimb pulling. Peak loading occurs during the mid-transition phase when the stifle is at approximately 90 degrees of flexion. Hold the stand for 2 to 3 seconds, then lure back into a controlled sit. The eccentric descent is equally therapeutic — watch for plop sitting which indicates quadriceps fatigue. Start with 5 repetitions and progress to 10 to 15 as the patient builds strength. Monitor for sit symmetry as a marker of limb preference. Contraindicated in the acute post-surgical phase and with pain scores exceeding 6 out of 10. Millis & Levine Chapter 16 — Active Therapeutic Exercises.",
       key_phrases: ['concentric and eccentric', 'hindlimb drive', 'plop sitting', 'sit symmetry', 'Millis & Levine Chapter 16'],
     },
 
@@ -472,12 +494,22 @@ const STORYBOARD_LIBRARY = {
   // ═══════════════════════════════════════════════════════════════════════════
   CURB_WALK: {
     exercise_code: 'CURB_WALK',
-    version: '1.0',
-    last_updated: '2026-02-20',
+    version: '1.1',
+    last_updated: '2026-02-25',
+
+    // ── Breed Model ──
+    breed_model: {
+      breed: 'Pembroke Welsh Corgi',
+      weight_lbs: 28,
+      size: 'small',
+      build: 'long body, short limbs',
+      temperament: 'willing and food-motivated',
+      category_assignment: 'Active Assisted',
+    },
 
     exercise_name: 'Curb/Step Walking',
 
-    clinical_purpose: 'Improve active joint flexion and extension through controlled elevation changes. Walking with ipsilateral limbs elevated on a curb produces asymmetric weight loading that increases stifle and hip range of motion, strengthens quadriceps and gluteals during the step-up phase, and challenges proprioceptive awareness through uneven surface navigation. Targets functional gait retraining by simulating real-world terrain variations.',
+    clinical_purpose: 'Improve active joint flexion and extension through controlled elevation changes. Walking with ipsilateral limbs elevated on a curb produces asymmetric weight loading that increases stifle and hip range of motion, strengthens quadriceps and gluteals during the step-up phase, and challenges proprioceptive awareness through uneven surface navigation. Targets functional gait retraining by simulating real-world terrain variations. Demonstrated with Pembroke Welsh Corgi (28 lbs, long body with short limbs). Scale handler positioning for smaller frame — lower curb heights (2 inches) recommended for chondrodystrophic breeds.',
 
     indications: [
       'Post-CCL repair (TPLO, lateral suture, TTA) — Phase 2 onward (weeks 3+)',
@@ -488,6 +520,7 @@ const STORYBOARD_LIBRARY = {
       'Geriatric muscle atrophy with preserved ambulatory status',
       'General conditioning — hindlimb and forelimb strengthening',
       'Post-femoral head ostectomy (FHO) — mid-to-late rehabilitation',
+      'Breed model: Pembroke Welsh Corgi — long body, short limbs, willing and food-motivated',
     ],
 
     contraindications: [
@@ -508,7 +541,7 @@ const STORYBOARD_LIBRARY = {
       { item: 'Treat rewards', required: false },
     ],
 
-    handler_setup: 'Position yourself on the road-side (lower surface) with the dog between you and the curb. Hold the leash short (2-3 ft) in your curb-side hand to control pace and positioning. Your free hand should be available to guide the dog\'s hip or provide light support if needed. Walk at the dog\'s pace — never pull. Ensure the curb surface is dry, non-slip, and free of debris.',
+    handler_setup: 'Position yourself on the road-side (lower surface) with the dog between you and the curb. Hold the leash short (2-3 ft) in your curb-side hand to control pace and positioning. Your free hand should be available to guide the dog\'s hip or provide light support if needed. Walk at the dog\'s pace — never pull. Ensure the curb surface is dry, non-slip, and free of debris. Breed model: Pembroke Welsh Corgi (28 lbs, small). This breed has long body with short limbs and a willing, food-motivated temperament — use gentle, proportionate hand placement for small frame. Start with 2-inch curbs for chondrodystrophic builds; monitor spinal alignment throughout.',
 
     movement_breakdown: [
       { step: 1, action: 'Position dog parallel to curb, inside legs on elevated surface', muscle_focus: null, joint_motion: null },
@@ -525,7 +558,7 @@ const STORYBOARD_LIBRARY = {
         frame_number: 1,
         frame_title: 'Parallel Curb Setup',
         frame_description: 'Starting position — dog parallel to curb with ipsilateral limbs elevated',
-        dog_action: 'Standing parallel to curb with inside forelimb and hindlimb on the elevated surface. Outside limbs on the lower surface. Weight evenly distributed.',
+        dog_action: 'Pembroke Welsh Corgi (28 lbs, long body, short limbs) standing parallel to curb with inside forelimb and hindlimb on the elevated surface. Outside limbs on the lower surface. Weight evenly distributed. Patient is willing and food-motivated.',
         handler_action: 'Standing on the lower surface beside the dog. Leash short in curb-side hand. Free hand resting near the dog\'s hip for guidance.',
         clinical_cues: 'Confirm the dog is comfortable with the elevation difference. Assess baseline weight bearing on all four limbs. Verify curb surface is non-slip.',
         safety_notes: 'If the dog resists stepping onto the curb, use a treat lure. Never force placement. Start with a lower curb (2 inches) if hesitation occurs.',
@@ -654,13 +687,13 @@ const STORYBOARD_LIBRARY = {
 
     client_script: {
       duration_range: '20-30 seconds',
-      text: "This exercise strengthens your dog's legs by having them walk along a curb with two legs up and two legs down. Position your dog so the legs closest to the curb are up on the surface while the other two stay on the ground. Walk slowly for about 10 to 15 feet, then turn around so the other legs get a turn on top. Do 2 to 3 passes in each direction. Keep the pace slow — your dog should never rush. Stop immediately if your dog starts dragging their paws, limping more than before, or refusing to put weight on a leg. Call your vet if you see increased swelling or pain after the exercise.",
+      text: "This exercise strengthens your dog's legs by having them walk along a curb with two legs up and two legs down. Demonstrated here with a Pembroke Welsh Corgi (28 lbs). Your dog may need adjusted positioning based on their size and build. Position your dog so the legs closest to the curb are up on the surface while the other two stay on the ground. Walk slowly for about 10 to 15 feet, then turn around so the other legs get a turn on top. Do 2 to 3 passes in each direction. Keep the pace slow — your dog should never rush. Stop immediately if your dog starts dragging their paws, limping more than before, or refusing to put weight on a leg. Call your vet if you see increased swelling or pain after the exercise.",
       key_phrases: ['slowly', 'turn around', 'stop immediately', 'call your vet'],
     },
 
     clinician_script: {
       duration_range: '20-40 seconds',
-      text: "Curb walking with asymmetric limb elevation. Position the patient parallel to a 2-to-4-inch curb with the ipsilateral forelimb and hindlimb on the elevated surface. Walk forward at a controlled pace for 10 to 15 feet. The elevated limbs undergo 10 to 15 degrees of additional stifle and hip flexion compared to level walking, producing targeted concentric loading of the quadriceps and gluteals during the stance-to-swing transition. Reverse direction after each pass to load the contralateral limbs. Complete 2 to 3 passes per side. Monitor for trunk lean toward the lower surface, which indicates core instability. Paw dragging on the curb edge is a red flag for proprioceptive deficit. Progress by increasing curb height to 4 to 6 inches, adding perpendicular step-ups, or extending pass distance. Contraindicated with severe ataxia, non-weight-bearing lameness, acute post-surgical status, or pain exceeding 6 out of 10. Evidence base: Millis and Levine Chapter 16 — Active Therapeutic Exercises.",
+      text: "Curb walking with asymmetric limb elevation. Breed model: Pembroke Welsh Corgi (28 lbs, small, long body, short limbs). Temperament: willing and food-motivated. Adjust technique for patient body type and conformation — use 2-inch curbs for chondrodystrophic builds, monitor spinal alignment. Position the patient parallel to a 2-to-4-inch curb with the ipsilateral forelimb and hindlimb on the elevated surface. Walk forward at a controlled pace for 10 to 15 feet. The elevated limbs undergo 10 to 15 degrees of additional stifle and hip flexion compared to level walking, producing targeted concentric loading of the quadriceps and gluteals during the stance-to-swing transition. Reverse direction after each pass to load the contralateral limbs. Complete 2 to 3 passes per side. Monitor for trunk lean toward the lower surface, which indicates core instability. Paw dragging on the curb edge is a red flag for proprioceptive deficit. Progress by increasing curb height to 4 to 6 inches, adding perpendicular step-ups, or extending pass distance. Contraindicated with severe ataxia, non-weight-bearing lameness, acute post-surgical status, or pain exceeding 6 out of 10. Evidence base: Millis and Levine Chapter 16 — Active Therapeutic Exercises.",
       key_phrases: ['asymmetric limb elevation', 'concentric loading', 'trunk lean', 'proprioceptive deficit', 'Millis and Levine Chapter 16'],
     },
 
@@ -675,14 +708,24 @@ const STORYBOARD_LIBRARY = {
   // ═══════════════════════════════════════════════════════════════════════════
   TPLO_LEASH_WALK: {
     exercise_code: 'TPLO_LEASH_WALK',
-    version: '1.0',
-    last_updated: '2026-02-20',
+    version: '1.1',
+    last_updated: '2026-02-25',
+
+    // ── Breed Model ──
+    breed_model: {
+      breed: 'Labrador Retriever',
+      weight_lbs: 72,
+      size: 'large',
+      build: 'solid and muscular',
+      temperament: 'tolerant and food-motivated',
+      category_assignment: 'Post-Surgical',
+    },
 
     // ── 1. Exercise Name ──
     exercise_name: 'TPLO Early-Stage Controlled Leash Walk',
 
     // ── 2. Clinical Purpose ──
-    clinical_purpose: 'Encourage controlled, partial weight-bearing ambulation during the acute post-operative phase (weeks 1-3) following TPLO surgery. Promotes early limb use to prevent quadriceps atrophy and stifle capsular fibrosis, stimulates articular cartilage nutrition via cyclic loading, and maintains cardiovascular baseline — all within strict tissue-healing constraints. Per Millis & Levine, controlled leash walking is the first active exercise introduced post-TPLO, progressing from elimination-only walks (week 1) to short therapeutic sessions (weeks 2-3).',
+    clinical_purpose: 'Encourage controlled, partial weight-bearing ambulation during the acute post-operative phase (weeks 1-3) following TPLO surgery. Promotes early limb use to prevent quadriceps atrophy and stifle capsular fibrosis, stimulates articular cartilage nutrition via cyclic loading, and maintains cardiovascular baseline — all within strict tissue-healing constraints. Per Millis & Levine, controlled leash walking is the first active exercise introduced post-TPLO, progressing from elimination-only walks (week 1) to short therapeutic sessions (weeks 2-3). Demonstrated with Labrador Retriever (72 lbs, solid and muscular build). Account for large body mass and joint loading — Labs are the most common TPLO patients due to high activity levels and CCL predisposition.',
 
     // ── 3. Indications ──
     indications: [
@@ -691,6 +734,7 @@ const STORYBOARD_LIBRARY = {
       'Post-TTA — weeks 1-3',
       'Any early post-op stifle case cleared for toe-touch weight bearing',
       'Surgeon clearance confirmed',
+      'Breed model: Labrador Retriever — solid and muscular, tolerant and food-motivated',
     ],
 
     // ── 4. Contraindications ──
@@ -713,7 +757,7 @@ const STORYBOARD_LIBRARY = {
     ],
 
     // ── 6. Handler Setup ──
-    handler_setup: 'Handler positions on the surgical side of the dog. Leash held short with minimal slack — no more than 12 inches of play. If a support sling is used, handler cradles sling under the abdomen just cranial to the stifle, providing 10-20% body weight support as needed. Pace is deliberately slow — matching the dog\'s willingness, never pulling forward. Handler watches for toe-touching, knuckling, or gait deviation on every stride cycle.',
+    handler_setup: 'Handler positions on the surgical side of the dog. Leash held short with minimal slack — no more than 12 inches of play. If a support sling is used, handler cradles sling under the abdomen just cranial to the stifle, providing 10-20% body weight support as needed. Pace is deliberately slow — matching the dog\'s willingness, never pulling forward. Handler watches for toe-touching, knuckling, or gait deviation on every stride cycle. Breed model: Labrador Retriever (72 lbs, large). This breed is solid and muscular with a tolerant, food-motivated temperament — ensure adequate handler strength and positioning for large patient. Labs may try to move faster than prescribed; maintain leash discipline.',
 
     // ── 7. Step-by-Step Movement Breakdown ──
     movement_breakdown: [
@@ -733,7 +777,7 @@ const STORYBOARD_LIBRARY = {
         frame_number: 1,
         frame_title: 'Pre-Walk Assessment & Harness Fit',
         frame_description: 'Incision check, harness application, and pain assessment before ambulation',
-        dog_action: 'Dog is in lateral or sternal recumbency. Remains still during incision check and harness application. Transitions to standing with handler support.',
+        dog_action: 'Labrador Retriever (72 lbs, solid and muscular) in lateral or sternal recumbency. Remains still during incision check and harness application. Patient is tolerant and food-motivated. Transitions to standing with handler support.',
         handler_action: 'Palpate surgical stifle for heat, swelling, and pain response. Apply body harness with rear-support handle. Attach short, non-retractable leash. Apply hindquarter sling if weight-bearing is tentative.',
         clinical_cues: 'Assess incision integrity — no dehiscence, erythema, or discharge. Note resting pain score. Confirm analgesic schedule is current. Palpate quadriceps for early atrophy signs.',
         safety_notes: 'Do not proceed if incision is draining, swelling has increased, or dog vocalizes on palpation. Confirm surgeon clearance for ambulation.',
@@ -867,14 +911,14 @@ const STORYBOARD_LIBRARY = {
     // ── 11. Client-Friendly Script ──
     client_script: {
       duration_range: '20-30 seconds',
-      text: 'This short walk helps your dog begin using the surgical leg safely. Keep the leash short and walk slowly — let your dog set the pace. Only walk on flat, non-slip surfaces like grass or carpet. Week one, keep walks to 3-5 minutes, just for bathroom trips. Weeks two and three, you can slowly increase to 5-10 minutes. Always walk in straight lines and make only wide turns. After every walk, apply a cold pack wrapped in a towel to the knee area for 10-15 minutes. If your dog starts limping more during the walk, stop right away and head back. No running, no stairs, no playing — just calm, slow walking.',
+      text: 'This short walk helps your dog begin using the surgical leg safely. Demonstrated here with a Labrador Retriever (72 lbs). Your dog may need adjusted positioning based on their size and build. Keep the leash short and walk slowly — let your dog set the pace. Only walk on flat, non-slip surfaces like grass or carpet. Week one, keep walks to 3-5 minutes, just for bathroom trips. Weeks two and three, you can slowly increase to 5-10 minutes. Always walk in straight lines and make only wide turns. After every walk, apply a cold pack wrapped in a towel to the knee area for 10-15 minutes. If your dog starts limping more during the walk, stop right away and head back. No running, no stairs, no playing — just calm, slow walking.',
       key_phrases: ['walk slowly', 'let your dog set the pace', 'stop right away', 'cold pack', 'no running, no stairs'],
     },
 
     // ── 12. Clinician-Level Script ──
     clinician_script: {
       duration_range: '20-40 seconds',
-      text: 'Controlled leash ambulation initiates at post-op day 3-5 following TPLO, beginning with elimination walks (3-5 min) and progressing to therapeutic sessions (5-10 min) by weeks 2-3. Handler positions ipsilateral to the surgical limb with a fixed 4-6 ft lead. Hindquarter sling provides 10-20% BW support for dogs with < 50% weight-bearing. Walking surface must be flat, non-slip, and obstacle-free. Turns are wide arcs (minimum 6-8 ft radius), always directed away from the surgical limb to minimize tibial rotational forces on the healing osteotomy. Post-ambulation cryotherapy (10-15 min) is applied to control inflammatory response. Monitor for progressive limb use, stride length symmetry, and pain scoring at each session. Red flags: worsening lameness during ambulation, knuckling, complete non-weight bearing beyond day 5, incision complications. Progression to Phase 2 walking (15-20 min, gentle inclines) begins at week 4 pending radiographic confirmation of osteotomy healing.',
+      text: 'Controlled leash ambulation initiates at post-op day 3-5 following TPLO, beginning with elimination walks (3-5 min) and progressing to therapeutic sessions (5-10 min) by weeks 2-3. Breed model: Labrador Retriever (72 lbs, large, solid and muscular). Temperament: tolerant and food-motivated. Adjust technique for patient body type and conformation — Labs are the most common TPLO patients; their enthusiasm may require extra leash discipline. Handler positions ipsilateral to the surgical limb with a fixed 4-6 ft lead. Hindquarter sling provides 10-20% BW support for dogs with < 50% weight-bearing. Walking surface must be flat, non-slip, and obstacle-free. Turns are wide arcs (minimum 6-8 ft radius), always directed away from the surgical limb to minimize tibial rotational forces on the healing osteotomy. Post-ambulation cryotherapy (10-15 min) is applied to control inflammatory response. Monitor for progressive limb use, stride length symmetry, and pain scoring at each session. Red flags: worsening lameness during ambulation, knuckling, complete non-weight bearing beyond day 5, incision complications. Progression to Phase 2 walking (15-20 min, gentle inclines) begins at week 4 pending radiographic confirmation of osteotomy healing.',
       key_phrases: ['ipsilateral', 'tibial rotational forces', 'cryotherapy', 'progressive limb use', 'radiographic confirmation'],
     },
 
@@ -896,6 +940,29 @@ const STORYBOARD_LIBRARY = {
 // 14-point storyboard specification. Used as fallback when no hand-authored
 // storyboard exists in STORYBOARD_LIBRARY.
 // ============================================================================
+
+// ── Category-to-Breed mapping — 1 clinically appropriate breed per category ──
+const CATEGORY_BREED_MAP = {
+  'Athletic Foundations':        { breed: 'Belgian Malinois',              weight_lbs: 55,  size: 'large',  build: 'athletic and muscular',  temperament: 'driven and focused' },
+  'Sport Conditioning':          { breed: 'Border Collie',                weight_lbs: 40,  size: 'medium', build: 'agile and lean',          temperament: 'highly responsive' },
+  'Balance & Proprioception':    { breed: 'Cavalier King Charles Spaniel', weight_lbs: 15,  size: 'small',  build: 'compact and balanced',    temperament: 'calm and cooperative' },
+  'Post-Surgical':               { breed: 'Labrador Retriever',           weight_lbs: 72,  size: 'large',  build: 'solid and muscular',      temperament: 'tolerant and food-motivated' },
+  'Neurological Rehab':          { breed: 'Dachshund',                    weight_lbs: 18,  size: 'small',  build: 'elongated trunk, short limbs', temperament: 'determined and alert' },
+  'Hydrotherapy':                { breed: 'Golden Retriever',             weight_lbs: 68,  size: 'large',  build: 'well-proportioned',       temperament: 'eager and water-loving' },
+  'Geriatric Care':              { breed: 'German Shepherd',              weight_lbs: 78,  size: 'large',  build: 'sloping hindquarters',    temperament: 'loyal and attentive' },
+  'Complementary Therapy':       { breed: 'Shih Tzu',                     weight_lbs: 12,  size: 'small',  build: 'compact and sturdy',      temperament: 'affectionate and receptive' },
+  'Strengthening':               { breed: 'Rottweiler',                   weight_lbs: 105, size: 'large',  build: 'powerful and broad',      temperament: 'confident and steady' },
+  'Therapeutic Modalities':      { breed: 'Boxer',                        weight_lbs: 62,  size: 'large',  build: 'muscular and square',     temperament: 'patient and trusting' },
+  'Pediatric Rehabilitation':    { breed: 'Great Dane',                   weight_lbs: 45,  size: 'giant-puppy', build: 'rapidly growing, gangly limbs', temperament: 'gentle and curious' },
+  'Active Assisted':             { breed: 'Pembroke Welsh Corgi',         weight_lbs: 28,  size: 'small',  build: 'long body, short limbs',  temperament: 'willing and food-motivated' },
+  'Passive Therapy':             { breed: 'French Bulldog',               weight_lbs: 26,  size: 'small',  build: 'compact brachycephalic',  temperament: 'calm and compliant' },
+  'Palliative Care':             { breed: 'Bernese Mountain Dog',         weight_lbs: 95,  size: 'large',  build: 'heavy-boned and broad',   temperament: 'gentle and trusting' },
+  'Breed-Specific':              { breed: 'English Bulldog',              weight_lbs: 50,  size: 'medium', build: 'brachycephalic, unique anatomy', temperament: 'stubborn but affectionate' },
+  'Active Therapeutic':          { breed: 'Australian Shepherd',          weight_lbs: 52,  size: 'medium', build: 'athletic and balanced',   temperament: 'intelligent and eager' },
+  'Manual Therapy':              { breed: 'Greyhound',                    weight_lbs: 65,  size: 'large',  build: 'lean, thin-skinned, deep-chested', temperament: 'sensitive and quiet' },
+  'Functional Training':         { breed: 'Standard Poodle',              weight_lbs: 55,  size: 'large',  build: 'elegant and athletic',    temperament: 'smart and trainable' },
+  'Aquatic Therapy':             { breed: 'Newfoundland',                 weight_lbs: 120, size: 'giant',  build: 'massive, webbed paws',    temperament: 'calm and water-confident' },
+};
 
 // Category-specific accent colors for auto-generated storyboards
 const CATEGORY_ACCENTS = {
@@ -940,6 +1007,14 @@ function generateAutoStoryboard(exercise) {
   const category = exercise.category || 'General';
   const categorySlug = category.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
   const accent = CATEGORY_ACCENTS[category] || '#0EA5E9';
+
+  // ── Breed model lookup ──
+  const breedInfo = CATEGORY_BREED_MAP[category] || { breed: 'Medium-sized dog', weight_lbs: 40, size: 'medium', build: 'moderate build', temperament: 'cooperative' };
+  const breed = breedInfo.breed;
+  const breedWeight = breedInfo.weight_lbs;
+  const breedSize = breedInfo.size;
+  const breedBuild = breedInfo.build;
+  const breedTemperament = breedInfo.temperament;
 
   // ── 4. Contraindications — parse from comma/semicolon-delimited string ──
   const contraindicationsList = exercise.contraindications
@@ -990,21 +1065,67 @@ function generateAutoStoryboard(exercise) {
   const mistakes = exercise.common_mistakes || [];
   const redFlags = exercise.red_flags || [];
 
+  // ── SVG indicator generation based on exercise category and properties ──
+  function generateSvgIndicators(exercise, frameIndex, isSetup) {
+    const indicators = [];
+    const cat = (exercise.category || '').toLowerCase();
+    const diff = (exercise.difficulty_level || '').toLowerCase();
+
+    if (isSetup) {
+      // Setup frames: hand placement and joint pivot markers
+      indicators.push({ type: SVG_INDICATOR_TYPES.HAND_PLACEMENT, x: 45, y: 55, label: 'Handler positioning', color: '#0EA5E9' });
+      if (cat.includes('passive') || cat.includes('manual'))
+        indicators.push({ type: SVG_INDICATOR_TYPES.HAND_PLACEMENT, x: 60, y: 65, label: 'Stabilization hand', color: '#059669' });
+      return indicators;
+    }
+
+    // Movement frames: category-specific overlays
+    if (cat.includes('passive') || cat.includes('manual')) {
+      indicators.push({ type: SVG_INDICATOR_TYPES.FLEXION_ARC, x: 50, y: 60, angle_start: 160, angle_end: 90, label: 'ROM arc', color: '#0EA5E9' });
+      indicators.push({ type: SVG_INDICATOR_TYPES.HAND_PLACEMENT, x: 42, y: 55, label: 'Proximal stabilization', color: '#059669' });
+    } else if (cat.includes('balance') || cat.includes('proprioception')) {
+      indicators.push({ type: SVG_INDICATOR_TYPES.FORCE_VECTOR, x: 50, y: 45, dx: 0, dy: 15, label: 'Center of gravity', color: '#D97706' });
+      indicators.push({ type: SVG_INDICATOR_TYPES.JOINT_PIVOT, x: 50, y: 65, label: 'Balance point', color: '#8B5CF6' });
+    } else if (cat.includes('strength') || cat.includes('active')) {
+      indicators.push({ type: SVG_INDICATOR_TYPES.MUSCLE_HIGHLIGHT, region: 'target_muscle', x: 52, y: 55, rx: 10, ry: 18, label: 'Primary muscle group', color: 'rgba(14,165,233,0.25)' });
+      indicators.push({ type: SVG_INDICATOR_TYPES.FORCE_VECTOR, x: 55, y: 60, dx: 0, dy: -15, label: 'Force direction', color: '#39FF7E' });
+    } else if (cat.includes('aquatic') || cat.includes('hydro')) {
+      indicators.push({ type: SVG_INDICATOR_TYPES.FORCE_VECTOR, x: 50, y: 50, dx: 15, dy: 0, label: 'Direction of movement', color: '#06B6D4' });
+      indicators.push({ type: SVG_INDICATOR_TYPES.MUSCLE_HIGHLIGHT, region: 'buoyancy', x: 50, y: 45, rx: 20, ry: 10, label: 'Buoyancy support zone', color: 'rgba(6,182,212,0.2)' });
+    } else if (cat.includes('neuro')) {
+      indicators.push({ type: SVG_INDICATOR_TYPES.JOINT_PIVOT, x: 55, y: 65, label: 'Proprioceptive target', color: '#A855F7' });
+      indicators.push({ type: SVG_INDICATOR_TYPES.FORCE_VECTOR, x: 50, y: 50, dx: 8, dy: 0, label: 'Stimulus direction', color: '#39FF7E' });
+    } else if (cat.includes('athletic') || cat.includes('sport') || cat.includes('function')) {
+      indicators.push({ type: SVG_INDICATOR_TYPES.FORCE_VECTOR, x: 50, y: 50, dx: 12, dy: -8, label: 'Movement vector', color: '#39FF7E' });
+      indicators.push({ type: SVG_INDICATOR_TYPES.MUSCLE_HIGHLIGHT, region: 'power_chain', x: 50, y: 55, rx: 12, ry: 20, label: 'Kinetic chain activation', color: 'rgba(249,115,22,0.2)' });
+    } else {
+      // Generic therapeutic
+      indicators.push({ type: SVG_INDICATOR_TYPES.FORCE_VECTOR, x: 50, y: 55, dx: 10, dy: 0, label: 'Direction of motion', color: '#39FF7E' });
+    }
+
+    // Add difficulty-based indicators
+    if (diff === 'advanced' && frameIndex > 0) {
+      indicators.push({ type: SVG_INDICATOR_TYPES.JOINT_PIVOT, x: 55, y: 62, label: 'High-demand joint', color: '#DC2626' });
+    }
+
+    return indicators;
+  }
+
   const frames = cappedFrames.map((rf, i) => ({
     frame_number: i + 1,
     frame_title: rf.title,
     frame_description: rf.desc,
     dog_action: rf.isSetup
-      ? 'Patient positioned as described. Relaxed and comfortable.'
+      ? `${breed} (${breedWeight} lbs, ${breedBuild}) positioned as described. Patient is ${breedTemperament} — relaxed and comfortable.`
       : rf.desc,
     handler_action: rf.isSetup
-      ? rf.desc
+      ? `${rf.desc} Note: ${breed} patients are ${breedBuild} with ${breedTemperament} temperament — adjust hand placement for ${breedSize} frame.`
       : 'Follow step instructions. Maintain proper technique throughout.',
     clinical_cues: goodForm[i] || goodForm[0] || 'Monitor patient comfort and response throughout.',
     safety_notes: redFlags[i] || redFlags[0] || 'Stop if patient shows signs of pain or distress.',
     duration_seconds: rf.isSetup ? 5 : 6,
     status: FRAME_STATUS.FREE,
-    svg_indicators: [],
+    svg_indicators: generateSvgIndicators(exercise, i, rf.isSetup),
   }));
 
   // If no frames at all, create a minimal single frame
@@ -1077,9 +1198,10 @@ function generateAutoStoryboard(exercise) {
     color_palette: { navy: '#0A2540', teal: '#0EA5E9', green: '#059669', neon: '#39FF7E' },
   };
 
-  // ── 11. Client script — plain-language summary ──
+  // ── 11. Client script — plain-language summary with breed reference ──
   const clientSteps = (exercise.steps || []).slice(0, 4).map((s, i) => `Step ${i + 1}: ${s}`).join(' ');
-  const clientText = `This exercise is called "${name}". ${exercise.description || ''} Here is what to do: ${exercise.setup || 'Position your dog comfortably.'} ${clientSteps} ${redFlags.length > 0 ? 'Important: ' + redFlags[0] : 'Stop if your dog shows signs of pain or discomfort.'} Always follow your veterinarian\'s guidance.`;
+  const clientBreedNote = `Demonstrated here with a ${breed} (${breedWeight} lbs). Your dog may need adjusted positioning based on their size and build.`;
+  const clientText = `This exercise is called "${name}". ${exercise.description || ''} ${clientBreedNote} Here is what to do: ${exercise.setup || 'Position your dog comfortably.'} ${clientSteps} ${redFlags.length > 0 ? 'Important: ' + redFlags[0] : 'Stop if your dog shows signs of pain or discomfort.'} Always follow your veterinarian\'s guidance.`;
   const client_script = {
     duration_range: '20-30 seconds',
     text: clientText.replace(/\s+/g, ' ').trim(),
@@ -1088,32 +1210,41 @@ function generateAutoStoryboard(exercise) {
     ).concat(['follow your veterinarian\'s guidance']),
   };
 
-  // ── 12. Clinician script — clinical-grade summary ──
+  // ── 12. Clinician script — clinical-grade summary with breed considerations ──
   const clinGoodForm = goodForm.length > 0 ? ' Key technique points: ' + goodForm.join('. ') + '.' : '';
   const clinMistakes = mistakes.length > 0 ? ' Common errors: ' + mistakes.join('. ') + '.' : '';
   const clinProgression = exercise.progression ? ' Progression: ' + exercise.progression : '';
   const clinContra = contraindicationsList.length > 0 ? ' Contraindications: ' + contraindicationsList.join('; ') + '.' : '';
-  const clinText = `${name} — ${category}. ${exercise.description || ''}${clinGoodForm}${clinMistakes}${clinProgression}${clinContra}`;
+  const clinBreedNote = ` Breed model: ${breed} (${breedWeight} lbs, ${breedSize}, ${breedBuild}). Temperament: ${breedTemperament}. Adjust technique for patient body type and conformation.`;
+  const clinText = `${name} — ${category}. ${exercise.description || ''}${clinBreedNote}${clinGoodForm}${clinMistakes}${clinProgression}${clinContra}`;
   const clinician_script = {
     duration_range: '20-40 seconds',
     text: clinText.replace(/\s+/g, ' ').trim(),
-    key_phrases: [name, category, 'contraindication'].filter(kp =>
+    key_phrases: [name, category, breed, 'contraindication'].filter(kp =>
       clinText.toLowerCase().includes(kp.toLowerCase())
     ),
   };
 
-  // ── Full 14-point storyboard ──
+  // ── Full 14-point storyboard with breed model ──
   return {
     exercise_code: code,
     exercise_name: name,
     version: '1.0-auto',
-    last_updated: '2026-02-21',
+    last_updated: '2026-02-25',
     auto_generated: true,
-    clinical_purpose: exercise.description || '',
-    indications: [`${category} — as indicated per clinical assessment and patient evaluation`],
+    breed_model: {
+      breed: breed,
+      weight_lbs: breedWeight,
+      size: breedSize,
+      build: breedBuild,
+      temperament: breedTemperament,
+      category_assignment: category,
+    },
+    clinical_purpose: `${exercise.description || ''} Demonstrated with ${breed} (${breedWeight} lbs, ${breedBuild}). ${breedSize === 'small' ? 'Scale handler positioning for smaller frame.' : breedSize === 'giant' || breedSize === 'giant-puppy' ? 'Account for large body mass and joint loading.' : 'Adjust technique based on patient conformation.'}`,
+    indications: [`${category} — as indicated per clinical assessment and patient evaluation`, `Breed model: ${breed} — ${breedBuild}, ${breedTemperament}`],
     contraindications: contraindicationsList,
     equipment_needed: equipmentNeeded,
-    handler_setup: exercise.setup || 'Follow standard positioning for this exercise category.',
+    handler_setup: `${exercise.setup || 'Follow standard positioning for this exercise category.'} Breed model: ${breed} (${breedWeight} lbs, ${breedSize}). This breed is ${breedBuild} with a ${breedTemperament} temperament — ${breedSize === 'small' ? 'use gentle, proportionate hand placement for small frame' : breedSize === 'giant' || breedSize === 'giant-puppy' ? 'ensure adequate handler strength and positioning for large patient' : 'use standard handler positioning appropriate for body type'}.`,
     movement_breakdown: movementBreakdown,
     frames,
     overlay_groups,
@@ -1162,23 +1293,58 @@ function getStoryboardScript(exerciseCode, mode, exerciseData) {
   return sb.client_script;
 }
 
-function getExercisesWithStoryboards() {
-  return Object.keys(STORYBOARD_LIBRARY).map(code => ({
+function getExercisesWithStoryboards(allExercises) {
+  // Hand-authored storyboards first
+  const results = Object.keys(STORYBOARD_LIBRARY).map(code => ({
     code,
     exercise_name: STORYBOARD_LIBRARY[code].exercise_name,
     frame_count: STORYBOARD_LIBRARY[code].frames.length,
     version: STORYBOARD_LIBRARY[code].version,
+    auto_generated: false,
   }));
+  const manualCodes = new Set(Object.keys(STORYBOARD_LIBRARY));
+  // Auto-generated storyboards from exercise data
+  if (allExercises) {
+    allExercises.forEach(ex => {
+      if (!manualCodes.has(ex.code)) {
+        const auto = getOrGenerateStoryboard(ex.code, ex);
+        if (auto) {
+          results.push({
+            code: ex.code,
+            exercise_name: auto.exercise_name,
+            frame_count: auto.frames.length,
+            version: auto.version,
+            auto_generated: true,
+          });
+        }
+      }
+    });
+  }
+  return results;
 }
 
-function getStoryboardStats() {
-  const codes = Object.keys(STORYBOARD_LIBRARY);
-  const totalFrames = codes.reduce((sum, code) => sum + STORYBOARD_LIBRARY[code].frames.length, 0);
+function getStoryboardStats(allExercises) {
+  const manualCodes = Object.keys(STORYBOARD_LIBRARY);
+  const manualFrames = manualCodes.reduce((sum, code) => sum + STORYBOARD_LIBRARY[code].frames.length, 0);
+  let autoCount = 0, autoFrames = 0;
+  if (allExercises) {
+    const manualSet = new Set(manualCodes);
+    allExercises.forEach(ex => {
+      if (!manualSet.has(ex.code)) {
+        const auto = getOrGenerateStoryboard(ex.code, ex);
+        if (auto) { autoCount++; autoFrames += auto.frames.length; }
+      }
+    });
+  }
+  const totalStoryboards = manualCodes.length + autoCount;
+  const totalFrames = manualFrames + autoFrames;
   return {
-    total_storyboards: codes.length,
+    total_storyboards: totalStoryboards,
+    hand_authored: manualCodes.length,
+    auto_generated: autoCount,
     total_frames: totalFrames,
-    exercises_covered: codes,
-    average_frames_per_exercise: codes.length > 0 ? (totalFrames / codes.length).toFixed(1) : 0,
+    exercises_covered: manualCodes,
+    average_frames_per_exercise: totalStoryboards > 0 ? (totalFrames / totalStoryboards).toFixed(1) : 0,
   };
 }
 
@@ -1189,6 +1355,7 @@ function getStoryboardStats() {
 
 module.exports = {
   STORYBOARD_LIBRARY,
+  CATEGORY_BREED_MAP,
   OVERLAY_TYPES,
   FRAME_STATUS,
   SVG_INDICATOR_TYPES,
