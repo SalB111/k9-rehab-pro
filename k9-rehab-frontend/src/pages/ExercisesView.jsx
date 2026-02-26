@@ -428,14 +428,6 @@ function ExercisesView() {
             <input style={{ ...S.input, paddingLeft: 34, background: "rgba(255,255,255,0.08)", border: "1.5px solid rgba(255,255,255,0.15)", color: "#fff", height: 38 }} placeholder="Search exercises by name or description…"
               value={search} onChange={e => setSearch(e.target.value)} />
           </div>
-          <select style={{ ...S.select, background: "rgba(255,255,255,0.08)", border: "1.5px solid rgba(255,255,255,0.15)", color: "#fff", height: 38 }} value={filterCat} onChange={e => setFilterCat(e.target.value)}>
-            <option value="">All Categories</option>
-            {categories.map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
-          <select style={{ ...S.select, background: "rgba(255,255,255,0.08)", border: "1.5px solid rgba(255,255,255,0.15)", color: "#fff", height: 38 }} value={filterDiff} onChange={e => setFilterDiff(e.target.value)}>
-            <option value="">All Levels</option>
-            {["Easy","Moderate","Advanced"].map(d => <option key={d} value={d}>{d}</option>)}
-          </select>
           <span style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", whiteSpace: "nowrap", fontWeight: 600 }}>
             {filtered.length} / {exercises.length}
           </span>

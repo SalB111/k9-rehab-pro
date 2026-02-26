@@ -5,82 +5,11 @@
 
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const db = require('./db-provider');
 
 // ============================================================================
-// USERS TABLE INITIALIZATION
+// PASSWORD OPERATIONS
 // ============================================================================
-
-function initializeUsersTable(db) {
-  return new Promise((resolve, reject) => {
-    db.run(`
-      CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT UNIQUE NOT NULL,
-        password_hash TEXT NOT NULL,
-        role TEXT NOT NULL DEFAULT 'clinician',
-        display_name TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-      )
-    `, (err) => {
-      if (err) reject(err);
-      else {
-        console.log('  \u2705 Users table ready');
-        resolve();
-      }
-    });
-  });
-}
-
-// ============================================================================
-// USER OPERATIONS
-// ============================================================================
-
-function getUserCount(db) {
-  return new Promise((resolve, reject) => {
-    db.get('SELECT COUNT(*) as count FROM users', (err, row) => {
-      if (err) reject(err);
-      else resolve(row.count);
-    });
-  });
-}
-
-function findUserByUsername(db, username) {
-  return new Promise((resolve, reject) => {
-    db.get('SELECT * FROM users WHERE username = ?', [username], (err, row) => {
-      if (err) reject(err);
-      else resolve(row);
-    });
-  });
-}
-
-function findUserById(db, id) {
-  return new Promise((resolve, reject) => {
-    db.get(
-      'SELECT id, username, role, display_name, created_at FROM users WHERE id = ?',
-      [id],
-      (err, row) => {
-        if (err) reject(err);
-        else resolve(row);
-      }
-    );
-  });
-}
-
-async function createUser(db, { username, password, role, display_name }) {
-  const salt = await bcrypt.genSalt(10);
-  const password_hash = await bcrypt.hash(password, salt);
-
-  return new Promise((resolve, reject) => {
-    db.run(
-      'INSERT INTO users (username, password_hash, role, display_name) VALUES (?, ?, ?, ?)',
-      [username, password_hash, role || 'clinician', display_name || username],
-      function(err) {
-        if (err) reject(err);
-        else resolve({ id: this.lastID, username, role: role || 'clinician' });
-      }
-    );
-  });
-}
 
 async function verifyPassword(plaintext, hash) {
   return bcrypt.compare(plaintext, hash);
@@ -114,7 +43,7 @@ const PUBLIC_ROUTES = [
   '/api/auth/status',
 ];
 
-function requireAuth(db) {
+function requireAuth() {
   return async (req, res, next) => {
     const fullPath = req.baseUrl + req.path;
     const isPublicRoute = PUBLIC_ROUTES.some(route => fullPath === route);
@@ -127,7 +56,7 @@ function requireAuth(db) {
       try {
         const token = authHeader.split(' ')[1];
         const decoded = verifyToken(token);
-        const user = await findUserById(db, decoded.id);
+        const user = await db.findUserById(decoded.id);
         if (user) {
           req.user = user;
         }
@@ -173,11 +102,6 @@ function requireRole(...roles) {
 // ============================================================================
 
 module.exports = {
-  initializeUsersTable,
-  getUserCount,
-  findUserByUsername,
-  findUserById,
-  createUser,
   verifyPassword,
   generateToken,
   verifyToken,

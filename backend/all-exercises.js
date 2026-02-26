@@ -53,15 +53,15 @@ const DUPLICATE_CODES = new Set([
 // COMBINE ALL EXERCISE PARTS (deduplicated)
 // ============================================================================
 const ALL_EXERCISES_RAW = [
-  ...EXERCISES_PART1,  // 15 exercises - Basic Rehabilitation Exercises
-  ...EXERCISES_PART2,  // 15 exercises - Advanced Mobility & Strengthening
-  ...EXERCISES_PART3,  // 15 exercises - Balance, Coordination & Proprioception
+  ...EXERCISES_PART1,  //  8 exercises - Basic Rehabilitation Exercises
+  ...EXERCISES_PART2,  // 10 exercises - Advanced Mobility & Strengthening
+  ...EXERCISES_PART3,  // 12 exercises - Balance, Coordination & Proprioception
   ...EXERCISES_PART4,  // 10 exercises - Pain Management & Manual Therapy
   ...EXERCISES_PART5,  // 10 exercises - Cardiovascular & Endurance Training
-  ...EXERCISES_PART6,  // 10 exercises - Home Care & Maintenance Programs
-  ...EXERCISES_PART7,  // 80 exercises - Advanced Hydrotherapy, Geriatric, Neuro, Post-Surgical
+  ...EXERCISES_PART6,  // 25 exercises - Home Care & Maintenance Programs
+  ...EXERCISES_PART7,  // 60 exercises - Advanced Hydrotherapy, Geriatric, Neuro, Post-Surgical
   ...EXERCISES_PART8,  // 35 exercises - Sport Conditioning & Complementary Therapies
-  ...EXERCISES_PART9,  // 20 exercises - Pediatric, Palliative, Breed-Specific
+  ...EXERCISES_PART9,  // 40 exercises - Pediatric, Palliative, Breed-Specific
   ...EXERCISES_PART10  // 30 exercises - Athletic Foundations: General Rehab
 ];
 

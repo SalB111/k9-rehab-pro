@@ -10,7 +10,7 @@ import TopNav from "./components/TopNav";
 
 // ── Pages ──
 import DashboardView from "./pages/DashboardView";
-import ClientsView from "./pages/ClientsView";
+
 import GeneratorView from "./pages/GeneratorView";
 import ExercisesView from "./pages/ExercisesView";
 import SessionsView from "./pages/SessionsView";
@@ -90,7 +90,6 @@ export default function App() {
   const views = {
     home:       <GeneratorView key={genKey} initialStep={1} />,
     dashboard:  <DashboardView setView={setView} />,
-    clients:    <ClientsView />,
     generator:  <GeneratorView key={genKey} initialStep={genInitialStep} />,
     exercises:  <ExercisesView />,
     sessions:   <SessionsView />,

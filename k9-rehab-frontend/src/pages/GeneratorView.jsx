@@ -114,7 +114,18 @@ export default function GeneratorView({ initialStep }) {
     neuroProprioception: "", neuroWithdrawal: "", neuroDeepPain: "", neuroMotorGrade: "",
     // Treatment Goals (Section 3)
     rehabGoals: [], implantDetails: "",
-    // Protocol Parameters (Section 4)
+    // Rehab Goals & Prognosis (Section 4)
+    problems: [],
+    stGoals: [],
+    ltGoals: [],
+    outcomeMeasures: [],
+    prognosisRating: "",
+    estimatedTimeline: "",
+    dischargeCriteria: [],
+    precautions: [],
+    homeEquipment: [],
+    homeEnvironment: [],
+    // Protocol Parameters (Section 5 — was Section 4)
     sessionFrequency: "2", homeExerciseProgram: true, ownerCompliance: "Motivated",
     aquaticAccess: false,
     modalityUWTM: false, modalityLaser: false, modalityTENS: false, modalityNMES: false,
@@ -515,7 +526,8 @@ export default function GeneratorView({ initialStep }) {
       { num: 1, label: "Client & Patient" },
       { num: 2, label: "Clinical Assessment" },
       { num: 3, label: "Treatment Plan" },
-      { num: 4, label: "Protocol Parameters" },
+      { num: 4, label: "Rehab Goals" },
+      { num: 5, label: "Protocol Parameters" },
     ];
     return (
       <>
@@ -1776,49 +1788,6 @@ export default function GeneratorView({ initialStep }) {
           </div>
         </div>
 
-        {/* ── Rehabilitation Goals ── */}
-        <div style={{ marginBottom: 16 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "#7DD3FC", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 12, paddingBottom: 4, borderBottom: "1px solid rgba(14,165,233,0.25)" }}>
-            Rehabilitation Goals
-          </div>
-          <div style={{ fontSize: 10, color: "#fff", marginBottom: 10 }}>Select all primary goals for this patient (guides protocol intensity and exercise selection)</div>
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            {[
-              { value: "pain_management", label: "Pain Management", icon: "🎯" },
-              { value: "restore_rom", label: "Restore ROM", icon: "📐" },
-              { value: "rebuild_muscle", label: "Rebuild Muscle Mass", icon: "💪" },
-              { value: "improve_ambulation", label: "Improve Ambulation", icon: "🚶" },
-              { value: "return_function", label: "Return to Full Function", icon: "🏃" },
-              { value: "return_sport", label: "Return to Sport/Work", icon: "🏅" },
-              { value: "weight_management", label: "Weight Management", icon: "⚖️" },
-              { value: "comfort_care", label: "Comfort / Quality of Life", icon: "❤️" },
-              { value: "prevent_contralateral", label: "Prevent Contralateral Injury", icon: "🛡️" },
-              { value: "owner_education", label: "Owner Education & HEP", icon: "📋" },
-            ].map(goal => (
-              <label key={goal.value} style={{
-                display: "flex", alignItems: "center", gap: 8, cursor: "pointer",
-                padding: "8px 14px", borderRadius: 8, fontSize: 12, fontWeight: 600,
-                color: "#fff",
-                background: (form.rehabGoals || []).includes(goal.value) ? "rgba(14,165,233,0.18)" : "rgba(255,255,255,0.05)",
-                border: (form.rehabGoals || []).includes(goal.value) ? "1.5px solid #0EA5E9" : "1.5px solid #3A4A5C",
-                transition: "all 0.2s",
-              }}>
-                <input type="checkbox"
-                  checked={(form.rehabGoals || []).includes(goal.value)}
-                  onChange={e => {
-                    const current = form.rehabGoals || [];
-                    if (e.target.checked) {
-                      setField("rehabGoals", [...current, goal.value]);
-                    } else {
-                      setField("rehabGoals", current.filter(g => g !== goal.value));
-                    }
-                  }}
-                  style={{ accentColor: "#0EA5E9", width: 15, height: 15, cursor: "pointer" }} />
-                <span>{goal.icon}</span> {goal.label}
-              </label>
-            ))}
-          </div>
-        </div>
       </div>
 
       {/* Step 3 navigation */}
@@ -1845,18 +1814,278 @@ export default function GeneratorView({ initialStep }) {
           onMouseLeave={e => e.currentTarget.style.boxShadow = "0 0 14px rgba(14,165,233,0.35), 0 0 28px rgba(14,165,233,0.12)"}
           onClick={() => goToStep(4)}
         >
+          Next: Rehab Goals <FiChevronRight size={16} />
+        </button>
+      </div>
+
+      </>)}
+
+      {/* ═══════════ STEP 4: REHAB GOALS & PROGNOSIS ═══════════ */}
+      {!protocol && wizardStep === 4 && (<>
+
+      {/* ── Section Header + Problem List ── */}
+      <div style={{ background: "#1D2B3A", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, padding: "16px 20px", marginBottom: 10 }}>
+        <SectionHead icon={FiAward} title="Section 4 — Rehabilitation Goals & Prognosis" />
+        <div style={{ fontSize: 11, fontWeight: 700, color: "#7DD3FC", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10, marginTop: 14 }}>
+          Problem List
+        </div>
+        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.5)", marginBottom: 10 }}>
+          Identify all functional deficits and impairments (select all that apply)
+        </div>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {["Decreased ROM", "Muscle atrophy", "Pain / nociception", "Abnormal gait pattern",
+            "Edema / swelling", "Joint stiffness", "Muscle weakness", "Reduced weight bearing",
+            "Proprioceptive deficit", "Neurological deficit", "Post-surgical inflammation",
+            "Decreased endurance", "Balance / coordination deficit", "Soft tissue restriction",
+            "Compensatory movement pattern", "Decreased functional mobility"].map(item => (
+            <label key={item} style={{
+              display: "flex", alignItems: "center", gap: 6, cursor: "pointer",
+              padding: "6px 10px", borderRadius: 6, fontSize: 11, fontWeight: 600, color: "#fff",
+              background: (form.problems || []).includes(item) ? "rgba(14,165,233,0.15)" : "rgba(255,255,255,0.05)",
+              border: (form.problems || []).includes(item) ? "1.5px solid #0EA5E9" : "1.5px solid #3A4A5C",
+              transition: "all 0.2s",
+            }}>
+              <input type="checkbox" checked={(form.problems || []).includes(item)}
+                onChange={e => {
+                  const arr = [...(form.problems || [])];
+                  if (e.target.checked) arr.push(item); else arr.splice(arr.indexOf(item), 1);
+                  setField("problems", arr);
+                }}
+                style={{ accentColor: "#0EA5E9", width: 13, height: 13, cursor: "pointer" }} />
+              {item}
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Short-Term Goals ── */}
+      <div style={{ background: "#1D2B3A", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, padding: "16px 20px", marginBottom: 10 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: "#7DD3FC", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10 }}>
+          Short-Term Goals (STG) — 2-4 Weeks
+        </div>
+        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.5)", marginBottom: 10 }}>
+          Measurable objectives for the first rehabilitation phase (select all that apply)
+        </div>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {["Reduce pain to \u22643/10", "Progress weight bearing", "Increase ROM 15\u00B0+",
+            "Reduce swelling/edema", "Begin controlled leash walks", "Improve proprioception",
+            "Initiate muscle activation", "Protect surgical repair", "Establish HEP routine",
+            "Restore basic mobility", "Normalize gait at walk", "Owner education complete"].map(item => (
+            <label key={item} style={{
+              display: "flex", alignItems: "center", gap: 6, cursor: "pointer",
+              padding: "6px 10px", borderRadius: 6, fontSize: 11, fontWeight: 600, color: "#fff",
+              background: (form.stGoals || []).includes(item) ? "rgba(14,165,233,0.15)" : "rgba(255,255,255,0.05)",
+              border: (form.stGoals || []).includes(item) ? "1.5px solid #0EA5E9" : "1.5px solid #3A4A5C",
+              transition: "all 0.2s",
+            }}>
+              <input type="checkbox" checked={(form.stGoals || []).includes(item)}
+                onChange={e => {
+                  const arr = [...(form.stGoals || [])];
+                  if (e.target.checked) arr.push(item); else arr.splice(arr.indexOf(item), 1);
+                  setField("stGoals", arr);
+                }}
+                style={{ accentColor: "#0EA5E9", width: 13, height: 13, cursor: "pointer" }} />
+              {item}
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Long-Term Goals ── */}
+      <div style={{ background: "#1D2B3A", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, padding: "16px 20px", marginBottom: 10 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: "#7DD3FC", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10 }}>
+          Long-Term Goals (LTG) — 8-16 Weeks
+        </div>
+        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.5)", marginBottom: 10 }}>
+          Functional outcomes expected at discharge (select all that apply)
+        </div>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {["Full weight bearing", "Normal gait pattern", "ROM within 10\u00B0 of contralateral",
+            "Muscle symmetry \u22641cm difference", "Return to off-leash activity",
+            "Return to sport/work function", "Independent stair navigation",
+            "Pain-free with activity", "Owner independent with HEP",
+            "Maintain/improve body condition", "Sustained comfort & QoL"].map(item => (
+            <label key={item} style={{
+              display: "flex", alignItems: "center", gap: 6, cursor: "pointer",
+              padding: "6px 10px", borderRadius: 6, fontSize: 11, fontWeight: 600, color: "#fff",
+              background: (form.ltGoals || []).includes(item) ? "rgba(14,165,233,0.15)" : "rgba(255,255,255,0.05)",
+              border: (form.ltGoals || []).includes(item) ? "1.5px solid #0EA5E9" : "1.5px solid #3A4A5C",
+              transition: "all 0.2s",
+            }}>
+              <input type="checkbox" checked={(form.ltGoals || []).includes(item)}
+                onChange={e => {
+                  const arr = [...(form.ltGoals || [])];
+                  if (e.target.checked) arr.push(item); else arr.splice(arr.indexOf(item), 1);
+                  setField("ltGoals", arr);
+                }}
+                style={{ accentColor: "#0EA5E9", width: 13, height: 13, cursor: "pointer" }} />
+              {item}
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Outcome Measures & Prognosis — side by side ── */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
+        <div style={{ background: "#1D2B3A", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, padding: "16px 20px" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#7DD3FC", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10 }}>
+            Functional Outcome Measures
+          </div>
+          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.5)", marginBottom: 10 }}>
+            Validated instruments for tracking progress (select all that apply)
+          </div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {["CBPI (Canine Brief Pain Inventory)", "HCPI (Helsinki Chronic Pain Index)",
+              "LOAD (Liverpool OA in Dogs)", "CSU Acute Pain Scale",
+              "Goniometry (ROM)", "Thigh circumference", "Video gait analysis",
+              "Force plate analysis", "Stance analyzer", "Timed functional tests",
+              "Owner questionnaire (QoL)"].map(item => (
+              <label key={item} style={{
+                display: "flex", alignItems: "center", gap: 6, cursor: "pointer",
+                padding: "6px 10px", borderRadius: 6, fontSize: 11, fontWeight: 600, color: "#fff",
+                background: (form.outcomeMeasures || []).includes(item) ? "rgba(14,165,233,0.15)" : "rgba(255,255,255,0.05)",
+                border: (form.outcomeMeasures || []).includes(item) ? "1.5px solid #0EA5E9" : "1.5px solid #3A4A5C",
+                transition: "all 0.2s",
+              }}>
+                <input type="checkbox" checked={(form.outcomeMeasures || []).includes(item)}
+                  onChange={e => {
+                    const arr = [...(form.outcomeMeasures || [])];
+                    if (e.target.checked) arr.push(item); else arr.splice(arr.indexOf(item), 1);
+                    setField("outcomeMeasures", arr);
+                  }}
+                  style={{ accentColor: "#0EA5E9", width: 13, height: 13, cursor: "pointer" }} />
+                {item}
+              </label>
+            ))}
+          </div>
+        </div>
+        <div style={{ background: "#1D2B3A", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, padding: "16px 20px" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#7DD3FC", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10 }}>
+            Prognosis
+          </div>
+          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.5)", marginBottom: 10 }}>
+            Expected recovery outcome based on clinical findings
+          </div>
+          <select style={{ ...S.select, width: "100%", border: "1.5px solid #3A4A5C", marginBottom: 12 }}
+            value={form.prognosisRating} onChange={e => setField("prognosisRating", e.target.value)}>
+            <option value="">Select prognosis...</option>
+            <option value="Excellent">Excellent — Full return to prior function expected</option>
+            <option value="Good">Good — Significant improvement expected, minor residual deficits</option>
+            <option value="Fair">Fair — Moderate improvement expected, functional limitations likely</option>
+            <option value="Guarded">Guarded — Uncertain outcome, dependent on response to therapy</option>
+            <option value="Poor">Poor — Limited improvement expected, focus on comfort/QoL</option>
+          </select>
+          <label style={S.label}>Estimated Timeline to Discharge</label>
+          <input style={{ ...S.input, border: "1.5px solid #3A4A5C" }}
+            value={form.estimatedTimeline} onChange={e => setField("estimatedTimeline", e.target.value)}
+            placeholder="e.g. 12-16 weeks with good compliance" />
+        </div>
+      </div>
+
+      {/* ── Discharge Criteria & Precautions — side by side ── */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
+        <div style={{ background: "#1D2B3A", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, padding: "16px 20px" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#7DD3FC", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10 }}>
+            Discharge Criteria
+          </div>
+          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.5)", marginBottom: 10 }}>
+            Objective benchmarks for protocol completion (select all that apply)
+          </div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {["Pain-free at rest and activity", "Full ROM or within 10\u00B0 contralateral",
+              "Symmetrical muscle mass", "Normal gait at walk & trot",
+              "Independent stair use", "Owner competent with HEP",
+              "Functional activity tolerance", "Stable on all validated measures",
+              "No exercise-induced lameness", "Vet clearance obtained"].map(item => (
+              <label key={item} style={{
+                display: "flex", alignItems: "center", gap: 6, cursor: "pointer",
+                padding: "6px 10px", borderRadius: 6, fontSize: 11, fontWeight: 600, color: "#fff",
+                background: (form.dischargeCriteria || []).includes(item) ? "rgba(14,165,233,0.15)" : "rgba(255,255,255,0.05)",
+                border: (form.dischargeCriteria || []).includes(item) ? "1.5px solid #0EA5E9" : "1.5px solid #3A4A5C",
+                transition: "all 0.2s",
+              }}>
+                <input type="checkbox" checked={(form.dischargeCriteria || []).includes(item)}
+                  onChange={e => {
+                    const arr = [...(form.dischargeCriteria || [])];
+                    if (e.target.checked) arr.push(item); else arr.splice(arr.indexOf(item), 1);
+                    setField("dischargeCriteria", arr);
+                  }}
+                  style={{ accentColor: "#0EA5E9", width: 13, height: 13, cursor: "pointer" }} />
+                {item}
+              </label>
+            ))}
+          </div>
+        </div>
+        <div style={{ background: "#1D2B3A", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, padding: "16px 20px" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#7DD3FC", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10 }}>
+            Precautions & Contraindications
+          </div>
+          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.5)", marginBottom: 10 }}>
+            Activity restrictions and safety considerations (select all that apply)
+          </div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {["No off-leash activity", "No jumping", "No stairs unsupervised",
+              "No rough play / wrestling", "Leash walks only", "Monitor incision",
+              "Stop if acute pain increase", "No slippery surfaces",
+              "No swimming until cleared", "Weight restriction in effect",
+              "Muzzle for manual therapy", "Sedation may be required"].map(item => (
+              <label key={item} style={{
+                display: "flex", alignItems: "center", gap: 6, cursor: "pointer",
+                padding: "6px 10px", borderRadius: 6, fontSize: 11, fontWeight: 600, color: "#fff",
+                background: (form.precautions || []).includes(item) ? "rgba(14,165,233,0.15)" : "rgba(255,255,255,0.05)",
+                border: (form.precautions || []).includes(item) ? "1.5px solid #0EA5E9" : "1.5px solid #3A4A5C",
+                transition: "all 0.2s",
+              }}>
+                <input type="checkbox" checked={(form.precautions || []).includes(item)}
+                  onChange={e => {
+                    const arr = [...(form.precautions || [])];
+                    if (e.target.checked) arr.push(item); else arr.splice(arr.indexOf(item), 1);
+                    setField("precautions", arr);
+                  }}
+                  style={{ accentColor: "#0EA5E9", width: 13, height: 13, cursor: "pointer" }} />
+                {item}
+              </label>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Step 4 navigation */}
+      <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0" }}>
+        <button
+          style={{
+            ...S.btn("ghost"), boxShadow: "0 0 8px rgba(14,165,233,0.15)",
+            transition: "all 0.25s",
+          }}
+          onMouseEnter={e => e.currentTarget.style.boxShadow = "0 0 14px rgba(14,165,233,0.3)"}
+          onMouseLeave={e => e.currentTarget.style.boxShadow = "0 0 8px rgba(14,165,233,0.15)"}
+          onClick={() => goToStep(3)}
+        >
+          ← Back to Treatment Plan
+        </button>
+        <button
+          style={{
+            background: "#1E5A8A", color: "#fff", display: "inline-flex", alignItems: "center", gap: 6,
+            borderRadius: 8, border: "none", cursor: "pointer", padding: "14px 32px", fontSize: 14, fontWeight: 700,
+            boxShadow: "0 0 14px rgba(14,165,233,0.35), 0 0 28px rgba(14,165,233,0.12)",
+            transition: "all 0.25s",
+          }}
+          onMouseEnter={e => e.currentTarget.style.boxShadow = "0 0 20px rgba(14,165,233,0.5), 0 0 40px rgba(14,165,233,0.2)"}
+          onMouseLeave={e => e.currentTarget.style.boxShadow = "0 0 14px rgba(14,165,233,0.35), 0 0 28px rgba(14,165,233,0.12)"}
+          onClick={() => goToStep(5)}
+        >
           Next: Protocol Parameters <FiChevronRight size={16} />
         </button>
       </div>
 
       </>)}
 
-      {/* ═══════════ STEP 4: PROTOCOL PARAMETERS ═══════════ */}
-      {!protocol && wizardStep === 4 && (<>
+      {/* ═══════════ STEP 5: PROTOCOL PARAMETERS ═══════════ */}
+      {!protocol && wizardStep === 5 && (<>
 
-      {/* ═══════════ SECTION 4: PROTOCOL PARAMETERS ═══════════ */}
+      {/* ═══════════ SECTION 5: PROTOCOL PARAMETERS ═══════════ */}
       <div style={{ background: "#1D2B3A", border: "2px solid #2E3D4F", borderRadius: 10, padding: "16px 20px", marginBottom: 12 }}>
-        <SectionHead icon={FiCalendar} title="Section 4 — Protocol Parameters" />
+        <SectionHead icon={FiCalendar} title="Section 5 — Protocol Parameters" />
         <div style={S.grid(3)}>
           <div>
             <label style={S.label}>Protocol Duration</label>
@@ -1947,6 +2176,75 @@ export default function GeneratorView({ initialStep }) {
           <label style={S.label}>Special Instructions / Clinical Notes</label>
           <textarea style={{ ...S.input, border: "1.5px solid #3A4A5C", minHeight: 56, resize: "vertical", fontFamily: "inherit" }} value={form.specialInstructions} onChange={e => setField("specialInstructions", e.target.value)}
             placeholder="e.g. Fearful of water — avoid aquatic initially, aggressive with handling — needs muzzle for manual therapy, owner has pool at home" />
+        </div>
+      </div>
+
+      {/* ── Home Environment & HEP Equipment — side by side ── */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
+        <div style={{ background: "#1D2B3A", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, padding: "16px 20px" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#7DD3FC", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10 }}>
+            Available Home Equipment
+          </div>
+          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.5)", marginBottom: 10 }}>
+            For clients following a HEP — what equipment do they have?
+          </div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {["Yoga / exercise mat", "Balance disc / wobble cushion", "Cavaletti poles / PVC rails",
+              "Resistance band", "Ramp (car or furniture)", "Stairs (indoor)",
+              "Underwater treadmill access", "Pool / swim access", "Therapy ball / peanut ball",
+              "Harness / sling", "Cones / weave markers", "Elevated food/water bowls",
+              "Orthopedic bed", "Ice packs / cold compress", "Heat pack / warm compress",
+              "Treat-dispensing toy (enrichment)"].map(item => (
+              <label key={item} style={{
+                display: "flex", alignItems: "center", gap: 6, cursor: "pointer",
+                padding: "6px 10px", borderRadius: 6, fontSize: 11, fontWeight: 600, color: "#fff",
+                background: (form.homeEquipment || []).includes(item) ? "rgba(14,165,233,0.15)" : "rgba(255,255,255,0.05)",
+                border: (form.homeEquipment || []).includes(item) ? "1.5px solid #0EA5E9" : "1.5px solid #3A4A5C",
+                transition: "all 0.2s",
+              }}>
+                <input type="checkbox" checked={(form.homeEquipment || []).includes(item)}
+                  onChange={e => {
+                    const arr = [...(form.homeEquipment || [])];
+                    if (e.target.checked) arr.push(item); else arr.splice(arr.indexOf(item), 1);
+                    setField("homeEquipment", arr);
+                  }}
+                  style={{ accentColor: "#0EA5E9", width: 13, height: 13, cursor: "pointer" }} />
+                {item}
+              </label>
+            ))}
+          </div>
+        </div>
+        <div style={{ background: "#1D2B3A", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, padding: "16px 20px" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#7DD3FC", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10 }}>
+            Home Environment
+          </div>
+          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.5)", marginBottom: 10 }}>
+            Living situation and accessibility considerations
+          </div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {["House \u2014 single story", "House \u2014 multi-story", "Apartment / condo",
+              "Tile / hardwood floors", "Carpet / rugs throughout", "Fenced yard",
+              "No yard / urban setting", "Rural / acreage", "Stairs to enter home",
+              "Ramp to enter home", "Dog door available", "Crate / confined space available",
+              "Other pets in home", "Small children in home"].map(item => (
+              <label key={item} style={{
+                display: "flex", alignItems: "center", gap: 6, cursor: "pointer",
+                padding: "6px 10px", borderRadius: 6, fontSize: 11, fontWeight: 600, color: "#fff",
+                background: (form.homeEnvironment || []).includes(item) ? "rgba(14,165,233,0.15)" : "rgba(255,255,255,0.05)",
+                border: (form.homeEnvironment || []).includes(item) ? "1.5px solid #0EA5E9" : "1.5px solid #3A4A5C",
+                transition: "all 0.2s",
+              }}>
+                <input type="checkbox" checked={(form.homeEnvironment || []).includes(item)}
+                  onChange={e => {
+                    const arr = [...(form.homeEnvironment || [])];
+                    if (e.target.checked) arr.push(item); else arr.splice(arr.indexOf(item), 1);
+                    setField("homeEnvironment", arr);
+                  }}
+                  style={{ accentColor: "#0EA5E9", width: 13, height: 13, cursor: "pointer" }} />
+                {item}
+              </label>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -2477,7 +2775,7 @@ export default function GeneratorView({ initialStep }) {
         </button>
       </div>
 
-      {/* Step 4 navigation */}
+      {/* Step 5 navigation */}
       <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0" }}>
         <button
           style={{
@@ -2486,9 +2784,9 @@ export default function GeneratorView({ initialStep }) {
           }}
           onMouseEnter={e => e.currentTarget.style.boxShadow = "0 0 14px rgba(14,165,233,0.3)"}
           onMouseLeave={e => e.currentTarget.style.boxShadow = "0 0 8px rgba(14,165,233,0.15)"}
-          onClick={() => goToStep(3)}
+          onClick={() => goToStep(4)}
         >
-          ← Back to Treatment Plan
+          ← Back to Rehab Goals
         </button>
         <div />
       </div>

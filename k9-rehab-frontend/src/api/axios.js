@@ -1,6 +1,6 @@
 import axios from "axios";
 
-export const API = process.env.REACT_APP_API_URL || "http://localhost:3000/api";
+export const API = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
 // ─────────────────────────────────────────────
 // AXIOS AUTH INTERCEPTOR

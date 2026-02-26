@@ -16,7 +16,7 @@ export default function TopNav({ view, setView, brand, dateStr, timeStr, current
           }
         `}</style>
         <div style={{ ...S.topNavBrand, cursor: "pointer" }} onClick={() => setView("generator")}>
-          <img src="/favicon.png" alt="K9 Rehab Pro"
+          <img src="/logo.svg" alt="K9 Rehab Pro"
             style={{ width: 30, height: 30, animation: "faviconGlow 2.8s ease-in-out infinite" }} />
           <span style={{
             fontFamily: "'Orbitron', 'Exo 2', 'Rajdhani', sans-serif",
