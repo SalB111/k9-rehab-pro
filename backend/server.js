@@ -3,7 +3,7 @@
 // Supporting futuristic frontend with grouped conditions and full exercises
 // ============================================================================
 
-require('dotenv').config();
+require('dotenv').config({ override: true, path: require('path').join(__dirname, '.env') });
 
 const express = require('express');
 const cors = require('cors');
@@ -46,22 +46,12 @@ const {
 } = require('./auth');
 const mammoth = require('mammoth');
 
-// ── Evidence-Based References → Exercise Enrichment ──
-// Links CORE_REFERENCES to every exercise via EXERCISE_EVIDENCE_MAP at startup
-let evidenceLinked = 0;
-ALL_EXERCISES.forEach(ex => {
-  const refKeys = EXERCISE_EVIDENCE_MAP[ex.code];
-  if (refKeys) {
-    const refs = refKeys
-      .map(key => CORE_REFERENCES[key])
-      .filter(Boolean);
-    // Determine highest evidence grade: A > B > C
-    const grades = refs.map(r => r.evidence_grade).filter(Boolean);
-    const grade = grades.includes('A') ? 'A' : grades.includes('B') ? 'B' : grades[0] || null;
-    ex.evidence_base = { grade, references: refs };
-    evidenceLinked++;
-  }
-});
+// ── Evidence-Based References → Verification ──
+// The exercise-enhancer.js already sets evidence_base with reference-derived
+// grades (v2 algorithm: journal A → Grade A, journal B → Grade B,
+// textbook-only in limited categories → Grade C, etc.)
+// We just verify the linking was done correctly at startup.
+const evidenceLinked = ALL_EXERCISES.filter(ex => ex.evidence_base && ex.evidence_base.references && ex.evidence_base.references.length > 0).length;
 console.log(`✅ Evidence references linked: ${evidenceLinked}/${ALL_EXERCISES.length} exercises`);
 
 // ── Source-of-Truth Protocol Document ──
@@ -151,8 +141,9 @@ function safeError(err) {
   return process.env.NODE_ENV === 'development' ? err.message : 'Internal server error';
 }
 
-// Authentication middleware — DISABLED during build (user requested unlock)
-// app.use('/api', requireAuth());
+// Authentication middleware — protects all /api routes except PUBLIC_ROUTES
+// (health, login, register, auth/status). See auth.js PUBLIC_ROUTES array.
+app.use('/api', requireAuth());
 
 // Database initialization moved to db-provider — see db-providers/sqlite-provider.js
 
@@ -636,6 +627,17 @@ app.post('/api/patients/delete-batch', requireRole('admin'), async (req, res) =>
     res.json({ success: true, message: `${result.changes} patient(s) deleted`, data: { deleted: result.changes } });
   } catch (err) {
     res.status(500).json({ error: safeError(err) });
+  }
+});
+
+// GET PROTOCOLS FOR PATIENT
+app.get('/api/patients/:patientId/protocols', async (req, res) => {
+  try {
+    const protocols = await db.getProtocolsByPatient(req.params.patientId);
+    res.json(protocols);
+  } catch (err) {
+    console.error('❌ Failed to fetch patient protocols:', err.message);
+    res.status(500).json({ error: 'Failed to load protocols' });
   }
 });
 

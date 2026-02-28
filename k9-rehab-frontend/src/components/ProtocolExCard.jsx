@@ -11,7 +11,7 @@ function ProtocolExCard({ entry, onRemove, onOpenStoryboard }) {
 
   return (
     <div style={{
-      background: "#fff", borderRadius: 10, border: "1px solid #E2E8F0",
+      background: C.surface, borderRadius: 10, border: `1px solid ${C.border}`,
       overflow: "hidden", gridColumn: open ? "1 / -1" : undefined,
       boxShadow: "0 1px 3px rgba(0,0,0,0.06)"
     }}>
@@ -26,7 +26,7 @@ function ProtocolExCard({ entry, onRemove, onOpenStoryboard }) {
               fontSize: 18, flexShrink: 0, border: `1px solid ${catIcon.SvgIcon ? "#222" : catIcon.color + "22"}`
             }}>{catIcon.SvgIcon ? <catIcon.SvgIcon size={28} /> : catIcon.icon}</div>
             <div>
-              <div style={{ fontWeight: 700, fontSize: 13, color: "#1A202C", marginBottom: 6 }}>
+              <div style={{ fontWeight: 700, fontSize: 13, color: C.text, marginBottom: 6 }}>
                 {ex.name || "Exercise"}
               </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
@@ -48,14 +48,14 @@ function ProtocolExCard({ entry, onRemove, onOpenStoryboard }) {
           </div>
           <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
             <button onClick={() => setOpen(o => !o)} style={{
-              background: "#F0F4F8", border: "none", borderRadius: 6, padding: "4px 8px",
-              cursor: "pointer", fontSize: 11, color: "#4A5568", fontWeight: 600
+              background: C.border, border: "none", borderRadius: 6, padding: "4px 8px",
+              cursor: "pointer", fontSize: 11, color: C.textMid, fontWeight: 600
             }}>
               {open ? "▲ Less" : "▼ Details"}
             </button>
             <button onClick={onRemove} title="Remove exercise" style={{
-              background: "#FFF5F5", border: "1px solid #FED7D7", borderRadius: 6,
-              padding: "4px 8px", cursor: "pointer", color: "#C53030", display: "flex",
+              background: C.redBg, border: `1px solid ${C.redBg}`, borderRadius: 6,
+              padding: "4px 8px", cursor: "pointer", color: C.red, display: "flex",
               alignItems: "center"
             }}>
               <FiX size={13} />
@@ -64,17 +64,17 @@ function ProtocolExCard({ entry, onRemove, onOpenStoryboard }) {
         </div>
 
         {entry.notes && (
-          <div style={{ marginTop: 8, fontSize: 11, color: "#718096", fontStyle: "italic",
-            background: "#F7FAFC", padding: "6px 10px", borderRadius: 6 }}>
+          <div style={{ marginTop: 8, fontSize: 11, color: C.textLight, fontStyle: "italic",
+            background: C.bg, padding: "6px 10px", borderRadius: 6 }}>
             📋 {entry.notes}
           </div>
         )}
 
         {entry.evidence_citation && (
-          <div style={{ marginTop: 6, fontSize: 10, color: "#5B6B82", display: "flex",
-            alignItems: "center", gap: 5, background: "#F0F6FF", padding: "4px 10px",
-            borderRadius: 5, border: "1px solid #D6E4F0" }}>
-            <FiBook size={10} style={{ flexShrink: 0, color: "#2B6CB0" }} />
+          <div style={{ marginTop: 6, fontSize: 10, color: C.textLight, display: "flex",
+            alignItems: "center", gap: 5, background: C.tealLight, padding: "4px 10px",
+            borderRadius: 5, border: `1px solid ${C.border}` }}>
+            <FiBook size={10} style={{ flexShrink: 0, color: C.teal }} />
             <span style={{ fontStyle: "italic" }}>{entry.evidence_citation}</span>
           </div>
         )}
@@ -82,19 +82,19 @@ function ProtocolExCard({ entry, onRemove, onOpenStoryboard }) {
 
       {/* Expanded clinical detail */}
       {open && (
-        <div style={{ borderTop: "1px solid #F0F4F8", padding: "0 16px 16px" }}>
+        <div style={{ borderTop: `1px solid ${C.border}`, padding: "0 16px 16px" }}>
           {ex.description && (
-            <p style={{ fontSize: 13, color: "#4A5568", lineHeight: 1.6, margin: "12px 0" }}>
+            <p style={{ fontSize: 13, color: C.textMid, lineHeight: 1.6, margin: "12px 0" }}>
               {ex.description}
             </p>
           )}
 
           {ex.equipment?.length > 0 && (
             <div style={{ marginBottom: 12 }}>
-              <div style={{ ...S.label, color: "#0F4C81", marginBottom: 5 }}>Equipment</div>
+              <div style={{ ...S.label, color: C.navy, marginBottom: 5 }}>Equipment</div>
               <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
                 {ex.equipment.map((item, i) => (
-                  <span key={i} style={{ background: "#EBF8FF", color: "#2B6CB0",
+                  <span key={i} style={{ background: C.tealLight, color: C.teal,
                     padding: "2px 9px", borderRadius: 20, fontSize: 11 }}>{item}</span>
                 ))}
               </div>
@@ -103,19 +103,19 @@ function ProtocolExCard({ entry, onRemove, onOpenStoryboard }) {
 
           {ex.setup && (
             <div style={{ marginBottom: 12 }}>
-              <div style={{ ...S.label, color: "#0F4C81", marginBottom: 4 }}>Setup</div>
-              <p style={{ fontSize: 12, color: "#4A5568", margin: 0 }}>{ex.setup}</p>
+              <div style={{ ...S.label, color: C.navy, marginBottom: 4 }}>Setup</div>
+              <p style={{ fontSize: 12, color: C.textMid, margin: 0 }}>{ex.setup}</p>
             </div>
           )}
 
           {ex.steps?.length > 0 && (
             <div style={{ marginBottom: 12 }}>
-              <div style={{ ...S.label, color: "#0F4C81", marginBottom: 6 }}>
+              <div style={{ ...S.label, color: C.navy, marginBottom: 6 }}>
                 Step-by-Step Instructions
               </div>
               <ol style={{ margin: 0, paddingLeft: 18 }}>
                 {ex.steps.map((step, i) => (
-                  <li key={i} style={{ fontSize: 12, color: "#4A5568", marginBottom: 5, lineHeight: 1.5 }}>
+                  <li key={i} style={{ fontSize: 12, color: C.textMid, marginBottom: 5, lineHeight: 1.5 }}>
                     {step}
                   </li>
                 ))}
@@ -125,23 +125,23 @@ function ProtocolExCard({ entry, onRemove, onOpenStoryboard }) {
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 8 }}>
             {ex.good_form?.length > 0 && (
-              <div style={{ background: "#F0FFF4", borderRadius: 8, padding: 12 }}>
-                <div style={{ ...S.label, color: "#276749", marginBottom: 6, display: "flex", alignItems: "center", gap: 4 }}>
+              <div style={{ background: C.greenBg, borderRadius: 8, padding: 12 }}>
+                <div style={{ ...S.label, color: C.green, marginBottom: 6, display: "flex", alignItems: "center", gap: 4 }}>
                   <FiCheckCircle size={11} /> Good Form
                 </div>
                 <ul style={{ margin: 0, paddingLeft: 14 }}>
                   {ex.good_form.map((item, i) => (
-                    <li key={i} style={{ fontSize: 11, color: "#276749", marginBottom: 3 }}>{item}</li>
+                    <li key={i} style={{ fontSize: 11, color: C.green, marginBottom: 3 }}>{item}</li>
                   ))}
                 </ul>
               </div>
             )}
             {ex.common_mistakes?.length > 0 && (
-              <div style={{ background: "#FFFAF0", borderRadius: 8, padding: 12 }}>
-                <div style={{ ...S.label, color: "#C05621", marginBottom: 6 }}>Common Mistakes</div>
+              <div style={{ background: C.amberBg, borderRadius: 8, padding: 12 }}>
+                <div style={{ ...S.label, color: C.amber, marginBottom: 6 }}>Common Mistakes</div>
                 <ul style={{ margin: 0, paddingLeft: 14 }}>
                   {ex.common_mistakes.map((item, i) => (
-                    <li key={i} style={{ fontSize: 11, color: "#C05621", marginBottom: 3 }}>{item}</li>
+                    <li key={i} style={{ fontSize: 11, color: C.amber, marginBottom: 3 }}>{item}</li>
                   ))}
                 </ul>
               </div>
@@ -149,35 +149,35 @@ function ProtocolExCard({ entry, onRemove, onOpenStoryboard }) {
           </div>
 
           {ex.red_flags?.length > 0 && (
-            <div style={{ background: "#FFF5F5", borderRadius: 8, padding: 12, marginTop: 8 }}>
-              <div style={{ ...S.label, color: "#C53030", marginBottom: 6, display: "flex", alignItems: "center", gap: 4 }}>
+            <div style={{ background: C.redBg, borderRadius: 8, padding: 12, marginTop: 8 }}>
+              <div style={{ ...S.label, color: C.red, marginBottom: 6, display: "flex", alignItems: "center", gap: 4 }}>
                 <FiAlertTriangle size={11} /> Red Flags — Stop Immediately
               </div>
               <ul style={{ margin: 0, paddingLeft: 14 }}>
                 {ex.red_flags.map((flag, i) => (
-                  <li key={i} style={{ fontSize: 11, color: "#C53030", marginBottom: 3, fontWeight: 500 }}>{flag}</li>
+                  <li key={i} style={{ fontSize: 11, color: C.red, marginBottom: 3, fontWeight: 500 }}>{flag}</li>
                 ))}
               </ul>
             </div>
           )}
 
           {ex.contraindications?.length > 0 && (
-            <div style={{ background: "#FFF5F5", borderRadius: 8, padding: 12, marginTop: 8 }}>
-              <div style={{ ...S.label, color: "#C53030", marginBottom: 6 }}>Contraindications</div>
+            <div style={{ background: C.redBg, borderRadius: 8, padding: 12, marginTop: 8 }}>
+              <div style={{ ...S.label, color: C.red, marginBottom: 6 }}>Contraindications</div>
               <ul style={{ margin: 0, paddingLeft: 14 }}>
                 {(Array.isArray(ex.contraindications) ? ex.contraindications : [ex.contraindications]).map((c, i) => (
-                  <li key={i} style={{ fontSize: 11, color: "#C53030", marginBottom: 3 }}>{c}</li>
+                  <li key={i} style={{ fontSize: 11, color: C.red, marginBottom: 3 }}>{c}</li>
                 ))}
               </ul>
             </div>
           )}
 
           {ex.progression && (
-            <div style={{ background: "#EBF8FF", borderRadius: 8, padding: 12, marginTop: 8 }}>
-              <div style={{ ...S.label, color: "#2B6CB0", marginBottom: 4, display: "flex", alignItems: "center", gap: 4 }}>
+            <div style={{ background: C.tealLight, borderRadius: 8, padding: 12, marginTop: 8 }}>
+              <div style={{ ...S.label, color: C.teal, marginBottom: 4, display: "flex", alignItems: "center", gap: 4 }}>
                 <FiBook size={11} /> Progression
               </div>
-              <p style={{ fontSize: 11, color: "#2B6CB0", margin: 0, lineHeight: 1.5 }}>{ex.progression}</p>
+              <p style={{ fontSize: 11, color: C.teal, margin: 0, lineHeight: 1.5 }}>{ex.progression}</p>
             </div>
           )}
           {/* Storyboard button — check by exercise code via storyboard API */}

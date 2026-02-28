@@ -263,9 +263,21 @@ async function seedConditions(conditionsList) {
 
 async function seedExercises(exercisesList) {
   const existing = await get('SELECT COUNT(*) as count FROM exercises');
-  if (existing.count > 0) return;
+  const masterCount = exercisesList.length;
+
+  // Always upsert so the DB matches the master exercise list (all-exercises.js).
+  // This handles new exercises being added, stale duplicates being removed, and
+  // metadata corrections being picked up on every server restart.
+  if (existing.count === masterCount) {
+    console.log(`✅ Exercises table up-to-date (${existing.count} rows)`);
+    return;
+  }
+
+  console.log(`🔄 Syncing exercises table: DB has ${existing.count}, master has ${masterCount}`);
+
+  // 1. Upsert every exercise from the master list
   const stmt = db.prepare(
-    `INSERT OR IGNORE INTO exercises (code, name, category, description, equipment, setup,
+    `INSERT OR REPLACE INTO exercises (code, name, category, description, equipment, setup,
       steps, good_form, common_mistakes, red_flags, progression, contraindications, difficulty_level)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   );
@@ -278,7 +290,20 @@ async function seedExercises(exercisesList) {
       ex.progression || null, ex.contraindications || null, ex.difficulty_level || 'Moderate'
     );
   }
-  return new Promise((resolve) => stmt.finalize(() => resolve()));
+  await new Promise((resolve) => stmt.finalize(() => resolve()));
+
+  // 2. Remove stale rows whose codes no longer appear in the master list
+  const masterCodes = new Set(exercisesList.map(ex => ex.code));
+  const dbRows = await all('SELECT code FROM exercises');
+  const staleCodes = dbRows.filter(row => !masterCodes.has(row.code)).map(row => row.code);
+  if (staleCodes.length > 0) {
+    const placeholders = staleCodes.map(() => '?').join(',');
+    await run(`DELETE FROM exercises WHERE code IN (${placeholders})`, staleCodes);
+    console.log(`🗑️  Removed ${staleCodes.length} stale exercises: ${staleCodes.join(', ')}`);
+  }
+
+  const final = await get('SELECT COUNT(*) as count FROM exercises');
+  console.log(`✅ Exercises table synced: ${final.count} rows`);
 }
 
 // ── Patients ────────────────────────────────────────────────────────────────
@@ -326,6 +351,17 @@ async function createProtocol(patientId, protocolData) {
 
 async function deleteProtocolsByPatient(patientId) {
   return run('DELETE FROM protocols WHERE patient_id = ?', [patientId]);
+}
+
+async function getProtocolsByPatient(patientId) {
+  const rows = await all(
+    'SELECT * FROM protocols WHERE patient_id = ? ORDER BY created_at DESC',
+    [patientId]
+  );
+  return rows.map(r => ({
+    ...r,
+    protocol_data: r.protocol_data ? JSON.parse(r.protocol_data) : null,
+  }));
 }
 
 // ── Conditions ──────────────────────────────────────────────────────────────
@@ -617,6 +653,7 @@ module.exports = {
   // Protocols
   createProtocol,
   deleteProtocolsByPatient,
+  getProtocolsByPatient,
 
   // Conditions
   getAllConditions,

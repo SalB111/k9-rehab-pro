@@ -2,6 +2,7 @@ import React from "react";
 import { FiBookOpen, FiShield, FiActivity, FiLock } from "react-icons/fi";
 import C from "../constants/colors";
 import S from "../constants/styles";
+import ClinicalFooter from "../components/ClinicalFooter";
 
 // ─────────────────────────────────────────────
 // ABOUT VIEW — Brand Story & Platform Info
@@ -15,10 +16,10 @@ function AboutView() {
           fontFamily: "'Exo 2', 'Orbitron', sans-serif", letterSpacing: "2px" }}>
           K9 REHAB PRO
         </h1>
-        <div style={{ fontSize: 12, fontWeight: 700, color: "#0EA5E9", textTransform: "uppercase", letterSpacing: "2px", marginBottom: 16, textShadow: "0 0 8px rgba(14,165,233,0.4)" }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: C.teal, textTransform: "uppercase", letterSpacing: "2px", marginBottom: 16, textShadow: `0 0 8px ${C.tealLight}` }}>
           Clinical Decision-Support System for Evidence-Based Canine Exercise Protocols
         </div>
-        <p style={{ fontSize: 14, color: "#111", lineHeight: 1.8, maxWidth: 650, margin: "0 auto" }}>
+        <p style={{ fontSize: 14, color: C.text, lineHeight: 1.8, maxWidth: 650, margin: "0 auto" }}>
           K9 Rehab Pro is a veterinary rehabilitation platform built for the clinicians who dedicate their careers to helping dogs recover, move, and live better. Designed from the ground up using evidence-based methodology, it transforms clinical expertise into structured, repeatable rehabilitation protocols.
         </p>
       </div>
@@ -27,9 +28,9 @@ function AboutView() {
         <div style={{ ...S.card, border: `2px solid ${C.navy}` }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
             <FiBookOpen size={16} style={{ color: C.teal }} />
-            <h3 style={{ margin: 0, fontSize: 14, fontWeight: 900, color: "#000" }}>Evidence-Based Foundation</h3>
+            <h3 style={{ margin: 0, fontSize: 14, fontWeight: 900, color: C.text }}>Evidence-Based Foundation</h3>
           </div>
-          <p style={{ fontSize: 12, color: "#111", lineHeight: 1.7, margin: 0 }}>
+          <p style={{ fontSize: 12, color: C.textMid, lineHeight: 1.7, margin: 0 }}>
             Every protocol, exercise, and progression rule is sourced from peer-reviewed veterinary rehabilitation literature. Primary references include Millis & Levine's <em>Canine Rehabilitation and Physical Therapy</em> (2nd ed., Elsevier 2014), Zink & Van Dyke's <em>Canine Sports Medicine and Rehabilitation</em> (2nd ed., Wiley 2018), and ACVSMR position statements.
           </p>
         </div>
@@ -37,36 +38,36 @@ function AboutView() {
         <div style={{ ...S.card, border: `2px solid ${C.navy}` }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
             <FiShield size={16} style={{ color: C.navy }} />
-            <h3 style={{ margin: 0, fontSize: 14, fontWeight: 900, color: "#000" }}>CDSS Classification</h3>
+            <h3 style={{ margin: 0, fontSize: 14, fontWeight: 900, color: C.text }}>CDSS Classification</h3>
           </div>
-          <p style={{ fontSize: 12, color: "#111", lineHeight: 1.7, margin: 0 }}>
+          <p style={{ fontSize: 12, color: C.textMid, lineHeight: 1.7, margin: 0 }}>
             K9 Rehab Pro is classified as a Clinical Decision-Support System (CDSS). It assists licensed veterinary professionals in generating rehabilitation protocols but does not replace clinical judgment, establish a VCPR, or provide diagnoses. All output requires veterinary review and approval.
           </p>
         </div>
 
         <div style={{ ...S.card, border: `2px solid ${C.navy}` }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-            <FiActivity size={16} style={{ color: "#059669" }} />
-            <h3 style={{ margin: 0, fontSize: 14, fontWeight: 900, color: "#000" }}>Protocol Engine</h3>
+            <FiActivity size={16} style={{ color: C.green }} />
+            <h3 style={{ margin: 0, fontSize: 14, fontWeight: 900, color: C.text }}>Protocol Engine</h3>
           </div>
-          <p style={{ fontSize: 12, color: "#111", lineHeight: 1.7, margin: 0 }}>
-            4 ACVSMR-aligned protocols (TPLO, IVDD, OA, Geriatric) with 4 gated phases each. 170+ exercises classified by intervention type, phase appropriateness, and evidence grade. Automated contraindication enforcement prevents unsafe exercise selection.
+          <p style={{ fontSize: 12, color: C.textMid, lineHeight: 1.7, margin: 0 }}>
+            4 ACVSMR-aligned protocols (TPLO, IVDD, OA, Geriatric) with 4 gated phases each. 223 exercises classified by intervention type, phase appropriateness, and evidence grade. Automated contraindication enforcement prevents unsafe exercise selection.
           </p>
         </div>
 
         <div style={{ ...S.card, border: `2px solid ${C.navy}` }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-            <FiLock size={16} style={{ color: "#D97706" }} />
-            <h3 style={{ margin: 0, fontSize: 14, fontWeight: 900, color: "#000" }}>Data Privacy</h3>
+            <FiLock size={16} style={{ color: C.amber }} />
+            <h3 style={{ margin: 0, fontSize: 14, fontWeight: 900, color: C.text }}>Data Privacy</h3>
           </div>
-          <p style={{ fontSize: 12, color: "#111", lineHeight: 1.7, margin: 0 }}>
+          <p style={{ fontSize: 12, color: C.textMid, lineHeight: 1.7, margin: 0 }}>
             All patient and client data remains local to your installation. No data is transmitted to external servers, sold to third parties, or used for AI training. The platform is designed with HIPAA-aligned principles and supports state veterinary medical board recordkeeping requirements.
           </p>
         </div>
       </div>
 
       <div style={{ ...S.card, border: `2px solid ${C.navy}` }}>
-        <h3 style={{ fontSize: 14, fontWeight: 900, color: "#000", marginBottom: 12 }}>Target Environments</h3>
+        <h3 style={{ fontSize: 14, fontWeight: 900, color: C.text, marginBottom: 12 }}>Target Environments</h3>
         <div style={S.grid(4)}>
           {[
             ["General Practice", "DVM-supervised rehabilitation for primary care clinics"],
@@ -75,20 +76,14 @@ function AboutView() {
             ["Universities", "Clinical teaching and research under faculty supervision"],
           ].map(([title, desc]) => (
             <div key={title} style={{ padding: "12px 14px", background: C.surface, borderRadius: 8, border: `2px solid ${C.navy}` }}>
-              <div style={{ fontWeight: 900, fontSize: 12, color: "#000", marginBottom: 4 }}>{title}</div>
-              <div style={{ fontSize: 11, color: "#111", lineHeight: 1.5 }}>{desc}</div>
+              <div style={{ fontWeight: 900, fontSize: 12, color: C.text, marginBottom: 4 }}>{title}</div>
+              <div style={{ fontSize: 11, color: C.textMid, lineHeight: 1.5 }}>{desc}</div>
             </div>
           ))}
         </div>
       </div>
 
-      <div style={{ ...S.card, background: C.navy, border: `2px solid ${C.navy}`, textAlign: "center", padding: "20px 28px" }}>
-        <div style={{ fontSize: 11, color: "#FFFFFF", lineHeight: 1.7 }}>
-          K9 Rehab Pro™ · Clinical Decision-Support System · ACVSMR-Aligned Methodology
-          <br />Evidence-Based Canine Rehabilitation Exercise Protocols
-          <br />All protocols require licensed veterinary review and approval before clinical application.
-        </div>
-      </div>
+      <ClinicalFooter variant="card" />
     </div>
   );
 }

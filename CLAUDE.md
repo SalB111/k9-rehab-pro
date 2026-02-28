@@ -17,15 +17,16 @@ K9 Rehab Pro is a veterinary rehabilitation intelligence platform. Clinician FIR
 - Evidence-based: ACVSMR diplomate methodology, Millis & Levine textbook standards
 - 4 Protocols: TPLO (16wk), IVDD (12wk), OA (16wk), Geriatric (16wk)
 - 4 Phases per protocol with gated progression (16 total phases)
-- 50 unique exercise codes mapped to protocol phases, 216 total in exercise database
+- 52 unique exercise codes mapped to protocol phases, 223 total in exercise database
 - Equipment gating: aquatic (flag), modalities (individual flags)
 - Phase 4 for chronic conditions = lifelong maintenance
-- Protocol generator header: `4 Conditions | 16 Phases | 50 Protocol Exercises | 216 Exercise Library | Full Modality Integration`
+- Protocol generator header: `4 Conditions | 16 Phases | 52 Protocol Exercises | 223 Exercise Library | Full Modality Integration`
 
 ## Tech Stack
 
 - **Backend**: Express.js 4.x, SQLite3, Node.js on port 3000
-- **Frontend (active)**: `k9-rehab-frontend/` — React 19 (CRA via react-scripts) on port 3001
+- **Frontend (active)**: `k9-rehab-frontend/` — React 19 + Vite 6.x + Tailwind CSS 3.4 on port 3001
+- **Frontend UI**: Radix UI primitives, shadcn/ui components, lucide-react icons, class-variance-authority
 - **Frontend (legacy/WIP)**: `frontend/` (React 19 + Vite + TypeScript), `frontend_new/` (React 18 + Vite)
 - **Authentication**: JWT (jsonwebtoken + bcryptjs) with role-based access control (`backend/auth.js`)
 - **Security**: Helmet, CORS (origin: localhost:3001), express-rate-limit
@@ -33,7 +34,7 @@ K9 Rehab Pro is a veterinary rehabilitation intelligence platform. Clinician FIR
 - **Image Generation**: Hugging Face Inference API (SDXL) for storyboard exercise images
 - **Breed Photos Fallback**: Dog.CEO API for breed-specific photos (19 breeds mapped)
 - **Document parsing**: Mammoth (for .docx source-of-truth ingestion)
-- **Database future**: Supabase client included in dependencies
+- **Database (migration)**: Supabase (WIP via `k9-rehab-api/`), client included in dependencies
 - **No test framework** configured (utility test scripts exist in `backend/`)
 - **No linter** configured (eslint exists in frontend/ only)
 
@@ -56,13 +57,21 @@ k9-rehab-pro/
 │   ├── storyboard-references.js # Exercise storyboard system (215/215 auto-gen)
 │   ├── storyboard-images/       # Cached AI-generated exercise images (HF SDXL)
 │   └── package.json
-├── k9-rehab-frontend/          # Active frontend (React 19 + CRA, port 3001)
-│   ├── src/App.js              # Main app — all views including VetAI
-│   ├── src/K9Icons.js          # Icon system v2
-│   ├── src/index.js            # Entry point
+├── k9-rehab-frontend/          # Active frontend (React 19 + Vite, port 3001)
+│   ├── src/App.jsx             # Main app — all views including VetAI
+│   ├── src/K9Icons.jsx         # Icon system v2
+│   ├── src/index.jsx           # Entry point
+│   ├── src/components/ui/      # shadcn/ui components
+│   ├── src/lib/                # Utility functions (cn, etc.)
+│   ├── vite.config.js          # Vite configuration
+│   ├── tailwind.config.js      # Tailwind CSS configuration
 │   └── package.json
 ├── frontend/                   # WIP frontend (React 19 + Vite + TypeScript)
 ├── frontend_new/               # Legacy frontend (React 18 + Vite)
+├── k9-rehab-api/               # Supabase-backed API (WIP migration target)
+│   ├── server.js               # Express + Supabase server
+│   ├── schema.sql              # Supabase schema
+│   └── seed*.js/sql            # Data migration scripts
 ├── CanineRehabProtocols/       # Source-of-truth clinical document
 │   └── canine_rehab_protocols.docx
 ├── export/clinical-source/     # Exported copy of source-of-truth
@@ -70,6 +79,7 @@ k9-rehab-pro/
 ├── output/                     # Generated protocols, PDFs, reports
 ├── data/                       # Supporting data files
 ├── supabase/                   # Supabase configuration
+│   └── migrations/             # Database migration files
 ├── tests/                      # Test directory
 ├── public/                     # Static assets
 └── documentation/              # Project documentation

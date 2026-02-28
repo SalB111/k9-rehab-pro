@@ -1,30 +1,36 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense, lazy } from "react";
 import axios from "axios";
 
 // ── Constants & Config ──
+import C from "./constants/colors";
 import S from "./constants/styles";
 import { API, setupAxiosAuth, clearAxiosAuth } from "./api/axios";
 
 // ── Components ──
 import TopNav from "./components/TopNav";
+import { ToastProvider } from "./components/Toast";
+import { ThemeProvider } from "./components/ThemeProvider";
 
-// ── Pages ──
-import DashboardView from "./pages/DashboardView";
-
-import GeneratorView from "./pages/GeneratorView";
-import ExercisesView from "./pages/ExercisesView";
-import SessionsView from "./pages/SessionsView";
-import VetAIView from "./pages/VetAIView";
-import SettingsView from "./pages/SettingsView";
+// ── Eager-loaded pages (first screens) ──
 import LoginView from "./pages/LoginView";
 import WelcomeView from "./pages/WelcomeView";
-import AboutView from "./pages/AboutView";
+
+// ── Lazy-loaded pages (code-split) ──
+const GeneratorView = lazy(() => import("./pages/GeneratorView"));
+const DashboardView = lazy(() => import("./pages/DashboardView"));
+const ExercisesView = lazy(() => import("./pages/ExercisesView"));
+const SessionsView  = lazy(() => import("./pages/SessionsView"));
+const VetAIView     = lazy(() => import("./pages/VetAIView"));
+const SettingsView  = lazy(() => import("./pages/SettingsView"));
+const AboutView     = lazy(() => import("./pages/AboutView"));
 
 // ─────────────────────────────────────────────
 // APP — Slim Orchestrator
 // ─────────────────────────────────────────────
 export default function App() {
-  const [view, setView] = useState("welcome");
+  const [view, setView] = useState(
+    localStorage.getItem("k9-welcome-seen") ? "home" : "welcome"
+  );
   const [genKey, setGenKey] = useState(0);
   const [genInitialStep, setGenInitialStep] = useState(1);
   const [brand, setBrand] = useState({ clinicName: "K9 Rehab Pro\u2122", accent: "#0F4C81" });
@@ -84,28 +90,46 @@ export default function App() {
 
   // ── Auth Gate ──
   if (!authToken) {
-    return <LoginView onLogin={handleLogin} onRegister={handleRegister} />;
+    return <ToastProvider><LoginView onLogin={handleLogin} onRegister={handleRegister} /></ToastProvider>;
   }
 
-  const views = {
-    home:       <GeneratorView key={genKey} initialStep={1} />,
-    dashboard:  <DashboardView setView={setView} />,
-    generator:  <GeneratorView key={genKey} initialStep={genInitialStep} />,
-    exercises:  <ExercisesView />,
-    sessions:   <SessionsView />,
-    vetai:      <VetAIView authToken={authToken} />,
-    settings:   <SettingsView brand={brand} setBrand={setBrand} />,
-    about:      <AboutView />,
+  // ── Loading spinner for lazy chunks ──
+  const ChunkSpinner = () => (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "40vh", gap: 16 }}>
+      <div style={{
+        width: 40, height: 40, borderRadius: "50%",
+        border: `4px solid ${C.border}`, borderTopColor: C.green,
+        animation: "spin 0.8s linear infinite",
+      }} />
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <div style={{ fontSize: 13, fontWeight: 600, color: C.navy }}>Loading Module...</div>
+    </div>
+  );
+
+  // ── Render active view (only the active one mounts → triggers lazy import) ──
+  const renderView = () => {
+    switch (view) {
+      case "home":      return <GeneratorView key={genKey} initialStep={1} />;
+      case "generator": return <GeneratorView key={genKey} initialStep={genInitialStep} />;
+      case "dashboard": return <DashboardView setView={setView} />;
+      case "exercises": return <ExercisesView setView={setView} setGenKey={setGenKey} setGenInitialStep={setGenInitialStep} />;
+      case "sessions":  return <SessionsView />;
+      case "vetai":     return <VetAIView authToken={authToken} />;
+      case "settings":  return <SettingsView brand={brand} setBrand={setBrand} />;
+      case "about":     return <AboutView />;
+      default:          return <GeneratorView key={genKey} initialStep={1} />;
+    }
   };
 
   if (view === "welcome") {
-    return <WelcomeView onEnter={() => setView("home")} onAbout={() => setView("about")} />;
+    return <ToastProvider><WelcomeView onEnter={() => { localStorage.setItem("k9-welcome-seen", "true"); setView("home"); }} onAbout={() => setView("about")} /></ToastProvider>;
   }
 
   const dateStr = liveTime.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
   const timeStr = liveTime.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 
   return (
+    <ToastProvider>
     <div style={S.app}>
       <style>{`
         @keyframes ekgScroll {
@@ -115,6 +139,10 @@ export default function App() {
         @keyframes neonFlatline {
           0% { transform: translateX(0); }
           100% { transform: translateX(-50%); }
+        }
+        @keyframes toastSlide {
+          from { opacity: 0; transform: translateX(40px); }
+          to   { opacity: 1; transform: translateX(0); }
         }
       `}</style>
 
@@ -133,9 +161,12 @@ export default function App() {
 
       <div style={S.main}>
         <div style={S.content} data-content-scroll>
-          {views[view]}
+          <Suspense fallback={<ChunkSpinner />}>
+            {renderView()}
+          </Suspense>
         </div>
       </div>
     </div>
+    </ToastProvider>
   );
 }

@@ -38,12 +38,12 @@ function SvgOverlayLayer({ indicators, overlayToggles, width, height }) {
         }
         if (ind.type === 'joint_pivot') {
           return <g key={i}>
-            <circle cx={ind.x} cy={ind.y} r="2.5" fill="none" stroke={ind.color || "#D97706"} strokeWidth="0.6" opacity={0.9} />
-            <circle cx={ind.x} cy={ind.y} r="1" fill={ind.color || "#D97706"} opacity={0.7} />
+            <circle cx={ind.x} cy={ind.y} r="2.5" fill="none" stroke={ind.color || C.amber} strokeWidth="0.6" opacity={0.9} />
+            <circle cx={ind.x} cy={ind.y} r="1" fill={ind.color || C.amber} opacity={0.7} />
           </g>;
         }
         if (ind.type === 'hand_placement') {
-          return <circle key={i} cx={ind.x} cy={ind.y} r="3" fill="none" stroke={ind.color || "#0EA5E9"}
+          return <circle key={i} cx={ind.x} cy={ind.y} r="3" fill="none" stroke={ind.color || C.teal}
             strokeWidth="0.5" strokeDasharray="1.5,1" opacity={0.8} />;
         }
         if (ind.type === 'muscle_highlight') {
@@ -60,7 +60,7 @@ function SvgOverlayLayer({ indicators, overlayToggles, width, height }) {
           const ey = ind.y + r * Math.sin(e);
           const largeArc = Math.abs(e - s) > Math.PI ? 1 : 0;
           return <path key={i} d={`M ${sx} ${sy} A ${r} ${r} 0 ${largeArc} ${e > s ? 1 : 0} ${ex} ${ey}`}
-            fill="none" stroke={ind.color || "#0EA5E9"} strokeWidth="0.7" strokeDasharray="2,1" opacity={0.8} />;
+            fill="none" stroke={ind.color || C.teal} strokeWidth="0.7" strokeDasharray="2,1" opacity={0.8} />;
         }
         return null;
       })}
@@ -260,7 +260,7 @@ function StoryboardPlayer({ exerciseCode, onClose }) {
   if (loading) {
     return (
       <div style={{ position: "fixed", inset: 0, background: "rgba(10,37,64,0.92)", backdropFilter: "blur(8px)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ width: 32, height: 32, borderRadius: "50%", border: "3px solid #E2E8F0", borderTopColor: C.teal, animation: "spin 0.8s linear infinite" }} />
+        <div style={{ width: 32, height: 32, borderRadius: "50%", border: `3px solid ${C.border}`, borderTopColor: C.teal, animation: "spin 0.8s linear infinite" }} />
       </div>
     );
   }
@@ -332,7 +332,7 @@ function StoryboardPlayer({ exerciseCode, onClose }) {
                   </div>
                 </div>
                 {frame.status === 'locked' && (
-                  <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10, fontWeight: 600, color: "#D97706", background: "rgba(217,119,6,0.15)", padding: "3px 10px", borderRadius: 20 }}>
+                  <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10, fontWeight: 600, color: C.amber, background: "rgba(217,119,6,0.15)", padding: "3px 10px", borderRadius: 20 }}>
                     <FiLock size={10} /> Premium
                   </span>
                 )}
@@ -373,7 +373,7 @@ function StoryboardPlayer({ exerciseCode, onClose }) {
 
               {/* Frame progress bar */}
               <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 3, background: "rgba(255,255,255,0.1)" }}>
-                <div style={{ height: "100%", width: `${((currentFrame + 1) / storyboard.frames.length) * 100}%`, background: `linear-gradient(90deg, ${branding.neon_accent || "#39FF7E"}, ${branding.secondary_accent || "#0EA5E9"})`, transition: "width 0.3s ease" }} />
+                <div style={{ height: "100%", width: `${((currentFrame + 1) / storyboard.frames.length) * 100}%`, background: `linear-gradient(90deg, ${branding.neon_accent || "#39FF7E"}, ${branding.secondary_accent || C.teal})`, transition: "width 0.3s ease" }} />
               </div>
             </div>
 
@@ -385,7 +385,7 @@ function StoryboardPlayer({ exerciseCode, onClose }) {
                   <div style={{ fontSize: 12, color: C.text, lineHeight: 1.5 }}>{frame.dog_action}</div>
                 </div>
                 <div>
-                  <div style={{ fontSize: 9, fontWeight: 700, color: "#059669", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 4 }}>Handler Action</div>
+                  <div style={{ fontSize: 9, fontWeight: 700, color: C.green, textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 4 }}>Handler Action</div>
                   <div style={{ fontSize: 12, color: C.text, lineHeight: 1.5 }}>{frame.handler_action}</div>
                 </div>
               </div>
@@ -398,7 +398,7 @@ function StoryboardPlayer({ exerciseCode, onClose }) {
                   <div style={{ fontSize: 10, fontWeight: 700, color: C.red, display: "flex", alignItems: "center", gap: 4 }}>
                     <FiAlertTriangle size={10} /> Safety
                   </div>
-                  <div style={{ fontSize: 11, color: "#991B1B", marginTop: 3, lineHeight: 1.5 }}>{frame.safety_notes}</div>
+                  <div style={{ fontSize: 11, color: C.red, marginTop: 3, lineHeight: 1.5 }}>{frame.safety_notes}</div>
                 </div>
               )}
             </div>
@@ -407,22 +407,22 @@ function StoryboardPlayer({ exerciseCode, onClose }) {
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", borderBottom: `1px solid ${C.borderLight}` }}>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 <button onClick={() => setCurrentFrame(0)} disabled={currentFrame === 0}
-                  style={{ background: currentFrame === 0 ? "#F1F5F9" : C.navy, color: currentFrame === 0 ? "#94A3B8" : "#fff", border: "none", borderRadius: 6, padding: "6px 10px", cursor: currentFrame === 0 ? "default" : "pointer", fontSize: 11, fontWeight: 600 }}>
+                  style={{ background: currentFrame === 0 ? C.bg : C.navy, color: currentFrame === 0 ? C.textLight : "#fff", border: "none", borderRadius: 6, padding: "6px 10px", cursor: currentFrame === 0 ? "default" : "pointer", fontSize: 11, fontWeight: 600 }}>
                   ⏮
                 </button>
                 <button onClick={() => setCurrentFrame(f => Math.max(0, f - 1))} disabled={currentFrame === 0}
-                  style={{ background: currentFrame === 0 ? "#F1F5F9" : C.navy, color: currentFrame === 0 ? "#94A3B8" : "#fff", border: "none", borderRadius: 6, padding: "6px 12px", cursor: currentFrame === 0 ? "default" : "pointer", fontSize: 11, fontWeight: 600 }}>
+                  style={{ background: currentFrame === 0 ? C.bg : C.navy, color: currentFrame === 0 ? C.textLight : "#fff", border: "none", borderRadius: 6, padding: "6px 12px", cursor: currentFrame === 0 ? "default" : "pointer", fontSize: 11, fontWeight: 600 }}>
                   ◀ Prev
                 </button>
                 <span style={{ fontSize: 12, fontWeight: 700, color: C.text, padding: "0 8px" }}>
                   {currentFrame + 1} / {storyboard.frames.length}
                 </span>
                 <button onClick={() => setCurrentFrame(f => Math.min(storyboard.frames.length - 1, f + 1))} disabled={currentFrame === storyboard.frames.length - 1}
-                  style={{ background: currentFrame === storyboard.frames.length - 1 ? "#F1F5F9" : C.navy, color: currentFrame === storyboard.frames.length - 1 ? "#94A3B8" : "#fff", border: "none", borderRadius: 6, padding: "6px 12px", cursor: currentFrame === storyboard.frames.length - 1 ? "default" : "pointer", fontSize: 11, fontWeight: 600 }}>
+                  style={{ background: currentFrame === storyboard.frames.length - 1 ? C.bg : C.navy, color: currentFrame === storyboard.frames.length - 1 ? C.textLight : "#fff", border: "none", borderRadius: 6, padding: "6px 12px", cursor: currentFrame === storyboard.frames.length - 1 ? "default" : "pointer", fontSize: 11, fontWeight: 600 }}>
                   Next ▶
                 </button>
                 <button onClick={() => setCurrentFrame(storyboard.frames.length - 1)} disabled={currentFrame === storyboard.frames.length - 1}
-                  style={{ background: currentFrame === storyboard.frames.length - 1 ? "#F1F5F9" : C.navy, color: currentFrame === storyboard.frames.length - 1 ? "#94A3B8" : "#fff", border: "none", borderRadius: 6, padding: "6px 10px", cursor: currentFrame === storyboard.frames.length - 1 ? "default" : "pointer", fontSize: 11, fontWeight: 600 }}>
+                  style={{ background: currentFrame === storyboard.frames.length - 1 ? C.bg : C.navy, color: currentFrame === storyboard.frames.length - 1 ? C.textLight : "#fff", border: "none", borderRadius: 6, padding: "6px 10px", cursor: currentFrame === storyboard.frames.length - 1 ? "default" : "pointer", fontSize: 11, fontWeight: 600 }}>
                   ⏭
                 </button>
               </div>
@@ -433,11 +433,11 @@ function StoryboardPlayer({ exerciseCode, onClose }) {
                 </button>
                 <div style={{ display: "flex", borderRadius: 6, overflow: "hidden", border: `1px solid ${C.border}` }}>
                   <button onClick={() => setScriptMode('client')}
-                    style={{ padding: "5px 10px", fontSize: 10, fontWeight: 600, border: "none", cursor: "pointer", background: scriptMode === 'client' ? C.teal : "#F1F5F9", color: scriptMode === 'client' ? "#fff" : C.textMid }}>
+                    style={{ padding: "5px 10px", fontSize: 10, fontWeight: 600, border: "none", cursor: "pointer", background: scriptMode === 'client' ? C.teal : C.bg, color: scriptMode === 'client' ? "#fff" : C.textMid }}>
                     Client
                   </button>
                   <button onClick={() => setScriptMode('clinician')}
-                    style={{ padding: "5px 10px", fontSize: 10, fontWeight: 600, border: "none", cursor: "pointer", background: scriptMode === 'clinician' ? C.navy : "#F1F5F9", color: scriptMode === 'clinician' ? "#fff" : C.textMid }}>
+                    style={{ padding: "5px 10px", fontSize: 10, fontWeight: 600, border: "none", cursor: "pointer", background: scriptMode === 'clinician' ? C.navy : C.bg, color: scriptMode === 'clinician' ? "#fff" : C.textMid }}>
                     Clinician
                   </button>
                 </div>
@@ -484,7 +484,7 @@ function StoryboardPlayer({ exerciseCode, onClose }) {
             ))}
 
             {/* ── Quick Info ── */}
-            <div style={{ marginTop: 16, padding: "10px 12px", borderRadius: 8, background: "#F8FAFC", border: `1px solid ${C.borderLight}` }}>
+            <div style={{ marginTop: 16, padding: "10px 12px", borderRadius: 8, background: C.bg, border: `1px solid ${C.borderLight}` }}>
               <div style={{ fontSize: 9, fontWeight: 700, color: C.navy, textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 8 }}>Exercise Info</div>
               <div style={{ fontSize: 10, color: C.textMid, marginBottom: 4 }}>
                 <strong>Frames:</strong> {storyboard.frames.length}
@@ -514,7 +514,7 @@ function StoryboardPlayer({ exerciseCode, onClose }) {
                 <div style={{ fontSize: 9, fontWeight: 700, color: C.navy, textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 6 }}>Equipment</div>
                 {storyboard.equipment_needed.map((eq, i) => (
                   <div key={i} style={{ fontSize: 10, color: eq.required ? C.text : C.textLight, marginBottom: 3, display: "flex", alignItems: "center", gap: 4 }}>
-                    <span style={{ color: eq.required ? C.green : "#CBD5E0" }}>{eq.required ? "●" : "○"}</span>
+                    <span style={{ color: eq.required ? C.green : C.borderLight }}>{eq.required ? "●" : "○"}</span>
                     {eq.item}
                   </div>
                 ))}

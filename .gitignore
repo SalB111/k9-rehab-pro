@@ -31,3 +31,7 @@ output/
 *.tmp
 *.temp
 .cache/
+
+# Legacy frontends (superseded by k9-rehab-frontend/)
+frontend/
+frontend_new/

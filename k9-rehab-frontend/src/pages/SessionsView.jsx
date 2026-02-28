@@ -1,19 +1,37 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import {
-  FiClipboard, FiActivity, FiClock, FiCheckCircle, FiBook
+  FiClipboard, FiActivity, FiClock, FiCheckCircle, FiBook,
+  FiFileText, FiChevronDown, FiChevronUp
 } from "react-icons/fi";
 import C from "../constants/colors";
 import S from "../constants/styles";
 import { API } from "../api/axios";
+import { useToast } from "../components/Toast";
+
+// ── Phase names and progression criteria ──
+const PHASE_NAMES = [
+  "Acute Protection",
+  "Early Mobilization",
+  "Controlled Strengthening",
+  "Return to Function",
+];
+const PHASE_CRITERIA = [
+  "Pain controlled, incision healing, minimal edema",
+  "Weight bearing improving, ROM progressing, pain < 4/10",
+  "Full weight bearing, functional strength gains, pain < 2/10",
+  "Return to normal activity, maintenance exercises, owner compliance",
+];
 
 // ─────────────────────────────────────────────
 // SESSIONS VIEW — SOAP + CBPI OUTCOME MEASURES
 // ─────────────────────────────────────────────
 function SessionsView() {
   const [patients, setPatients] = useState([]);
+  const [loadingPatients, setLoadingPatients] = useState(true);
   const [selectedPatient, setSelectedPatient] = useState("");
   const [activeTab, setActiveTab] = useState("soap");
+  const toast = useToast();
 
   // SOAP form state
   const [soapForm, setSoapForm] = useState({
@@ -30,13 +48,49 @@ function SessionsView() {
     notes: "",
   });
 
+  // Protocol context state
+  const [protocols, setProtocols] = useState([]);
+  const [protocolExpanded, setProtocolExpanded] = useState(true);
+
   // Client-side session/CBPI history
   const [soapHistory, setSoapHistory] = useState([]);
   const [cbpiHistory, setCbpiHistory] = useState([]);
 
   useEffect(() => {
-    axios.get(`${API}/patients`).then(r => setPatients(r.data?.data || r.data || [])).catch(() => {});
+    axios.get(`${API}/patients`).then(r => setPatients(r.data?.data || r.data || [])).catch(() => toast("Failed to load patients")).finally(() => setLoadingPatients(false));
   }, []);
+
+  // Fetch protocols when patient is selected
+  useEffect(() => {
+    if (selectedPatient) {
+      axios.get(`${API}/patients/${selectedPatient}/protocols`)
+        .then(r => setProtocols(r.data || []))
+        .catch(() => setProtocols([]));
+    } else {
+      setProtocols([]);
+    }
+  }, [selectedPatient]);
+
+  // Calculate current phase from protocol data
+  const getCurrentPhase = (protocol) => {
+    const pd = protocol.protocol_data;
+    if (!pd) return null;
+    const totalWeeks = pd.protocol_length_weeks || 16;
+    const weeksPerPhase = Math.ceil(totalWeeks / 4);
+    const generatedAt = new Date(pd.generated_at || protocol.created_at);
+    const daysSince = Math.max(0, (Date.now() - generatedAt.getTime()) / (1000 * 60 * 60 * 24));
+    const currentWeek = Math.min(totalWeeks, Math.ceil(daysSince / 7) || 1);
+    const currentPhase = Math.min(4, Math.ceil(currentWeek / weeksPerPhase));
+    return { currentWeek, currentPhase, totalWeeks, weeksPerPhase, generatedAt };
+  };
+
+  // Get exercises for a specific week from protocol data
+  const getExercisesForWeek = (protocol, weekNum) => {
+    const pd = protocol.protocol_data;
+    if (!pd?.weeks) return [];
+    const week = pd.weeks.find(w => w.week_number === weekNum);
+    return week?.exercises || [];
+  };
 
   // CBPI computed scores
   const pssScore = ((cbpi.pss_worst + cbpi.pss_least + cbpi.pss_average + cbpi.pss_now) / 4).toFixed(1);
@@ -64,7 +118,7 @@ function SessionsView() {
               flex: 1, height: 34, borderRadius: 5,
               fontSize: 12, fontWeight: 700, cursor: "pointer",
               background: value === n ? (n <= 3 ? C.green : n <= 6 ? C.amber : C.red) : "rgba(255,255,255,0.06)",
-              color: value === n ? "#fff" : "#94A3B8",
+              color: value === n ? "#fff" : C.textLight,
               transition: "all 0.1s",
               border: value === n ? "none" : "1px solid rgba(255,255,255,0.08)",
             }}>
@@ -108,20 +162,142 @@ function SessionsView() {
       </div>
 
       {/* Patient Selector — shared */}
-      <div style={{ ...S.card, padding: "12px 20px", display: "flex", gap: 12, alignItems: "center", background: "#1D2B3A", border: "1.5px solid #2E3D4F" }}>
-        <label style={{ ...S.label, margin: 0, whiteSpace: "nowrap", color: "#7DD3FC" }}>Patient</label>
-        <select style={{ ...S.select, flex: 1, border: "1.5px solid #3A4A5C" }} value={selectedPatient}
-          onChange={e => setSelectedPatient(e.target.value)}>
-          <option value="">— Select patient for this session —</option>
+      <div style={{ ...S.card, padding: "12px 20px", display: "flex", gap: 12, alignItems: "center", background: C.surface, border: `1.5px solid ${C.border}` }}>
+        <label style={{ ...S.label, margin: 0, whiteSpace: "nowrap", color: C.teal }}>Patient</label>
+        <select style={{ ...S.select, flex: 1, border: `1.5px solid ${C.border}` }} value={selectedPatient}
+          onChange={e => setSelectedPatient(e.target.value)} disabled={loadingPatients}>
+          <option value="">{loadingPatients ? "Loading patients..." : "— Select patient for this session —"}</option>
           {patients.map(p => (
             <option key={p.id} value={p.id}>{p.name} — {p.condition || "N/A"} ({p.client_name || "N/A"})</option>
           ))}
         </select>
       </div>
 
+      {/* ═══════════ PROTOCOL CONTEXT PANEL ═══════════ */}
+      {selectedPatient && protocols.length > 0 && (() => {
+        const proto = protocols[0]; // Most recent protocol
+        const phase = getCurrentPhase(proto);
+        const pd = proto.protocol_data;
+        if (!phase || !pd) return null;
+        const exercises = getExercisesForWeek(proto, phase.currentWeek);
+        const phaseIdx = phase.currentPhase - 1; // 0-based for array access
+
+        return (
+          <div style={{
+            ...S.card, padding: 0, overflow: "hidden", marginTop: 12,
+            background: C.surface,
+            border: `1.5px solid ${C.teal}44`,
+          }}>
+            {/* Header — clickable toggle */}
+            <div
+              onClick={() => setProtocolExpanded(e => !e)}
+              style={{
+                display: "flex", alignItems: "center", gap: 10,
+                padding: "12px 20px", cursor: "pointer", userSelect: "none",
+                borderBottom: protocolExpanded ? `1px solid ${C.border}` : "none",
+              }}
+            >
+              <FiFileText size={14} style={{ color: C.teal, flexShrink: 0 }} />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: C.teal, textTransform: "uppercase", letterSpacing: "0.8px" }}>
+                  Active Protocol
+                </div>
+                <div style={{ fontSize: 12, fontWeight: 600, color: C.text, marginTop: 2 }}>
+                  {pd.protocol_name || pd.protocol_type || "Rehabilitation Protocol"} — {pd.protocol_length_weeks} weeks
+                </div>
+              </div>
+              <span style={{
+                fontSize: 10, fontWeight: 700, color: C.navy,
+                background: C.tealBg, padding: "3px 10px", borderRadius: 10,
+              }}>
+                Week {phase.currentWeek} · Phase {phase.currentPhase}
+              </span>
+              {protocolExpanded ? <FiChevronUp size={14} style={{ color: C.textLight }} /> : <FiChevronDown size={14} style={{ color: C.textLight }} />}
+            </div>
+
+            {/* Expanded content */}
+            {protocolExpanded && (
+              <div style={{ padding: "16px 20px" }}>
+                {/* Phase indicator bar */}
+                <div style={{ display: "flex", gap: 4, marginBottom: 16 }}>
+                  {[1, 2, 3, 4].map(p => (
+                    <div key={p} style={{
+                      flex: 1, textAlign: "center", padding: "8px 4px", borderRadius: 6,
+                      background: p === phase.currentPhase ? C.tealBg : "rgba(255,255,255,0.03)",
+                      border: p === phase.currentPhase ? `1.5px solid ${C.teal}` : `1px solid ${C.border}`,
+                    }}>
+                      <div style={{
+                        fontSize: 10, fontWeight: 700,
+                        color: p === phase.currentPhase ? C.teal : C.textLight,
+                      }}>
+                        P{p}
+                      </div>
+                      <div style={{
+                        fontSize: 9, color: p === phase.currentPhase ? C.text : C.textLight,
+                        marginTop: 2,
+                      }}>
+                        {PHASE_NAMES[p - 1]}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Current phase details */}
+                <div style={{
+                  padding: "12px 16px", borderRadius: 8, marginBottom: 12,
+                  background: "rgba(14,165,233,0.06)", border: `1px solid ${C.teal}22`,
+                }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: C.teal, marginBottom: 4 }}>
+                    Phase {phase.currentPhase}: {PHASE_NAMES[phaseIdx]}
+                  </div>
+                  <div style={{ fontSize: 11, color: C.textMid, lineHeight: 1.5 }}>
+                    <strong style={{ color: C.text }}>Progression criteria:</strong> {PHASE_CRITERIA[phaseIdx]}
+                  </div>
+                </div>
+
+                {/* Current week exercises */}
+                {exercises.length > 0 && (
+                  <div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: C.textLight, textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 8 }}>
+                      Week {phase.currentWeek} Exercises ({exercises.length})
+                    </div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                      {exercises.map((ex, i) => (
+                        <span key={i} style={{
+                          fontSize: 10, fontWeight: 600, color: C.text,
+                          background: "rgba(255,255,255,0.06)", padding: "4px 10px",
+                          borderRadius: 6, border: `1px solid ${C.border}`,
+                        }}>
+                          {ex.exercise_name || ex.code || ex}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* SOAP integration hints */}
+                <div style={{
+                  marginTop: 14, padding: "10px 14px", borderRadius: 6,
+                  background: "rgba(16,185,129,0.06)", border: `1px solid ${C.green}22`,
+                  display: "flex", gap: 8, alignItems: "flex-start",
+                }}>
+                  <FiClipboard size={12} style={{ color: C.green, flexShrink: 0, marginTop: 2 }} />
+                  <div style={{ fontSize: 10, color: C.textMid, lineHeight: 1.5 }}>
+                    <strong style={{ color: C.green }}>Assessment hint:</strong> Document progress toward Phase {phase.currentPhase} criteria.
+                    {phase.currentPhase < 4 && (
+                      <span> Next phase ({PHASE_NAMES[phase.currentPhase]}) requires: {PHASE_CRITERIA[phase.currentPhase]}.</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })()}
+
       {/* ═══════════ SOAP TAB ═══════════ */}
       {activeTab === "soap" && (
-        <div style={{ ...S.card, background: "#1D2B3A", border: "2px solid #2E3D4F" }}>
+        <div style={{ ...S.card, background: C.surface, border: `2px solid ${C.border}` }}>
           <div>
             <div style={S.sectionHeader()}>
               <FiClipboard size={13} style={{ color: "#39FF7E" }} /> SOAP Note Entry
@@ -134,7 +310,7 @@ function SessionsView() {
           {/* S - Subjective */}
           <div style={{ marginBottom: 14 }}>
             <label style={S.label}>S — Subjective (Owner Report)</label>
-            <textarea style={{ ...S.input, border: "1.5px solid #3A4A5C", minHeight: 60, resize: "vertical", fontFamily: "inherit" }}
+            <textarea style={{ ...S.input, border: `1.5px solid ${C.border}`, minHeight: 60, resize: "vertical", fontFamily: "inherit" }}
               placeholder="Owner observations: appetite, activity level, willingness to bear weight, behavior changes..."
               value={soapForm.subjective} onChange={e => setSoapForm(f => ({ ...f, subjective: e.target.value }))} />
           </div>
@@ -142,7 +318,7 @@ function SessionsView() {
           {/* O - Objective */}
           <div style={{ marginBottom: 14 }}>
             <label style={S.label}>O — Objective (Clinical Findings)</label>
-            <textarea style={{ ...S.input, border: "1.5px solid #3A4A5C", minHeight: 60, resize: "vertical", fontFamily: "inherit" }}
+            <textarea style={{ ...S.input, border: `1.5px solid ${C.border}`, minHeight: 60, resize: "vertical", fontFamily: "inherit" }}
               placeholder="ROM (goniometry), limb circumference, weight bearing status, gait analysis, palpation findings..."
               value={soapForm.objective} onChange={e => setSoapForm(f => ({ ...f, objective: e.target.value }))} />
           </div>
@@ -174,7 +350,7 @@ function SessionsView() {
           {/* A - Assessment */}
           <div style={{ marginTop: 14, marginBottom: 14 }}>
             <label style={S.label}>A — Assessment</label>
-            <textarea style={{ ...S.input, border: "1.5px solid #3A4A5C", minHeight: 56, resize: "vertical", fontFamily: "inherit" }}
+            <textarea style={{ ...S.input, border: `1.5px solid ${C.border}`, minHeight: 56, resize: "vertical", fontFamily: "inherit" }}
               placeholder="Clinical assessment: progress toward goals, phase advancement readiness, response to therapy..."
               value={soapForm.assessment} onChange={e => setSoapForm(f => ({ ...f, assessment: e.target.value }))} />
           </div>
@@ -182,7 +358,7 @@ function SessionsView() {
           {/* P - Plan */}
           <div style={{ marginBottom: 16 }}>
             <label style={S.label}>P — Plan</label>
-            <textarea style={{ ...S.input, border: "1.5px solid #3A4A5C", minHeight: 56, resize: "vertical", fontFamily: "inherit" }}
+            <textarea style={{ ...S.input, border: `1.5px solid ${C.border}`, minHeight: 56, resize: "vertical", fontFamily: "inherit" }}
               placeholder="Next session plan, frequency changes, phase progression, HEP modifications, referral needs..."
               value={soapForm.plan} onChange={e => setSoapForm(f => ({ ...f, plan: e.target.value }))} />
           </div>
@@ -203,13 +379,13 @@ function SessionsView() {
           {/* Citation Banner */}
           <div style={{ ...S.card, background: "rgba(14,165,233,0.08)", border: `1px solid ${C.teal}33`, padding: "12px 20px", display: "flex", alignItems: "center", gap: 8 }}>
             <FiBook size={13} style={{ color: C.teal, flexShrink: 0 }} />
-            <span style={{ fontSize: 11, color: "#7DD3FC" }}>
+            <span style={{ fontSize: 11, color: C.teal }}>
               <strong>Canine Brief Pain Inventory (CBPI)</strong> — Brown DC, Boston RC, Coyne JC, Farrar JT. 2008. Development and psychometric testing of an instrument designed to measure chronic pain in dogs with osteoarthritis. <em>Am J Vet Res</em> 69:1034-1041.
             </span>
           </div>
 
           {/* Pain Severity Scale (PSS) — 4 items */}
-          <div style={{ ...S.card, background: "#1D2B3A", border: "2px solid #2E3D4F" }}>
+          <div style={{ ...S.card, background: C.surface, border: `2px solid ${C.border}` }}>
             <div style={{ marginBottom: 16 }}>
               <div style={{ fontSize: 12, fontWeight: 800, color: "#fff", textTransform: "uppercase", letterSpacing: "0.8px", paddingBottom: 8 }}>Pain Severity Scale (PSS)</div>
               <div style={{ height: 2, width: "100%", overflow: "hidden", borderRadius: 1 }}><div style={{ width: "200%", height: "100%", background: "linear-gradient(90deg, transparent, #39FF7E, #0EA5E9, #39FF7E, transparent)", animation: "neonFlatline 3s linear infinite" }} /></div>
@@ -225,7 +401,7 @@ function SessionsView() {
           </div>
 
           {/* Pain Interference Scale (PIS) — 6 items */}
-          <div style={{ ...S.card, background: "#1D2B3A", border: "2px solid #2E3D4F" }}>
+          <div style={{ ...S.card, background: C.surface, border: `2px solid ${C.border}` }}>
             <div style={{ marginBottom: 8 }}>
               <div style={{ fontSize: 12, fontWeight: 800, color: "#fff", textTransform: "uppercase", letterSpacing: "0.8px", paddingBottom: 8 }}>Pain Interference Scale (PIS)</div>
               <div style={{ height: 2, width: "100%", overflow: "hidden", borderRadius: 1 }}><div style={{ width: "200%", height: "100%", background: "linear-gradient(90deg, transparent, #39FF7E, #0EA5E9, #39FF7E, transparent)", animation: "neonFlatline 3s linear infinite" }} /></div>
@@ -248,7 +424,7 @@ function SessionsView() {
           {/* CBPI Summary Card */}
           <div style={{
             ...S.card, padding: "24px 28px",
-            background: `linear-gradient(135deg, ${C.navy} 0%, #1E293B 100%)`,
+            background: `linear-gradient(135deg, ${C.navy} 0%, ${C.border} 100%)`,
             border: `1px solid ${C.teal}44`,
           }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: C.teal, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 16 }}>

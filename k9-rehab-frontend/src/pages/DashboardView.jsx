@@ -8,6 +8,7 @@ import { TbDog } from "react-icons/tb";
 import C from "../constants/colors";
 import S from "../constants/styles";
 import { API } from "../api/axios";
+import ClinicalFooter from "../components/ClinicalFooter";
 
 // Neon flatline divider — shared across all pages
 const NeonLine = () => (
@@ -48,7 +49,7 @@ export default function DashboardView({ setView }) {
   if (loading) {
     return (
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "40vh", gap: 12 }}>
-        <div style={{ width: 32, height: 32, borderRadius: "50%", border: "3px solid #E2E8F0", borderTopColor: C.teal, animation: "spin 0.8s linear infinite" }} />
+        <div style={{ width: 32, height: 32, borderRadius: "50%", border: `3px solid ${C.border}`, borderTopColor: C.teal, animation: "spin 0.8s linear infinite" }} />
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         <span style={{ fontSize: 13, fontWeight: 600, color: C.navy }}>Loading dashboard...</span>
       </div>
@@ -56,7 +57,7 @@ export default function DashboardView({ setView }) {
   }
 
   const PROTOCOLS = [
-    { name: "TPLO Post-Surgical", phases: 4, weeks: "16 wk", color: "#DC2626" },
+    { name: "TPLO Post-Surgical", phases: 4, weeks: "16 wk", color: C.red },
     { name: "IVDD Neuro Recovery", phases: 4, weeks: "12 wk", color: "#7C3AED" },
     { name: "OA Multimodal", phases: 4, weeks: "16 wk", color: C.teal },
     { name: "Geriatric Mobility", phases: 4, weeks: "16 wk", color: C.amber },
@@ -78,6 +79,19 @@ export default function DashboardView({ setView }) {
             <FiActivity size={13} style={{ color: "#39FF7E" }} /> Clinical Overview
           </div>
           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+            <button style={{
+              display: "flex", alignItems: "center", gap: 6,
+              padding: "8px 20px", borderRadius: 8, cursor: "pointer",
+              background: "linear-gradient(135deg, #059669, #0EA5E9)", border: "1.5px solid rgba(57,255,126,0.35)",
+              color: "#fff", fontSize: 11, fontWeight: 700,
+              boxShadow: "0 0 14px rgba(14,165,233,0.3), 0 0 28px rgba(5,150,105,0.15)",
+              transition: "all 0.2s",
+            }}
+            onClick={() => setView("home")}
+            onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 0 20px rgba(14,165,233,0.5), 0 0 40px rgba(5,150,105,0.25)"; }}
+            onMouseLeave={e => { e.currentTarget.style.boxShadow = "0 0 14px rgba(14,165,233,0.3), 0 0 28px rgba(5,150,105,0.15)"; }}>
+              <FiActivity size={13} /> Generate Protocol
+            </button>
             <button style={{
               display: "flex", alignItems: "center", gap: 6,
               padding: "7px 16px", borderRadius: 8, cursor: "pointer",
@@ -187,6 +201,12 @@ export default function DashboardView({ setView }) {
             <div style={{ marginBottom: 12 }}>
               <div style={S.sectionHeader()}>
                 <FiActivity size={13} style={{ color: "#39FF7E" }} /> Condition Distribution
+              <span style={{
+                marginLeft: "auto", fontSize: 9, fontWeight: 700,
+                color: C.amber, background: C.amberBg,
+                padding: "2px 8px", borderRadius: 8,
+                textTransform: "uppercase", letterSpacing: "0.5px",
+              }}>Sample Data</span>
               </div>
             </div>
             <NeonLine />
@@ -265,11 +285,7 @@ export default function DashboardView({ setView }) {
       </div>
 
       {/* ── CLINICAL STANDARDS FOOTER ── */}
-      <div style={{ textAlign: "center", padding: "16px 0 8px", opacity: 0.5 }}>
-        <div style={{ fontSize: 9, color: C.textLight, letterSpacing: "0.5px" }}>
-          ACVSMR Diplomate Methodology · Millis & Levine Canine Rehabilitation & Physical Therapy · Evidence-Based Protocols
-        </div>
-      </div>
+      <ClinicalFooter variant="subtle" />
     </div>
   );
 }

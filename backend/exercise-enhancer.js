@@ -309,46 +309,126 @@ function inferPrimaryIndications(exercise) {
 }
 
 function inferEvidenceGrade(exercise) {
-  // Check if exercise code has mapped references
-  if (EXERCISE_EVIDENCE_MAP[exercise.code]) {
-    return EVIDENCE_GRADES.GRADE_A.code;  // Has specific research
+  // ========================================================================
+  // Reference-derived evidence grading (v2 — category-aware)
+  // Algorithm: exercise → references → individual grades → composite grade
+  //            with category-based modulation for textbook-only exercises
+  //
+  // Grade A: Has ≥1 A-grade journal article (RCT, systematic review,
+  //          kinematic study) that directly studies this intervention
+  // Grade B: Has B-grade journal evidence, OR textbook-only support in
+  //          core rehabilitation categories (well-established modalities)
+  // Grade C: Only C-grade journals, OR textbook-only references in
+  //          specialized/limited-evidence categories (sport conditioning,
+  //          complementary therapy, breed-specific, palliative, pediatric)
+  // Expert Opinion: No mapped references at all — category-based fallback
+  // ========================================================================
+
+  const refKeys = EXERCISE_EVIDENCE_MAP[exercise.code];
+
+  // No mapped references — fall back to category-based inference
+  if (!refKeys || refKeys.length === 0) {
+    return inferGradeByCategory(exercise.category);
   }
 
-  // Passive ROM, therapeutic exercise, hydrotherapy - strong evidence base
-  if (exercise.category === 'Passive Therapy' ||
-      exercise.category === 'Active Assisted' ||
-      exercise.category === 'Strengthening' ||
-      exercise.category === 'Aquatic Therapy' ||
-      exercise.category === 'Hydrotherapy') {
+  // Resolve reference objects and count grade types
+  let hasJournalA = false;   // Journal/review/meta-analysis graded A
+  let hasJournalB = false;   // Journal graded B
+  let hasJournalC = false;   // Journal graded C
+  let hasTextbookA = false;  // Gold-standard textbook (A-grade)
+  let hasTextbookB = false;  // Other textbook (B-grade)
+  let hasAnyJournal = false; // Any journal/review at all
+  let refCount = 0;
+
+  for (const key of refKeys) {
+    const ref = CORE_REFERENCES[key];
+    if (!ref) continue;
+    refCount++;
+
+    const isJournal = ref.type === 'Journal' || ref.type === 'Review' || ref.type === 'Meta-Analysis';
+    const isTextbook = ref.type === 'Textbook';
+
+    if (isJournal) {
+      hasAnyJournal = true;
+      if (ref.evidence_grade === 'A') hasJournalA = true;
+      else if (ref.evidence_grade === 'B') hasJournalB = true;
+      else if (ref.evidence_grade === 'C') hasJournalC = true;
+    } else if (isTextbook) {
+      if (ref.evidence_grade === 'A') hasTextbookA = true;
+      else hasTextbookB = true;
+    }
+  }
+
+  // No valid references resolved
+  if (refCount === 0) {
+    return inferGradeByCategory(exercise.category);
+  }
+
+  // Categories where textbook-only citations yield limited evidence (Grade C)
+  // Rationale: textbook mention ≠ primary evidence for specialized areas
+  const LIMITED_EVIDENCE_CATEGORIES = [
+    'Sport Conditioning', 'Breed-Specific', 'Complementary Therapy',
+    'Geriatric Care', 'Palliative Care', 'Pediatric Rehabilitation'
+  ];
+
+  // Grade A: At least one A-rated journal article (RCT, systematic review)
+  if (hasJournalA) {
+    return EVIDENCE_GRADES.GRADE_A.code;
+  }
+
+  // Grade B: Has B-rated journal evidence
+  if (hasJournalB) {
     return EVIDENCE_GRADES.GRADE_B.code;
   }
 
-  // Balance, manual therapy - moderate evidence
-  if (exercise.category === 'Balance & Proprioception' ||
-      exercise.category === 'Manual Therapy') {
+  // Textbook-only exercises: modulate by category
+  if (!hasAnyJournal) {
+    // Limited-evidence categories with only textbook mentions → Grade C
+    if (LIMITED_EVIDENCE_CATEGORIES.includes(exercise.category)) {
+      return EVIDENCE_GRADES.GRADE_C.code;
+    }
+    // Core rehabilitation categories with gold-standard textbook → Grade B
     return EVIDENCE_GRADES.GRADE_B.code;
   }
 
-  // Modalities - varies, default to B
-  if (exercise.category === 'Therapeutic Modalities') {
-    return EVIDENCE_GRADES.GRADE_B.code;
-  }
-
-  // Sport, breed-specific, complementary - limited evidence
-  if (exercise.category === 'Sport Conditioning' ||
-      exercise.category === 'Breed-Specific' ||
-      exercise.category === 'Complementary Therapy') {
+  // Has journal C evidence only (no A or B journals)
+  if (hasJournalC) {
     return EVIDENCE_GRADES.GRADE_C.code;
   }
 
-  // Geriatric, palliative, pediatric - expert consensus
-  if (exercise.category === 'Geriatric Care' ||
-      exercise.category === 'Palliative Care' ||
-      exercise.category === 'Pediatric Rehabilitation') {
+  // Fallback: has references but couldn't classify
+  return EVIDENCE_GRADES.GRADE_B.code;
+}
+
+// Category-based fallback for exercises without mapped references
+function inferGradeByCategory(category) {
+  // Core rehabilitation categories — strong textbook support at minimum
+  if (category === 'Passive Therapy' ||
+      category === 'Active Assisted' ||
+      category === 'Strengthening' ||
+      category === 'Aquatic Therapy' ||
+      category === 'Hydrotherapy' ||
+      category === 'Balance & Proprioception' ||
+      category === 'Manual Therapy' ||
+      category === 'Therapeutic Modalities') {
+    return EVIDENCE_GRADES.GRADE_B.code;
+  }
+
+  // Specialized categories — limited primary evidence
+  if (category === 'Sport Conditioning' ||
+      category === 'Breed-Specific' ||
+      category === 'Complementary Therapy') {
+    return EVIDENCE_GRADES.GRADE_C.code;
+  }
+
+  // Population-specific — expert consensus
+  if (category === 'Geriatric Care' ||
+      category === 'Palliative Care' ||
+      category === 'Pediatric Rehabilitation') {
     return EVIDENCE_GRADES.EXPERT_OPINION.code;
   }
 
-  return EVIDENCE_GRADES.GRADE_B.code;  // Default moderate evidence
+  return EVIDENCE_GRADES.GRADE_B.code;
 }
 
 function getReferences(exerciseCode) {

@@ -109,7 +109,7 @@ function LoginView({ onLogin, onRegister }) {
               background: "rgba(220,38,38,0.15)", border: "1px solid rgba(220,38,38,0.3)",
               borderRadius: 8, padding: "10px 14px", marginBottom: 16,
             }}>
-              <p style={{ color: "#f87171", fontSize: 12, margin: 0, display: "flex", alignItems: "center", gap: 6 }}>
+              <p style={{ color: C.red, fontSize: 12, margin: 0, display: "flex", alignItems: "center", gap: 6 }}>
                 <FiAlertTriangle size={14} /> Cannot connect to server. Is the backend running?
               </p>
             </div>
@@ -120,7 +120,7 @@ function LoginView({ onLogin, onRegister }) {
               background: "rgba(220,38,38,0.15)", border: "1px solid rgba(220,38,38,0.3)",
               borderRadius: 8, padding: "10px 14px", marginBottom: 16,
             }}>
-              <p style={{ color: "#f87171", fontSize: 12, margin: 0, display: "flex", alignItems: "center", gap: 6 }}>
+              <p style={{ color: C.red, fontSize: 12, margin: 0, display: "flex", alignItems: "center", gap: 6 }}>
                 <FiAlertTriangle size={14} /> {error}
               </p>
             </div>

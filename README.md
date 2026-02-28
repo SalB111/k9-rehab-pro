@@ -1,277 +1,96 @@
-# 🐕 K9-REHAB-PRO - Veterinary Rehabilitation Application
+# K9 Rehab Pro
 
-**Professional-Grade Rehabilitation Protocol Generator**  
-*Evidence-Based on Dr. Millis & Dr. Levine Standards*
+Veterinary rehabilitation intelligence platform built on ACVSMR diplomate methodology and Millis & Levine textbook standards.
+
+**4 Conditions | 16 Phases | 52 Protocol Exercises | 223 Exercise Library | Full Modality Integration**
 
 ---
 
-## 🚀 QUICK START
-
-### Start the Application (Both Servers)
+## Quick Start
 
 ```bash
-# Terminal 1 - Backend
-cd C:\Users\sbona\k9-rehab-pro\backend
-node server.js
+# Backend (Terminal 1)
+cd backend && npm install && node server.js
 
-# Terminal 2 - Frontend  
-cd C:\Users\sbona\k9-rehab-pro\frontend
-npm start
+# Frontend (Terminal 2)
+cd k9-rehab-frontend && npm install && npm start
 ```
 
-### Access URLs
-- **Frontend Application:** http://localhost:8080
-- **Backend API:** http://localhost:3000
-- **Health Check:** http://localhost:3000/api/health
+- **Frontend:** http://localhost:3001
+- **Backend API:** http://localhost:3000/api
+- **Health check:** http://localhost:3000/api/health
+
+### Environment Variables
+
+Create `backend/.env`:
+
+```env
+JWT_SECRET=<generate-a-64-byte-hex-secret>
+ANTHROPIC_API_KEY=<required-for-vetai>
+HF_TOKEN=<optional-for-storyboard-images>
+```
 
 ---
 
-## ✅ SYSTEM STATUS
+## Features
 
-- **Database:** 75 Exercises (Fully Verified)
-- **Backend:** ✅ Operational
-- **Frontend:** ✅ Operational  
-- **Quality:** CEO-Presentation Grade
-
----
-
-## 📊 DATABASE OVERVIEW
-
-### 75 Veterinary-Accurate Exercises
-
-| Category | Count | Focus Area |
-|----------|-------|------------|
-| Passive Therapy | 8 | PROM, Stretching, Massage |
-| Active Assisted | 10 | Controlled Walking, Transitions |
-| Strengthening | 12 | Hills, Stairs, Resistance |
-| Balance & Proprioception | 20 | Wobble Boards, Perturbation |
-| Aquatic Therapy | 5 | Swimming, Underwater Treadmill |
-| Functional Training | 5 | Real-World Activities |
-| Therapeutic Modalities | 10 | TENS, Ultrasound, Laser |
-| Manual Therapy | 5 | Joint Mobilization, Myofascial |
+- **Protocol Generator** — TPLO (16 wk), IVDD (12 wk), OA (16 wk), Geriatric (16 wk) with 4 gated phases each, safety gating (weight-bearing, incision, e-collar, crate rest, pain level), and equipment flags
+- **Exercise Library** — 223 exercises with evidence grades, contraindications, intervention types, video references, and AI-generated storyboards (215/215 coverage)
+- **VetAI Clinical Assistant** — Streaming AI chat with patient context injection (Anthropic Claude)
+- **Patient Management** — Intake, progress assessments, audit logging, bulk operations
+- **Storyboard System** — Breed-specific exercise storyboards with AI-generated images (HF SDXL) and Dog.CEO fallback photos
 
 ---
 
-## 🎯 KEY FEATURES
+## Tech Stack
 
-### Frontend (React + Tailwind)
-- ✅ Visual Dog Anatomy Builder
-- ✅ 4-Step Patient Intake Wizard
-- ✅ Breed Selection (organized by size)
-- ✅ Medical Conditions (anatomical grouping)
-- ✅ Clinical Assessment Sliders
-- ✅ Dual-Language Protocols (Vet/Client)
-- ✅ Cyberpunk Dark Theme
-- ✅ PDF Export
-
-### Backend (Node.js + SQLite)
-- ✅ RESTful API Architecture
-- ✅ Condition-Specific Exercise Mapping
-- ✅ Phase-Based Progression
-- ✅ Exercise Rotation Logic
-- ✅ Comprehensive Exercise Database
+| Layer | Stack |
+|-------|-------|
+| Backend | Express.js 4.x, SQLite3, JWT auth (bcrypt), Helmet, rate-limiting |
+| Frontend | React 19, Vite 6.x, Tailwind CSS 3.4, Radix UI, shadcn/ui, lucide-react |
+| AI | Anthropic SDK (VetAI chat), Hugging Face SDXL (storyboard images) |
+| Testing | Vitest, React Testing Library, jsdom |
+| Agent | Claude Agent SDK (TypeScript) — `k9pro-agent/` |
 
 ---
 
-## 📁 PROJECT STRUCTURE
+## Project Structure
 
 ```
 k9-rehab-pro/
-├── backend/
-│   ├── database.db              # 75 exercises
-│   ├── server.js                # Express API server
-│   ├── exercises-part1.js       # Passive (8)
-│   ├── exercises-part2.js       # Active Assisted (10)
-│   ├── exercises-part3.js       # Strengthening (12)
-│   ├── exercises-part4.js       # Balance Basic (10)
-│   ├── exercises-part5.js       # Aquatic + Functional (10)
-│   ├── exercises-part6.js       # Advanced (25)
-│   ├── all-exercises.js         # Master export
-│   ├── create-exercises-table.js
-│   └── verify-database.js
-│
-├── frontend/
-│   └── public/
-│       ├── index.html
-│       ├── script.js
-│       └── styles.css
-│
-└── Documentation/
-    ├── COMPLETION_CERTIFICATE.txt
-    ├── PRODUCTION_DEPLOYMENT_COMPLETE.md
-    ├── EXERCISE_DATABASE_COMPLETE.md
-    └── EXERCISE_EXPANSION_PLAN.md
+  backend/                 Express API, SQLite, protocol engine, exercise DB
+  k9-rehab-frontend/       Active React frontend (Vite + Tailwind)
+  k9pro-agent/             Claude Agent SDK CLI tool
+  CanineRehabProtocols/    Clinical source-of-truth document
+  docs/                    Supplementary clinical documents
 ```
 
 ---
 
-## 🔬 QUALITY STANDARDS
+## Testing
 
-### Clinical Accuracy
-- Based on Millis & Levine textbook
-- Evidence-based protocols
-- Professional terminology
-- Safe progression guidelines
-
-### Code Quality
-- Zero duplicate codes
-- No placeholder content
-- Comprehensive error handling
-- Production-ready architecture
-
-### User Experience
-- Futuristic cyberpunk design
-- Intuitive workflow
-- Professional output
-- Export functionality
-
----
-
-## 🛠️ API ENDPOINTS
-
-### Health & Status
-```
-GET  /api/health              # System health check
-```
-
-### Exercises
-```
-GET  /api/exercises           # Get all 75 exercises
-GET  /api/exercises/:id       # Get specific exercise
-```
-
-### Protocol Generation
-```
-POST /api/protocol/generate   # Generate rehabilitation protocol
-```
-
----
-
-## 📖 DOCUMENTATION
-
-- **[Completion Certificate](COMPLETION_CERTIFICATE.txt)** - Official completion record
-- **[Production Deployment](PRODUCTION_DEPLOYMENT_COMPLETE.md)** - Full deployment details
-- **[Exercise Database](EXERCISE_DATABASE_COMPLETE.md)** - Complete exercise catalog
-- **[Expansion Plan](EXERCISE_EXPANSION_PLAN.md)** - Roadmap to 150 exercises
-
----
-
-## 🧪 TESTING & VERIFICATION
-
-### Run Database Verification
 ```bash
-cd backend
-node verify-database.js
-```
-
-### Test API Connection
-```bash
-cd backend
-node test-api.js
-```
-
-### Check for Duplicates
-```bash
-cd backend
-node check-duplicates.js
+cd k9-rehab-frontend && npm test
 ```
 
 ---
 
-## 🎓 EXERCISE STANDARDS
+## Clinical Source of Truth
 
-Each exercise includes:
-- **7-10 detailed steps** - Complete execution instructions
-- **Equipment list** - Required materials
-- **Setup instructions** - Proper positioning
-- **Good form criteria** - Quality indicators
-- **Common mistakes** - What to avoid
-- **Red flags** - Safety contraindications
-- **Progression** - Advancement protocols
-- **Difficulty level** - Easy/Moderate/Hard/Challenging
+All protocols, exercises, phase definitions, and progression criteria originate from `CanineRehabProtocols/canine_rehab_protocols.docx`. Zero tolerance for fabricated exercises, invented diagnoses, or hallucinated clinical data.
 
----
+### Protocol System
 
-## 🏥 CLINICAL APPLICATIONS
-
-### Condition-Specific Protocols
-- Post-surgical rehabilitation
-- Hip dysplasia management
-- Neurological recovery
-- Chronic pain management
-- Sports injury prevention
-- Geriatric mobility
-
-### Phase-Based Progression
-- **Phase 1:** Acute (Passive & Gentle Active)
-- **Phase 2:** Subacute (Active Assisted & Balance)
-- **Phase 3:** Strengthening (Progressive Loading)
-- **Phase 4:** Functional (Return to Activity)
+- 4 Protocols with 4 phases each (16 total phases)
+- Phase flow: Acute Protection -> Early Mobilization -> Controlled Strengthening -> Return to Function
+- 52 unique exercise codes mapped to protocol phases
+- Safety gating: weight-bearing status, incision status, e-collar, crate rest, pain level, MMT, IVDD grade, OA KL grade
 
 ---
 
-## 📈 FUTURE DEVELOPMENT
+## License
 
-### Planned Expansions
-- **Block 3 (76-100):** Specialized protocols
-- **Block 4 (101-150):** Advanced combinations
-- **Additional Features:**
-  - Progress tracking
-  - Video demonstrations
-  - Client portal
-  - Outcome metrics
+Proprietary. All rights reserved.
+(c) 2026 Sal Bonavita
 
----
-
-## 💡 DEVELOPMENT METHODOLOGY
-
-**Vibe Coding with AI Assistance**
-- Human vision + AI execution
-- Comprehensive planning before implementation
-- Quality-first development
-- CEO-level presentation standards
-
----
-
-## 🏆 ACHIEVEMENTS
-
-✅ 75 textbook-accurate exercises  
-✅ Complete protocol generator  
-✅ Professional-grade UI/UX  
-✅ Production-ready deployment  
-✅ Comprehensive documentation  
-✅ Million-dollar IP value  
-
----
-
-## 📞 SUPPORT
-
-For questions or issues:
-- Check documentation in `/Documentation`
-- Review exercise database details
-- Verify server logs
-- Test API endpoints
-
----
-
-## 📜 LICENSE & COPYRIGHT
-
-**Proprietary Application**  
-© 2026 Sal Bonavita  
-All Rights Reserved
-
-Clinical content based on evidence-based veterinary rehabilitation standards.
-
----
-
-## 🌟 CREDITS
-
-**Developer:** Sal Bonavita  
-**AI Assistant:** Claude (Anthropic - Sonnet 4.5)  
-**Development Tool:** Desktop Commander MCP  
-**Clinical Standards:** Dr. Millis & Dr. Levine  
-**Date Completed:** February 11, 2026
-
----
-
-**K9-REHAB-PRO - Where Veterinary Science Meets Modern Technology** 🐾
+Clinical content based on evidence-based veterinary rehabilitation standards (Dr. Millis & Dr. Levine).

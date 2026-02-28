@@ -27,7 +27,7 @@ export default function TopNav({ view, setView, brand, dateStr, timeStr, current
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <div style={{ textAlign: "right" }}>
-            <div style={{ fontSize: 11, color: "#111", fontWeight: 500 }}>{dateStr}</div>
+            <div style={{ fontSize: 11, color: C.text, fontWeight: 500 }}>{dateStr}</div>
             <div style={{ fontSize: 12, color: C.navy, fontWeight: 700, marginTop: 1, fontFamily: "'Exo 2', monospace", letterSpacing: "1px" }}>{timeStr}</div>
           </div>
           {currentUser && (
@@ -70,7 +70,7 @@ export default function TopNav({ view, setView, brand, dateStr, timeStr, current
           <FiHome size={12} style={{ color: "#39FF7E" }} />
         </div>
         {NAV.map(({ id, label, icon: Icon }) => (
-          <div key={id} style={S.topNavItem(view === id)} onClick={() => {
+          <div key={id} style={S.topNavItem(id === "generator" ? (view === "generator" || view === "home") : view === id)} onClick={() => {
             if (id === "generator") {
               setGenInitialStep(2);
               setGenKey(k => k + 1);

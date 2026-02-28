@@ -13,7 +13,7 @@ const S = {
   },
   // ── TOP NAV ──
   topNav: {
-    background: "#fff",
+    background: C.surface,
     display: "flex", alignItems: "center", justifyContent: "space-between",
     padding: "0 24px", height: 48, flexShrink: 0,
     borderBottom: `1px solid ${C.border}`,
@@ -44,7 +44,7 @@ const S = {
   wizardStep: (state) => ({
     display: "flex", alignItems: "center", gap: 6,
     padding: "4px 12px", fontSize: 10, fontWeight: 600,
-    color: state === "done" ? "#39FF7E" : "#111",
+    color: state === "done" ? "#39FF7E" : C.text,
     cursor: "pointer",
     transition: "all 0.2s ease",
   }),
@@ -52,9 +52,9 @@ const S = {
     width: 22, height: 22, borderRadius: "50%",
     display: "flex", alignItems: "center", justifyContent: "center",
     fontSize: 10, fontWeight: 700,
-    background: state === "done" ? "#39FF7E" : state === "active" ? "#fff" : C.bg,
-    color: "#111",
-    border: state === "done" ? "1.5px solid #39FF7E" : state === "pending" ? `1.5px solid ${C.border}` : `1.5px solid #111`,
+    background: state === "done" ? "#39FF7E" : state === "active" ? C.surface : C.bg,
+    color: C.text,
+    border: state === "done" ? "1.5px solid #39FF7E" : state === "pending" ? `1.5px solid ${C.border}` : `1.5px solid ${C.text}`,
     boxShadow: state === "done" ? "0 0 8px rgba(57,255,126,0.45), 0 0 16px rgba(57,255,126,0.2)" : "none",
     animation: "none",
     transition: "all 0.4s ease",

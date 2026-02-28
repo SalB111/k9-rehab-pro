@@ -7,6 +7,7 @@ import {
 } from "react-icons/fi";
 import C from "../constants/colors";
 import { API } from "../api/axios";
+import { useToast } from "../components/Toast";
 
 // ─────────────────────────────────────────────
 // VET AI VIEW — Clinical Assistant
@@ -22,10 +23,11 @@ function VetAIView({ authToken }) {
   const [aiStatus, setAiStatus] = useState(null);
   const endRef = useRef(null);
   const taRef = useRef(null);
+  const toast = useToast();
 
   // Load patients from DB + check AI status
   useEffect(() => {
-    axios.get(`${API}/patients`).then(r => setPatients(r.data?.data || r.data || [])).catch(() => {});
+    axios.get(`${API}/patients`).then(r => setPatients(r.data?.data || r.data || [])).catch(() => toast("Failed to load patients"));
     axios.get(`${API}/vet-ai/status`).then(r => setAiStatus(r.data)).catch(() => setAiStatus({ configured: false }));
   }, []);
 
@@ -59,7 +61,7 @@ function VetAIView({ authToken }) {
       if (ln.startsWith("# ")) { h += `<h2 style="color:${C.navy};margin:18px 0 8px;font-size:16px;font-weight:700">${ln.slice(2)}</h2>`; continue; }
       let l = ln.replace(/\*\*(.*?)\*\*/g, `<strong style="color:${C.navy}">$1</strong>`);
       l = l.replace(/\*(.*?)\*/g, `<em style="color:${C.textLight}">$1</em>`);
-      l = l.replace(/`([^`]+)`/g, `<code style="background:#f0f4f8;padding:1px 5px;border-radius:3px;font-size:12px;color:${C.teal}">$1</code>`);
+      l = l.replace(/`([^`]+)`/g, `<code style="background:${C.bg};padding:1px 5px;border-radius:3px;font-size:12px;color:${C.teal}">$1</code>`);
       if (l.match(/^[-•]\s/)) { h += `<div style="margin:3px 0 3px 16px;line-height:1.6">\u2022 ${l.replace(/^[-•]\s/, "")}</div>`; continue; }
       if (l.match(/^\d+\.\s/)) { h += `<div style="margin:3px 0 3px 16px;line-height:1.6">${l}</div>`; continue; }
       if (l.trim()) h += `<p style="margin:5px 0;line-height:1.65">${l}</p>`;
@@ -80,7 +82,7 @@ function VetAIView({ authToken }) {
     if (taRef.current) taRef.current.style.height = "auto";
 
     try {
-      const res = await fetch(`${API.replace('/api', '')}/api/vet-ai/chat`, {
+      const res = await fetch(`${API}/vet-ai/chat`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -135,10 +137,10 @@ function VetAIView({ authToken }) {
 
   // Styles matching the app's design system
   const aiC = {
-    bg: "#f8fafc",
+    bg: C.bg,
     chatBg: "#fff",
     userBubble: `linear-gradient(135deg, ${C.navy}, ${C.navyMid || "#1a3a5c"})`,
-    aiBubble: "#f0f4f8",
+    aiBubble: C.bg,
     aiBorder: C.border,
     accent: C.teal,
   };
@@ -153,7 +155,7 @@ function VetAIView({ authToken }) {
             <div style={{ fontSize: 14, fontWeight: 700, color: C.navy, letterSpacing: 0.5 }}>
               Ask Beau <span style={{ color: C.teal, fontSize: 10, fontWeight: 600, background: `${C.teal}15`, padding: "2px 7px", borderRadius: 4, marginLeft: 6 }}>Clinical Assistant</span>
             </div>
-            <div style={{ fontSize: 10, color: C.textLight, marginTop: 1 }}>Evidence-Based Decision Support \u2022 ACVSMR</div>
+            <div style={{ fontSize: 10, color: C.textLight, marginTop: 1 }}>Evidence-Based Decision Support • ACVSMR</div>
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -181,12 +183,12 @@ function VetAIView({ authToken }) {
           {patients.length === 0 && <div style={{ fontSize: 12, color: C.textLight, padding: 12 }}>No patients found. Add patients in Patient Records first.</div>}
           <div style={{ maxHeight: 300, overflowY: "auto" }}>
             {patients.map(pt => (
-              <div key={pt.id} onClick={() => pickPatient(pt)} style={{ padding: "10px 12px", borderRadius: 8, marginBottom: 4, background: patient?.id === pt.id ? `${C.teal}10` : "#fafafa", border: patient?.id === pt.id ? `1px solid ${C.teal}40` : "1px solid transparent", cursor: "pointer", transition: "all 0.15s" }}>
+              <div key={pt.id} onClick={() => pickPatient(pt)} style={{ padding: "10px 12px", borderRadius: 8, marginBottom: 4, background: patient?.id === pt.id ? `${C.teal}10` : C.bg, border: patient?.id === pt.id ? `1px solid ${C.teal}40` : "1px solid transparent", cursor: "pointer", transition: "all 0.15s" }}>
                 <div style={{ display: "flex", justifyContent: "space-between" }}>
                   <span style={{ fontSize: 13, fontWeight: 600, color: C.navy }}>{pt.name}</span>
                   <span style={{ fontSize: 10, color: C.textLight }}>{pt.breed || ""}</span>
                 </div>
-                <div style={{ fontSize: 10, color: C.textLight, marginTop: 2 }}>{pt.species || "Canine"} \u2022 {pt.age || "?"} \u2022 {pt.weight || "?"}lbs</div>
+                <div style={{ fontSize: 10, color: C.textLight, marginTop: 2 }}>{pt.species || "Canine"} • {pt.age || "?"} • {pt.weight || "?"}lbs</div>
                 {(pt.diagnosis || pt.condition) && <div style={{ fontSize: 10, color: C.teal, marginTop: 2, fontWeight: 500 }}>{pt.diagnosis || pt.condition}</div>}
               </div>
             ))}
@@ -199,10 +201,10 @@ function VetAIView({ authToken }) {
       <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px" }}>
         {/* API Key Warning */}
         {aiStatus && !aiStatus.configured && (
-          <div style={{ background: "#FFF8E1", border: "1px solid #FFD54F", borderRadius: 10, padding: "12px 16px", marginBottom: 16, display: "flex", alignItems: "center", gap: 10 }}>
-            <FiAlertTriangle size={16} style={{ color: "#F57F17", flexShrink: 0 }} />
+          <div style={{ background: C.amberBg, border: `1px solid ${C.amber}`, borderRadius: 10, padding: "12px 16px", marginBottom: 16, display: "flex", alignItems: "center", gap: 10 }}>
+            <FiAlertTriangle size={16} style={{ color: C.amber, flexShrink: 0 }} />
             <div style={{ fontSize: 12, color: "#5D4037" }}>
-              <strong>API Key Required:</strong> Add your Anthropic API key to <code style={{ background: "#f5f5f5", padding: "1px 4px", borderRadius: 3 }}>backend/.env</code> as <code style={{ background: "#f5f5f5", padding: "1px 4px", borderRadius: 3 }}>ANTHROPIC_API_KEY=sk-ant-...</code> then restart the backend.
+              <strong>API Key Required:</strong> Add your Anthropic API key to <code style={{ background: C.bg, padding: "1px 4px", borderRadius: 3 }}>backend/.env</code> as <code style={{ background: C.bg, padding: "1px 4px", borderRadius: 3 }}>ANTHROPIC_API_KEY=sk-ant-...</code> then restart the backend.
             </div>
           </div>
         )}
@@ -287,7 +289,7 @@ function VetAIView({ authToken }) {
 
       {/* Input Area */}
       <div style={{ padding: "10px 20px 16px", borderTop: `1px solid ${C.border}`, background: "#fff", flexShrink: 0 }}>
-        <div style={{ display: "flex", alignItems: "flex-end", gap: 8, background: "#f8fafc", border: `1px solid ${C.border}`, borderRadius: 14, padding: "4px 4px 4px 16px" }}>
+        <div style={{ display: "flex", alignItems: "flex-end", gap: 8, background: C.bg, border: `1px solid ${C.border}`, borderRadius: 14, padding: "4px 4px 4px 16px" }}>
           <textarea
             ref={taRef}
             value={input}
@@ -300,18 +302,18 @@ function VetAIView({ authToken }) {
           />
           <button onClick={() => send()} disabled={!input.trim() || loading} style={{
             width: 36, height: 36, borderRadius: 10,
-            background: input.trim() && !loading ? `linear-gradient(135deg, ${C.teal}, ${C.green})` : "#e2e8f0",
+            background: input.trim() && !loading ? `linear-gradient(135deg, ${C.teal}, ${C.green})` : C.border,
             border: "none", cursor: input.trim() && !loading ? "pointer" : "default",
             display: "flex", alignItems: "center", justifyContent: "center",
-            color: input.trim() && !loading ? "#fff" : "#a0aec0",
+            color: input.trim() && !loading ? "#fff" : C.textLight,
             transition: "all 0.2s", flexShrink: 0
           }}>
             <FiSend size={16} />
           </button>
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, padding: "0 2px" }}>
-          <span style={{ fontSize: 9, color: C.textLight }}>K9 Rehab Pro\u2122 CDSS \u2022 Evidence-based rehabilitation support</span>
-          <span style={{ fontSize: 9, color: C.textLight }}>Powered by Claude \u2022 Millis & Levine \u2022 ACVSMR</span>
+          <span style={{ fontSize: 9, color: C.textLight }}>K9 Rehab Pro™ CDSS • Evidence-based rehabilitation support</span>
+          <span style={{ fontSize: 9, color: C.textLight }}>Powered by Claude • Millis & Levine • ACVSMR</span>
         </div>
       </div>
 
