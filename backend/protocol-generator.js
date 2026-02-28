@@ -2,7 +2,7 @@
 // CANINE REHABILITATION PROTOCOL SYSTEM
 // Full Hybrid Exercise Library Edition — Board-Certified Specialty Standard
 // ACVSMR-Aligned Clinical Protocols
-// 4 Conditions | 16 Phases | 60+ Exercises | Full Modality Integration
+// 4 Conditions | 16 Phases | 52 Protocol Exercises | 223 Exercise Library | Full Modality Integration
 //
 // Source: canine_rehab_protocols.docx
 // Evidence-Based | Client-Safe | Phase-Specific
@@ -132,7 +132,7 @@ const PROTOCOL_DEFINITIONS = {
         number: 1,
         name: 'Strict Rest & Pain Control',
         weekRange: 'Weeks 0-2',
-        phaseFraction: [0, 0.167],
+        phaseFraction: [0, 2/12],     // Weeks 0-2 of 12-week protocol
         goal: 'Reduce disc inflammation. Manage neuropathic pain. Prevent further herniation. Maintain passive joint/tissue health.',
         exercises: [
           { code: 'PROM_STIFLE',  sets: '10-15 reps/joint',  frequency: '2-3x/day',   progression: 'Increase ROM as tolerated' },
@@ -151,7 +151,7 @@ const PROTOCOL_DEFINITIONS = {
         number: 2,
         name: 'Neuromotor Re-Education',
         weekRange: 'Weeks 2-6',
-        phaseFraction: [0.167, 0.50],
+        phaseFraction: [2/12, 0.50],  // Weeks 2-6 of 12-week protocol
         goal: 'Restore proprioceptive awareness. Initiate voluntary motor control. Establish supported weight bearing. Begin core stabilization.',
         exercises: [
           { code: 'PROM_STIFLE',      sets: '10-15 reps/joint',      frequency: '2-3x/day',   progression: 'Increase ROM as tolerated' },

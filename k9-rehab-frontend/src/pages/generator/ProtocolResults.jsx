@@ -105,21 +105,21 @@ export default function ProtocolResults({ protocol, setProtocol, setWizardStep, 
             <div style={{ fontSize: 10, fontWeight: 700, color: C.teal, textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: 4 }}>
               {protocol.protocol_name || "Rehabilitation Protocol"} — {(protocol.protocol_type || "").toUpperCase()}
             </div>
-            <h2 style={{ margin: "0 0 8px", color: C.navy, fontSize: 24, fontWeight: 800 }}>
+            <h2 style={{ margin: "0 0 8px", color: C.text, fontSize: 24, fontWeight: 800 }}>
               {protocol.patient_name}
             </h2>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
               <span style={S.badge("blue")}>{protocol.condition}</span>
               <span style={S.badge("green")}>{protocol.affected_region}</span>
               <span style={S.badge("blue")}>{totalWeeks} Weeks</span>
-              <span style={{ ...S.badge("green"), background: "#EDE9FE", color: "#6B21A8" }}>{phaseGroups.length} Phases</span>
+              <span style={{ ...S.badge("green"), background: "rgba(124,58,237,0.12)", color: "#7C3AED" }}>{phaseGroups.length} Phases</span>
             </div>
             <p style={{ margin: 0, color: C.textLight, fontSize: 11 }}>
               Protocol ID: {protocol.patient_id} · Generated {new Date(protocol.generated_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })} · {protocol.total_exercises} exercises in library
             </p>
           </div>
           <div style={{ textAlign: "right" }}>
-            <div style={{ fontSize: 36, fontWeight: 800, color: C.navy }}>{totalWeeks}</div>
+            <div style={{ fontSize: 36, fontWeight: 800, color: C.text }}>{totalWeeks}</div>
             <div style={{ fontSize: 9, fontWeight: 700, color: C.textLight, textTransform: "uppercase", letterSpacing: "1px" }}>Week Program</div>
             <div style={{ display: "flex", gap: 6, marginTop: 10 }}>
               <button style={{ ...S.btn("primary"), fontSize: 11, padding: "6px 16px" }}
@@ -183,7 +183,7 @@ export default function ProtocolResults({ protocol, setProtocol, setWizardStep, 
                 }}>
                   Phase {phase.number} | Weeks {phase.startWeek}–{phase.endWeek}
                 </div>
-                <h3 style={{ margin: "0 0 6px", fontSize: 18, fontWeight: 800, color: C.navy }}>
+                <h3 style={{ margin: "0 0 6px", fontSize: 18, fontWeight: 800, color: C.text }}>
                   {phase.name}
                 </h3>
                 {phase.goal && (
@@ -225,7 +225,7 @@ export default function ProtocolResults({ protocol, setProtocol, setWizardStep, 
                 marginLeft: 16, marginBottom: 8,
               }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                  <h4 style={{ margin: 0, fontSize: 13, fontWeight: 700, color: C.navy }}>
+                  <h4 style={{ margin: 0, fontSize: 13, fontWeight: 700, color: C.text }}>
                     Week {week.week_number}
                   </h4>
                   <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
@@ -303,7 +303,7 @@ export default function ProtocolResults({ protocol, setProtocol, setWizardStep, 
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <FiHeart size={14} style={{ color: C.green }} />
-                <span style={{ fontSize: 13, fontWeight: 800, color: C.navy, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                <span style={{ fontSize: 13, fontWeight: 800, color: C.text, textTransform: "uppercase", letterSpacing: "0.5px" }}>
                   Home Exercise Program (HEP)
                 </span>
               </div>
@@ -314,17 +314,17 @@ export default function ProtocolResults({ protocol, setProtocol, setWizardStep, 
             </p>
             {Object.entries(hepByPhase).map(([phaseNum, phase]) => (
               <div key={phaseNum} style={{ marginBottom: 16 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: C.navy, marginBottom: 8,
+                <div style={{ fontSize: 11, fontWeight: 700, color: C.text, marginBottom: 8,
                   padding: "4px 10px", background: C.tealLight, borderRadius: 4, display: "inline-block" }}>
                   Phase {phaseNum}: {phase.name}
                 </div>
                 <div style={S.grid(2)}>
                   {[...phase.exercises.values()].slice(0, 10).map((ex, i) => (
                     <div key={i} style={{
-                      padding: "10px 14px", background: "#fff",
+                      padding: "10px 14px", background: C.surface,
                       border: `1px solid ${C.border}`, borderRadius: 8,
                     }}>
-                      <div style={{ fontWeight: 700, fontSize: 12, color: C.navy }}>{ex.name || ex.exercise?.name}</div>
+                      <div style={{ fontWeight: 700, fontSize: 12, color: C.text }}>{ex.name || ex.exercise?.name}</div>
                       <div style={{ fontSize: 11, color: C.textMid, marginTop: 4 }}>
                         {ex.sets && `${ex.sets}`}{ex.reps && ` × ${ex.reps}`}
                         {ex.duration_seconds && ` · ${ex.duration_seconds >= 60 ? `${ex.duration_seconds / 60} min` : `${ex.duration_seconds}s`}`}
@@ -346,12 +346,12 @@ export default function ProtocolResults({ protocol, setProtocol, setWizardStep, 
 
       {/* ── Veterinary Sign-Off Section ── */}
       <div style={{
-        ...S.card, borderTop: `3px solid ${C.navy}`,
-        background: `linear-gradient(135deg, ${C.surface} 0%, #F0F4F8 100%)`,
+        ...S.card, borderTop: `3px solid ${C.teal}`,
+        background: C.surface,
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-          <FiAward size={14} style={{ color: C.navy }} />
-          <span style={{ fontSize: 13, fontWeight: 800, color: C.navy, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+          <FiAward size={14} style={{ color: C.text }} />
+          <span style={{ fontSize: 13, fontWeight: 800, color: C.text, textTransform: "uppercase", letterSpacing: "0.5px" }}>
             Veterinary Review & Approval
           </span>
         </div>

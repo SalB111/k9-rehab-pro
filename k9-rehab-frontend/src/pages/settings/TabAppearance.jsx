@@ -20,9 +20,9 @@ export function TabAppearance({ appearance, setAppearance, theme, setTheme, flas
               <div key={val} onClick={() => setTheme(val)}
                 style={{
                   flex: 1, padding: "14px 16px", borderRadius: 8, cursor: "pointer",
-                  background: theme === val ? C.teal : "rgba(255,255,255,0.05)",
-                  color: "#fff",
-                  border: theme === val ? `2px solid ${C.teal}` : `1px solid rgba(255,255,255,0.2)`,
+                  background: theme === val ? C.teal : C.bg,
+                  color: theme === val ? "#fff" : C.text,
+                  border: theme === val ? `2px solid ${C.teal}` : `1px solid ${C.border}`,
                   transition: "all 0.15s",
                 }}>
                 <div style={{ fontSize: 13, fontWeight: 700 }}>{label}</div>

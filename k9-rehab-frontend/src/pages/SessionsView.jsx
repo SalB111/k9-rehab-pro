@@ -109,7 +109,7 @@ function SessionsView() {
   // Shared 0-10 button row component
   const ScoreRow = ({ label, value, onChange }) => (
     <div style={{ marginBottom: 14 }}>
-      <label style={{ fontSize: 12, fontWeight: 600, color: "#fff", marginBottom: 8, display: "block" }}>{label}</label>
+      <label style={{ fontSize: 12, fontWeight: 600, color: C.text, marginBottom: 8, display: "block" }}>{label}</label>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <span style={{ fontSize: 10, color: C.green, fontWeight: 600, minWidth: 48 }}>No Pain</span>
         <div style={{ flex: 1, display: "flex", gap: 3 }}>
@@ -117,10 +117,10 @@ function SessionsView() {
             <button key={n} onClick={() => onChange(n)} type="button" style={{
               flex: 1, height: 34, borderRadius: 5,
               fontSize: 12, fontWeight: 700, cursor: "pointer",
-              background: value === n ? (n <= 3 ? C.green : n <= 6 ? C.amber : C.red) : "rgba(255,255,255,0.06)",
+              background: value === n ? (n <= 3 ? C.green : n <= 6 ? C.amber : C.red) : C.bg,
               color: value === n ? "#fff" : C.textLight,
               transition: "all 0.1s",
-              border: value === n ? "none" : "1px solid rgba(255,255,255,0.08)",
+              border: value === n ? "none" : `1px solid ${C.border}`,
             }}>
               {n}
             </button>
@@ -146,9 +146,9 @@ function SessionsView() {
             display: "flex", alignItems: "center", gap: 6,
             padding: "10px 20px", borderRadius: 8,
             fontSize: 12, fontWeight: 600, cursor: "pointer",
-            background: activeTab === tab.id ? C.navy : C.surface,
+            background: activeTab === tab.id ? C.teal : C.surface,
             color: activeTab === tab.id ? "#fff" : C.textMid,
-            border: `1px solid ${activeTab === tab.id ? C.navy : C.border}`,
+            border: `1px solid ${activeTab === tab.id ? C.teal : C.border}`,
             transition: "all 0.15s",
           }}>
             <tab.icon size={13} /> {tab.label}
@@ -223,7 +223,7 @@ function SessionsView() {
                   {[1, 2, 3, 4].map(p => (
                     <div key={p} style={{
                       flex: 1, textAlign: "center", padding: "8px 4px", borderRadius: 6,
-                      background: p === phase.currentPhase ? C.tealBg : "rgba(255,255,255,0.03)",
+                      background: p === phase.currentPhase ? C.tealBg : C.bg,
                       border: p === phase.currentPhase ? `1.5px solid ${C.teal}` : `1px solid ${C.border}`,
                     }}>
                       <div style={{
@@ -265,7 +265,7 @@ function SessionsView() {
                       {exercises.map((ex, i) => (
                         <span key={i} style={{
                           fontSize: 10, fontWeight: 600, color: C.text,
-                          background: "rgba(255,255,255,0.06)", padding: "4px 10px",
+                          background: C.bg, padding: "4px 10px",
                           borderRadius: 6, border: `1px solid ${C.border}`,
                         }}>
                           {ex.exercise_name || ex.code || ex}
@@ -300,7 +300,7 @@ function SessionsView() {
         <div style={{ ...S.card, background: C.surface, border: `2px solid ${C.border}` }}>
           <div>
             <div style={S.sectionHeader()}>
-              <FiClipboard size={13} style={{ color: "#39FF7E" }} /> SOAP Note Entry
+              <FiClipboard size={13} style={{ color: C.teal }} /> SOAP Note Entry
             </div>
             <div style={{ height: 2, width: "100%", overflow: "hidden", borderRadius: 1 }}>
               <div style={{ width: "200%", height: "100%", background: "linear-gradient(90deg, transparent, #39FF7E, #0EA5E9, #39FF7E, transparent)", animation: "neonFlatline 3s linear infinite" }} />
@@ -387,15 +387,15 @@ function SessionsView() {
           {/* Pain Severity Scale (PSS) — 4 items */}
           <div style={{ ...S.card, background: C.surface, border: `2px solid ${C.border}` }}>
             <div style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: 12, fontWeight: 800, color: "#fff", textTransform: "uppercase", letterSpacing: "0.8px", paddingBottom: 8 }}>Pain Severity Scale (PSS)</div>
+              <div style={{ fontSize: 12, fontWeight: 800, color: C.text, textTransform: "uppercase", letterSpacing: "0.8px", paddingBottom: 8 }}>Pain Severity Scale (PSS)</div>
               <div style={{ height: 2, width: "100%", overflow: "hidden", borderRadius: 1 }}><div style={{ width: "200%", height: "100%", background: "linear-gradient(90deg, transparent, #39FF7E, #0EA5E9, #39FF7E, transparent)", animation: "neonFlatline 3s linear infinite" }} /></div>
             </div>
             <ScoreRow label="1. Rate your dog's pain at its WORST in the last 7 days" value={cbpi.pss_worst} onChange={v => setCbpi(f => ({ ...f, pss_worst: v }))} />
             <ScoreRow label="2. Rate your dog's pain at its LEAST in the last 7 days" value={cbpi.pss_least} onChange={v => setCbpi(f => ({ ...f, pss_least: v }))} />
             <ScoreRow label="3. Rate your dog's pain on AVERAGE" value={cbpi.pss_average} onChange={v => setCbpi(f => ({ ...f, pss_average: v }))} />
             <ScoreRow label="4. Rate your dog's pain RIGHT NOW" value={cbpi.pss_now} onChange={v => setCbpi(f => ({ ...f, pss_now: v }))} />
-            <div style={{ padding: "12px 16px", background: "rgba(255,255,255,0.04)", borderRadius: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>PSS Score (Mean of 4 items)</span>
+            <div style={{ padding: "12px 16px", background: C.bg, borderRadius: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontSize: 12, fontWeight: 700, color: C.text }}>PSS Score (Mean of 4 items)</span>
               <span style={{ fontSize: 22, fontWeight: 800, color: scoreColor(pssScore) }}>{pssScore}/10</span>
             </div>
           </div>
@@ -403,10 +403,10 @@ function SessionsView() {
           {/* Pain Interference Scale (PIS) — 6 items */}
           <div style={{ ...S.card, background: C.surface, border: `2px solid ${C.border}` }}>
             <div style={{ marginBottom: 8 }}>
-              <div style={{ fontSize: 12, fontWeight: 800, color: "#fff", textTransform: "uppercase", letterSpacing: "0.8px", paddingBottom: 8 }}>Pain Interference Scale (PIS)</div>
+              <div style={{ fontSize: 12, fontWeight: 800, color: C.text, textTransform: "uppercase", letterSpacing: "0.8px", paddingBottom: 8 }}>Pain Interference Scale (PIS)</div>
               <div style={{ height: 2, width: "100%", overflow: "hidden", borderRadius: 1 }}><div style={{ width: "200%", height: "100%", background: "linear-gradient(90deg, transparent, #39FF7E, #0EA5E9, #39FF7E, transparent)", animation: "neonFlatline 3s linear infinite" }} /></div>
             </div>
-            <div style={{ fontSize: 10, color: "#fff", marginBottom: 14 }}>
+            <div style={{ fontSize: 10, color: C.textMid, marginBottom: 14 }}>
               During the past 7 days, how much has pain interfered with your dog's:
             </div>
             <ScoreRow label="1. General activity" value={cbpi.pis_activity} onChange={v => setCbpi(f => ({ ...f, pis_activity: v }))} />
@@ -415,8 +415,8 @@ function SessionsView() {
             <ScoreRow label="4. Ability to walk" value={cbpi.pis_walking} onChange={v => setCbpi(f => ({ ...f, pis_walking: v }))} />
             <ScoreRow label="5. Ability to run" value={cbpi.pis_running} onChange={v => setCbpi(f => ({ ...f, pis_running: v }))} />
             <ScoreRow label="6. Ability to climb (stairs, curbs, bed)" value={cbpi.pis_climbing} onChange={v => setCbpi(f => ({ ...f, pis_climbing: v }))} />
-            <div style={{ padding: "12px 16px", background: "rgba(255,255,255,0.04)", borderRadius: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>PIS Score (Mean of 6 items)</span>
+            <div style={{ padding: "12px 16px", background: C.bg, borderRadius: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontSize: 12, fontWeight: 700, color: C.text }}>PIS Score (Mean of 6 items)</span>
               <span style={{ fontSize: 22, fontWeight: 800, color: scoreColor(pisScore) }}>{pisScore}/10</span>
             </div>
           </div>
@@ -424,8 +424,7 @@ function SessionsView() {
           {/* CBPI Summary Card */}
           <div style={{
             ...S.card, padding: "24px 28px",
-            background: `linear-gradient(135deg, ${C.navy} 0%, ${C.border} 100%)`,
-            border: `1px solid ${C.teal}44`,
+            border: `1.5px solid ${C.teal}44`,
           }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: C.teal, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 16 }}>
               CBPI Assessment Summary
@@ -436,15 +435,15 @@ function SessionsView() {
                 { label: "Pain Interference (PIS)", value: pisScore },
                 { label: "Combined CBPI", value: combinedScore },
               ].map((item, i) => (
-                <div key={i} style={{ textAlign: "center", padding: "16px 12px", background: "rgba(255,255,255,0.04)", borderRadius: 8 }}>
+                <div key={i} style={{ textAlign: "center", padding: "16px 12px", background: C.bg, borderRadius: 8 }}>
                   <div style={{ fontSize: 36, fontWeight: 800, color: scoreColor(item.value) }}>{item.value}</div>
-                  <div style={{ fontSize: 10, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.5px", marginTop: 4 }}>{item.label}</div>
+                  <div style={{ fontSize: 10, color: C.textLight, textTransform: "uppercase", letterSpacing: "0.5px", marginTop: 4 }}>{item.label}</div>
                 </div>
               ))}
             </div>
             <div style={{ marginTop: 16 }}>
-              <label style={{ ...S.label, color: "rgba(255,255,255,0.5)" }}>Assessor Notes</label>
-              <textarea style={{ ...S.input, border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)", color: "#fff", minHeight: 48, resize: "vertical", fontFamily: "inherit" }}
+              <label style={{ ...S.label, color: C.textLight }}>Assessor Notes</label>
+              <textarea style={{ ...S.input, border: `1px solid ${C.border}`, minHeight: 48, resize: "vertical", fontFamily: "inherit" }}
                 placeholder="Clinical observations during CBPI assessment..."
                 value={cbpi.notes} onChange={e => setCbpi(f => ({ ...f, notes: e.target.value }))} />
             </div>
@@ -467,7 +466,7 @@ function SessionsView() {
           {cbpiHistory.length > 0 && (
             <div style={{ ...S.card, padding: 0, overflow: "hidden" }}>
               <div style={{ padding: "14px 20px", borderBottom: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: C.navy, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: C.text, textTransform: "uppercase", letterSpacing: "0.5px" }}>
                   CBPI Assessments — {cbpiHistory.length} record{cbpiHistory.length !== 1 ? "s" : ""}
                 </div>
               </div>
@@ -479,7 +478,7 @@ function SessionsView() {
                 <tbody>
                   {cbpiHistory.map(r => (
                     <tr key={r.id}>
-                      <td style={S.td}><strong style={{ color: C.navy }}>{r.patientName}</strong></td>
+                      <td style={S.td}><strong style={{ color: C.text }}>{r.patientName}</strong></td>
                       <td style={S.td}><span style={{ ...S.badge("blue"), background: scoreBg(r.pssScore), color: scoreColor(r.pssScore) }}>{r.pssScore}</span></td>
                       <td style={S.td}><span style={{ ...S.badge("blue"), background: scoreBg(r.pisScore), color: scoreColor(r.pisScore) }}>{r.pisScore}</span></td>
                       <td style={S.td}><span style={{ fontWeight: 700, color: scoreColor(r.combinedScore) }}>{r.combinedScore}</span></td>
@@ -496,7 +495,7 @@ function SessionsView() {
           {soapHistory.length > 0 && (
             <div style={{ ...S.card, padding: 0, overflow: "hidden" }}>
               <div style={{ padding: "14px 20px", borderBottom: `1px solid ${C.border}` }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: C.navy, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: C.text, textTransform: "uppercase", letterSpacing: "0.5px" }}>
                   Session SOAP Notes — {soapHistory.length} record{soapHistory.length !== 1 ? "s" : ""}
                 </div>
               </div>
@@ -508,7 +507,7 @@ function SessionsView() {
                 <tbody>
                   {soapHistory.map(r => (
                     <tr key={r.id}>
-                      <td style={S.td}><strong style={{ color: C.navy }}>{r.patientName}</strong></td>
+                      <td style={S.td}><strong style={{ color: C.text }}>{r.patientName}</strong></td>
                       <td style={S.td}><span style={{ ...S.badge("blue"), background: scoreBg(r.painPre), color: scoreColor(r.painPre) }}>{r.painPre}/10</span></td>
                       <td style={S.td}><span style={{ ...S.badge("blue"), background: scoreBg(r.painPost), color: scoreColor(r.painPost) }}>{r.painPost}/10</span></td>
                       <td style={S.td}><span style={{ ...S.badge("blue"), background: scoreBg(r.lamenessPre, 5), color: scoreColor(r.lamenessPre, 5) }}>{r.lamenessPre}/5</span></td>

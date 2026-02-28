@@ -9,7 +9,7 @@ export default function Step5ProtocolParams({ form, setField, generate, allExerc
   return (
     <>
       {/* ═══════════ SECTION 5: PROTOCOL PARAMETERS ═══════════ */}
-      <div style={{ background: C.surface, border: `2px solid ${C.border}`, borderRadius: 10, padding: "16px 20px", marginBottom: 12 }}>
+      <div style={{ background: C.navy, border: `1px solid ${C.navy}`, borderRadius: 10, padding: "16px 20px", marginBottom: 12, color: "#fff" }}>
         <SectionHead icon={FiCalendar} title="Section 5 — Protocol Parameters" />
         <div style={S.grid(3)}>
           <div>
@@ -45,16 +45,16 @@ export default function Step5ProtocolParams({ form, setField, generate, allExerc
         {/* Home Exercise Program & Aquatic */}
         <div style={{ display: "flex", gap: 16, marginTop: 14, flexWrap: "wrap" }}>
           <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer",
-            padding: "8px 14px", background: form.homeExerciseProgram ? "rgba(16,185,129,0.15)" : "rgba(255,255,255,0.05)",
-            border: form.homeExerciseProgram ? `1.5px solid ${C.green}` : `1.5px solid ${C.border}`, borderRadius: 8, fontSize: 12, fontWeight: 600, color: C.text,
+            padding: "8px 14px", background: C.bg,
+            border: `1.5px solid ${C.border}`, borderRadius: 8, fontSize: 12, fontWeight: 600, color: C.text,
             transition: "all 0.2s" }}>
             <input type="checkbox" checked={form.homeExerciseProgram} onChange={e => setField("homeExerciseProgram", e.target.checked)}
               style={{ accentColor: C.green, width: 16, height: 16, cursor: "pointer" }} />
             Include Home Exercise Program (HEP)
           </label>
           <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer",
-            padding: "8px 14px", background: form.aquaticAccess ? "rgba(14,165,233,0.15)" : "rgba(255,255,255,0.05)",
-            border: form.aquaticAccess ? `1.5px solid ${C.teal}` : `1.5px solid ${C.border}`, borderRadius: 8, fontSize: 12, fontWeight: 600, color: C.text,
+            padding: "8px 14px", background: C.bg,
+            border: `1.5px solid ${C.border}`, borderRadius: 8, fontSize: 12, fontWeight: 600, color: C.text,
             transition: "all 0.2s" }}>
             <input type="checkbox" checked={form.aquaticAccess} onChange={e => setField("aquaticAccess", e.target.checked)}
               style={{ accentColor: C.teal, width: 16, height: 16, cursor: "pointer" }} />
@@ -67,7 +67,7 @@ export default function Step5ProtocolParams({ form, setField, generate, allExerc
           <div style={{ fontSize: 11, fontWeight: 700, color: C.teal, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10, paddingBottom: 4, borderBottom: "1px solid rgba(14,165,233,0.25)" }}>
             Available Therapeutic Modalities
           </div>
-          <div style={{ fontSize: 10, color: C.text, marginBottom: 10 }}>Select all modalities available at your facility (determines which interventions can be prescribed)</div>
+          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.7)", marginBottom: 10 }}>Select all modalities available at your facility (determines which interventions can be prescribed)</div>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             {[
               { key: "modalityUWTM", label: "Underwater Treadmill", icon: "\uD83C\uDF0A" },
@@ -84,8 +84,8 @@ export default function Step5ProtocolParams({ form, setField, generate, allExerc
                 display: "flex", alignItems: "center", gap: 7, cursor: "pointer",
                 padding: "7px 12px", borderRadius: 8, fontSize: 11, fontWeight: 600,
                 color: C.text,
-                background: form[mod.key] ? "rgba(14,165,233,0.15)" : "rgba(255,255,255,0.05)",
-                border: form[mod.key] ? `1.5px solid ${C.teal}` : `1.5px solid ${C.border}`,
+                background: C.bg,
+                border: `1.5px solid ${C.border}`,
                 transition: "all 0.2s",
               }}>
                 <input type="checkbox" checked={form[mod.key]} onChange={e => setField(mod.key, e.target.checked)}
@@ -106,11 +106,11 @@ export default function Step5ProtocolParams({ form, setField, generate, allExerc
 
       {/* ── Home Environment & HEP Equipment — side by side ── */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
-        <div style={{ background: C.surface, border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, padding: "16px 20px" }}>
+        <div style={{ background: C.navy, border: `1px solid ${C.navy}`, borderRadius: 10, padding: "16px 20px", color: "#fff" }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: C.teal, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10 }}>
             Available Home Equipment
           </div>
-          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.5)", marginBottom: 10 }}>
+          <div style={{ fontSize: 10, color: C.textLight, marginBottom: 10 }}>
             For clients following a HEP — what equipment do they have?
           </div>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -123,8 +123,8 @@ export default function Step5ProtocolParams({ form, setField, generate, allExerc
               <label key={item} style={{
                 display: "flex", alignItems: "center", gap: 6, cursor: "pointer",
                 padding: "6px 10px", borderRadius: 6, fontSize: 11, fontWeight: 600, color: C.text,
-                background: (form.homeEquipment || []).includes(item) ? "rgba(14,165,233,0.15)" : "rgba(255,255,255,0.05)",
-                border: (form.homeEquipment || []).includes(item) ? `1.5px solid ${C.teal}` : `1.5px solid ${C.border}`,
+                background: C.bg,
+                border: `1.5px solid ${C.border}`,
                 transition: "all 0.2s",
               }}>
                 <input type="checkbox" checked={(form.homeEquipment || []).includes(item)}
@@ -139,11 +139,11 @@ export default function Step5ProtocolParams({ form, setField, generate, allExerc
             ))}
           </div>
         </div>
-        <div style={{ background: C.surface, border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, padding: "16px 20px" }}>
+        <div style={{ background: C.navy, border: `1px solid ${C.navy}`, borderRadius: 10, padding: "16px 20px", color: "#fff" }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: C.teal, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10 }}>
             Home Environment
           </div>
-          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.5)", marginBottom: 10 }}>
+          <div style={{ fontSize: 10, color: C.textLight, marginBottom: 10 }}>
             Living situation and accessibility considerations
           </div>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -155,8 +155,8 @@ export default function Step5ProtocolParams({ form, setField, generate, allExerc
               <label key={item} style={{
                 display: "flex", alignItems: "center", gap: 6, cursor: "pointer",
                 padding: "6px 10px", borderRadius: 6, fontSize: 11, fontWeight: 600, color: C.text,
-                background: (form.homeEnvironment || []).includes(item) ? "rgba(14,165,233,0.15)" : "rgba(255,255,255,0.05)",
-                border: (form.homeEnvironment || []).includes(item) ? `1.5px solid ${C.teal}` : `1.5px solid ${C.border}`,
+                background: C.bg,
+                border: `1.5px solid ${C.border}`,
                 transition: "all 0.2s",
               }}>
                 <input type="checkbox" checked={(form.homeEnvironment || []).includes(item)}
@@ -208,9 +208,9 @@ export default function Step5ProtocolParams({ form, setField, generate, allExerc
 
         return (
           <div style={{
-            background: `linear-gradient(135deg, #1D2B3A 0%, #22323F 50%, #1D2B3A 100%)`,
-            border: `2px solid ${C.border}`, borderRadius: 10, padding: "16px 20px", marginBottom: 12,
-            position: "relative", overflow: "hidden",
+            background: C.navy,
+            border: `1px solid ${C.navy}`, borderRadius: 10, padding: "16px 20px", marginBottom: 12,
+            position: "relative", overflow: "hidden", color: "#fff",
           }}>
             {/* Decorative top accent */}
             <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 4, background: "linear-gradient(90deg, #0F4C81, #0EA5E9, #10B981)" }} />
@@ -226,7 +226,7 @@ export default function Step5ProtocolParams({ form, setField, generate, allExerc
             {/* Patient & Diagnosis Row */}
             <div style={{ ...S.grid(3), gap: 16 }}>
               {/* Patient Info Card */}
-              <div style={{ background: "rgba(255,255,255,0.05)", border: `1.5px solid ${C.border}`, borderRadius: 10, padding: "14px 16px" }}>
+              <div style={{ background: C.bg, border: `1.5px solid ${C.border}`, borderRadius: 10, padding: "14px 16px" }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: C.teal, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 8 }}>Patient</div>
                 <div style={{ fontSize: 15, fontWeight: 800, color: C.text, marginBottom: 4 }}>
                   {form.patientName || "\u2014"} <span style={{ fontSize: 12, fontWeight: 400 }}>({form.sex || "\u2014"})</span>
@@ -240,7 +240,7 @@ export default function Step5ProtocolParams({ form, setField, generate, allExerc
               </div>
 
               {/* Diagnosis Card */}
-              <div style={{ background: "rgba(255,255,255,0.05)", border: `1.5px solid ${C.border}`, borderRadius: 10, padding: "14px 16px" }}>
+              <div style={{ background: C.bg, border: `1.5px solid ${C.border}`, borderRadius: 10, padding: "14px 16px" }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: C.teal, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 8 }}>Diagnosis & Region</div>
                 <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 4 }}>{diagLabel}</div>
                 {diagCategory && <div style={{ fontSize: 11, color: C.text, fontWeight: 400, marginBottom: 4 }}>Category: {diagCategory}</div>}
@@ -263,7 +263,7 @@ export default function Step5ProtocolParams({ form, setField, generate, allExerc
                     }}>MMT: {form.mmtGrade}/5</span>
                   )}
                   {form.ivddGrade && (
-                    <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: "#F3E8FF", color: "#7C3AED" }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: "rgba(124,58,237,0.15)", color: "#7C3AED" }}>
                       IVDD: Grade {form.ivddGrade}
                     </span>
                   )}
@@ -280,7 +280,7 @@ export default function Step5ProtocolParams({ form, setField, generate, allExerc
               </div>
 
               {/* Treatment Plan Card */}
-              <div style={{ background: "rgba(255,255,255,0.05)", border: `1.5px solid ${C.border}`, borderRadius: 10, padding: "14px 16px" }}>
+              <div style={{ background: C.bg, border: `1.5px solid ${C.border}`, borderRadius: 10, padding: "14px 16px" }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: C.teal, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 8 }}>Treatment Plan</div>
                 <div style={{ fontSize: 12, fontWeight: 700, color: C.text, marginBottom: 4 }}>{txLabel}</div>
                 {form.treatmentApproach === "surgical" && form.surgeryType && (
@@ -304,7 +304,7 @@ export default function Step5ProtocolParams({ form, setField, generate, allExerc
             {/* Client & Safety Row */}
             <div style={{ ...S.grid(2), gap: 16, marginTop: 16 }}>
               {/* Client Info Card */}
-              <div style={{ background: "rgba(255,255,255,0.05)", border: `1.5px solid ${C.border}`, borderRadius: 10, padding: "14px 16px" }}>
+              <div style={{ background: C.bg, border: `1.5px solid ${C.border}`, borderRadius: 10, padding: "14px 16px" }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: C.teal, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 8 }}>Client Information</div>
                 <div style={{ fontSize: 12, fontWeight: 700, color: C.text, marginBottom: 2 }}>{form.clientName || "\u2014"}</div>
                 {form.clientEmail && <div style={{ fontSize: 11, color: C.text, marginBottom: 2 }}>{form.clientEmail}</div>}
@@ -320,7 +320,7 @@ export default function Step5ProtocolParams({ form, setField, generate, allExerc
               </div>
 
               {/* Safety Flags Card */}
-              <div style={{ background: "rgba(255,255,255,0.05)", border: `1.5px solid ${C.border}`, borderRadius: 10, padding: "14px 16px" }}>
+              <div style={{ background: C.bg, border: `1.5px solid ${C.border}`, borderRadius: 10, padding: "14px 16px" }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: C.teal, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 8 }}>Safety Flags</div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                   {form.allergies && form.allergies.trim() && (
@@ -351,7 +351,7 @@ export default function Step5ProtocolParams({ form, setField, generate, allExerc
             </div>
 
             {/* Exercise Availability Row */}
-            <div style={{ marginTop: 16, background: "rgba(255,255,255,0.05)", border: `1.5px solid ${C.border}`, borderRadius: 10, padding: "14px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ marginTop: 16, background: C.bg, border: `1.5px solid ${C.border}`, borderRadius: 10, padding: "14px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div>
                 <div style={{ fontSize: 10, fontWeight: 700, color: C.teal, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 6 }}>Exercise Library Available</div>
                 <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
@@ -371,9 +371,9 @@ export default function Step5ProtocolParams({ form, setField, generate, allExerc
                 </div>
               </div>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap", maxWidth: 320 }}>
-                {form.eCollarRequired && <span style={{ fontSize: 10, fontWeight: 600, padding: "3px 8px", borderRadius: 4, background: "#DBEAFE", color: "#1E3A5F" }}>E-Collar</span>}
-                {form.crateRestRequired && <span style={{ fontSize: 10, fontWeight: 600, padding: "3px 8px", borderRadius: 4, background: "#DBEAFE", color: "#1E3A5F" }}>Crate Rest</span>}
-                {form.slingAssistRequired && <span style={{ fontSize: 10, fontWeight: 600, padding: "3px 8px", borderRadius: 4, background: "#DBEAFE", color: "#1E3A5F" }}>Sling Assist</span>}
+                {form.eCollarRequired && <span style={{ fontSize: 10, fontWeight: 600, padding: "3px 8px", borderRadius: 4, background: C.tealLight, color: C.tealDark }}>E-Collar</span>}
+                {form.crateRestRequired && <span style={{ fontSize: 10, fontWeight: 600, padding: "3px 8px", borderRadius: 4, background: C.tealLight, color: C.tealDark }}>Crate Rest</span>}
+                {form.slingAssistRequired && <span style={{ fontSize: 10, fontWeight: 600, padding: "3px 8px", borderRadius: 4, background: C.tealLight, color: C.tealDark }}>Sling Assist</span>}
                 {form.specialInstructions && <span style={{ fontSize: 10, fontWeight: 600, padding: "3px 8px", borderRadius: 4, background: C.amberBg, color: C.amber }}>Special Instructions</span>}
               </div>
             </div>
@@ -381,7 +381,7 @@ export default function Step5ProtocolParams({ form, setField, generate, allExerc
             {/* Rehab Goals & Protocol Config Row */}
             <div style={{ marginTop: 20, display: "flex", gap: 16 }}>
               {/* Rehab Goals */}
-              <div style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: `1.5px solid ${C.border}`, borderRadius: 10, padding: "12px 16px" }}>
+              <div style={{ flex: 1, background: C.bg, border: `1.5px solid ${C.border}`, borderRadius: 10, padding: "12px 16px" }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: C.teal, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 6 }}>Rehab Goals</div>
                 {(form.rehabGoals || []).length > 0 ? (
                   <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
@@ -394,7 +394,7 @@ export default function Step5ProtocolParams({ form, setField, generate, allExerc
                 ) : <span style={{ fontSize: 11, color: C.text }}>No goals selected</span>}
               </div>
               {/* Protocol Config */}
-              <div style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: `1.5px solid ${C.border}`, borderRadius: 10, padding: "12px 16px" }}>
+              <div style={{ flex: 1, background: C.bg, border: `1.5px solid ${C.border}`, borderRadius: 10, padding: "12px 16px" }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: C.teal, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 6 }}>Protocol Configuration</div>
                 <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
                   <span style={{ fontSize: 11, color: C.text, fontWeight: 500 }}>{form.protocolLength} weeks</span>
@@ -412,7 +412,7 @@ export default function Step5ProtocolParams({ form, setField, generate, allExerc
 
             {/* Objective Measurements Summary */}
             {(form.circumferenceAffected || form.romFlexion || form.muscleCondition !== "Normal" || +form.jointEffusion > 0) && (
-              <div style={{ marginTop: 20, background: "rgba(255,255,255,0.05)", border: `1.5px solid ${C.border}`, borderRadius: 10, padding: "12px 16px" }}>
+              <div style={{ marginTop: 20, background: C.bg, border: `1.5px solid ${C.border}`, borderRadius: 10, padding: "12px 16px" }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: C.teal, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 6 }}>Baseline Measurements</div>
                 <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
                   {form.circumferenceAffected && form.circumferenceContralateral && (
@@ -450,7 +450,7 @@ export default function Step5ProtocolParams({ form, setField, generate, allExerc
       <div style={{ marginBottom: 12 }}>
         <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
           <input type="checkbox" checked={complianceAgreed} onChange={e => setComplianceAgreed(e.target.checked)}
-            style={{ accentColor: "#39FF7E", width: 16, height: 16, cursor: "pointer" }} />
+            style={{ accentColor: C.green, width: 16, height: 16, cursor: "pointer" }} />
           <span style={{ fontSize: 11, fontWeight: 600, color: C.text }}>
             I acknowledge the{" "}
             <span
@@ -461,7 +461,7 @@ export default function Step5ProtocolParams({ form, setField, generate, allExerc
         </label>
         {complianceOpen && (
           <div style={{
-            background: C.surface, border: `2px solid ${C.border}`, borderRadius: 10,
+            background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10,
             padding: "20px 24px", marginTop: 8, maxHeight: 420, overflowY: "auto",
           }}>
             {/* Section 1 */}
@@ -478,7 +478,7 @@ export default function Step5ProtocolParams({ form, setField, generate, allExerc
               <li>Professional conduct, recordkeeping, and data-handling requirements</li>
               <li>Restrictions on diagnosis, prescription, and medical decision-making by non-veterinarians</li>
             </ul>
-            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.7)", lineHeight: 1.7, marginBottom: 16, fontStyle: "italic" }}>
+            <div style={{ fontSize: 10, color: C.textMid, lineHeight: 1.7, marginBottom: 16, fontStyle: "italic" }}>
               The platform functions as a clinical decision-support system (CDSS) and educational tool, not a substitute for licensed veterinary judgment.
             </div>
 
@@ -499,7 +499,7 @@ export default function Step5ProtocolParams({ form, setField, generate, allExerc
             <div style={{ fontSize: 10, color: C.text, lineHeight: 1.7, marginBottom: 6 }}>
               The system does not:
             </div>
-            <ul style={{ fontSize: 10, color: "rgba(255,255,255,0.7)", lineHeight: 1.8, margin: "0 0 8px 16px", padding: 0 }}>
+            <ul style={{ fontSize: 10, color: C.textMid, lineHeight: 1.8, margin: "0 0 8px 16px", padding: 0 }}>
               <li>Establish a VCPR</li>
               <li>Provide medical diagnosis</li>
               <li>Replace in-person examinations</li>
@@ -525,7 +525,7 @@ export default function Step5ProtocolParams({ form, setField, generate, allExerc
             <div style={{ fontSize: 10, color: C.amber, lineHeight: 1.7, marginBottom: 4, fontWeight: 600 }}>
               Planned for production deployment:
             </div>
-            <ul style={{ fontSize: 10, color: "rgba(255,255,255,0.6)", lineHeight: 1.8, margin: "0 0 8px 16px", padding: 0 }}>
+            <ul style={{ fontSize: 10, color: C.textLight, lineHeight: 1.8, margin: "0 0 8px 16px", padding: 0 }}>
               <li>AES-256 encryption at rest</li>
               <li>TLS 1.3 encryption in transit</li>
               <li>Zero-knowledge architecture for sensitive fields</li>
@@ -533,7 +533,7 @@ export default function Step5ProtocolParams({ form, setField, generate, allExerc
               <li>Multi-factor authentication</li>
               <li>Encrypted backups and disaster-recovery protocols</li>
             </ul>
-            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.7)", lineHeight: 1.7, marginBottom: 16, fontStyle: "italic" }}>
+            <div style={{ fontSize: 10, color: C.textMid, lineHeight: 1.7, marginBottom: 16, fontStyle: "italic" }}>
               No client or patient data is sold, shared, or used for advertising. Security features will be fully implemented prior to multi-user or cloud deployment.
             </div>
 
@@ -548,7 +548,7 @@ export default function Step5ProtocolParams({ form, setField, generate, allExerc
               <li>Documentation standards aligned with state recordkeeping rules</li>
               <li>Clear separation between education, decision support, and clinical judgment</li>
             </ul>
-            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.7)", lineHeight: 1.7, marginBottom: 16, fontStyle: "italic" }}>
+            <div style={{ fontSize: 10, color: C.textMid, lineHeight: 1.7, marginBottom: 16, fontStyle: "italic" }}>
               All workflows are designed to align with state-level practice restrictions. Final clinical decisions remain the responsibility of the supervising veterinarian.
             </div>
 
@@ -576,7 +576,7 @@ export default function Step5ProtocolParams({ form, setField, generate, allExerc
               <li>Safety-screened</li>
               <li>Free of hallucinated or non-standard techniques</li>
             </ul>
-            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.7)", lineHeight: 1.7, marginBottom: 16, fontStyle: "italic" }}>
+            <div style={{ fontSize: 10, color: C.textMid, lineHeight: 1.7, marginBottom: 16, fontStyle: "italic" }}>
               Protocols are generated using deterministic logic to ensure reproducibility and clinical reliability.
             </div>
 
@@ -596,14 +596,14 @@ export default function Step5ProtocolParams({ form, setField, generate, allExerc
             <div style={{ fontSize: 10, color: C.amber, lineHeight: 1.7, marginBottom: 4, fontWeight: 600 }}>
               Planned for production deployment:
             </div>
-            <ul style={{ fontSize: 10, color: "rgba(255,255,255,0.6)", lineHeight: 1.8, margin: "0 0 8px 16px", padding: 0 }}>
+            <ul style={{ fontSize: 10, color: C.textLight, lineHeight: 1.8, margin: "0 0 8px 16px", padding: 0 }}>
               <li>Encrypted databases (AES-256)</li>
               <li>Audit logs for all clinical-related actions</li>
               <li>Multi-factor authentication</li>
               <li>Continuous monitoring and intrusion detection</li>
               <li>Automated patching and vulnerability scanning</li>
             </ul>
-            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.7)", lineHeight: 1.7, marginBottom: 16, fontStyle: "italic" }}>
+            <div style={{ fontSize: 10, color: C.textMid, lineHeight: 1.7, marginBottom: 16, fontStyle: "italic" }}>
               Enterprise-grade security features will be fully implemented prior to multi-user, cloud, or production deployment.
             </div>
 
@@ -621,7 +621,7 @@ export default function Step5ProtocolParams({ form, setField, generate, allExerc
               <li>No third-party data sharing</li>
               <li>No AI training on user-submitted patient data</li>
             </ul>
-            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.7)", lineHeight: 1.7, marginBottom: 16, fontStyle: "italic" }}>
+            <div style={{ fontSize: 10, color: C.textMid, lineHeight: 1.7, marginBottom: 16, fontStyle: "italic" }}>
               All retention timelines align with state veterinary medical board recordkeeping requirements.
             </div>
 
@@ -666,7 +666,7 @@ export default function Step5ProtocolParams({ form, setField, generate, allExerc
               <li><strong>Patient Data:</strong> All patient and client data entered into the system is owned exclusively by the clinic or clinician. K9 Rehab Pro acts solely as a local data processor.</li>
               <li><strong>Branding & Trademarks:</strong> "K9 Rehab Pro," the K9 Rehab Pro logo, and all associated branding elements are proprietary marks of the platform owner.</li>
             </ul>
-            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.7)", lineHeight: 1.7, fontStyle: "italic" }}>
+            <div style={{ fontSize: 10, color: C.textMid, lineHeight: 1.7, fontStyle: "italic" }}>
               Unauthorized reproduction, distribution, or reverse engineering of the platform, its algorithms, or exercise library is prohibited.
             </div>
           </div>
@@ -681,7 +681,7 @@ export default function Step5ProtocolParams({ form, setField, generate, allExerc
             padding: "18px 56px", borderRadius: 12, border: `2px solid ${C.green}`,
             fontSize: 16, fontWeight: 800, letterSpacing: "0.5px", cursor: "pointer",
             background: "linear-gradient(135deg, #059669 0%, #10B981 50%, #34D399 100%)",
-            color: C.text,
+            color: "#fff",
             boxShadow: "0 0 20px rgba(16,185,129,0.5), 0 0 40px rgba(16,185,129,0.3), 0 0 60px rgba(16,185,129,0.15), inset 0 1px 0 rgba(255,255,255,0.2)",
             transition: "all 0.3s ease",
           }}

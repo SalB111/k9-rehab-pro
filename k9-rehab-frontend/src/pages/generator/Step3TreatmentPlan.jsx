@@ -8,7 +8,7 @@ import StepNavButtons from "./StepNavButtons";
 export default function Step3TreatmentPlan({ form, setField, goToStep, handleSurgeryDate, handlePostOpDay }) {
   return (
     <>
-      <div style={{ background: C.surface, border: `2px solid ${C.border}`, borderRadius: 10, padding: "16px 20px", marginBottom: 12 }}>
+      <div style={{ background: C.navy, border: `1px solid ${C.navy}`, borderRadius: 10, padding: "16px 20px", marginBottom: 12, color: "#fff" }}>
         <SectionHead icon={FiFileText} title="Section 3 — Treatment Plan & Surgical Status" />
 
         {/* -- Treatment Approach -- */}
@@ -26,14 +26,14 @@ export default function Step3TreatmentPlan({ form, setField, goToStep, handleSur
                 onClick={() => setField("treatmentApproach", opt.value)}
                 style={{
                   padding: "14px 16px", borderRadius: 10, cursor: "pointer",
-                  background: form.treatmentApproach === opt.value ? "rgba(14,165,233,0.15)" : "rgba(255,255,255,0.05)",
+                  background: form.treatmentApproach === opt.value ? "rgba(14,165,233,0.15)" : C.bg,
                   border: form.treatmentApproach === opt.value ? `2px solid ${C.teal}` : `1.5px solid ${C.border}`,
                   boxShadow: form.treatmentApproach === opt.value ? "0 0 12px rgba(14,165,233,0.2)" : "none",
                   transition: "all 0.2s",
                 }}>
                 <div style={{ fontSize: 20, marginBottom: 4 }}>{opt.icon}</div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{opt.label}</div>
-                <div style={{ fontSize: 11, color: "#fff", marginTop: 2, fontWeight: 400 }}>{opt.desc}</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{opt.label}</div>
+                <div style={{ fontSize: 11, color: C.textMid, marginTop: 2, fontWeight: 400 }}>{opt.desc}</div>
               </div>
             ))}
           </div>
@@ -264,11 +264,11 @@ export default function Step3TreatmentPlan({ form, setField, goToStep, handleSur
               { key: "slingAssistRequired", label: "Sling Assist Required" },
             ].map(item => (
               <label key={item.key} style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer",
-                padding: "8px 14px", background: form[item.key] ? "rgba(14,165,233,0.15)" : "rgba(255,255,255,0.05)",
-                border: `1.5px solid ${C.border}`, borderRadius: 8, fontSize: 12, fontWeight: 600, color: "#fff",
+                padding: "8px 14px", background: form[item.key] ? "rgba(14,165,233,0.15)" : C.bg,
+                border: `1.5px solid ${C.border}`, borderRadius: 8, fontSize: 12, fontWeight: 600, color: C.text,
                 transition: "all 0.2s" }}>
                 <input type="checkbox" checked={form[item.key]} onChange={e => setField(item.key, e.target.checked)}
-                  style={{ accentColor: "#1E3A5F", width: 16, height: 16, cursor: "pointer" }} />
+                  style={{ accentColor: C.teal, width: 16, height: 16, cursor: "pointer" }} />
                 {item.label}
               </label>
             ))}

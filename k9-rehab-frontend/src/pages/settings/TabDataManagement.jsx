@@ -21,11 +21,11 @@ export function TabDataManagement({ isOpen, toggleSection }) {
             <div key={type} style={{
               display: "flex", alignItems: "center", justifyContent: "space-between",
               padding: "14px 18px", borderRadius: 8,
-              background: "rgba(255,255,255,0.05)", border: `1px solid rgba(255,255,255,0.15)`,
+              background: C.bg, border: `1px solid ${C.border}`,
             }}>
               <div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{label}</div>
-                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginTop: 2 }}>{desc}</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{label}</div>
+                <div style={{ fontSize: 11, color: C.textLight, marginTop: 2 }}>{desc}</div>
               </div>
               <button style={{ ...S.btn("ghost"), padding: "6px 14px", fontSize: 11 }}>
                 <FiDownload size={12} /> Export
@@ -38,14 +38,14 @@ export function TabDataManagement({ isOpen, toggleSection }) {
       <SettingsSection id="data_import" open={isOpen("data_import")} onToggle={toggleSection} icon={FiUpload} title="Import Data">
         <div style={{
           padding: "24px", borderRadius: 8, textAlign: "center",
-          border: `2px dashed rgba(255,255,255,0.25)`, background: "rgba(255,255,255,0.03)",
+          border: `2px dashed ${C.border}`, background: C.bg,
         }}>
-          <FiUpload size={24} style={{ color: "rgba(255,255,255,0.4)", marginBottom: 8 }} />
-          <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>Import Patient Records</div>
-          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginTop: 4 }}>
+          <FiUpload size={24} style={{ color: C.textLight, marginBottom: 8 }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>Import Patient Records</div>
+          <div style={{ fontSize: 11, color: C.textLight, marginTop: 4 }}>
             Drag and drop CSV or JSON files, or click to browse
           </div>
-          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", marginTop: 8 }}>
+          <div style={{ fontSize: 10, color: C.textLight, marginTop: 8 }}>
             Supported formats: CSV (patient demographics), JSON (protocol data), XLSX (bulk import)
           </div>
         </div>

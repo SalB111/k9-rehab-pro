@@ -10,9 +10,9 @@ import ClinicalFooter from "../components/ClinicalFooter";
 function AboutView() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 900, margin: "0 auto" }}>
-      <div style={{ ...S.card, border: `2px solid ${C.navy}`, borderTop: `4px solid ${C.teal}`, padding: "32px 36px", textAlign: "center" }}>
+      <div style={{ ...S.card, border: `1px solid ${C.border}`, borderTop: `4px solid ${C.teal}`, padding: "32px 36px", textAlign: "center" }}>
         <img src="/caduceus.png" alt="Rod of Asclepius" style={{ width: 64, height: 64, marginBottom: 12, objectFit: "contain" }} />
-        <h1 style={{ fontSize: 28, fontWeight: 900, color: C.navy, margin: "0 0 8px",
+        <h1 style={{ fontSize: 28, fontWeight: 900, color: C.text, margin: "0 0 8px",
           fontFamily: "'Exo 2', 'Orbitron', sans-serif", letterSpacing: "2px" }}>
           K9 REHAB PRO
         </h1>
@@ -25,7 +25,7 @@ function AboutView() {
       </div>
 
       <div style={S.grid(2)}>
-        <div style={{ ...S.card, border: `2px solid ${C.navy}` }}>
+        <div style={{ ...S.card, border: `1px solid ${C.border}` }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
             <FiBookOpen size={16} style={{ color: C.teal }} />
             <h3 style={{ margin: 0, fontSize: 14, fontWeight: 900, color: C.text }}>Evidence-Based Foundation</h3>
@@ -35,9 +35,9 @@ function AboutView() {
           </p>
         </div>
 
-        <div style={{ ...S.card, border: `2px solid ${C.navy}` }}>
+        <div style={{ ...S.card, border: `1px solid ${C.border}` }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-            <FiShield size={16} style={{ color: C.navy }} />
+            <FiShield size={16} style={{ color: C.teal }} />
             <h3 style={{ margin: 0, fontSize: 14, fontWeight: 900, color: C.text }}>CDSS Classification</h3>
           </div>
           <p style={{ fontSize: 12, color: C.textMid, lineHeight: 1.7, margin: 0 }}>
@@ -45,7 +45,7 @@ function AboutView() {
           </p>
         </div>
 
-        <div style={{ ...S.card, border: `2px solid ${C.navy}` }}>
+        <div style={{ ...S.card, border: `1px solid ${C.border}` }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
             <FiActivity size={16} style={{ color: C.green }} />
             <h3 style={{ margin: 0, fontSize: 14, fontWeight: 900, color: C.text }}>Protocol Engine</h3>
@@ -55,7 +55,7 @@ function AboutView() {
           </p>
         </div>
 
-        <div style={{ ...S.card, border: `2px solid ${C.navy}` }}>
+        <div style={{ ...S.card, border: `1px solid ${C.border}` }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
             <FiLock size={16} style={{ color: C.amber }} />
             <h3 style={{ margin: 0, fontSize: 14, fontWeight: 900, color: C.text }}>Data Privacy</h3>
@@ -66,7 +66,7 @@ function AboutView() {
         </div>
       </div>
 
-      <div style={{ ...S.card, border: `2px solid ${C.navy}` }}>
+      <div style={{ ...S.card, border: `1px solid ${C.border}` }}>
         <h3 style={{ fontSize: 14, fontWeight: 900, color: C.text, marginBottom: 12 }}>Target Environments</h3>
         <div style={S.grid(4)}>
           {[
@@ -75,7 +75,7 @@ function AboutView() {
             ["Specialty Hospitals", "Integration with surgical, neurology, and oncology teams"],
             ["Universities", "Clinical teaching and research under faculty supervision"],
           ].map(([title, desc]) => (
-            <div key={title} style={{ padding: "12px 14px", background: C.surface, borderRadius: 8, border: `2px solid ${C.navy}` }}>
+            <div key={title} style={{ padding: "12px 14px", background: C.surface, borderRadius: 8, border: `1px solid ${C.border}` }}>
               <div style={{ fontWeight: 900, fontSize: 12, color: C.text, marginBottom: 4 }}>{title}</div>
               <div style={{ fontSize: 11, color: C.textMid, lineHeight: 1.5 }}>{desc}</div>
             </div>

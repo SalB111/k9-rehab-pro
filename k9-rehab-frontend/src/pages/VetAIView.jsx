@@ -54,12 +54,12 @@ function VetAIView({ authToken }) {
     if (!t) return "";
     let h = "", code = false;
     for (const ln of t.split("\n")) {
-      if (ln.startsWith("```")) { h += code ? "</pre>" : `<pre style="background:${C.navy};border:1px solid ${C.border};border-radius:8px;padding:12px;margin:8px 0;font-size:12px;overflow-x:auto;color:${C.teal}">`; code = !code; continue; }
+      if (ln.startsWith("```")) { h += code ? "</pre>" : `<pre style="background:${C.bg};border:1px solid ${C.border};border-radius:8px;padding:12px;margin:8px 0;font-size:12px;overflow-x:auto;color:${C.teal}">`; code = !code; continue; }
       if (code) { h += ln + "\n"; continue; }
       if (ln.startsWith("### ")) { h += `<h4 style="color:${C.teal};margin:14px 0 4px;font-size:13px;font-weight:700">${ln.slice(4)}</h4>`; continue; }
       if (ln.startsWith("## ")) { h += `<h3 style="color:${C.green};margin:16px 0 6px;font-size:14px;font-weight:700">${ln.slice(3)}</h3>`; continue; }
-      if (ln.startsWith("# ")) { h += `<h2 style="color:${C.navy};margin:18px 0 8px;font-size:16px;font-weight:700">${ln.slice(2)}</h2>`; continue; }
-      let l = ln.replace(/\*\*(.*?)\*\*/g, `<strong style="color:${C.navy}">$1</strong>`);
+      if (ln.startsWith("# ")) { h += `<h2 style="color:${C.teal};margin:18px 0 8px;font-size:16px;font-weight:700">${ln.slice(2)}</h2>`; continue; }
+      let l = ln.replace(/\*\*(.*?)\*\*/g, `<strong style="color:${C.text}">$1</strong>`);
       l = l.replace(/\*(.*?)\*/g, `<em style="color:${C.textLight}">$1</em>`);
       l = l.replace(/`([^`]+)`/g, `<code style="background:${C.bg};padding:1px 5px;border-radius:3px;font-size:12px;color:${C.teal}">$1</code>`);
       if (l.match(/^[-•]\s/)) { h += `<div style="margin:3px 0 3px 16px;line-height:1.6">\u2022 ${l.replace(/^[-•]\s/, "")}</div>`; continue; }
@@ -152,7 +152,7 @@ function VetAIView({ authToken }) {
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <img src="/Beau.png" alt="Beau" style={{ width: 38, height: 38, borderRadius: 10, objectFit: "cover", boxShadow: `0 0 12px rgba(14,165,233,0.3)` }} />
           <div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: C.navy, letterSpacing: 0.5 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: C.text, letterSpacing: 0.5 }}>
               Ask Beau <span style={{ color: C.teal, fontSize: 10, fontWeight: 600, background: `${C.teal}15`, padding: "2px 7px", borderRadius: 4, marginLeft: 6 }}>Clinical Assistant</span>
             </div>
             <div style={{ fontSize: 10, color: C.textLight, marginTop: 1 }}>Evidence-Based Decision Support • ACVSMR</div>
@@ -165,7 +165,7 @@ function VetAIView({ authToken }) {
               <span style={{ fontSize: 12, color: C.teal, fontWeight: 600 }}>{patient.name}</span>
             </div>
           )}
-          <button onClick={() => setShowPatientPanel(!showPatientPanel)} style={{ background: `${C.navy}08`, border: `1px solid ${C.border}`, borderRadius: 8, color: C.navy, padding: "6px 14px", cursor: "pointer", fontSize: 11, fontWeight: 600 }}>
+          <button onClick={() => setShowPatientPanel(!showPatientPanel)} style={{ background: `${C.navy}08`, border: `1px solid ${C.border}`, borderRadius: 8, color: C.text, padding: "6px 14px", cursor: "pointer", fontSize: 11, fontWeight: 600 }}>
             {patient ? "Switch Patient" : "Load Patient"}
           </button>
           {msgs.length > 0 && (
@@ -179,13 +179,13 @@ function VetAIView({ authToken }) {
       {/* Patient Selection Panel */}
       {showPatientPanel && (
         <div style={{ position: "absolute", top: 58, right: 12, zIndex: 100, background: "#fff", border: `1px solid ${C.border}`, borderRadius: 12, padding: 14, width: 320, boxShadow: "0 12px 40px rgba(0,0,0,0.12)" }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: C.navy, marginBottom: 10, letterSpacing: 0.5 }}>SELECT PATIENT</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: C.text, marginBottom: 10, letterSpacing: 0.5 }}>SELECT PATIENT</div>
           {patients.length === 0 && <div style={{ fontSize: 12, color: C.textLight, padding: 12 }}>No patients found. Add patients in Patient Records first.</div>}
           <div style={{ maxHeight: 300, overflowY: "auto" }}>
             {patients.map(pt => (
               <div key={pt.id} onClick={() => pickPatient(pt)} style={{ padding: "10px 12px", borderRadius: 8, marginBottom: 4, background: patient?.id === pt.id ? `${C.teal}10` : C.bg, border: patient?.id === pt.id ? `1px solid ${C.teal}40` : "1px solid transparent", cursor: "pointer", transition: "all 0.15s" }}>
                 <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: C.navy }}>{pt.name}</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{pt.name}</span>
                   <span style={{ fontSize: 10, color: C.textLight }}>{pt.breed || ""}</span>
                 </div>
                 <div style={{ fontSize: 10, color: C.textLight, marginTop: 2 }}>{pt.species || "Canine"} • {pt.age || "?"} • {pt.weight || "?"}lbs</div>
@@ -213,7 +213,7 @@ function VetAIView({ authToken }) {
         {welcome && (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "60vh", textAlign: "center" }}>
             <img src="/Beau.png" alt="Beau" style={{ width: 80, height: 80, borderRadius: 20, objectFit: "cover", marginBottom: 16, boxShadow: `0 0 30px ${C.teal}20`, border: `2px solid ${C.teal}30` }} />
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: C.navy, margin: "0 0 6px" }}>Ask Beau</h1>
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: C.text, margin: "0 0 6px" }}>Ask Beau</h1>
             <p style={{ fontSize: 13, color: C.textLight, maxWidth: 460, lineHeight: 1.6, margin: "0 0 28px" }}>
               Evidence-based canine rehabilitation intelligence. Load a patient for personalized protocols, or ask general clinical questions.
             </p>

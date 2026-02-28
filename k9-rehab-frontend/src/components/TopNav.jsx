@@ -64,19 +64,13 @@ export default function TopNav({ view, setView, brand, dateStr, timeStr, current
       }}>
         <div
           onClick={() => { setGenKey(k => k + 1); setView("home"); const el = document.querySelector("[data-content-scroll]"); if (el) el.scrollTop = 0; }}
-          style={{ cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: 26, height: 26, borderRadius: 5, background: view === "home" ? "rgba(57,255,126,0.25)" : "rgba(57,255,126,0.12)", border: `1px solid ${view === "home" ? "rgba(57,255,126,0.6)" : "rgba(57,255,126,0.3)"}`, marginRight: 10, transition: "all 0.2s" }}
-          title="Home — Section 1 Intake"
+          style={S.topNavItem(view === "home")}
         >
-          <FiHome size={12} style={{ color: "#39FF7E" }} />
+          <span>Home</span>
         </div>
         {NAV.map(({ id, label, icon: Icon }) => (
-          <div key={id} style={S.topNavItem(id === "generator" ? (view === "generator" || view === "home") : view === id)} onClick={() => {
-            if (id === "generator") {
-              setGenInitialStep(2);
-              setGenKey(k => k + 1);
-            } else {
-              setGenInitialStep(1);
-            }
+          <div key={id} style={S.topNavItem(view === id)} onClick={() => {
+            setGenInitialStep(1);
             setView(id);
             const contentEl = document.querySelector("[data-content-scroll]");
             if (contentEl) contentEl.scrollTop = 0;

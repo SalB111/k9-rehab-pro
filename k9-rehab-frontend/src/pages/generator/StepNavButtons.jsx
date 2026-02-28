@@ -22,7 +22,7 @@ export default function StepNavButtons({ onBack, backLabel, onNext, nextLabel })
       {onNext && (
         <button
           style={{
-            background: C.navyMid, color: "#fff", display: "inline-flex", alignItems: "center", gap: 6,
+            background: "linear-gradient(135deg, #059669, #0EA5E9)", color: "#fff", display: "inline-flex", alignItems: "center", gap: 6,
             borderRadius: 8, border: "none", cursor: "pointer", padding: "14px 32px", fontSize: 14, fontWeight: 700,
             boxShadow: `0 0 14px ${C.tealLight}, 0 0 28px ${C.tealLight}`,
             transition: "all 0.25s",

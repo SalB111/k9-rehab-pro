@@ -13,7 +13,7 @@ import { ThemeProvider } from "./components/ThemeProvider";
 
 // ── Eager-loaded pages (first screens) ──
 import LoginView from "./pages/LoginView";
-import WelcomeView from "./pages/WelcomeView";
+// WelcomeView removed — app goes straight to login
 
 // ── Lazy-loaded pages (code-split) ──
 const GeneratorView = lazy(() => import("./pages/GeneratorView"));
@@ -28,9 +28,7 @@ const AboutView     = lazy(() => import("./pages/AboutView"));
 // APP — Slim Orchestrator
 // ─────────────────────────────────────────────
 export default function App() {
-  const [view, setView] = useState(
-    localStorage.getItem("k9-welcome-seen") ? "home" : "welcome"
-  );
+  const [view, setView] = useState("home");
   const [genKey, setGenKey] = useState(0);
   const [genInitialStep, setGenInitialStep] = useState(1);
   const [brand, setBrand] = useState({ clinicName: "K9 Rehab Pro\u2122", accent: "#0F4C81" });
@@ -79,7 +77,7 @@ export default function App() {
   const handleLogout = () => {
     setAuthToken(null);
     setCurrentUser(null);
-    setView("welcome");
+    setView("home");
   };
 
   const [liveTime, setLiveTime] = useState(new Date());
@@ -121,9 +119,6 @@ export default function App() {
     }
   };
 
-  if (view === "welcome") {
-    return <ToastProvider><WelcomeView onEnter={() => { localStorage.setItem("k9-welcome-seen", "true"); setView("home"); }} onAbout={() => setView("about")} /></ToastProvider>;
-  }
 
   const dateStr = liveTime.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
   const timeStr = liveTime.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit" });

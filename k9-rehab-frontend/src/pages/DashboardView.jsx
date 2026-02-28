@@ -51,7 +51,7 @@ export default function DashboardView({ setView }) {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "40vh", gap: 12 }}>
         <div style={{ width: 32, height: 32, borderRadius: "50%", border: `3px solid ${C.border}`, borderTopColor: C.teal, animation: "spin 0.8s linear infinite" }} />
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-        <span style={{ fontSize: 13, fontWeight: 600, color: C.navy }}>Loading dashboard...</span>
+        <span style={{ fontSize: 13, fontWeight: 600, color: C.teal }}>Loading dashboard...</span>
       </div>
     );
   }
@@ -65,55 +65,55 @@ export default function DashboardView({ setView }) {
 
   const STATS = [
     { label: "Active Patients", value: patients.length, img: "/2.png", color: C.teal },
-    { label: "Protocols Available", value: "4 × 4 Phases", icon: FiFileText, color: "#7C3AED" },
+    { label: "Protocols Available", value: "4 \u00d7 4 Phases", icon: FiFileText, color: "#7C3AED" },
     { label: "Exercise Library", value: exercises.length, img: "/Beau.png", color: C.navy },
-    { label: "Unique Conditions", value: Object.keys(conditionCounts).length || "—", icon: TbDog, color: C.amber },
+    { label: "Unique Conditions", value: Object.keys(conditionCounts).length || "\u2014", icon: TbDog, color: C.amber },
   ];
 
   return (
     <div>
-      {/* ── KPI STAT CARDS — navy header card ── */}
-      <div style={{ ...S.card, background: C.navy, border: `2px solid ${C.navy}`, padding: 20 }}>
+      {/* ── KPI STAT CARDS — white card ── */}
+      <div style={{ ...S.card, padding: 20 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
           <div style={S.sectionHeader()}>
-            <FiActivity size={13} style={{ color: "#39FF7E" }} /> Clinical Overview
+            <FiActivity size={13} style={{ color: C.teal }} /> Clinical Overview
           </div>
           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
             <button style={{
               display: "flex", alignItems: "center", gap: 6,
               padding: "8px 20px", borderRadius: 8, cursor: "pointer",
-              background: "linear-gradient(135deg, #059669, #0EA5E9)", border: "1.5px solid rgba(57,255,126,0.35)",
+              background: "linear-gradient(135deg, #059669, #0EA5E9)", border: "none",
               color: "#fff", fontSize: 11, fontWeight: 700,
-              boxShadow: "0 0 14px rgba(14,165,233,0.3), 0 0 28px rgba(5,150,105,0.15)",
+              boxShadow: "0 2px 8px rgba(14,165,233,0.3)",
               transition: "all 0.2s",
             }}
             onClick={() => setView("home")}
-            onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 0 20px rgba(14,165,233,0.5), 0 0 40px rgba(5,150,105,0.25)"; }}
-            onMouseLeave={e => { e.currentTarget.style.boxShadow = "0 0 14px rgba(14,165,233,0.3), 0 0 28px rgba(5,150,105,0.15)"; }}>
+            onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 4px 16px rgba(14,165,233,0.4)"; }}
+            onMouseLeave={e => { e.currentTarget.style.boxShadow = "0 2px 8px rgba(14,165,233,0.3)"; }}>
               <FiActivity size={13} /> Generate Protocol
             </button>
             <button style={{
               display: "flex", alignItems: "center", gap: 6,
               padding: "7px 16px", borderRadius: 8, cursor: "pointer",
-              background: "rgba(255,255,255,0.08)", border: "1.5px solid rgba(255,255,255,0.15)",
-              color: "#fff", fontSize: 11, fontWeight: 700,
+              background: C.bg, border: `1px solid ${C.border}`,
+              color: C.text, fontSize: 11, fontWeight: 700,
               transition: "all 0.15s",
             }}
             onClick={() => setView("exercises")}
-            onMouseEnter={e => { e.currentTarget.style.background = "rgba(14,165,233,0.25)"; e.currentTarget.style.borderColor = C.teal; }}
-            onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)"; }}>
+            onMouseEnter={e => { e.currentTarget.style.borderColor = C.teal; e.currentTarget.style.color = C.teal; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.text; }}>
               <FiBookOpen size={13} /> Exercise Library
             </button>
             <button style={{
               display: "flex", alignItems: "center", gap: 6,
               padding: "7px 16px", borderRadius: 8, cursor: "pointer",
-              background: "rgba(255,255,255,0.08)", border: "1.5px solid rgba(255,255,255,0.15)",
-              color: "#fff", fontSize: 11, fontWeight: 700,
+              background: C.bg, border: `1px solid ${C.border}`,
+              color: C.text, fontSize: 11, fontWeight: 700,
               transition: "all 0.15s",
             }}
             onClick={() => setView("sessions")}
-            onMouseEnter={e => { e.currentTarget.style.background = "rgba(14,165,233,0.25)"; e.currentTarget.style.borderColor = C.teal; }}
-            onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)"; }}>
+            onMouseEnter={e => { e.currentTarget.style.borderColor = C.teal; e.currentTarget.style.color = C.teal; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.text; }}>
               <FiClipboard size={13} /> SOAP Notes
             </button>
           </div>
@@ -123,15 +123,15 @@ export default function DashboardView({ setView }) {
           {STATS.map((stat, i) => (
             <div key={i} style={{
               padding: "16px 18px", borderRadius: 8,
-              background: "rgba(255,255,255,0.04)", border: "1.5px solid rgba(255,255,255,0.1)",
+              background: C.bg, border: `1px solid ${C.border}`,
               borderLeft: `4px solid ${stat.color}`,
             }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.8px" }}>{stat.label}</div>
-                  <div style={{ fontSize: 26, fontWeight: 800, color: "#fff", marginTop: 4 }}>{stat.value}</div>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: C.textLight, textTransform: "uppercase", letterSpacing: "0.8px" }}>{stat.label}</div>
+                  <div style={{ fontSize: 26, fontWeight: 800, color: C.text, marginTop: 4 }}>{stat.value}</div>
                 </div>
-                <div style={{ width: stat.img ? 50 : 40, height: stat.img ? 50 : 40, borderRadius: 8, background: "rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+                <div style={{ width: stat.img ? 50 : 40, height: stat.img ? 50 : 40, borderRadius: 8, background: C.bg, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", border: `1px solid ${C.border}` }}>
                   {stat.img
                     ? <img src={stat.img} alt={stat.label} style={{ width: 50, height: 50, objectFit: "cover", borderRadius: 8 }} />
                     : <stat.icon size={18} style={{ color: stat.color }} />
@@ -146,22 +146,22 @@ export default function DashboardView({ setView }) {
       {/* ── TWO-COLUMN LAYOUT ── */}
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 10 }}>
 
-        {/* LEFT: Recent Patients — read-only overview */}
-        <div style={{ ...S.card, background: C.navy, border: `2px solid ${C.navy}`, padding: 0, overflow: "hidden" }}>
+        {/* LEFT: Recent Patients */}
+        <div style={{ ...S.card, padding: 0, overflow: "hidden" }}>
           <div style={{ padding: "14px 20px" }}>
             <div style={S.sectionHeader()}>
-              <TbDog size={14} style={{ color: "#39FF7E" }} /> Recent Patients
+              <TbDog size={14} style={{ color: C.teal }} /> Recent Patients
             </div>
           </div>
           <NeonLine />
           {patients.length === 0 ? (
-            <div style={{ padding: "48px 24px", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>
+            <div style={{ padding: "48px 24px", textAlign: "center", color: C.textLight }}>
               <TbDog size={32} style={{ marginBottom: 12, opacity: 0.3 }} />
               <div style={{ fontSize: 13, fontWeight: 600 }}>No patients registered yet</div>
               <div style={{ fontSize: 11, marginTop: 4 }}>Patients are created during protocol generation</div>
             </div>
           ) : (
-            <div style={{ background: C.surface, margin: 0 }}>
+            <div style={{ margin: 0 }}>
               <table style={S.table}>
                 <thead>
                   <tr>
@@ -175,15 +175,15 @@ export default function DashboardView({ setView }) {
                       onMouseEnter={e => { e.currentTarget.style.background = C.bg; }}
                       onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}>
                       <td style={S.td}>
-                        <div style={{ fontWeight: 600, color: C.navy, fontSize: 13 }}>{p.name}</div>
-                        <div style={{ fontSize: 10, color: C.textLight }}>Owner: {p.client_name || "—"}</div>
+                        <div style={{ fontWeight: 700, color: C.text, fontSize: 13 }}>{p.name}</div>
+                        <div style={{ fontSize: 10, color: C.textLight }}>Owner: {p.client_name || "\u2014"}</div>
                       </td>
-                      <td style={{ ...S.td, fontSize: 12 }}>{p.breed || "—"}</td>
+                      <td style={{ ...S.td, fontSize: 12 }}>{p.breed || "\u2014"}</td>
                       <td style={S.td}>
-                        {p.condition ? <span style={S.badge("blue")}>{p.condition}</span> : "—"}
+                        {p.condition ? <span style={S.badge("blue")}>{p.condition}</span> : "\u2014"}
                       </td>
                       <td style={{ ...S.td, fontSize: 11, color: C.textLight }}>
-                        {p.created_at ? new Date(p.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}
+                        {p.created_at ? new Date(p.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "\u2014"}
                       </td>
                     </tr>
                   ))}
@@ -193,14 +193,14 @@ export default function DashboardView({ setView }) {
           )}
         </div>
 
-        {/* RIGHT: Condition Distribution + Platform Status — navy cards */}
+        {/* RIGHT: Condition Distribution + Platform Status */}
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
 
           {/* Condition Distribution */}
-          <div style={{ ...S.card, background: C.navy, border: `2px solid ${C.navy}` }}>
+          <div style={S.card}>
             <div style={{ marginBottom: 12 }}>
               <div style={S.sectionHeader()}>
-                <FiActivity size={13} style={{ color: "#39FF7E" }} /> Condition Distribution
+                <FiActivity size={13} style={{ color: C.teal }} /> Condition Distribution
               <span style={{
                 marginLeft: "auto", fontSize: 9, fontWeight: 700,
                 color: C.amber, background: C.amberBg,
@@ -211,15 +211,15 @@ export default function DashboardView({ setView }) {
             </div>
             <NeonLine />
             {conditionEntries.length === 0 ? (
-              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", textAlign: "center", padding: "16px 0" }}>No patient data yet</div>
+              <div style={{ fontSize: 12, color: C.textLight, textAlign: "center", padding: "16px 0" }}>No patient data yet</div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 12 }}>
                 {conditionEntries.slice(0, 8).map(([cond, count]) => (
                   <div key={cond} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ fontSize: 12, color: "rgba(255,255,255,0.8)", fontWeight: 500 }}>{cond}</span>
+                    <span style={{ fontSize: 12, color: C.textMid, fontWeight: 600 }}>{cond}</span>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <div style={{ width: Math.max(20, (count / Math.max(...conditionEntries.map(e => e[1]))) * 80), height: 6, borderRadius: 3, background: C.teal }} />
-                      <span style={{ fontSize: 11, fontWeight: 700, color: "#fff", minWidth: 18, textAlign: "right" }}>{count}</span>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: C.text, minWidth: 18, textAlign: "right" }}>{count}</span>
                     </div>
                   </div>
                 ))}
@@ -228,10 +228,10 @@ export default function DashboardView({ setView }) {
           </div>
 
           {/* Platform Status */}
-          <div style={{ ...S.card, background: C.navy, border: `2px solid ${C.navy}` }}>
+          <div style={S.card}>
             <div style={{ marginBottom: 12 }}>
               <div style={S.sectionHeader()}>
-                <FiCheckCircle size={13} style={{ color: "#39FF7E" }} /> Platform Status
+                <FiCheckCircle size={13} style={{ color: C.teal }} /> Platform Status
               </div>
             </div>
             <NeonLine />
@@ -243,8 +243,8 @@ export default function DashboardView({ setView }) {
                 { label: "Phase System", ok: true, detail: "4 phases each" },
               ].map((item, i) => (
                 <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ fontSize: 12, color: "rgba(255,255,255,0.6)" }}>{item.label}</span>
-                  <span style={{ fontSize: 11, fontWeight: 600, color: item.ok ? "#39FF7E" : C.red, display: "flex", alignItems: "center", gap: 4 }}>
+                  <span style={{ fontSize: 12, color: C.textMid, fontWeight: 600 }}>{item.label}</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: item.ok ? C.green : C.red, display: "flex", alignItems: "center", gap: 4 }}>
                     <FiCheckCircle size={11} /> {item.detail}
                   </span>
                 </div>
@@ -254,10 +254,10 @@ export default function DashboardView({ setView }) {
         </div>
       </div>
 
-      {/* ── PROTOCOL ENGINE — navy card ── */}
-      <div style={{ ...S.card, background: C.navy, border: `2px solid ${C.navy}`, padding: 20 }}>
+      {/* ── PROTOCOL ENGINE ── */}
+      <div style={{ ...S.card, padding: 20 }}>
         <div style={S.sectionHeader()}>
-          <FiFileText size={13} style={{ color: "#39FF7E" }} /> ACVSMR-Aligned Protocol Engine — 4 Evidence-Based Pathways
+          <FiFileText size={13} style={{ color: C.teal }} /> ACVSMR-Aligned Protocol Engine \u2014 4 Evidence-Based Pathways
         </div>
         <div style={{ marginTop: 8, marginBottom: 14 }}>
           <NeonLine />
@@ -274,10 +274,10 @@ export default function DashboardView({ setView }) {
             onMouseLeave={e => { e.currentTarget.style.borderColor = p.color + "33"; e.currentTarget.style.boxShadow = "none"; }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
                 <div style={{ width: 10, height: 10, borderRadius: "50%", background: p.color, boxShadow: `0 0 6px ${p.color}66` }} />
-                <span style={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>{p.name}</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: C.text }}>{p.name}</span>
               </div>
-              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.5)" }}>
-                {p.phases} Phases · {p.weeks} · Gated Progression
+              <div style={{ fontSize: 10, color: C.textLight }}>
+                {p.phases} Phases \u00b7 {p.weeks} \u00b7 Gated Progression
               </div>
             </div>
           ))}

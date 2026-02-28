@@ -63,8 +63,8 @@ export function TabSecurity({ security, setSecurity, flashSave, isOpen, toggleSe
               border: `1px solid ${ok ? "rgba(16,185,129,0.3)" : "rgba(245,158,11,0.3)"}`,
             }}>
               <div>
-                <span style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{label}</span>
-                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginTop: 2 }}>{statusNote}</div>
+                <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{label}</span>
+                <div style={{ fontSize: 11, color: C.textLight, marginTop: 2 }}>{statusNote}</div>
               </div>
               <span style={sty.statusBadge(ok)}>
                 {ok ? <FiCheckCircle size={11} /> : <FiClock size={11} />}

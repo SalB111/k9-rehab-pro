@@ -80,7 +80,7 @@ function EvidenceSection({ grade, refs }) {
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{
-                    marginLeft: "auto", background: C.navy, color: "#fff",
+                    marginLeft: "auto", background: C.teal, color: "#fff",
                     padding: "2px 10px", borderRadius: 4, fontSize: 10, fontWeight: 700,
                     textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 3,
                     whiteSpace: "nowrap"
@@ -323,9 +323,10 @@ function ExerciseCard({ e, onOpenStoryboard, onUseInProtocol }) {
             <button onClick={(ev) => { ev.stopPropagation(); onOpenStoryboard(e.code); }}
               style={{
                 marginTop: 12, width: "100%", padding: "10px 16px", borderRadius: 8,
-                background: `linear-gradient(135deg, ${C.navy} 0%, ${C.navyMid} 100%)`,
-                color: "#fff", border: "1px solid rgba(57,255,126,0.2)", cursor: "pointer",
+                background: `linear-gradient(135deg, #059669, #0EA5E9)`,
+                color: "#fff", border: "none", cursor: "pointer",
                 fontSize: 12, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                boxShadow: "0 2px 8px rgba(14,165,233,0.3)",
               }}>
               <FiMonitor size={14} /> View Exercise Storyboard
             </button>
@@ -351,13 +352,13 @@ function ExerciseCard({ e, onOpenStoryboard, onUseInProtocol }) {
           <button onClick={(ev) => { ev.stopPropagation(); closeCard(); }}
             style={{
               marginTop: 12, width: "100%", padding: "10px 16px", borderRadius: 8,
-              background: C.navy, border: `1.5px solid ${C.navy}`, cursor: "pointer",
-              color: "#fff", fontSize: 12, fontWeight: 700,
+              background: C.bg, border: `1.5px solid ${C.border}`, cursor: "pointer",
+              color: C.text, fontSize: 12, fontWeight: 700,
               display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
               transition: "all 0.15s",
             }}
-            onMouseEnter={ev => { ev.currentTarget.style.background = C.navyMid; ev.currentTarget.style.borderColor = C.teal; }}
-            onMouseLeave={ev => { ev.currentTarget.style.background = C.navy; ev.currentTarget.style.borderColor = C.navy; }}>
+            onMouseEnter={ev => { ev.currentTarget.style.borderColor = C.teal; ev.currentTarget.style.color = C.teal; }}
+            onMouseLeave={ev => { ev.currentTarget.style.borderColor = C.border; ev.currentTarget.style.color = C.text; }}>
             <FiChevronDown size={14} style={{ transform: "rotate(180deg)" }} /> Close
           </button>
         </div>
@@ -458,14 +459,14 @@ function ExercisesView({ setView, setGenKey, setGenInitialStep }) {
       {/* Storyboard Player Modal */}
       {showStoryboard && <StoryboardPlayer exerciseCode={showStoryboard} onClose={() => setShowStoryboard(null)} />}
       {/* Search Toolbar */}
-      <div style={{ ...S.card, background: C.navy, border: `2px solid ${C.navy}`, padding: "16px 20px" }}>
+      <div style={{ ...S.card, padding: "16px 20px" }}>
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
           <div style={{ position: "relative", flex: 1, minWidth: 200 }}>
-            <FiSearch size={14} style={{ position: "absolute", left: 12, top: 11, color: "rgba(255,255,255,0.4)" }} />
-            <input style={{ ...S.input, paddingLeft: 34, background: "rgba(255,255,255,0.08)", border: "1.5px solid rgba(255,255,255,0.15)", color: "#fff", height: 38 }} placeholder="Search exercises by name or description…"
+            <FiSearch size={14} style={{ position: "absolute", left: 12, top: 11, color: C.textLight }} />
+            <input style={{ ...S.input, paddingLeft: 34, height: 38 }} placeholder="Search exercises by name or description…"
               value={search} onChange={e => setSearch(e.target.value)} />
           </div>
-          <span style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", whiteSpace: "nowrap", fontWeight: 600 }}>
+          <span style={{ fontSize: 12, color: C.textLight, whiteSpace: "nowrap", fontWeight: 600 }}>
             {filtered.length} / {exercises.length}
           </span>
           {setView && (
@@ -490,9 +491,9 @@ function ExercisesView({ setView, setGenKey, setGenInitialStep }) {
               <button key={mode} onClick={() => setViewMode(mode)} title={title} style={{
                 display: "flex", alignItems: "center", justifyContent: "center",
                 width: 34, height: 34, borderRadius: 6, cursor: "pointer",
-                background: viewMode === mode ? "rgba(57,255,126,0.2)" : "rgba(255,255,255,0.06)",
-                border: `1.5px solid ${viewMode === mode ? "rgba(57,255,126,0.5)" : "rgba(255,255,255,0.1)"}`,
-                color: viewMode === mode ? "#39FF7E" : "rgba(255,255,255,0.4)",
+                background: viewMode === mode ? `${C.teal}18` : C.bg,
+                border: `1.5px solid ${viewMode === mode ? C.teal : C.border}`,
+                color: viewMode === mode ? C.teal : C.textLight,
                 transition: "all 0.15s",
               }}>
                 <ModeIcon size={14} />
@@ -503,10 +504,10 @@ function ExercisesView({ setView, setGenKey, setGenInitialStep }) {
       </div>
 
       {/* Exercise Categories + Difficulty Counts */}
-      <div style={{ ...S.card, background: C.navy, border: `2px solid ${C.navy}`, padding: 20 }}>
+      <div style={{ ...S.card, padding: 20 }}>
         {/* Header row: title + difficulty counts */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-          <div style={{ fontSize: 12, fontWeight: 800, color: "#fff", textTransform: "uppercase", letterSpacing: "1px" }}>
+          <div style={{ fontSize: 12, fontWeight: 800, color: C.text, textTransform: "uppercase", letterSpacing: "1px" }}>
             Exercise Categories
           </div>
           <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
@@ -518,7 +519,7 @@ function ExercisesView({ setView, setGenKey, setGenInitialStep }) {
               <div key={d.label} onClick={() => setFilterDiff(prev => prev === d.label ? "" : d.label)}
                 style={{ display: "flex", alignItems: "baseline", gap: 5, cursor: "pointer", transition: "opacity 0.15s", opacity: filterDiff && filterDiff !== d.label ? 0.4 : 1 }}>
                 <span style={{ fontSize: 18, fontWeight: 800, color: d.color, lineHeight: 1 }}>{d.count}</span>
-                <span style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.7)", textTransform: "uppercase", letterSpacing: "0.5px" }}>{d.label}</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: C.textMid, textTransform: "uppercase", letterSpacing: "0.5px" }}>{d.label}</span>
               </div>
             ))}
           </div>
@@ -534,22 +535,22 @@ function ExercisesView({ setView, setGenKey, setGenInitialStep }) {
               <button key={cat} onClick={() => scrollToCat(cat)} style={{
                 display: "flex", alignItems: "center", gap: 6,
                 padding: "8px 14px", borderRadius: 8, cursor: "pointer",
-                background: "rgba(255,255,255,0.06)", border: "1.5px solid rgba(255,255,255,0.12)",
-                color: "#fff", fontSize: 12, fontWeight: 600,
+                background: C.bg, border: `1.5px solid ${C.border}`,
+                color: C.text, fontSize: 12, fontWeight: 600,
                 transition: "all 0.15s",
                 opacity: count > 0 ? 1 : 0.4,
               }}
-              onMouseEnter={e => { e.currentTarget.style.background = "rgba(14,165,233,0.25)"; e.currentTarget.style.borderColor = C.teal; }}
-              onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)"; }}>
+              onMouseEnter={e => { e.currentTarget.style.background = `${C.teal}12`; e.currentTarget.style.borderColor = C.teal; }}
+              onMouseLeave={e => { e.currentTarget.style.background = C.bg; e.currentTarget.style.borderColor = C.border; }}>
                 {meta.SvgIcon ? (
-                  <span style={{ display: "inline-flex", background: "#0A0A0A", borderRadius: 4, padding: 2 }}>
+                  <span style={{ display: "inline-flex", background: C.bg, borderRadius: 4, padding: 2 }}>
                     <meta.SvgIcon size={20} />
                   </span>
                 ) : (
                   <span style={{ fontSize: 14 }}>{meta.icon}</span>
                 )}
                 {cat}
-                {count > 0 && <span style={{ background: "rgba(255,255,255,0.12)", borderRadius: 10, padding: "2px 8px", fontSize: 10, fontWeight: 700 }}>{count}</span>}
+                {count > 0 && <span style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 10, padding: "2px 8px", fontSize: 10, fontWeight: 700 }}>{count}</span>}
               </button>
             );
           })}
@@ -559,11 +560,11 @@ function ExercisesView({ setView, setGenKey, setGenInitialStep }) {
       {/* ═══════════ LIST VIEW ═══════════ */}
       {viewMode === "list" && (
         filtered.length === 0 ? (
-          <div style={{ ...S.card, border: `2px solid ${C.navy}`, textAlign: "center", color: C.textLight, padding: 48 }}>
+          <div style={{ ...S.card, textAlign: "center", color: C.textLight, padding: 48 }}>
             No exercises match your search
           </div>
         ) : (
-          <div style={{ ...S.card, padding: 0, overflow: "hidden", background: C.navy, border: `2px solid ${C.navy}` }}>
+          <div style={{ ...S.card, padding: 0, overflow: "hidden" }}>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr>
@@ -571,7 +572,7 @@ function ExercisesView({ setView, setGenKey, setGenInitialStep }) {
                     <th key={h} style={{
                       padding: "10px 14px", textAlign: "left", fontSize: 10, fontWeight: 700,
                       color: C.teal, textTransform: "uppercase", letterSpacing: "0.6px",
-                      borderBottom: `1px solid ${C.border}`, background: "rgba(0,0,0,0.2)",
+                      borderBottom: `1px solid ${C.border}`, background: C.bg,
                     }}>{h}</th>
                   ))}
                 </tr>
@@ -584,12 +585,12 @@ function ExercisesView({ setView, setGenKey, setGenInitialStep }) {
                     <tr key={e.code}
                       onClick={() => { setViewMode("grid"); setFilterCat(e.category); setCollapsedCats(prev => ({ ...prev, [e.category]: false })); setTimeout(() => { const el = document.getElementById(`card-${e.code}`); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); }, 100); }}
                       style={{ cursor: "pointer", transition: "background 0.1s" }}
-                      onMouseEnter={ev => ev.currentTarget.style.background = "rgba(255,255,255,0.04)"}
+                      onMouseEnter={ev => ev.currentTarget.style.background = C.bg}
                       onMouseLeave={ev => ev.currentTarget.style.background = "transparent"}
                     >
-                      <td style={{ padding: "8px 14px", fontSize: 12, fontWeight: 600, color: "#fff", borderBottom: `1px solid ${C.border}` }}>{e.name}</td>
+                      <td style={{ padding: "8px 14px", fontSize: 12, fontWeight: 600, color: C.text, borderBottom: `1px solid ${C.border}` }}>{e.name}</td>
                       <td style={{ padding: "8px 14px", fontSize: 10, fontWeight: 600, color: C.textLight, fontFamily: "monospace", borderBottom: `1px solid ${C.border}` }}>{e.code}</td>
-                      <td style={{ padding: "8px 14px", fontSize: 11, color: "rgba(255,255,255,0.7)", borderBottom: `1px solid ${C.border}` }}>{e.category}</td>
+                      <td style={{ padding: "8px 14px", fontSize: 11, color: C.textMid, borderBottom: `1px solid ${C.border}` }}>{e.category}</td>
                       <td style={{ padding: "8px 14px", borderBottom: `1px solid ${C.border}` }}>
                         <span style={{ fontSize: 10, fontWeight: 700, color: diffColor, background: `${diffColor}18`, padding: "2px 8px", borderRadius: 6 }}>{e.difficulty_level}</span>
                       </td>
@@ -609,7 +610,7 @@ function ExercisesView({ setView, setGenKey, setGenInitialStep }) {
 
       {/* ═══════════ GRID VIEW — Category sections ═══════════ */}
       {viewMode === "grid" && Object.entries(grouped).length === 0 && (
-        <div style={{ ...S.card, border: `2px solid ${C.navy}`, textAlign: "center", color: C.textLight, padding: 48 }}>
+        <div style={{ ...S.card, textAlign: "center", color: C.textLight, padding: 48 }}>
           No exercises match your search
         </div>
       )}
@@ -619,25 +620,25 @@ function ExercisesView({ setView, setGenKey, setGenInitialStep }) {
         const isCollapsed = collapsedCats[cat];
 
         return (
-          <div key={cat} ref={el => catRefs.current[cat] = el} style={{ ...S.card, background: C.navy, border: `2px solid ${C.navy}`, padding: 0, overflow: "hidden", marginBottom: 12 }}>
+          <div key={cat} ref={el => catRefs.current[cat] = el} style={{ ...S.card, padding: 0, overflow: "hidden", marginBottom: 12 }}>
             {/* Category header */}
             <div
               onClick={() => toggleCat(cat)}
               style={{
                 display: "flex", alignItems: "center", justifyContent: "space-between",
-                padding: "14px 20px", background: C.navy, cursor: "pointer",
+                padding: "14px 20px", cursor: "pointer",
               }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 {meta.SvgIcon ? (
-                  <span style={{ display: "inline-flex", background: "#0A0A0A", borderRadius: 6, padding: 3 }}>
+                  <span style={{ display: "inline-flex", background: C.bg, borderRadius: 6, padding: 3 }}>
                     <meta.SvgIcon size={28} />
                   </span>
                 ) : (
                   <span style={{ fontSize: 20 }}>{meta.icon}</span>
                 )}
                 <div>
-                  <span style={{ fontWeight: 800, fontSize: 14, color: "#fff" }}>{cat}</span>
-                  <span style={{ marginLeft: 8, fontSize: 12, color: "rgba(255,255,255,0.6)" }}>
+                  <span style={{ fontWeight: 800, fontSize: 14, color: C.text }}>{cat}</span>
+                  <span style={{ marginLeft: 8, fontSize: 12, color: C.textMid }}>
                     {exList.length} exercise{exList.length !== 1 ? "s" : ""}
                   </span>
                 </div>
@@ -651,7 +652,7 @@ function ExercisesView({ setView, setGenKey, setGenInitialStep }) {
                       fontSize: 10 }}>{n} {d}</span>;
                   })}
                 </div>
-                <span style={{ color: "#fff", fontSize: 14, fontWeight: 700 }}>
+                <span style={{ color: C.text, fontSize: 14, fontWeight: 700 }}>
                   {isCollapsed ? "▼" : "▲"}
                 </span>
               </div>
@@ -672,12 +673,12 @@ function ExercisesView({ setView, setGenKey, setGenInitialStep }) {
                   <button onClick={() => { const el = document.querySelector('[data-content-scroll]'); if (el) el.scrollTo({ top: 0, behavior: "smooth" }); else window.scrollTo({ top: 0, behavior: "smooth" }); }} style={{
                     display: "flex", alignItems: "center", gap: 6,
                     padding: "7px 16px", borderRadius: 8, cursor: "pointer",
-                    background: "rgba(255,255,255,0.08)", border: "1.5px solid rgba(255,255,255,0.15)",
-                    color: "#fff", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px",
+                    background: C.bg, border: `1.5px solid ${C.border}`,
+                    color: C.text, fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px",
                     transition: "all 0.15s",
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.background = "rgba(14,165,233,0.25)"; e.currentTarget.style.borderColor = C.teal; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)"; }}>
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = C.teal; e.currentTarget.style.color = C.teal; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.text; }}>
                     <FiArrowUp size={13} /> Back to Top
                   </button>
                 </div>

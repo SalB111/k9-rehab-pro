@@ -1,13 +1,14 @@
 import React from "react";
 import { FiChevronDown } from "react-icons/fi";
+import C from "../../constants/colors";
 import { settingsStyles } from "./constants";
 
 export function SettingsToggle({ value, onChange, label, desc }) {
   return (
     <div style={settingsStyles.toggleRow}>
       <div>
-        <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{label}</div>
-        {desc && <div style={{ fontSize: 11, color: "rgba(255,255,255,0.6)", marginTop: 2 }}>{desc}</div>}
+        <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{label}</div>
+        {desc && <div style={{ fontSize: 11, color: C.textLight, marginTop: 2 }}>{desc}</div>}
       </div>
       <div style={settingsStyles.toggleTrack(value)} onClick={() => onChange(!value)}>
         <div style={settingsStyles.toggleDot} />

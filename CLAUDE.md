@@ -10,6 +10,132 @@
 
 **Zero tolerance for fabricated exercises, invented diagnoses, or hallucinated clinical data.** If it's not in the source document, it doesn't go in the code. When in doubt, flag it — never guess.
 
+## Scope of Practice
+
+This platform is a **Clinical Decision-Support System (CDSS)** for **post-diagnostic rehabilitation planning ONLY**.
+
+**In scope:**
+- Rehabilitation protocol generation for diagnosed conditions
+- Exercise selection, dosing, and progression from the validated library
+- Phase-gated progression based on clinical assessment criteria
+- Clinical education and evidence reference
+
+**Out of scope — the platform NEVER:**
+- Diagnoses conditions or diseases
+- Prescribes medication or pharmaceutical interventions
+- Establishes or replaces the Veterinarian-Client-Patient Relationship (VCPR)
+- Overrides licensed veterinary judgment
+- Provides emergency or urgent care guidance
+- Makes prognosis determinations
+
+**Enforcement:** Any feature, AI output, or code path that crosses scope boundaries must be blocked, not just disclaimed.
+
+## Anti-Hallucination Rules
+
+These rules are **non-negotiable** and apply to all code generation, VetAI output, and protocol logic:
+
+1. **Exercise Library Lock**: Every exercise referenced in protocol output or VetAI responses MUST match an exercise code in the 223-exercise library. Any unmatched exercise name = blocked output + clinician alert. No exceptions.
+2. **Dosing from Source Only**: Sets, reps, duration, frequency, and intensity parameters MUST be extracted from the source-of-truth document. VetAI must NOT generate novel dosing. If the source doc doesn't specify dosing for an exercise, output "Dosing: Per clinician assessment" — never fabricate numbers.
+3. **No Invented Clinical Data**: Exercise descriptions, contraindications, indications, evidence grades, and phase assignments must trace to source documents. If a value cannot be sourced, it must be flagged as `[UNVERIFIED]` and excluded from clinical output.
+4. **VetAI Post-Generation Verification**: Every VetAI response that references exercises must be cross-checked against the exercise database before delivery to the clinician. Novel exercise names trigger a block.
+5. **Confidence Transparency**: When VetAI synthesizes recommendations (vs. quoting source material directly), the output must indicate this distinction. Never present AI synthesis as sourced fact.
+6. **No Speculative Prognosis**: VetAI must never predict outcomes, timelines to recovery, or success rates unless directly quoting published literature with citation.
+
+## Evidence Gating Policy
+
+- Protocols default to **Grade A (strong RCT)** and **Grade B (moderate evidence)** exercises
+- **Grade C (limited evidence)** and **EO (expert opinion)** exercises are included ONLY when no Grade A/B alternative exists for that phase/condition
+- Every exercise in protocol output MUST display its evidence grade to the clinician
+- Evidence grades: `A` = Strong RCT | `B` = Moderate evidence | `C` = Limited evidence | `EO` = Expert opinion
+- Low-evidence exercises (C/EO) must carry an inline notation: `[Evidence: C — limited studies]`
+- Evidence references must cite: Author, Year, Publication, and relevance to the exercise
+
+## Credential & Access Requirements
+
+- Users must attest to professional licensure during registration: **DVM**, **CCRP**, **CCRT**, or **supervised student/technician**
+- License type and credential number are required fields (stored, not externally verified in v1)
+- Protocol generation is restricted to authenticated users with valid credential attestation
+- Student/trainee accounts must be flagged for additional oversight in audit logs
+- Role hierarchy for clinical sign-off: DVM > CCRP/CCRT > Technician (supervised) > Student (view only)
+
+## Regulatory Framework
+
+### Classification
+- Platform is classified as a **CDSS (Clinical Decision-Support System)**, NOT a medical device
+- Does NOT claim FDA/USDA device classification
+- Does NOT claim AVMA endorsement — aligns with AVMA Model Veterinary Practice Act principles
+
+### Regulatory References
+- **AVMA Model Veterinary Practice Act** — scope-of-practice definitions
+- **ACVSMR (American College of Veterinary Sports Medicine and Rehabilitation)** — certification and methodology standards
+- **State Veterinary Practice Acts** — jurisdiction-specific requirements (vary by state)
+- **AAHA (American Animal Hospital Association)** — practice standards reference
+
+### Compliance Requirements
+- All protocol output includes CDSS classification disclaimer
+- Terms of Service must be accepted before first protocol generation
+- Disclaimer refresh required every 90 days for active users
+- No protocol output is valid without licensed veterinarian review and approval
+- Platform retains no liability for clinical outcomes — licensee assumes full professional responsibility
+
+### Adverse Event Reporting
+- UI must include a "Report Safety Concern" mechanism
+- Adverse events linked to protocol recommendations must be logged with: patient ID, protocol version, exercise code, event description, clinician ID, timestamp
+- Adverse event logs are retained for minimum 7 years (aligned with state board investigation timelines)
+
+## Red-Flag Detection & Escalation
+
+### Current Blocking Criteria (implemented)
+- Pain score >= 8/10 → **BLOCKS** protocol generation
+- Absent deep pain perception → **BLOCKS** protocol generation
+- Incision complications (dehiscence, infection) → **BLOCKS** generation
+- Lameness grade 5 (non-weight-bearing) → Restricted to passive exercises only
+
+### Escalation Pathways (required)
+- High pain (>= 7/10) → Recommend pain management specialist consult
+- Neurological grade IV-V → Recommend veterinary neurologist consult
+- Post-op complications → Flag for surgeon re-evaluation
+- Cardiac history + aquatic exercise → Recommend cardiology clearance
+- All escalation recommendations must be logged in audit trail
+
+### Red-Flag Audit Requirements
+- Every red flag evaluated per patient per protocol MUST be logged
+- Log format: `{patient_id, protocol_id, flag_type, flag_value, action_taken, clinician_id, timestamp}`
+- Red-flag logs are included in protocol defensibility records
+
+## Audit & Defensibility
+
+### Protocol Documentation Standard
+Every generated protocol must retain:
+- **Generation metadata**: timestamp, algorithm version, clinician ID, patient ID
+- **Input snapshot**: all intake parameters used for generation
+- **Red flags evaluated**: complete list of flags checked and their values
+- **Contraindications checked**: which contraindication categories were evaluated and passed/failed
+- **Evidence grades**: per-exercise evidence level
+- **Version control**: if protocol is modified post-generation, both "Original" and "Approved" versions retained
+- **Modification trail**: clinician edits tracked separately from algorithm output
+
+### Audit Log Requirements
+- All POST, PUT, DELETE operations logged automatically (existing)
+- Red-flag triggers logged per patient (required addition)
+- VetAI queries and responses logged with session ID
+- Protocol modifications tracked as diffs (original vs. approved)
+- Logs retained minimum 7 years
+- Audit log must be immutable once written (append-only, no delete except admin purge with separate audit entry)
+
+### Litigation Defensibility
+- Unsigned protocols must carry watermark: `DRAFT — NOT APPROVED FOR CLINICAL USE`
+- Signed/approved protocols must show: clinician name, credential type, approval timestamp
+- Decision rationale available per exercise: "Selected because: Phase 2 + TPLO indication + Grade B evidence + no contraindications"
+
+## Outcome Monitoring
+
+- Reassessment prompts at 2-week and 4-week intervals after protocol generation
+- Validated outcome measures: CBPI (Canine Brief Pain Inventory), lameness grading, goniometric ROM
+- Alert if patient shows regression: increased pain score, decreased ROM, increased lameness grade
+- Stalled progress (no improvement after 4 weeks) triggers protocol review recommendation
+- Outcome data feeds back into audit trail for protocol efficacy tracking
+
 ## Clinical Identity
 
 K9 Rehab Pro is a veterinary rehabilitation intelligence platform. Clinician FIRST, engineer second, designer third.
@@ -21,6 +147,35 @@ K9 Rehab Pro is a veterinary rehabilitation intelligence platform. Clinician FIR
 - Equipment gating: aquatic (flag), modalities (individual flags)
 - Phase 4 for chronic conditions = lifelong maintenance
 - Protocol generator header: `4 Conditions | 16 Phases | 52 Protocol Exercises | 223 Exercise Library | Full Modality Integration`
+
+## Implementation Tiers
+
+Features and safety measures are prioritized into implementation tiers:
+
+### TIER 1 — Required before clinical use
+- [ ] Credential verification at registration (DVM/CCRP/CCRT/student attestation)
+- [ ] Scope-of-practice enforcement in VetAI (block out-of-scope queries)
+- [ ] VetAI exercise name cross-check against 223-exercise library
+- [ ] Terms of Service sign-off on first login
+- [ ] Evidence grade display on every exercise in protocol output
+- [ ] Red-flag audit logging per patient per protocol
+
+### TIER 2 — Required for regulatory defensibility
+- [ ] AVMA/state board compliance reference in UI
+- [ ] Protocol versioning (Original vs. Approved with diff tracking)
+- [ ] VetAI dosing extraction from source doc (not AI-generated)
+- [ ] Outcome tracking with reassessment prompts
+- [ ] Specialist escalation pathways for high-risk flags
+- [ ] Adverse event reporting mechanism in UI
+
+### TIER 3 — Required for enterprise/university deployment
+- [ ] Role-based clinical access (DVM approve / technician execute / student view)
+- [ ] Semantic hallucination detection on VetAI responses
+- [ ] Confidence scoring per AI recommendation
+- [ ] Decision rationale per exercise selection
+- [ ] Informed consent template for CDSS-assisted rehabilitation
+- [ ] Multi-language support
+- [ ] WCAG AA accessibility compliance
 
 ## Tech Stack
 

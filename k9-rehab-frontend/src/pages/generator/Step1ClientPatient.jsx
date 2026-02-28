@@ -11,7 +11,7 @@ export default function Step1ClientPatient({ form, setField, goToStep, handleWei
   return (
     <>
       {/* ═══════════ SECTION 1: CLIENT INFORMATION ═══════════ */}
-      <div style={{ background: C.surface, border: `2px solid ${C.border}`, borderRadius: 10, padding: "16px 20px", marginBottom: 12 }}>
+      <div style={{ background: C.navy, border: `1px solid ${C.navy}`, borderRadius: 10, padding: "16px 20px", marginBottom: 12, color: "#fff" }}>
         <SectionHead icon={FiUsers} title="Section 1 — Client Information" />
         <div style={S.grid(2)}>
           <div>
@@ -128,8 +128,8 @@ export default function Step1ClientPatient({ form, setField, goToStep, handleWei
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer",
-              padding: "8px 14px", background: form.clientConsentObtained ? "rgba(16,185,129,0.15)" : "rgba(255,255,255,0.05)",
-              border: form.clientConsentObtained ? `1.5px solid ${C.green}` : `1.5px solid ${C.border}`, borderRadius: 8, fontSize: 12, fontWeight: 600, color: "#fff",
+              padding: "8px 14px", background: form.clientConsentObtained ? "rgba(16,185,129,0.15)" : C.bg,
+              border: form.clientConsentObtained ? `1.5px solid ${C.green}` : `1.5px solid ${C.border}`, borderRadius: 8, fontSize: 12, fontWeight: 600, color: C.text,
               transition: "all 0.2s", flex: 1 }}>
               <input type="checkbox" checked={form.clientConsentObtained} onChange={e => setField("clientConsentObtained", e.target.checked)}
                 style={{ accentColor: C.green, width: 16, height: 16, cursor: "pointer" }} />
@@ -144,7 +144,7 @@ export default function Step1ClientPatient({ form, setField, goToStep, handleWei
       </div>
 
       {/* ═══════════ SECTION 2: PATIENT SIGNALMENT ═══════════ */}
-      <div style={{ background: C.surface, border: `2px solid ${C.border}`, borderRadius: 10, padding: "16px 20px", marginBottom: 12 }}>
+      <div style={{ background: C.navy, border: `1px solid ${C.navy}`, borderRadius: 10, padding: "16px 20px", marginBottom: 12, color: "#fff" }}>
         <SectionHead icon={TbDog} title="Section 2 — Patient Signalment" />
         <div style={S.grid(3)}>
           <div>

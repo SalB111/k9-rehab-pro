@@ -1,10 +1,9 @@
 import {
   FiBookOpen, FiClipboard, FiSettings,
-  FiBarChart2, FiHeart, FiCpu, FiFileText,
+  FiBarChart2, FiHeart, FiCpu,
 } from "react-icons/fi";
 
 const NAV = [
-  { id: "generator",  label: "Generator",           icon: FiFileText,   desc: "Protocol generator" },
   { id: "dashboard",  label: "Dashboard",           icon: FiBarChart2,  desc: "Clinical analytics" },
   { id: "exercises",  label: "Exercise Library",     icon: FiBookOpen,   desc: "223 evidence-based exercises" },
   { id: "sessions",   label: "SOAP",                icon: FiClipboard,  desc: "SOAP notes & outcomes" },

@@ -15,7 +15,7 @@ export default function AddExerciseModal({ addingToWeek, filteredEx, addExercise
         boxShadow: "0 20px 60px rgba(0,0,0,0.2)"
       }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-          <h3 style={{ margin: 0, color: C.navy, fontSize: 16 }}>
+          <h3 style={{ margin: 0, color: C.text, fontSize: 16 }}>
             Add Exercise to Week {typeof addingToWeek === "number" ? addingToWeek + 1 : addingToWeek}
           </h3>
           <button onClick={() => { setShowAddModal(false); setExSearch(""); }}

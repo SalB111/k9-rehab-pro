@@ -66,9 +66,9 @@ export function TabClinician({ clinician, setClinician, flashSave, isOpen, toggl
                 }} style={{
                   padding: "6px 14px", borderRadius: 6, cursor: "pointer",
                   fontSize: 12, fontWeight: 700, letterSpacing: "0.3px",
-                  background: active ? C.teal : "rgba(255,255,255,0.08)",
-                  color: "#fff",
-                  border: active ? `1px solid ${C.teal}` : `1px solid rgba(255,255,255,0.2)`,
+                  background: active ? C.teal : C.bg,
+                  color: active ? "#fff" : C.text,
+                  border: active ? `1px solid ${C.teal}` : `1px solid ${C.border}`,
                   transition: "all 0.15s",
                 }}>
                   {cred}
@@ -95,20 +95,20 @@ export function TabClinician({ clinician, setClinician, flashSave, isOpen, toggl
                 }} style={{
                   display: "flex", alignItems: "center", gap: 10,
                   padding: "10px 16px", borderRadius: 8, cursor: "pointer",
-                  background: active ? "rgba(14,165,233,0.15)" : "rgba(255,255,255,0.05)",
-                  border: active ? `2px solid ${C.teal}` : `1px solid rgba(255,255,255,0.15)`,
+                  background: active ? "rgba(14,165,233,0.15)" : C.bg,
+                  border: active ? `2px solid ${C.teal}` : `1px solid ${C.border}`,
                   transition: "all 0.15s",
                 }}>
                   <div style={{
                     width: 18, height: 18, borderRadius: 4,
-                    background: active ? C.teal : "rgba(255,255,255,0.1)",
-                    border: active ? "none" : `2px solid rgba(255,255,255,0.3)`,
+                    background: active ? C.teal : C.bg,
+                    border: active ? "none" : `2px solid ${C.border}`,
                     display: "flex", alignItems: "center", justifyContent: "center",
                     color: "#fff", fontSize: 11,
                   }}>
                     {active && "\u2713"}
                   </div>
-                  <span style={{ fontSize: 13, fontWeight: active ? 700 : 500, color: "#fff" }}>{cert}</span>
+                  <span style={{ fontSize: 13, fontWeight: active ? 700 : 500, color: active ? "#fff" : C.text }}>{cert}</span>
                 </div>
               );
             })}

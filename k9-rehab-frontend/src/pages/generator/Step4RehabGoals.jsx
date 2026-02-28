@@ -9,12 +9,12 @@ export default function Step4RehabGoals({ form, setField, goToStep }) {
   return (
     <>
       {/* -- Section Header + Problem List -- */}
-      <div style={{ background: C.surface, border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, padding: "16px 20px", marginBottom: 10 }}>
+      <div style={{ background: C.navy, border: `1px solid ${C.navy}`, borderRadius: 10, padding: "16px 20px", marginBottom: 10, color: "#fff" }}>
         <SectionHead icon={FiAward} title="Section 4 — Rehabilitation Goals & Prognosis" />
         <div style={{ fontSize: 11, fontWeight: 700, color: C.teal, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10, marginTop: 14 }}>
           Problem List
         </div>
-        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.5)", marginBottom: 10 }}>
+        <div style={{ fontSize: 10, color: C.textLight, marginBottom: 10 }}>
           Identify all functional deficits and impairments (select all that apply)
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -25,8 +25,8 @@ export default function Step4RehabGoals({ form, setField, goToStep }) {
             "Compensatory movement pattern", "Decreased functional mobility"].map(item => (
             <label key={item} style={{
               display: "flex", alignItems: "center", gap: 6, cursor: "pointer",
-              padding: "6px 10px", borderRadius: 6, fontSize: 11, fontWeight: 600, color: "#fff",
-              background: (form.problems || []).includes(item) ? "rgba(14,165,233,0.15)" : "rgba(255,255,255,0.05)",
+              padding: "6px 10px", borderRadius: 6, fontSize: 11, fontWeight: 600, color: C.text,
+              background: (form.problems || []).includes(item) ? "rgba(14,165,233,0.15)" : C.bg,
               border: (form.problems || []).includes(item) ? `1.5px solid ${C.teal}` : `1.5px solid ${C.border}`,
               transition: "all 0.2s",
             }}>
@@ -44,11 +44,11 @@ export default function Step4RehabGoals({ form, setField, goToStep }) {
       </div>
 
       {/* -- Short-Term Goals -- */}
-      <div style={{ background: C.surface, border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, padding: "16px 20px", marginBottom: 10 }}>
+      <div style={{ background: C.navy, border: `1px solid ${C.navy}`, borderRadius: 10, padding: "16px 20px", marginBottom: 10, color: "#fff" }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: C.teal, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10 }}>
           Short-Term Goals (STG) — 2-4 Weeks
         </div>
-        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.5)", marginBottom: 10 }}>
+        <div style={{ fontSize: 10, color: C.textLight, marginBottom: 10 }}>
           Measurable objectives for the first rehabilitation phase (select all that apply)
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -58,8 +58,8 @@ export default function Step4RehabGoals({ form, setField, goToStep }) {
             "Restore basic mobility", "Normalize gait at walk", "Owner education complete"].map(item => (
             <label key={item} style={{
               display: "flex", alignItems: "center", gap: 6, cursor: "pointer",
-              padding: "6px 10px", borderRadius: 6, fontSize: 11, fontWeight: 600, color: "#fff",
-              background: (form.stGoals || []).includes(item) ? "rgba(14,165,233,0.15)" : "rgba(255,255,255,0.05)",
+              padding: "6px 10px", borderRadius: 6, fontSize: 11, fontWeight: 600, color: C.text,
+              background: (form.stGoals || []).includes(item) ? "rgba(14,165,233,0.15)" : C.bg,
               border: (form.stGoals || []).includes(item) ? `1.5px solid ${C.teal}` : `1.5px solid ${C.border}`,
               transition: "all 0.2s",
             }}>
@@ -77,11 +77,11 @@ export default function Step4RehabGoals({ form, setField, goToStep }) {
       </div>
 
       {/* -- Long-Term Goals -- */}
-      <div style={{ background: C.surface, border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, padding: "16px 20px", marginBottom: 10 }}>
+      <div style={{ background: C.navy, border: `1px solid ${C.navy}`, borderRadius: 10, padding: "16px 20px", marginBottom: 10, color: "#fff" }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: C.teal, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10 }}>
           Long-Term Goals (LTG) — 8-16 Weeks
         </div>
-        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.5)", marginBottom: 10 }}>
+        <div style={{ fontSize: 10, color: C.textLight, marginBottom: 10 }}>
           Functional outcomes expected at discharge (select all that apply)
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -92,8 +92,8 @@ export default function Step4RehabGoals({ form, setField, goToStep }) {
             "Maintain/improve body condition", "Sustained comfort & QoL"].map(item => (
             <label key={item} style={{
               display: "flex", alignItems: "center", gap: 6, cursor: "pointer",
-              padding: "6px 10px", borderRadius: 6, fontSize: 11, fontWeight: 600, color: "#fff",
-              background: (form.ltGoals || []).includes(item) ? "rgba(14,165,233,0.15)" : "rgba(255,255,255,0.05)",
+              padding: "6px 10px", borderRadius: 6, fontSize: 11, fontWeight: 600, color: C.text,
+              background: (form.ltGoals || []).includes(item) ? "rgba(14,165,233,0.15)" : C.bg,
               border: (form.ltGoals || []).includes(item) ? `1.5px solid ${C.teal}` : `1.5px solid ${C.border}`,
               transition: "all 0.2s",
             }}>
@@ -112,11 +112,11 @@ export default function Step4RehabGoals({ form, setField, goToStep }) {
 
       {/* -- Outcome Measures & Prognosis -- side by side -- */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
-        <div style={{ background: C.surface, border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, padding: "16px 20px" }}>
+        <div style={{ background: C.navy, border: `1px solid ${C.navy}`, borderRadius: 10, padding: "16px 20px", color: "#fff" }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: C.teal, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10 }}>
             Functional Outcome Measures
           </div>
-          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.5)", marginBottom: 10 }}>
+          <div style={{ fontSize: 10, color: C.textLight, marginBottom: 10 }}>
             Validated instruments for tracking progress (select all that apply)
           </div>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -127,8 +127,8 @@ export default function Step4RehabGoals({ form, setField, goToStep }) {
               "Owner questionnaire (QoL)"].map(item => (
               <label key={item} style={{
                 display: "flex", alignItems: "center", gap: 6, cursor: "pointer",
-                padding: "6px 10px", borderRadius: 6, fontSize: 11, fontWeight: 600, color: "#fff",
-                background: (form.outcomeMeasures || []).includes(item) ? "rgba(14,165,233,0.15)" : "rgba(255,255,255,0.05)",
+                padding: "6px 10px", borderRadius: 6, fontSize: 11, fontWeight: 600, color: C.text,
+                background: (form.outcomeMeasures || []).includes(item) ? "rgba(14,165,233,0.15)" : C.bg,
                 border: (form.outcomeMeasures || []).includes(item) ? `1.5px solid ${C.teal}` : `1.5px solid ${C.border}`,
                 transition: "all 0.2s",
               }}>
@@ -144,11 +144,11 @@ export default function Step4RehabGoals({ form, setField, goToStep }) {
             ))}
           </div>
         </div>
-        <div style={{ background: C.surface, border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, padding: "16px 20px" }}>
+        <div style={{ background: C.navy, border: `1px solid ${C.navy}`, borderRadius: 10, padding: "16px 20px", color: "#fff" }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: C.teal, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10 }}>
             Prognosis
           </div>
-          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.5)", marginBottom: 10 }}>
+          <div style={{ fontSize: 10, color: C.textLight, marginBottom: 10 }}>
             Expected recovery outcome based on clinical findings
           </div>
           <select style={{ ...S.select, width: "100%", border: `1.5px solid ${C.border}`, marginBottom: 12 }}
@@ -169,11 +169,11 @@ export default function Step4RehabGoals({ form, setField, goToStep }) {
 
       {/* -- Discharge Criteria & Precautions -- side by side -- */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
-        <div style={{ background: C.surface, border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, padding: "16px 20px" }}>
+        <div style={{ background: C.navy, border: `1px solid ${C.navy}`, borderRadius: 10, padding: "16px 20px", color: "#fff" }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: C.teal, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10 }}>
             Discharge Criteria
           </div>
-          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.5)", marginBottom: 10 }}>
+          <div style={{ fontSize: 10, color: C.textLight, marginBottom: 10 }}>
             Objective benchmarks for protocol completion (select all that apply)
           </div>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -184,8 +184,8 @@ export default function Step4RehabGoals({ form, setField, goToStep }) {
               "No exercise-induced lameness", "Vet clearance obtained"].map(item => (
               <label key={item} style={{
                 display: "flex", alignItems: "center", gap: 6, cursor: "pointer",
-                padding: "6px 10px", borderRadius: 6, fontSize: 11, fontWeight: 600, color: "#fff",
-                background: (form.dischargeCriteria || []).includes(item) ? "rgba(14,165,233,0.15)" : "rgba(255,255,255,0.05)",
+                padding: "6px 10px", borderRadius: 6, fontSize: 11, fontWeight: 600, color: C.text,
+                background: (form.dischargeCriteria || []).includes(item) ? "rgba(14,165,233,0.15)" : C.bg,
                 border: (form.dischargeCriteria || []).includes(item) ? `1.5px solid ${C.teal}` : `1.5px solid ${C.border}`,
                 transition: "all 0.2s",
               }}>
@@ -201,11 +201,11 @@ export default function Step4RehabGoals({ form, setField, goToStep }) {
             ))}
           </div>
         </div>
-        <div style={{ background: C.surface, border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, padding: "16px 20px" }}>
+        <div style={{ background: C.navy, border: `1px solid ${C.navy}`, borderRadius: 10, padding: "16px 20px", color: "#fff" }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: C.teal, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10 }}>
             Precautions & Contraindications
           </div>
-          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.5)", marginBottom: 10 }}>
+          <div style={{ fontSize: 10, color: C.textLight, marginBottom: 10 }}>
             Activity restrictions and safety considerations (select all that apply)
           </div>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -216,8 +216,8 @@ export default function Step4RehabGoals({ form, setField, goToStep }) {
               "Muzzle for manual therapy", "Sedation may be required"].map(item => (
               <label key={item} style={{
                 display: "flex", alignItems: "center", gap: 6, cursor: "pointer",
-                padding: "6px 10px", borderRadius: 6, fontSize: 11, fontWeight: 600, color: "#fff",
-                background: (form.precautions || []).includes(item) ? "rgba(14,165,233,0.15)" : "rgba(255,255,255,0.05)",
+                padding: "6px 10px", borderRadius: 6, fontSize: 11, fontWeight: 600, color: C.text,
+                background: (form.precautions || []).includes(item) ? "rgba(14,165,233,0.15)" : C.bg,
                 border: (form.precautions || []).includes(item) ? `1.5px solid ${C.teal}` : `1.5px solid ${C.border}`,
                 transition: "all 0.2s",
               }}>

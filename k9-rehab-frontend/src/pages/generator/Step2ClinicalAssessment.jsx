@@ -14,7 +14,7 @@ export default function Step2ClinicalAssessment({ form, setField, goToStep }) {
   return (
     <>
       {/* ═══════════ SECTION 2: CLINICAL ASSESSMENT ═══════════ */}
-      <div style={{ background: C.surface, border: `2px solid ${C.border}`, borderRadius: 10, padding: "16px 20px", marginBottom: 12 }}>
+      <div style={{ background: C.navy, border: `1px solid ${C.navy}`, borderRadius: 10, padding: "16px 20px", marginBottom: 12, color: "#fff" }}>
         <SectionHead icon={FiActivity} title="Section 2 — Clinical Assessment" />
         <div style={S.grid(2)}>
           <div>
@@ -110,8 +110,8 @@ export default function Step2ClinicalAssessment({ form, setField, goToStep }) {
               {GAIT_DESCRIPTORS.map(desc => (
                 <label key={desc} style={{
                   display: "flex", alignItems: "center", gap: 6, cursor: "pointer",
-                  padding: "6px 10px", borderRadius: 6, fontSize: 11, fontWeight: 600, color: "#fff",
-                  background: (form.gaitDescriptors || []).includes(desc) ? "rgba(14,165,233,0.15)" : "rgba(255,255,255,0.05)",
+                  padding: "6px 10px", borderRadius: 6, fontSize: 11, fontWeight: 600, color: C.text,
+                  background: (form.gaitDescriptors || []).includes(desc) ? "rgba(14,165,233,0.15)" : C.bg,
                   border: (form.gaitDescriptors || []).includes(desc) ? `1.5px solid ${C.teal}` : `1.5px solid ${C.border}`,
                   transition: "all 0.2s",
                 }}>
@@ -133,8 +133,8 @@ export default function Step2ClinicalAssessment({ form, setField, goToStep }) {
               {POSTURE_FINDINGS.map(desc => (
                 <label key={desc} style={{
                   display: "flex", alignItems: "center", gap: 6, cursor: "pointer",
-                  padding: "6px 10px", borderRadius: 6, fontSize: 11, fontWeight: 600, color: "#fff",
-                  background: (form.postureFindings || []).includes(desc) ? "rgba(14,165,233,0.15)" : "rgba(255,255,255,0.05)",
+                  padding: "6px 10px", borderRadius: 6, fontSize: 11, fontWeight: 600, color: C.text,
+                  background: (form.postureFindings || []).includes(desc) ? "rgba(14,165,233,0.15)" : C.bg,
                   border: (form.postureFindings || []).includes(desc) ? `1.5px solid ${C.teal}` : `1.5px solid ${C.border}`,
                   transition: "all 0.2s",
                 }}>
@@ -184,7 +184,7 @@ export default function Step2ClinicalAssessment({ form, setField, goToStep }) {
                  +form.bodyConditionScore <= 7 ? "Overweight — Weight management recommended, joint protection priority" :
                  "Obese — Formal weight loss protocol required, avoid impact loading"}
               </div>
-              <div style={{ fontSize: 9, color: "#fff", marginTop: 4 }}>
+              <div style={{ fontSize: 9, color: C.textMid, marginTop: 4 }}>
                 {+form.bodyConditionScore <= 3 ? "Consider metabolic workup if weight loss is unexplained" :
                  +form.bodyConditionScore <= 5 ? "Optimal for rehabilitation progression" :
                  +form.bodyConditionScore <= 7 ? "Excess weight increases joint stress — aquatic therapy preferred" :
@@ -222,7 +222,7 @@ export default function Step2ClinicalAssessment({ form, setField, goToStep }) {
         <div>
           {/* Limb Circumference */}
           <div style={{ marginBottom: 12 }}>
-            <div style={{ fontSize: 10, fontWeight: 600, color: "#fff", marginBottom: 8 }}>Limb Circumference (cm) — Measure bilaterally at consistent landmark</div>
+            <div style={{ fontSize: 10, fontWeight: 600, color: C.textMid, marginBottom: 8 }}>Limb Circumference (cm) — Measure bilaterally at consistent landmark</div>
             <div style={S.grid(3)}>
               <div>
                 <label style={S.label}>Measurement Site</label>
@@ -259,7 +259,7 @@ export default function Step2ClinicalAssessment({ form, setField, goToStep }) {
           </div>
           {/* Joint Range of Motion */}
           <div style={{ marginBottom: 12 }}>
-            <div style={{ fontSize: 10, fontWeight: 600, color: "#fff", marginBottom: 8 }}>Joint Range of Motion (Goniometry — degrees)</div>
+            <div style={{ fontSize: 10, fontWeight: 600, color: C.textMid, marginBottom: 8 }}>Joint Range of Motion (Goniometry — degrees)</div>
             <div style={S.grid(3)}>
               <div>
                 <label style={S.label}>Joint Measured</label>
@@ -308,7 +308,7 @@ export default function Step2ClinicalAssessment({ form, setField, goToStep }) {
                   color: +form.jointEffusion === 0 ? C.green : +form.jointEffusion <= 1 ? C.amber : C.red,
                 }}>{form.jointEffusion}/3</span>
               </div>
-              <div style={{ fontSize: 9, color: "#fff", marginTop: 4 }}>
+              <div style={{ fontSize: 9, color: C.textMid, marginTop: 4 }}>
                 {+form.jointEffusion === 0 ? "None" : +form.jointEffusion === 1 ? "Mild — palpable fluid wave" : +form.jointEffusion === 2 ? "Moderate — visible swelling" : "Severe — tense, distended"}
               </div>
             </div>
@@ -339,7 +339,7 @@ export default function Step2ClinicalAssessment({ form, setField, goToStep }) {
                     <div style={{ fontSize: 11, fontWeight: 700, color: +form.mmtGrade >= 4 ? C.green : +form.mmtGrade >= 2 ? C.amber : C.red }}>
                       {+form.mmtGrade >= 4 ? "Functional Strength" : +form.mmtGrade >= 2 ? "Significant Weakness — Active-assisted exercises recommended" : "Severe Deficit — Passive exercises and NMES indicated"}
                     </div>
-                    <div style={{ fontSize: 9, color: "#fff", marginTop: 4 }}>
+                    <div style={{ fontSize: 9, color: C.textMid, marginTop: 4 }}>
                       {+form.mmtGrade <= 2 ? "Protocol will emphasize NMES, passive ROM, and assisted standing" :
                        +form.mmtGrade === 3 ? "Patient can perform gravity-dependent exercises; avoid resistance training" :
                        "Patient cleared for progressive resistance exercises"}
@@ -495,7 +495,7 @@ export default function Step2ClinicalAssessment({ form, setField, goToStep }) {
       </div>
 
       {/* ═══════════ DIAGNOSTIC WORKUP (Collapsible Card) ═══════════ */}
-      <div id="diagnostics-workup" style={{ background: C.surface, border: `2px solid ${C.border}`, borderRadius: 10, padding: "16px 20px", marginBottom: 12 }}>
+      <div id="diagnostics-workup" style={{ background: C.navy, border: `1px solid ${C.navy}`, borderRadius: 10, padding: "16px 20px", marginBottom: 12, color: "#fff" }}>
         <CollapsibleSection
           title="Diagnostic Workup"
           icon={FiClipboard}
@@ -513,7 +513,7 @@ export default function Step2ClinicalAssessment({ form, setField, goToStep }) {
             return documented > 0 ? C.green : C.textLight;
           })()}
         >
-        <div style={{ fontSize: 10, color: "#fff", marginBottom: 16, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 10, color: C.textMid, marginBottom: 16, lineHeight: 1.5 }}>
           Document all diagnostics obtained or reviewed for this patient. Mark each study as <strong style={{ color: C.green }}>Reviewed &amp; Obtained</strong> with findings,
           or <strong style={{ color: "#fff" }}>Not Clinically Indicated</strong> to confirm the diagnostic was evaluated and deemed unnecessary at this time.
           Undocumented items remain as pending review.
@@ -534,7 +534,7 @@ export default function Step2ClinicalAssessment({ form, setField, goToStep }) {
                 return (
                   <div key={d.key} style={{
                     padding: "10px 14px", borderRadius: 8, transition: "all 0.2s",
-                    background: isPerformed ? "rgba(16,185,129,0.1)" : isNotIndicated ? "rgba(148,163,184,0.06)" : "rgba(255,255,255,0.03)",
+                    background: isPerformed ? "rgba(16,185,129,0.1)" : isNotIndicated ? "rgba(148,163,184,0.06)" : C.bg,
                     border: isPerformed ? "1.5px solid rgba(16,185,129,0.3)" : isNotIndicated ? "1.5px solid rgba(148,163,184,0.15)" : `1.5px solid ${C.border}`,
                   }}>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
@@ -548,11 +548,11 @@ export default function Step2ClinicalAssessment({ form, setField, goToStep }) {
                         <div>
                           <div style={{
                             fontSize: 12, fontWeight: 600,
-                            color: isPerformed ? C.green : isNotIndicated ? C.textMid : "#fff",
+                            color: isPerformed ? C.green : isNotIndicated ? C.textMid : C.text,
                             textDecoration: isNotIndicated ? "line-through" : "none",
                           }}>{d.label}</div>
                           {isNotIndicated && (
-                            <div style={{ fontSize: 10, color: "#fff", fontStyle: "italic", marginTop: 2 }}>
+                            <div style={{ fontSize: 10, color: C.textMid, fontStyle: "italic", marginTop: 2 }}>
                               Reviewed — not clinically indicated at this time
                             </div>
                           )}
@@ -594,7 +594,7 @@ export default function Step2ClinicalAssessment({ form, setField, goToStep }) {
                         <input style={{
                           ...S.input, border: "1px solid rgba(16,185,129,0.2)",
                           background: "rgba(16,185,129,0.05)", fontSize: 11, padding: "7px 10px",
-                          color: "#fff",
+                          color: C.text,
                         }}
                           value={form[notesKey] || ""} onChange={e => setField(notesKey, e.target.value)}
                           placeholder={d.hint} />

@@ -79,13 +79,13 @@ export function TabEquipment({ equipment, setEquipment, flashSave, isOpen, toggl
             <div key={key} style={{
               display: "flex", alignItems: "center", justifyContent: "space-between",
               padding: "10px 14px", borderRadius: 8,
-              background: equipment[key] ? "rgba(16,185,129,0.12)" : "rgba(255,255,255,0.05)",
-              border: equipment[key] ? `1px solid rgba(16,185,129,0.4)` : `1px solid rgba(255,255,255,0.15)`,
+              background: equipment[key] ? "rgba(16,185,129,0.12)" : C.bg,
+              border: equipment[key] ? `1px solid rgba(16,185,129,0.4)` : `1px solid ${C.border}`,
               transition: "all 0.15s",
             }}>
               <div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{label}</div>
-                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.5)", marginTop: 2 }}>{desc}</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{label}</div>
+                <div style={{ fontSize: 10, color: C.textLight, marginTop: 2 }}>{desc}</div>
               </div>
               <div style={settingsStyles.toggleTrack(equipment[key])} onClick={() => setEquipment({ ...equipment, [key]: !equipment[key] })}>
                 <div style={settingsStyles.toggleDot} />
@@ -97,7 +97,7 @@ export function TabEquipment({ equipment, setEquipment, flashSave, isOpen, toggl
 
       <div style={sty.saveBar}>
         <button style={S.btn("dark")} onClick={flashSave}>Save Equipment Profile</button>
-        <span style={{ fontSize: 12, color: "rgba(255,255,255,0.6)" }}>
+        <span style={{ fontSize: 12, color: C.textLight }}>
           {Object.values(equipment).filter(Boolean).length} of {Object.keys(equipment).length} items available
         </span>
       </div>

@@ -9,9 +9,9 @@ import C from "../../constants/colors";
 // ─────────────────────────────────────────────
 export const settingsStyles = {
   sectionCard: {
-    background: C.navy, borderRadius: 10, border: `2px solid ${C.navy}`,
+    background: C.surface, borderRadius: 10, border: `1px solid ${C.border}`,
     marginBottom: 12, overflow: "hidden",
-    boxShadow: "0 2px 8px rgba(15,76,129,0.15)",
+    boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
   },
   sectionHeader: (open) => ({
     display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -25,7 +25,7 @@ export const settingsStyles = {
     fontSize: 13, fontWeight: 800, color: "#fff",
     letterSpacing: "0.8px", textTransform: "uppercase",
   }),
-  sectionBody: { padding: "20px 24px", position: "relative", zIndex: 1, overflow: "visible", background: C.navy },
+  sectionBody: { padding: "20px 24px", position: "relative", zIndex: 1, overflow: "visible", background: C.surface },
   neonLine: {
     height: 3, width: "100%", overflow: "hidden", position: "relative",
   },
@@ -37,7 +37,7 @@ export const settingsStyles = {
   },
   toggleRow: {
     display: "flex", alignItems: "center", justifyContent: "space-between",
-    padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.1)",
+    padding: "10px 0", borderBottom: `1px solid ${C.border}`,
   },
   toggleTrack: (on) => ({
     display: "inline-flex", alignItems: "center", justifyContent: on ? "flex-end" : "flex-start",
@@ -67,7 +67,7 @@ export const sty = {
     fontSize: 11, fontWeight: 600, letterSpacing: "0.3px",
     background: active ? C.navy : "transparent",
     color: active ? "#fff" : C.textMid,
-    border: `2px solid ${C.navy}`,
+    border: `1px solid ${C.border}`,
     transition: "all 0.2s ease",
   }),
   fieldRow: { marginBottom: 16 },
@@ -76,7 +76,7 @@ export const sty = {
     textTransform: "uppercase", letterSpacing: "0.6px",
     marginBottom: 6, display: "block",
   },
-  fieldHint: { fontSize: 11, color: "rgba(255,255,255,0.5)", marginTop: 4 },
+  fieldHint: { fontSize: 11, color: "rgba(255,255,255,0.6)", marginTop: 4 },
   statusBadge: (ok) => ({
     display: "inline-flex", alignItems: "center", gap: 4,
     padding: "4px 12px", borderRadius: 20, fontSize: 10, fontWeight: 700,
@@ -86,7 +86,7 @@ export const sty = {
   }),
   saveBar: {
     display: "flex", alignItems: "center", gap: 16,
-    padding: "16px 0", borderTop: `1px solid rgba(255,255,255,0.1)`, marginTop: 8,
+    padding: "16px 0", borderTop: `1px solid ${C.border}`, marginTop: 8,
   },
 };
 
