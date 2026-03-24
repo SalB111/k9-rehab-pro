@@ -2430,7 +2430,9 @@ const CONDITIONS_SEED = [
 // ── Static Frontend Serving (production / pkg build) ──
 const FRONTEND_BUILD = IS_PKG
   ? path.join(APP_ROOT, 'public')
-  : path.join(__dirname, '..', 'k9-rehab-frontend', 'build');
+  : fs.existsSync(path.join(__dirname, 'public'))
+    ? path.join(__dirname, 'public')
+    : path.join(__dirname, '..', 'k9-rehab-frontend', 'build');
 if (fs.existsSync(FRONTEND_BUILD)) {
   app.use(express.static(FRONTEND_BUILD));
   // SPA fallback — serve index.html for any non-API route
