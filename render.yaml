@@ -8,7 +8,7 @@ services:
     runtime: node
     region: oregon
     rootDir: backend
-    buildCommand: npm install && cd ../k9-rehab-frontend && NODE_ENV=development npm install && npm run build && cp -r build ../backend/public
+    buildCommand: npm install && cd ../k9-rehab-frontend && npm install && npm run build && cp -r build ../backend/public
     startCommand: node server.js
     healthCheckPath: /api/health
     envVars:
