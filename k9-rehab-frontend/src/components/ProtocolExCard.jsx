@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import { FiX, FiCheckCircle, FiAlertTriangle, FiBook, FiMonitor } from "react-icons/fi";
+import { FiX, FiCheckCircle, FiAlertTriangle, FiBook, FiMonitor, FiLayers } from "react-icons/fi";
 import C from "../constants/colors";
 import S from "../constants/styles";
 import { getExCategoryIcon } from "../constants/exerciseCategories";
 
-function ProtocolExCard({ entry, onRemove, onOpenStoryboard }) {
+function ProtocolExCard({ entry, onRemove, onOpenStoryboard, onAnatomyClick }) {
   const [open, setOpen] = useState(false);
   const ex = entry.exercise || {};
   const catIcon = getExCategoryIcon(ex);
@@ -47,6 +47,16 @@ function ProtocolExCard({ entry, onRemove, onOpenStoryboard }) {
             </div>
           </div>
           <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+            {onAnatomyClick && (
+              <button onClick={() => onAnatomyClick(ex.code)} title="Show in Anatomy Viewer" style={{
+                background: "rgba(20,184,166,0.12)", border: `1px solid var(--k9-teal)`,
+                borderRadius: 6, padding: "4px 8px", cursor: "pointer",
+                color: "var(--k9-teal)", display: "flex", alignItems: "center", gap: 4,
+                fontSize: 10, fontWeight: 700
+              }}>
+                <FiLayers size={11} /> Anatomy
+              </button>
+            )}
             <button onClick={() => setOpen(o => !o)} style={{
               background: C.border, border: "none", borderRadius: 6, padding: "4px 8px",
               cursor: "pointer", fontSize: 11, color: C.textMid, fontWeight: 600
@@ -182,14 +192,16 @@ function ProtocolExCard({ entry, onRemove, onOpenStoryboard }) {
           )}
           {/* Storyboard button — check by exercise code via storyboard API */}
           {onOpenStoryboard && (
-            <button onClick={(ev) => { ev.stopPropagation(); onOpenStoryboard(ex.code); }}
+            <button onClick={undefined}
               style={{
                 marginTop: 10, width: "100%", padding: "8px 14px", borderRadius: 8,
                 background: `linear-gradient(135deg, ${C.navy} 0%, ${C.navyMid} 100%)`,
-                color: "#fff", border: "1px solid rgba(57,255,126,0.2)", cursor: "pointer",
+                color: "#fff", border: "1px solid rgba(57,255,126,0.2)",
                 fontSize: 11, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                opacity: 0.5, pointerEvents: "none",
               }}>
               <FiMonitor size={12} /> Exercise Storyboard
+              <span style={{ fontSize: 8, fontWeight: 700, padding: "2px 6px", borderRadius: 4, background: C.amberBg, color: C.amber, border: `1px solid ${C.amber}`, marginLeft: 4 }}>Coming Soon</span>
             </button>
           )}
         </div>

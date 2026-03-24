@@ -16,7 +16,7 @@ export default function TopNav({ view, setView, brand, dateStr, timeStr, current
           }
         `}</style>
         <div style={{ ...S.topNavBrand, cursor: "pointer" }} onClick={() => setView("generator")}>
-          <img src="/logo.svg" alt="K9 Rehab Pro"
+          <img src="/rod_of_asclepius.png" alt="K9 Rehab Pro"
             style={{ width: 30, height: 30, animation: "faviconGlow 2.8s ease-in-out infinite" }} />
           <span style={{
             fontFamily: "'Orbitron', 'Exo 2', 'Rajdhani', sans-serif",
@@ -27,21 +27,21 @@ export default function TopNav({ view, setView, brand, dateStr, timeStr, current
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <div style={{ textAlign: "right" }}>
-            <div style={{ fontSize: 11, color: C.text, fontWeight: 500 }}>{dateStr}</div>
-            <div style={{ fontSize: 12, color: C.navy, fontWeight: 700, marginTop: 1, fontFamily: "'Exo 2', monospace", letterSpacing: "1px" }}>{timeStr}</div>
+            <div style={{ fontSize: 11, color: "#000", fontWeight: 500 }}>{dateStr}</div>
+            <div style={{ fontSize: 12, color: "#000", fontWeight: 700, marginTop: 1, fontFamily: "'Exo 2', monospace", letterSpacing: "1px" }}>{timeStr}</div>
           </div>
           {currentUser && (
             <div style={{ display: "flex", alignItems: "center", gap: 10, borderLeft: `1px solid ${C.border}`, paddingLeft: 12 }}>
               <div style={{ textAlign: "right" }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: C.navy }}>{currentUser.display_name || currentUser.username}</div>
-                <div style={{ fontSize: 9, fontWeight: 600, color: C.teal, textTransform: "uppercase", letterSpacing: 1 }}>{currentUser.role}</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#000" }}>{currentUser.display_name || currentUser.username}</div>
+                <div style={{ fontSize: 9, fontWeight: 600, color: "#000", textTransform: "uppercase", letterSpacing: 1 }}>{currentUser.role}</div>
               </div>
               <div
                 onClick={onLogout}
                 style={{
                   cursor: "pointer", display: "flex", alignItems: "center", gap: 4,
                   padding: "4px 10px", borderRadius: 6, fontSize: 10, fontWeight: 600,
-                  color: C.textLight, border: `1px solid ${C.border}`,
+                  color: "#000", border: `1px solid ${C.border}`,
                   transition: "all 0.2s",
                 }}
                 onMouseEnter={(e) => { e.currentTarget.style.color = C.red; e.currentTarget.style.borderColor = C.red; }}

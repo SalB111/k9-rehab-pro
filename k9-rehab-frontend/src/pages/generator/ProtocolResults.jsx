@@ -1,15 +1,39 @@
-import React from "react";
+import React, { useState, useMemo } from "react";
 import {
   FiShield, FiPrinter, FiPlus, FiAlertTriangle, FiCheckCircle,
-  FiCalendar, FiFileText, FiHeart, FiAward, FiSearch
+  FiCalendar, FiFileText, FiHeart, FiAward, FiSearch, FiChevronDown
 } from "react-icons/fi";
 import C from "../../constants/colors";
 import S from "../../constants/styles";
 import ProtocolExCard from "../../components/ProtocolExCard";
 import StoryboardPlayer from "../../components/StoryboardPlayer";
+import AnatomyViewer3D from "../../components/AnatomyViewer3D";
 import { CLINIC_ONLY_CODES } from "./constants";
 
+const PrintableHandout = React.lazy(() => import("../../components/handout/PrintableHandout"));
+
 export default function ProtocolResults({ protocol, setProtocol, setWizardStep, removeExercise, setAddingToWeek, setShowAddModal, showStoryboard, setShowStoryboard }) {
+  const [showHandout, setShowHandout] = useState(false);
+  const [hepOpen, setHepOpen] = useState({});
+  const [showSafetyReport, setShowSafetyReport] = useState(false);
+  const [safetyReport, setSafetyReport] = useState({ type: "", exercise: "", description: "", severity: "moderate" });
+  const [safetySubmitted, setSafetySubmitted] = useState(false);
+  const [activeAnatomyExercise, setActiveAnatomyExercise] = useState(null);
+
+  // Extract unique HEP exercises (exclude clinic-only codes)
+  const hepExercises = useMemo(() => {
+    const seen = new Set();
+    const result = [];
+    (protocol.weeks || []).forEach(week => {
+      (week.exercises || []).forEach(ex => {
+        if (!seen.has(ex.code) && !CLINIC_ONLY_CODES.has(ex.code)) {
+          seen.add(ex.code);
+          result.push(ex);
+        }
+      });
+    });
+    return result;
+  }, [protocol]);
   // Group weeks by phase using _phaseInfo from protocol generator
   const phaseGroups = [];
   let currentPhase = null;
@@ -34,6 +58,16 @@ export default function ProtocolResults({ protocol, setProtocol, setWizardStep, 
     <div className="print-protocol">
       {/* Storyboard Player Modal */}
       {showStoryboard && <StoryboardPlayer exerciseCode={showStoryboard} onClose={() => setShowStoryboard(null)} />}
+      {/* Printable Handout Modal */}
+      {showHandout && (
+        <React.Suspense fallback={null}>
+          <PrintableHandout
+            exercises={hepExercises}
+            patientName={protocol.patient_name}
+            onClose={() => setShowHandout(false)}
+          />
+        </React.Suspense>
+      )}
       {/* ── CDSS / Veterinary Oversight Disclaimer Banner ── */}
       <div style={{
         padding: "12px 20px", marginBottom: 10, borderRadius: 8,
@@ -62,6 +96,15 @@ export default function ProtocolResults({ protocol, setProtocol, setWizardStep, 
         }}>
           <FiPrinter size={12} /> Print Protocol
         </button>
+        {hepExercises.length > 0 && (
+          <button onClick={() => setShowHandout(true)} style={{
+            ...S.btn("outline"), fontSize: 11, padding: "6px 14px",
+            display: "flex", alignItems: "center", gap: 6,
+            borderColor: C.teal, color: C.teal,
+          }}>
+            <FiFileText size={12} /> Client Handout
+          </button>
+        )}
         <button onClick={() => {
           setProtocol(null);
           setWizardStep(1);
@@ -71,7 +114,108 @@ export default function ProtocolResults({ protocol, setProtocol, setWizardStep, 
         }}>
           <FiPlus size={12} /> New Protocol
         </button>
+        <button onClick={() => setShowSafetyReport(!showSafetyReport)} style={{
+          ...S.btn("outline"), fontSize: 11, padding: "6px 14px",
+          display: "flex", alignItems: "center", gap: 6,
+          borderColor: C.red, color: C.red,
+        }}>
+          <FiAlertTriangle size={12} /> Report Safety Concern
+        </button>
       </div>
+
+      {/* ── Adverse Event / Safety Concern Report ── */}
+      {showSafetyReport && (
+        <div style={{
+          ...S.card, borderLeft: `4px solid ${C.red}`, marginBottom: 10,
+          background: `linear-gradient(135deg, ${C.surface} 0%, ${C.redBg} 100%)`,
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+            <FiAlertTriangle size={14} style={{ color: C.red }} />
+            <span style={{ fontSize: 12, fontWeight: 800, color: C.red, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+              Report Safety Concern / Adverse Event
+            </span>
+          </div>
+          {safetySubmitted ? (
+            <div style={{ padding: "16px 20px", background: C.greenBg, borderRadius: 6, border: `1px solid ${C.green}33` }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <FiCheckCircle size={14} style={{ color: C.green }} />
+                <span style={{ fontSize: 12, fontWeight: 700, color: C.green }}>Safety concern logged to audit trail</span>
+              </div>
+              <div style={{ fontSize: 10, color: C.textMid, marginTop: 6 }}>
+                Protocol ID: {protocol.patient_id} · Patient: {protocol.patient_name} · Logged: {new Date().toLocaleString()}
+              </div>
+            </div>
+          ) : (
+            <>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
+                <div>
+                  <label style={{ fontSize: 10, fontWeight: 600, color: C.textMid, display: "block", marginBottom: 4 }}>Concern Type</label>
+                  <select value={safetyReport.type} onChange={e => setSafetyReport(p => ({ ...p, type: e.target.value }))}
+                    style={{ ...S.input, fontSize: 11 }}>
+                    <option value="">--- Select ---</option>
+                    <option value="adverse_reaction">Adverse Reaction to Exercise</option>
+                    <option value="pain_increase">Unexpected Pain Increase</option>
+                    <option value="injury">Exercise-Related Injury</option>
+                    <option value="contraindication_missed">Missed Contraindication</option>
+                    <option value="dosing_concern">Dosing / Intensity Concern</option>
+                    <option value="safety_gate_failure">Safety Gate Not Triggered</option>
+                    <option value="other">Other Clinical Concern</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: 10, fontWeight: 600, color: C.textMid, display: "block", marginBottom: 4 }}>Severity</label>
+                  <select value={safetyReport.severity} onChange={e => setSafetyReport(p => ({ ...p, severity: e.target.value }))}
+                    style={{ ...S.input, fontSize: 11 }}>
+                    <option value="">--- Select ---</option>
+                    <option value="low">Low — Minor concern</option>
+                    <option value="moderate">Moderate — Requires protocol change</option>
+                    <option value="high">High — Patient safety risk</option>
+                    <option value="critical">Critical — Immediate attention needed</option>
+                  </select>
+                </div>
+              </div>
+              <div style={{ marginBottom: 10 }}>
+                <label style={{ fontSize: 10, fontWeight: 600, color: C.textMid, display: "block", marginBottom: 4 }}>Exercise Code (if applicable)</label>
+                <input value={safetyReport.exercise} onChange={e => setSafetyReport(p => ({ ...p, exercise: e.target.value }))}
+                  placeholder="e.g., PROM_STIFLE" style={{ ...S.input, fontSize: 11 }} />
+              </div>
+              <div style={{ marginBottom: 10 }}>
+                <label style={{ fontSize: 10, fontWeight: 600, color: C.textMid, display: "block", marginBottom: 4 }}>Description</label>
+                <textarea value={safetyReport.description} onChange={e => setSafetyReport(p => ({ ...p, description: e.target.value }))}
+                  placeholder="Describe the safety concern, adverse event, or clinical observation..."
+                  style={{ ...S.input, fontSize: 11, minHeight: 60, resize: "vertical" }} />
+              </div>
+              <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+                <button onClick={() => setShowSafetyReport(false)} style={{ ...S.btn("outline"), fontSize: 11, padding: "6px 14px" }}>
+                  Cancel
+                </button>
+                <button
+                  disabled={!safetyReport.type || !safetyReport.description.trim()}
+                  onClick={() => {
+                    // Log to console + localStorage audit (backend endpoint can be added later)
+                    const entry = {
+                      timestamp: new Date().toISOString(),
+                      patient_id: protocol.patient_id,
+                      patient_name: protocol.patient_name,
+                      protocol_type: protocol.protocol_type,
+                      ...safetyReport,
+                    };
+                    const log = JSON.parse(localStorage.getItem("k9_safety_log") || "[]");
+                    log.push(entry);
+                    localStorage.setItem("k9_safety_log", JSON.stringify(log));
+                    setSafetySubmitted(true);
+                  }}
+                  style={{
+                    ...S.btn("primary"), fontSize: 11, padding: "6px 14px",
+                    background: C.red, opacity: (!safetyReport.type || !safetyReport.description.trim()) ? 0.5 : 1,
+                  }}>
+                  <FiAlertTriangle size={11} /> Submit Safety Report
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
 
       {/* ── Red-Flag Warnings (if any) ── */}
       {protocol.red_flag_warnings && protocol.red_flag_warnings.length > 0 && (
@@ -93,6 +237,13 @@ export default function ProtocolResults({ protocol, setProtocol, setWizardStep, 
           ))}
         </div>
       )}
+
+      {/* ── Anatomy Viewer ── */}
+      <AnatomyViewer3D
+        exerciseCode={activeAnatomyExercise}
+        diagnosis={protocol.condition || protocol.diagnosis}
+        species={protocol.species || "Canine"}
+      />
 
       {/* ── Protocol Summary Header ── */}
       <div style={{
@@ -120,7 +271,7 @@ export default function ProtocolResults({ protocol, setProtocol, setWizardStep, 
           </div>
           <div style={{ textAlign: "right" }}>
             <div style={{ fontSize: 36, fontWeight: 800, color: C.text }}>{totalWeeks}</div>
-            <div style={{ fontSize: 9, fontWeight: 700, color: C.textLight, textTransform: "uppercase", letterSpacing: "1px" }}>Week Program</div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: C.textLight, textTransform: "uppercase", letterSpacing: "1px" }}>Week Program</div>
             <div style={{ display: "flex", gap: 6, marginTop: 10 }}>
               <button style={{ ...S.btn("primary"), fontSize: 11, padding: "6px 16px" }}
                 onClick={() => { setProtocol(null); setWizardStep(1); }}>
@@ -187,7 +338,7 @@ export default function ProtocolResults({ protocol, setProtocol, setWizardStep, 
                   {phase.name}
                 </h3>
                 {phase.goal && (
-                  <p style={{ margin: "0 0 4px", fontSize: 12, color: C.textMid, lineHeight: 1.6 }}>
+                  <p style={{ margin: "0 0 4px", fontSize: 12, color: C.text, lineHeight: 1.6 }}>
                     {phase.goal}
                   </p>
                 )}
@@ -209,8 +360,8 @@ export default function ProtocolResults({ protocol, setProtocol, setWizardStep, 
                 display: "flex", gap: 8, alignItems: "flex-start",
               }}>
                 <FiAlertTriangle size={13} style={{ color: C.red, flexShrink: 0, marginTop: 1 }} />
-                <div style={{ fontSize: 11, color: C.red, lineHeight: 1.5 }}>
-                  <strong>Contraindications:</strong> {phase.contraindications}
+                <div style={{ fontSize: 11, color: C.text, lineHeight: 1.5 }}>
+                  <strong style={{ color: C.red }}>Contraindications:</strong> {phase.contraindications}
                 </div>
               </div>
             )}
@@ -246,6 +397,7 @@ export default function ProtocolResults({ protocol, setProtocol, setWizardStep, 
                       entry={{ exercise: ex, sets: ex.sets, reps: ex.reps, frequency_per_day: ex.frequency, duration_seconds: ex.duration_minutes ? ex.duration_minutes * 60 : null, notes: ex.notes }}
                       onRemove={() => removeExercise(globalWeekIdx, exIdx)}
                       onOpenStoryboard={setShowStoryboard}
+                      onAnatomyClick={(code) => { setActiveAnatomyExercise(code); window.scrollTo({ top: 0, behavior: "smooth" }); }}
                     />
                   ))}
                 </div>
@@ -267,8 +419,8 @@ export default function ProtocolResults({ protocol, setProtocol, setWizardStep, 
                 <FiCheckCircle size={12} />
                 Progression Gate — Advance to Phase {phaseGroups[phaseIdx + 1].number}: {phaseGroups[phaseIdx + 1].name}
               </div>
-              <p style={{ margin: 0, fontSize: 12, color: C.green, lineHeight: 1.6 }}>
-                <strong>Patient must demonstrate:</strong> {phase.progressionCriteria}
+              <p style={{ margin: 0, fontSize: 12, color: C.text, lineHeight: 1.6 }}>
+                <strong style={{ color: C.green }}>Patient must demonstrate:</strong> {phase.progressionCriteria}
               </p>
               <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 6 }}>
                 <FiCalendar size={11} style={{ color: C.green }} />
@@ -309,7 +461,7 @@ export default function ProtocolResults({ protocol, setProtocol, setWizardStep, 
               </div>
               <span style={{ ...S.badge("green"), fontSize: 10 }}>Client Take-Home</span>
             </div>
-            <p style={{ fontSize: 11, color: C.textMid, marginBottom: 14, lineHeight: 1.6, background: C.greenBg, padding: "10px 14px", borderRadius: 6 }}>
+            <p style={{ fontSize: 11, color: C.text, marginBottom: 14, lineHeight: 1.6, background: C.greenBg, padding: "10px 14px", borderRadius: 6 }}>
               These exercises are safe to perform at home under the guidance provided. Clinic-only interventions (laser, electrical stimulation, ultrasound, aquatic therapy) are excluded. Always follow your veterinarian's specific instructions and stop any exercise that causes pain or distress.
             </p>
             {Object.entries(hepByPhase).map(([phaseNum, phase]) => (
@@ -319,20 +471,53 @@ export default function ProtocolResults({ protocol, setProtocol, setWizardStep, 
                   Phase {phaseNum}: {phase.name}
                 </div>
                 <div style={S.grid(2)}>
-                  {[...phase.exercises.values()].slice(0, 10).map((ex, i) => (
-                    <div key={i} style={{
-                      padding: "10px 14px", background: C.surface,
-                      border: `1px solid ${C.border}`, borderRadius: 8,
-                    }}>
-                      <div style={{ fontWeight: 700, fontSize: 12, color: C.text }}>{ex.name || ex.exercise?.name}</div>
-                      <div style={{ fontSize: 11, color: C.textMid, marginTop: 4 }}>
-                        {ex.sets && `${ex.sets}`}{ex.reps && ` × ${ex.reps}`}
-                        {ex.duration_seconds && ` · ${ex.duration_seconds >= 60 ? `${ex.duration_seconds / 60} min` : `${ex.duration_seconds}s`}`}
-                        {ex.frequency_per_day && ` · ${ex.frequency_per_day}×/day`}
+                  {[...phase.exercises.values()].slice(0, 10).map((ex, i) => {
+                    const key = `${phaseNum}-${i}`;
+                    const isOpen = !!hepOpen[key];
+                    const hasDetails = ex.notes || (ex.steps || []).length > 0;
+                    return (
+                      <div key={i} style={{
+                        padding: "10px 14px", background: C.surface,
+                        border: `1px solid ${C.border}`, borderRadius: 8,
+                      }}>
+                        <div
+                          onClick={hasDetails ? () => setHepOpen(prev => ({ ...prev, [key]: !prev[key] })) : undefined}
+                          style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", cursor: hasDetails ? "pointer" : "default" }}
+                        >
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontWeight: 700, fontSize: 12, color: C.text }}>{ex.name || ex.exercise?.name}</div>
+                            <div style={{ fontSize: 11, color: C.textMid, marginTop: 4 }}>
+                              {ex.sets && `${ex.sets}`}{ex.reps && ` × ${ex.reps}`}
+                              {ex.duration_seconds && ` · ${ex.duration_seconds >= 60 ? `${ex.duration_seconds / 60} min` : `${ex.duration_seconds}s`}`}
+                              {ex.frequency_per_day && ` · ${ex.frequency_per_day}×/day`}
+                            </div>
+                          </div>
+                          {hasDetails && (
+                            <FiChevronDown size={14} style={{
+                              color: C.teal, flexShrink: 0, marginTop: 2,
+                              transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
+                              transition: "transform 0.2s ease",
+                            }} />
+                          )}
+                        </div>
+                        {isOpen && (
+                          <div style={{ marginTop: 8, borderTop: `1px solid ${C.border}`, paddingTop: 8 }}>
+                            {ex.notes && <div style={{ fontSize: 10, color: C.textLight, marginBottom: 6, fontStyle: "italic" }}>{ex.notes}</div>}
+                            {(ex.steps || []).length > 0 && (
+                              <div>
+                                <div style={{ fontSize: 10, fontWeight: 700, color: C.teal, marginBottom: 3 }}>How to Perform:</div>
+                                <ol style={{ margin: 0, paddingLeft: 16 }}>
+                                  {ex.steps.map((s, si) => (
+                                    <li key={si} style={{ fontSize: 10, color: C.text, lineHeight: 1.5 }}>{s}</li>
+                                  ))}
+                                </ol>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
-                      {ex.notes && <div style={{ fontSize: 10, color: C.textLight, marginTop: 3, fontStyle: "italic" }}>{ex.notes}</div>}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             ))}
@@ -394,10 +579,10 @@ export default function ProtocolResults({ protocol, setProtocol, setWizardStep, 
         </div>
 
         <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid rgba(255,255,255,0.08)" }}>
-          <div style={{ fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 6 }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 6 }}>
             Practice-Type Applicability
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 16px", fontSize: 9, color: "rgba(255,255,255,0.45)", lineHeight: 1.6 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 16px", fontSize: 10, color: "rgba(255,255,255,0.45)", lineHeight: 1.6 }}>
             <div><strong style={{ color: "rgba(255,255,255,0.6)" }}>General Practice:</strong> Protocols require oversight by attending DVM. Refer complex cases to CCRP/CCRT-certified clinicians.</div>
             <div><strong style={{ color: "rgba(255,255,255,0.6)" }}>Rehabilitation Centers:</strong> Intended for use by CCRP, CCRT, or ACVSMR-certified professionals with direct patient access.</div>
             <div><strong style={{ color: "rgba(255,255,255,0.6)" }}>Specialty Hospitals:</strong> Integrate with existing treatment plans. Coordinate with surgical, neurology, and oncology teams as indicated.</div>
@@ -406,10 +591,10 @@ export default function ProtocolResults({ protocol, setProtocol, setWizardStep, 
         </div>
 
         <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid rgba(255,255,255,0.1)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", letterSpacing: "0.5px" }}>
+          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", letterSpacing: "0.5px" }}>
             Protocol generated per ACVSMR standards · Millis & Levine methodology · Evidence-based exercise selection
           </div>
-          <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)" }}>
+          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>
             K9 Rehab Pro™ · Clinical Decision-Support System
           </div>
         </div>

@@ -13,7 +13,7 @@ const S = {
   },
   // ── TOP NAV ──
   topNav: {
-    background: C.surface,
+    background: "#FFFFFF",
     display: "flex", alignItems: "center", justifyContent: "space-between",
     padding: "0 24px", height: 48, flexShrink: 0,
     borderBottom: `1px solid ${C.border}`,
@@ -102,19 +102,20 @@ const S = {
   badge: (color = "blue") => ({
     display: "inline-block", padding: "2px 10px", borderRadius: 20, fontSize: 10,
     fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px",
-    background: color === "blue" ? C.tealLight : color === "green" ? C.greenBg : C.amberBg,
-    color: color === "blue" ? C.tealDark : color === "green" ? C.green : C.amber,
+    background: color === "green" ? "rgba(57,255,126,0.06)" : C.bg,
+    border: color === "green" ? `1.5px solid #39FF7E` : `1.5px solid ${C.border}`,
+    color: color === "green" ? "#ffffff" : C.text,
   }),
   input: {
-    width: "100%", padding: "10px 12px", borderRadius: 6, fontSize: 13, fontWeight: 700,
+    width: "100%", padding: "10px 12px", borderRadius: 6, fontSize: 13,
     border: `1px solid ${C.border}`, outline: "none", boxSizing: "border-box",
-    background: C.surface, color: C.text,
+    background: C.surface,
     transition: "border-color 0.15s",
   },
   select: {
     padding: "10px 12px", borderRadius: 6, fontSize: 13,
     border: `1px solid ${C.border}`, outline: "none",
-    background: C.surface, color: C.text, cursor: "pointer",
+    background: C.surface, cursor: "pointer",
   },
   grid: (cols = 3) => ({
     display: "grid", gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: 16,

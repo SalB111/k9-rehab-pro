@@ -943,7 +943,7 @@ const STORYBOARD_LIBRARY = {
 
 // ── Category-to-Breed mapping — 1 clinically appropriate breed per category ──
 const CATEGORY_BREED_MAP = {
-  'Athletic Foundations':        { breed: 'Belgian Malinois',              weight_lbs: 55,  size: 'large',  build: 'athletic and muscular',  temperament: 'driven and focused' },
+  'Canine Strength (Zink)':      { breed: 'Belgian Malinois',              weight_lbs: 55,  size: 'large',  build: 'athletic and muscular',  temperament: 'driven and focused' },
   'Sport Conditioning':          { breed: 'Border Collie',                weight_lbs: 40,  size: 'medium', build: 'agile and lean',          temperament: 'highly responsive' },
   'Balance & Proprioception':    { breed: 'Cavalier King Charles Spaniel', weight_lbs: 15,  size: 'small',  build: 'compact and balanced',    temperament: 'calm and cooperative' },
   'Post-Surgical':               { breed: 'Labrador Retriever',           weight_lbs: 72,  size: 'large',  build: 'solid and muscular',      temperament: 'tolerant and food-motivated' },
@@ -958,7 +958,6 @@ const CATEGORY_BREED_MAP = {
   'Passive Therapy':             { breed: 'French Bulldog',               weight_lbs: 26,  size: 'small',  build: 'compact brachycephalic',  temperament: 'calm and compliant' },
   'Palliative Care':             { breed: 'Bernese Mountain Dog',         weight_lbs: 95,  size: 'large',  build: 'heavy-boned and broad',   temperament: 'gentle and trusting' },
   'Breed-Specific':              { breed: 'English Bulldog',              weight_lbs: 50,  size: 'medium', build: 'brachycephalic, unique anatomy', temperament: 'stubborn but affectionate' },
-  'Active Therapeutic':          { breed: 'Australian Shepherd',          weight_lbs: 52,  size: 'medium', build: 'athletic and balanced',   temperament: 'intelligent and eager' },
   'Manual Therapy':              { breed: 'Greyhound',                    weight_lbs: 65,  size: 'large',  build: 'lean, thin-skinned, deep-chested', temperament: 'sensitive and quiet' },
   'Functional Training':         { breed: 'Standard Poodle',              weight_lbs: 55,  size: 'large',  build: 'elegant and athletic',    temperament: 'smart and trainable' },
   'Aquatic Therapy':             { breed: 'Newfoundland',                 weight_lbs: 120, size: 'giant',  build: 'massive, webbed paws',    temperament: 'calm and water-confident' },
@@ -983,7 +982,7 @@ const CATEGORY_ACCENTS = {
   'Palliative Care':             '#A78BFA',
   'Complementary Therapy':       '#14B8A6',
   'Breed-Specific':              '#F472B6',
-  'Athletic Foundations':        '#39FF7E',
+  'Canine Strength (Zink)':      '#39FF7E',
 };
 
 function extractFrameTitle(text) {

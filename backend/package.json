@@ -1,12 +1,41 @@
 {
   "name": "k9-rehab-pro-backend",
   "version": "1.0.0",
+  "description": "K9 Rehab Pro™ — AI-powered clinical canine rehabilitation protocol engine powered by B.E.A.U.",
+  "author": "Salvatore Bonanno <salvatore@k9rehabpro.com>",
+  "license": "UNLICENSED",
+  "private": true,
   "main": "server.js",
+  "bin": "server.js",
   "engines": {
     "node": ">=18.0.0"
   },
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "package": "pkg . --targets node18-win-x64 --output ../K9_Rehab_Pro_Demo/K9RehabPro.exe"
+  },
+  "pkg": {
+    "assets": [
+      "../k9-rehab-frontend/build/**/*",
+      "../CanineRehabProtocols/**/*",
+      "storyboard-images/**/*",
+      "node_modules/sqlite3/build/**/*",
+      "node_modules/sqlite3/lib/**/*"
+    ],
+    "scripts": [
+      "db-provider.js",
+      "db-providers/*.js",
+      "protocol-generator.js",
+      "all-exercises.js",
+      "exercises-part*.js",
+      "exercise-enhancer.js",
+      "evidence-references.js",
+      "exercise-taxonomy.js",
+      "video-references.js",
+      "storyboard-references.js",
+      "protocol-rules.js",
+      "auth.js"
+    ]
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.78.0",

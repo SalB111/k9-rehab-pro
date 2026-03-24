@@ -166,7 +166,7 @@ function SessionsView() {
         <label style={{ ...S.label, margin: 0, whiteSpace: "nowrap", color: C.teal }}>Patient</label>
         <select style={{ ...S.select, flex: 1, border: `1.5px solid ${C.border}` }} value={selectedPatient}
           onChange={e => setSelectedPatient(e.target.value)} disabled={loadingPatients}>
-          <option value="">{loadingPatients ? "Loading patients..." : "— Select patient for this session —"}</option>
+          <option value="">{loadingPatients ? "Loading patients..." : "--- Select ---"}</option>
           {patients.map(p => (
             <option key={p.id} value={p.id}>{p.name} — {p.condition || "N/A"} ({p.client_name || "N/A"})</option>
           ))}
@@ -207,8 +207,8 @@ function SessionsView() {
                 </div>
               </div>
               <span style={{
-                fontSize: 10, fontWeight: 700, color: C.navy,
-                background: C.tealBg, padding: "3px 10px", borderRadius: 10,
+                fontSize: 10, fontWeight: 700, color: C.text,
+                background: C.tealLight, padding: "3px 10px", borderRadius: 10,
               }}>
                 Week {phase.currentWeek} · Phase {phase.currentPhase}
               </span>
@@ -223,7 +223,7 @@ function SessionsView() {
                   {[1, 2, 3, 4].map(p => (
                     <div key={p} style={{
                       flex: 1, textAlign: "center", padding: "8px 4px", borderRadius: 6,
-                      background: p === phase.currentPhase ? C.tealBg : C.bg,
+                      background: p === phase.currentPhase ? C.tealLight : C.bg,
                       border: p === phase.currentPhase ? `1.5px solid ${C.teal}` : `1px solid ${C.border}`,
                     }}>
                       <div style={{
@@ -233,7 +233,7 @@ function SessionsView() {
                         P{p}
                       </div>
                       <div style={{
-                        fontSize: 9, color: p === phase.currentPhase ? C.text : C.textLight,
+                        fontSize: 10, color: p === phase.currentPhase ? C.text : C.textLight,
                         marginTop: 2,
                       }}>
                         {PHASE_NAMES[p - 1]}
@@ -250,7 +250,7 @@ function SessionsView() {
                   <div style={{ fontSize: 11, fontWeight: 700, color: C.teal, marginBottom: 4 }}>
                     Phase {phase.currentPhase}: {PHASE_NAMES[phaseIdx]}
                   </div>
-                  <div style={{ fontSize: 11, color: C.textMid, lineHeight: 1.5 }}>
+                  <div style={{ fontSize: 11, color: C.text, lineHeight: 1.5 }}>
                     <strong style={{ color: C.text }}>Progression criteria:</strong> {PHASE_CRITERIA[phaseIdx]}
                   </div>
                 </div>
@@ -278,11 +278,12 @@ function SessionsView() {
                 {/* SOAP integration hints */}
                 <div style={{
                   marginTop: 14, padding: "10px 14px", borderRadius: 6,
-                  background: "rgba(16,185,129,0.06)", border: `1px solid ${C.green}22`,
+                  background: C.surface, border: `1px solid ${C.border}`,
+                  borderLeft: `3px solid ${C.green}`,
                   display: "flex", gap: 8, alignItems: "flex-start",
                 }}>
                   <FiClipboard size={12} style={{ color: C.green, flexShrink: 0, marginTop: 2 }} />
-                  <div style={{ fontSize: 10, color: C.textMid, lineHeight: 1.5 }}>
+                  <div style={{ fontSize: 10, color: C.text, lineHeight: 1.5 }}>
                     <strong style={{ color: C.green }}>Assessment hint:</strong> Document progress toward Phase {phase.currentPhase} criteria.
                     {phase.currentPhase < 4 && (
                       <span> Next phase ({PHASE_NAMES[phase.currentPhase]}) requires: {PHASE_CRITERIA[phase.currentPhase]}.</span>
@@ -406,7 +407,7 @@ function SessionsView() {
               <div style={{ fontSize: 12, fontWeight: 800, color: C.text, textTransform: "uppercase", letterSpacing: "0.8px", paddingBottom: 8 }}>Pain Interference Scale (PIS)</div>
               <div style={{ height: 2, width: "100%", overflow: "hidden", borderRadius: 1 }}><div style={{ width: "200%", height: "100%", background: "linear-gradient(90deg, transparent, #39FF7E, #0EA5E9, #39FF7E, transparent)", animation: "neonFlatline 3s linear infinite" }} /></div>
             </div>
-            <div style={{ fontSize: 10, color: C.textMid, marginBottom: 14 }}>
+            <div style={{ fontSize: 10, color: C.text, marginBottom: 14 }}>
               During the past 7 days, how much has pain interfered with your dog's:
             </div>
             <ScoreRow label="1. General activity" value={cbpi.pis_activity} onChange={v => setCbpi(f => ({ ...f, pis_activity: v }))} />

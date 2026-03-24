@@ -111,7 +111,39 @@ export const REGIONS = [
   "Multiple Joints", "Generalized"
 ];
 
+export const FELINE_BREEDS = [
+  "Abyssinian","American Shorthair","Bengal","Birman","British Shorthair",
+  "Burmese","Chartreux","Devon Rex","Egyptian Mau","Himalayan",
+  "Maine Coon","Manx","Norwegian Forest Cat","Ocicat","Persian",
+  "Ragdoll","Russian Blue","Scottish Fold","Siamese","Siberian",
+  "Sphynx","Tonkinese","Turkish Angora","Turkish Van",
+  "Domestic Shorthair (DSH)","Domestic Longhair (DLH)","Domestic Medium Hair (DMH)","Mixed Breed / Other"
+];
+
+// HCM high-risk breeds — auto-flag for cardiac screening
+export const FELINE_HCM_BREEDS = new Set([
+  "Maine Coon","Ragdoll","Sphynx","Persian","Norwegian Forest Cat",
+  "Bengal","British Shorthair","American Shorthair","Siberian","Chartreux"
+]);
+
+export const FELINE_DIAGNOSES = {
+  "Feline Musculoskeletal": [
+    { value: "FELINE_OA",               label: "Feline OA — Appendicular Osteoarthritis" },
+    { value: "FELINE_OA_AXIAL",         label: "Feline OA — Axial / Spinal (Spondylosis / DLS)" },
+    { value: "FELINE_POST_FRACTURE_CAT",label: "Post-Fracture Repair (Feline)" },
+  ],
+  "Feline Neurological": [
+    { value: "FELINE_IVDD_CAT",         label: "Feline IVDD — Intervertebral Disc Disease" },
+    { value: "FELINE_NEURO_CAT",        label: "Feline Neurological Rehab (FCE / Trauma / Brachial Plexus)" },
+  ],
+  "Feline Cardiac / Vascular": [
+    { value: "FELINE_FATE_RECOVERY",    label: "Post-FATE Recovery (Saddle Thrombus — Cardiac Cleared)" },
+    { value: "FELINE_HCM_SUBCLINICAL",  label: "Feline HCM — Subclinical (Stage A / B1, Cardiac Cleared)" },
+  ],
+};
+
 export const INITIAL_FORM = {
+  species: "Canine",
   patientName: "", breed: "", age: "", dob: "",
   weightKg: "", weightLbs: "", sex: "Male Intact",
   diagnosis: "", affectedRegion: "",
@@ -119,7 +151,7 @@ export const INITIAL_FORM = {
   painLevel: "", mobilityLevel: "",
   currentMedications: "", medsLastGiven: "", medicalHistory: "",
   specialInstructions: "", protocolLength: "8",
-  clientName: "", clientEmail: "", clientPhone: "", clientPhone2: "",
+  clientLastName: "", clientFirstName: "", clientEmail: "", clientPhone: "", clientPhone2: "",
   referringVet: "", referringClinicPhone: "", referringClinicEmail: "",
   mailingAddress: "", city: "", state: "", zipCode: "",
   nearbyHospital: "",
@@ -149,6 +181,7 @@ export const INITIAL_FORM = {
   temperament: "Cooperative",
   circumferenceAffected: "", circumferenceContralateral: "", circumferenceSite: "15cm proximal to patella",
   romFlexion: "", romExtension: "", romJoint: "",
+  romFlexionContralateral: "", romExtensionContralateral: "",
   jointEffusion: "0", muscleCondition: "Normal",
   gaitDescriptors: [],
   postureFindings: [],
@@ -156,6 +189,10 @@ export const INITIAL_FORM = {
   ivddGrade: "",
   oaStage: "",
   neuroProprioception: "", neuroWithdrawal: "", neuroDeepPain: "", neuroMotorGrade: "",
+  hcpiScore: "",
+  cbpiPSS: "",
+  cbpiPIS: "",
+  loadScore: "",
   rehabGoals: [], implantDetails: "",
   problems: [],
   stGoals: [],

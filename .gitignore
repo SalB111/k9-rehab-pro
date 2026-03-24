@@ -35,3 +35,16 @@ output/
 # Legacy frontends (superseded by k9-rehab-frontend/)
 frontend/
 frontend_new/
+
+# ── CONFIDENTIAL — Business & IP documents ──
+# Pitch decks, applications, financials, competitor research
+*Pitch_Deck*.pptx
+*LEAP*.pptx
+docs/revenue-projection*
+docs/competitor-analysis*
+docs/Leap_Venture*
+Competitor-Research/
+build-pitch-deck.py
+build-application-pdf.py
+*.bio.pdf
+source_of_truth_temp.txt

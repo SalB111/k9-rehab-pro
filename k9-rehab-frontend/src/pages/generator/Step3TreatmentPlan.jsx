@@ -9,7 +9,7 @@ export default function Step3TreatmentPlan({ form, setField, goToStep, handleSur
   return (
     <>
       <div style={{ background: C.navy, border: `1px solid ${C.navy}`, borderRadius: 10, padding: "16px 20px", marginBottom: 12, color: "#fff" }}>
-        <SectionHead icon={FiFileText} title="Section 3 — Treatment Plan & Surgical Status" />
+        <SectionHead icon={FiFileText} title="Treatment Plan & Surgical Status" />
 
         {/* -- Treatment Approach -- */}
         <div style={{ marginBottom: 20 }}>
@@ -18,9 +18,9 @@ export default function Step3TreatmentPlan({ form, setField, goToStep, handleSur
           </div>
           <div style={S.grid(3)}>
             {[
-              { value: "surgical", label: "Surgical", icon: "\uD83D\uDD2A", desc: "Post-operative rehabilitation" },
-              { value: "conservative", label: "Conservative", icon: "\uD83E\uDE7A", desc: "Non-surgical management" },
-              { value: "palliative", label: "Palliative / Comfort", icon: "\uD83D\uDC99", desc: "Quality of life focused" },
+              { value: "surgical", label: "Surgical", icon: "🔪", desc: "Post-operative rehabilitation" },
+              { value: "conservative", label: "Conservative", icon: "🩺", desc: "Non-surgical management" },
+              { value: "palliative", label: "Palliative / Comfort", icon: "💙", desc: "Quality of life focused" },
             ].map(opt => (
               <div key={opt.value}
                 onClick={() => setField("treatmentApproach", opt.value)}
@@ -33,7 +33,7 @@ export default function Step3TreatmentPlan({ form, setField, goToStep, handleSur
                 }}>
                 <div style={{ fontSize: 20, marginBottom: 4 }}>{opt.icon}</div>
                 <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{opt.label}</div>
-                <div style={{ fontSize: 11, color: C.textMid, marginTop: 2, fontWeight: 400 }}>{opt.desc}</div>
+                <div style={{ fontSize: 11, color: C.text, marginTop: 2, fontWeight: 400 }}>{opt.desc}</div>
               </div>
             ))}
           </div>
@@ -48,7 +48,7 @@ export default function Step3TreatmentPlan({ form, setField, goToStep, handleSur
             <div>
               <label style={S.label}>Veterinary Recommendation</label>
               <select style={{ ...S.select, width: "100%", border: `1.5px solid ${C.border}` }} value={form.vetRecommendation} onChange={e => setField("vetRecommendation", e.target.value)}>
-                <option value="">— Select —</option>
+                <option value="">--- Select ---</option>
                 <option value="Surgery - Strongly Recommended">Surgery — Strongly Recommended</option>
                 <option value="Surgery - Recommended">Surgery — Recommended</option>
                 <option value="Surgery - Optional">Surgery — Optional (Either approach viable)</option>
@@ -60,7 +60,7 @@ export default function Step3TreatmentPlan({ form, setField, goToStep, handleSur
             <div>
               <label style={S.label}>Owner Election / Decision</label>
               <select style={{ ...S.select, width: "100%", border: `1.5px solid ${C.border}` }} value={form.ownerElection} onChange={e => setField("ownerElection", e.target.value)}>
-                <option value="">— Select —</option>
+                <option value="">--- Select ---</option>
                 <option value="Elected Surgery">Elected Surgery (per recommendation)</option>
                 <option value="Elected Conservative">Elected Conservative Management</option>
                 <option value="Declined Surgery - Conservative">Declined Surgery — Elected Conservative</option>
@@ -76,8 +76,8 @@ export default function Step3TreatmentPlan({ form, setField, goToStep, handleSur
             <div style={{ display: "flex", alignItems: "flex-start", gap: 10, marginTop: 12, padding: "12px 16px", background: C.amberBg, border: `1.5px solid ${C.amber}`, borderRadius: 8 }}>
               <FiAlertTriangle size={18} style={{ color: C.amber, flexShrink: 0, marginTop: 2 }} />
               <div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: "#92400E" }}>Owner Declines Recommended Surgery</div>
-                <div style={{ fontSize: 11, color: "#92400E", marginTop: 4 }}>Protocol will be generated for conservative / non-surgical management. Document informed consent and owner's understanding of prognosis differences.</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: C.amber }}>Owner Declines Recommended Surgery</div>
+                <div style={{ fontSize: 11, color: C.amber, marginTop: 4 }}>Protocol will be generated for conservative / non-surgical management. Document informed consent and owner's understanding of prognosis differences.</div>
                 <div style={{ marginTop: 8 }}>
                   <label style={{ ...S.label, fontSize: 10 }}>Reason / Notes for Declining (Document for Medical Record)</label>
                   <input style={{ ...S.input, border: `1.5px solid ${C.amber}`, background: C.amberBg, fontSize: 11 }}
@@ -99,7 +99,7 @@ export default function Step3TreatmentPlan({ form, setField, goToStep, handleSur
               <div>
                 <label style={S.label}>Surgery Type / Procedure</label>
                 <select style={{ ...S.select, width: "100%", border: `1.5px solid ${C.border}` }} value={form.surgeryType} onChange={e => setField("surgeryType", e.target.value)}>
-                  <option value="">— Select Procedure —</option>
+                  <option value="">--- Select ---</option>
                   <optgroup label="Stifle / Knee Procedures">
                     <option value="TPLO">TPLO — Tibial Plateau Leveling Osteotomy</option>
                     <option value="TTA">TTA — Tibial Tuberosity Advancement</option>
@@ -189,6 +189,7 @@ export default function Step3TreatmentPlan({ form, setField, goToStep, handleSur
               <div>
                 <label style={S.label}>ASA Physical Status</label>
                 <select style={{ ...S.select, width: "100%", border: `1.5px solid ${C.border}` }} value={form.anesthesiaRisk} onChange={e => setField("anesthesiaRisk", e.target.value)}>
+                  <option value="">--- Select ---</option>
                   <option value="ASA I">ASA I — Normal healthy patient</option>
                   <option value="ASA II">ASA II — Mild systemic disease</option>
                   <option value="ASA III">ASA III — Severe systemic disease</option>
@@ -201,6 +202,7 @@ export default function Step3TreatmentPlan({ form, setField, goToStep, handleSur
               <div>
                 <label style={S.label}>Incision Status</label>
                 <select style={{ ...S.select, width: "100%", border: `1.5px solid ${C.border}` }} value={form.incisionStatus} onChange={e => setField("incisionStatus", e.target.value)}>
+                  <option value="">--- Select ---</option>
                   <option value="Clean/Dry/Intact">Clean / Dry / Intact (CDI)</option>
                   <option value="Mild Swelling">Mild Swelling — Monitoring</option>
                   <option value="Seroma Present">Seroma Present</option>
@@ -244,6 +246,7 @@ export default function Step3TreatmentPlan({ form, setField, goToStep, handleSur
             <div>
               <label style={S.label}>Weight-Bearing Status</label>
               <select style={{ ...S.select, width: "100%", border: `1.5px solid ${C.border}` }} value={form.weightBearingStatus} onChange={e => setField("weightBearingStatus", e.target.value)}>
+                <option value="">--- Select ---</option>
                 <option value="Non-weight bearing">Non-weight bearing (NWB)</option>
                 <option value="Toe-touching">Toe-touching weight bearing (TTWB)</option>
                 <option value="Partial">Partial weight bearing (PWB)</option>

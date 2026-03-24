@@ -1,4 +1,24 @@
-# CLAUDE.md - K9-REHAB-PRO
+# CLAUDE.md — K9 Rehab Pro™
+
+## Ownership & Intellectual Property
+
+**Product:** K9 Rehab Pro™
+**AI Engine:** B.E.A.U. (Biomedical Evidence-Based Assessment Utility)
+**Owner / Author:** Salvatore Bonanno
+**Role:** Canine Rehabilitation Nurse (CCRN) | Software Developer | Founder
+**Copyright:** © 2025 Salvatore Bonanno. All rights reserved.
+
+This codebase, all clinical logic, exercise data, protocol rules, and B.E.A.U.'s
+system prompt (`BEAUS_BRAIN_AI_PROMPT`) are the proprietary intellectual property
+of Salvatore Bonanno. Unauthorized use, reproduction, or distribution is prohibited.
+
+**Background:** Salvatore Bonanno built K9 Rehab Pro™ from 30 years of veterinary
+nursing experience, including founding and running the canine rehabilitation department
+at BluePearl Veterinary Partners (formerly Lauderdale Veterinary Specialists) in Fort
+Lauderdale, Florida from 2016–2024. Every protocol, every phase gate, and every
+clinical rule in this system came from real clinical work with real patients.
+
+---
 
 ## Clinical Source of Truth
 

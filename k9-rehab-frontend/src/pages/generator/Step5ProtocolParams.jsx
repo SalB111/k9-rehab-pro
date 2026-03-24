@@ -10,11 +10,12 @@ export default function Step5ProtocolParams({ form, setField, generate, allExerc
     <>
       {/* ═══════════ SECTION 5: PROTOCOL PARAMETERS ═══════════ */}
       <div style={{ background: C.navy, border: `1px solid ${C.navy}`, borderRadius: 10, padding: "16px 20px", marginBottom: 12, color: "#fff" }}>
-        <SectionHead icon={FiCalendar} title="Section 5 — Protocol Parameters" />
+        <SectionHead icon={FiCalendar} title="Protocol Parameters" />
         <div style={S.grid(3)}>
           <div>
             <label style={S.label}>Protocol Duration</label>
             <select style={{ ...S.select, width: "100%", border: `1.5px solid ${C.border}` }} value={form.protocolLength} onChange={e => setField("protocolLength", e.target.value)}>
+              <option value="">--- Select ---</option>
               <option value="6">6 weeks — Accelerated (mild)</option>
               <option value="8">8 weeks — Standard post-surgical</option>
               <option value="10">10 weeks — Extended recovery</option>
@@ -25,6 +26,7 @@ export default function Step5ProtocolParams({ form, setField, generate, allExerc
           <div>
             <label style={S.label}>Session Frequency (per week)</label>
             <select style={{ ...S.select, width: "100%", border: `1.5px solid ${C.border}` }} value={form.sessionFrequency} onChange={e => setField("sessionFrequency", e.target.value)}>
+              <option value="">--- Select ---</option>
               <option value="1">1× per week</option>
               <option value="2">2× per week (Recommended)</option>
               <option value="3">3× per week (Intensive)</option>
@@ -34,6 +36,7 @@ export default function Step5ProtocolParams({ form, setField, generate, allExerc
           <div>
             <label style={S.label}>Expected Owner Compliance</label>
             <select style={{ ...S.select, width: "100%", border: `1.5px solid ${C.border}` }} value={form.ownerCompliance} onChange={e => setField("ownerCompliance", e.target.value)}>
+              <option value="">--- Select ---</option>
               <option value="Highly Motivated">Highly Motivated — Will follow HEP diligently</option>
               <option value="Motivated">Motivated — Reliable with reminders</option>
               <option value="Average">Average — Moderate adherence expected</option>
@@ -306,13 +309,13 @@ export default function Step5ProtocolParams({ form, setField, generate, allExerc
               {/* Client Info Card */}
               <div style={{ background: C.bg, border: `1.5px solid ${C.border}`, borderRadius: 10, padding: "14px 16px" }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: C.teal, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 8 }}>Client Information</div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: C.text, marginBottom: 2 }}>{form.clientName || "\u2014"}</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: C.text, marginBottom: 2 }}>{[form.clientLastName, form.clientFirstName].filter(Boolean).join(", ") || "\u2014"}</div>
                 {form.clientEmail && <div style={{ fontSize: 11, color: C.text, marginBottom: 2 }}>{form.clientEmail}</div>}
                 {form.clientPhone && <div style={{ fontSize: 11, color: C.text, marginBottom: 2 }}>{form.clientPhone}</div>}
                 {form.referringVet && <div style={{ fontSize: 11, color: C.textLight, marginTop: 4 }}>Referring DVM: <strong style={{ color: C.text }}>{form.referringVet}</strong></div>}
                 {form.treatingClinician && <div style={{ fontSize: 11, color: C.textLight, marginTop: 2 }}>Treating Clinician: <strong style={{ color: C.text }}>{form.treatingClinician}{form.clinicianCredentials ? `, ${form.clinicianCredentials}` : ""}</strong></div>}
                 {form.clientConsentObtained && (
-                  <div style={{ display: "inline-flex", alignItems: "center", gap: 4, marginTop: 6, padding: "3px 8px", background: C.greenBg, border: "1px solid #A7F3D0", borderRadius: 4 }}>
+                  <div style={{ display: "inline-flex", alignItems: "center", gap: 4, marginTop: 6, padding: "3px 8px", background: C.greenBg, border: `1px solid rgba(16,185,129,0.3)`, borderRadius: 4 }}>
                     <FiCheckCircle size={10} style={{ color: C.green }} />
                     <span style={{ fontSize: 10, fontWeight: 600, color: C.green }}>Consent Obtained{form.clientConsentDate ? ` \u2014 ${form.clientConsentDate}` : ""}</span>
                   </div>
@@ -324,22 +327,22 @@ export default function Step5ProtocolParams({ form, setField, generate, allExerc
                 <div style={{ fontSize: 10, fontWeight: 700, color: C.teal, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 8 }}>Safety Flags</div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                   {form.allergies && form.allergies.trim() && (
-                    <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 10px", borderRadius: 4, background: C.redBg, color: C.red, border: "1px solid #FECACA" }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 10px", borderRadius: 4, background: C.redBg, color: C.red, border: "1px solid rgba(220,38,38,0.3)" }}>
                       ALLERGY: {form.allergies}
                     </span>
                   )}
                   {form.temperament && form.temperament !== "Cooperative" && (
-                    <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 10px", borderRadius: 4, background: C.amberBg, color: C.amber, border: "1px solid #FDE68A" }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 10px", borderRadius: 4, background: C.amberBg, color: C.amber, border: "1px solid rgba(217,119,6,0.3)" }}>
                       {form.temperament}
                     </span>
                   )}
                   {form.incisionStatus && form.incisionStatus !== "Clean/Dry/Intact" && (
-                    <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 10px", borderRadius: 4, background: C.redBg, color: C.red, border: "1px solid #FECACA" }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 10px", borderRadius: 4, background: C.redBg, color: C.red, border: "1px solid rgba(220,38,38,0.3)" }}>
                       Incision: {form.incisionStatus}
                     </span>
                   )}
                   {(form.activityRestrictions || []).length > 0 && (
-                    <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 10px", borderRadius: 4, background: C.amberBg, color: C.amber, border: "1px solid #FDE68A" }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 10px", borderRadius: 4, background: C.amberBg, color: C.amber, border: "1px solid rgba(217,119,6,0.3)" }}>
                       {(form.activityRestrictions || []).length} Restriction(s)
                     </span>
                   )}
@@ -429,7 +432,7 @@ export default function Step5ProtocolParams({ form, setField, generate, allExerc
             )}
 
             {/* Missing Info Warnings */}
-            {(!form.patientName || !form.diagnosis || !form.treatmentApproach || (form.rehabGoals || []).length === 0) && (
+            {(!form.patientName || !form.diagnosis || !form.treatmentApproach || ((form.problems || []).length === 0 && (form.stGoals || []).length === 0 && (form.ltGoals || []).length === 0)) && (
               <div style={{ marginTop: 20, padding: "10px 16px", background: C.amberBg, border: `1.5px solid ${C.amber}`, borderRadius: 8, display: "flex", alignItems: "center", gap: 8 }}>
                 <FiAlertTriangle size={14} style={{ color: C.amber }} />
                 <span style={{ fontSize: 11, fontWeight: 600, color: C.amber }}>
@@ -437,7 +440,7 @@ export default function Step5ProtocolParams({ form, setField, generate, allExerc
                   {!form.patientName && " Patient Name,"}
                   {!form.diagnosis && " Diagnosis,"}
                   {!form.treatmentApproach && " Treatment Approach,"}
-                  {(form.rehabGoals || []).length === 0 && " Rehab Goals"}
+                  {((form.problems || []).length === 0 && (form.stGoals || []).length === 0 && (form.ltGoals || []).length === 0) && " Rehab Goals"}
                   {" \u2014 go back and complete for optimal protocol generation."}
                 </span>
               </div>
@@ -693,7 +696,7 @@ export default function Step5ProtocolParams({ form, setField, generate, allExerc
             e.currentTarget.style.boxShadow = "0 0 20px rgba(16,185,129,0.5), 0 0 40px rgba(16,185,129,0.3), 0 0 60px rgba(16,185,129,0.15), inset 0 1px 0 rgba(255,255,255,0.2)";
             e.currentTarget.style.transform = "translateY(0)";
           }}
-          onClick={generate} disabled={loading}
+          onClick={generate} disabled={loading || ((form.problems || []).length === 0 && (form.stGoals || []).length === 0 && (form.ltGoals || []).length === 0)}
         >
           <FiActivity size={18} />
           {loading ? "Generating Protocol..." : "Generate Exercise Protocol"}

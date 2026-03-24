@@ -12,7 +12,7 @@ import { useToast } from "../components/Toast";
 // ─────────────────────────────────────────────
 // CLIENTS VIEW
 // ─────────────────────────────────────────────
-function ClientsView() {
+function ClientsView({ setView, setSelectedPatient }) {
   const [clients, setClients] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: "", breed: "", age: "", weight: "", sex: "Male", condition: "", client_name: "", client_email: "", client_phone: "" });
@@ -84,7 +84,7 @@ function ClientsView() {
               <FiUsers size={16} style={{ color: C.teal }} />
             </div>
             <div>
-              <div style={{ fontSize: 18, fontWeight: 800, color: C.navy }}>{clients.length}</div>
+              <div style={{ fontSize: 18, fontWeight: 800, color: C.text }}>{clients.length}</div>
               <div style={{ fontSize: 10, color: C.textLight, textTransform: "uppercase", letterSpacing: "0.5px" }}>Total Patients</div>
             </div>
           </div>
@@ -105,7 +105,7 @@ function ClientsView() {
             </button>
           )}
           <button style={S.btn("dark")} onClick={() => setShowForm(!showForm)}>
-            <span style={{ fontSize: 14 }}>⚕</span> Register Patient
+Register Patient
           </button>
         </div>
       </div>
@@ -193,6 +193,7 @@ function ClientsView() {
                 cursor: "pointer", transition: "background 0.1s",
                 background: selectedIds.has(c.id) ? "rgba(14,165,233,0.06)" : "transparent",
               }}
+                onClick={() => { if (setView && setSelectedPatient) { setSelectedPatient(c); setView("patient-detail"); } }}
                 onMouseEnter={e => { if (!selectedIds.has(c.id)) e.currentTarget.style.background = C.bg; }}
                 onMouseLeave={e => { if (!selectedIds.has(c.id)) e.currentTarget.style.background = "transparent"; }}>
                 <td style={{ ...S.td, textAlign: "center", padding: "10px 0" }}
@@ -205,7 +206,7 @@ function ClientsView() {
                   />
                 </td>
                 <td style={S.td}>
-                  <div style={{ fontWeight: 600, color: C.navy }}>{c.name}</div>
+                  <div style={{ fontWeight: 600, color: C.text }}>{c.name}</div>
                   <div style={{ fontSize: 10, color: C.textLight, marginTop: 2 }}>ID: {c.id}</div>
                 </td>
                 <td style={S.td}>

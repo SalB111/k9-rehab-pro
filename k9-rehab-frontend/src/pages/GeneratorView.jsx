@@ -21,7 +21,6 @@ export default function GeneratorView({ initialStep }) {
   // ── Orchestration state ──
   const [protocol, setProtocol] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [showVideo, setShowVideo] = useState(false);
   const [error, setError] = useState(null);
   const [wizardStep, setWizardStep] = useState(initialStep || 1);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -88,20 +87,27 @@ export default function GeneratorView({ initialStep }) {
 
   // ── Generate protocol ──
   const generate = async () => {
-    if (!form.patientName.trim()) { setError("Patient name is required"); return; }
-    if (!form.diagnosis) { setError("Please select a diagnosis"); return; }
-    if (!form.affectedRegion) { setError("Please select an affected region"); return; }
-    if (!form.treatmentApproach) { setError("Please select a treatment approach (Surgical, Conservative, or Palliative)"); return; }
+    if (loading) return; // Debounce — prevent double-submit
+    if (!form.patientName.trim()) { setError("Patient Name is required"); return; }
+    if (!form.diagnosis) { setError("Diagnosis is required — select from the dropdown"); return; }
+    if (!form.affectedRegion) { setError("Affected Region is required — select from the dropdown"); return; }
+    if (!form.treatmentApproach) { setError("Treatment Approach is required — select Surgical, Conservative, or Palliative"); return; }
     if (!complianceAgreed) { setError("Please acknowledge the Compliance & Data Protection Notice"); return; }
 
-    setLoading(true); setShowVideo(true); setError(null); setProtocol(null);
+    setLoading(true); setError(null); setProtocol(null);
 
     const minDelay = new Promise(resolve => setTimeout(resolve, 11000));
 
     try {
+      // Strip empty strings from form — only send actual clinician selections
+      const cleanedForm = {};
+      for (const [key, value] of Object.entries(form)) {
+        if (value === "" || value === null || value === undefined) continue; // Skip unselected dropdowns
+        cleanedForm[key] = value;
+      }
       const [{ data: resp }] = await Promise.all([
         axios.post(`${API}/generate-protocol`, {
-          ...form,
+          ...cleanedForm,
           age: +form.age || 0,
           weight: +form.weightLbs || +form.weightKg * 2.20462 || 0,
           protocolLength: +form.protocolLength || 8
@@ -112,7 +118,7 @@ export default function GeneratorView({ initialStep }) {
       clearSavedForm();
     } catch (e) {
       setError(e.response?.data?.error || "Failed to generate protocol");
-    } finally { setLoading(false); setShowVideo(false); }
+    } finally { setLoading(false); }
   };
 
   // ── Exercise management ──
@@ -151,39 +157,7 @@ export default function GeneratorView({ initialStep }) {
 
   // ═══════════ EARLY RETURNS ═══════════
 
-  // Full-screen video while generating
-  if (showVideo) {
-    return (
-      <div style={{
-        position: "fixed", inset: 0, zIndex: 9999,
-        background: "#000", display: "flex", flexDirection: "column",
-        alignItems: "center", justifyContent: "center",
-      }}>
-        <video
-          src="/loading-animation.mp4"
-          autoPlay muted playsInline
-          style={{ width: "100vw", height: "100vh", objectFit: "contain" }}
-        />
-        <button
-          onClick={() => setShowVideo(false)}
-          style={{
-            position: "fixed", bottom: 32, right: 40, zIndex: 10000,
-            padding: "10px 28px", borderRadius: 8,
-            background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)",
-            border: "1px solid rgba(255,255,255,0.25)",
-            color: "rgba(255,255,255,0.6)", fontSize: 12, fontWeight: 600,
-            cursor: "pointer", transition: "all 0.2s",
-          }}
-          onMouseEnter={e => { e.currentTarget.style.color = "#fff"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.6)"; }}
-          onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,255,255,0.6)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.25)"; }}
-        >
-          Skip →
-        </button>
-      </div>
-    );
-  }
-
-  // Compact spinner after video skipped
+  // Compact spinner while generating
   if (loading) {
     return (
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "40vh", gap: 16 }}>
@@ -193,8 +167,8 @@ export default function GeneratorView({ initialStep }) {
           animation: "spin 0.8s linear infinite",
         }} />
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-        <div style={{ fontSize: 14, fontWeight: 600, color: C.navy }}>Generating Protocol...</div>
-        <div style={{ fontSize: 11, color: "#fff" }}>Building your evidence-based exercise program</div>
+        <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>Generating Protocol...</div>
+        <div style={{ fontSize: 11, color: C.textMid }}>Building your evidence-based exercise program</div>
       </div>
     );
   }

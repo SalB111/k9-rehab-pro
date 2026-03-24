@@ -14,7 +14,7 @@ const ATHLETIC_FOUNDATIONS = [
   {
     code: 'AF_DIG',
     name: 'Dig',
-    category: 'Athletic Foundations',
+    category: 'Canine Strength (Zink)',
     description: 'Controlled digging motion on a designated surface to strengthen forelimb flexors/extensors, shoulder stabilizers, and core musculature. The repetitive pawing engages the biceps brachii, supraspinatus, and digital flexors in a functional movement pattern.',
     equipment: ['Sandbox or designated dig area', 'High-value buried treats', 'Towel for cleanup'],
     setup: 'Place high-value treats or toy partially buried in a sandbox or soft dirt area. Position dog standing in front of dig area on stable footing.',
@@ -53,7 +53,7 @@ const ATHLETIC_FOUNDATIONS = [
   {
     code: 'AF_HIGH_FIVE_WAVE',
     name: 'High Five and Wave',
-    category: 'Athletic Foundations',
+    category: 'Canine Strength (Zink)',
     description: 'Unilateral forelimb elevation from a sitting or standing position to strengthen shoulder flexors, improve scapular stability, and challenge core balance. The controlled paw lift activates the deltoideus, supraspinatus, and triceps of the weight-bearing limb.',
     equipment: ['Non-slip surface', 'High-value treats', 'Target stick (optional)'],
     setup: 'Dog in a stable sit or stand on a non-slip surface. Handler positioned in front at eye level.',
@@ -93,7 +93,7 @@ const ATHLETIC_FOUNDATIONS = [
   {
     code: 'AF_SNOOPYS',
     name: 'Snoopys',
-    category: 'Athletic Foundations',
+    category: 'Canine Strength (Zink)',
     description: 'Rhythmic bilateral forelimb elevation while in a standing position, mimicking a happy dance. Strengthens the shoulder girdle, improves bilateral forelimb coordination, and activates core stabilizers as the dog shifts weight between hind limbs.',
     equipment: ['Non-slip surface', 'High-value treats', 'Handler lure hand'],
     setup: 'Dog standing squarely on a non-slip surface. Handler stands directly in front holding a treat above the dog\'s head.',
@@ -132,7 +132,7 @@ const ATHLETIC_FOUNDATIONS = [
   {
     code: 'AF_ABDOM_COOKIE',
     name: 'Abdominal Cookie Reach',
-    category: 'Athletic Foundations',
+    category: 'Canine Strength (Zink)',
     description: 'Targeted core activation exercise where the dog reaches laterally or ventrally toward a treat from a standing position, engaging the oblique and rectus abdominis muscles. Promotes trunk flexion control and lateral stability.',
     equipment: ['Non-slip surface', 'Small high-value treats'],
     setup: 'Dog standing squarely on a non-slip surface. Handler kneels beside the dog with treats in hand.',
@@ -171,7 +171,7 @@ const ATHLETIC_FOUNDATIONS = [
   {
     code: 'AF_ROCKERBOARD',
     name: 'Rockerboard Exercises',
-    category: 'Athletic Foundations',
+    category: 'Canine Strength (Zink)',
     description: 'Controlled weight shifting on an unstable rocker surface to strengthen bilateral limb stabilizers, activate proprioceptive pathways, and improve dynamic postural control. Engages core, shoulder, and pelvic stabilizers simultaneously.',
     equipment: ['Rocker board (commercial or DIY)', 'Non-slip mat beneath board', 'High-value treats', 'Spotter'],
     setup: 'Place rocker board on a non-slip surface. Have spotter present for safety. Dog approaches from the side.',
@@ -210,7 +210,7 @@ const ATHLETIC_FOUNDATIONS = [
   {
     code: 'AF_ROLL_OVER',
     name: 'Roll Over',
-    category: 'Athletic Foundations',
+    category: 'Canine Strength (Zink)',
     description: 'Full trunk rotation from lateral recumbency through dorsal to opposite lateral, engaging the obliques, paraspinals, and hip rotators. Promotes spinal mobility, core flexibility, and body awareness.',
     equipment: ['Soft padded surface', 'High-value treats'],
     setup: 'Dog in a down position on a soft, padded surface. Handler kneels beside the dog.',
@@ -249,7 +249,7 @@ const ATHLETIC_FOUNDATIONS = [
   {
     code: 'AF_SIT_TO_STAND',
     name: 'Sit to Stand',
-    category: 'Athletic Foundations',
+    category: 'Canine Strength (Zink)',
     description: 'Repetitive sit-to-stand transitions to strengthen the quadriceps, hamstrings, gluteals, and gastrocnemius. Functions as a controlled squat, building hind limb strength critical for stair climbing, rising, and gait quality.',
     equipment: ['Non-slip surface', 'Treats for luring'],
     setup: 'Dog on a non-slip surface with adequate room. Handler stands in front of the dog.',
@@ -288,7 +288,7 @@ const ATHLETIC_FOUNDATIONS = [
   {
     code: 'AF_BEG_STAND_BEG',
     name: 'Beg-Stand-Beg',
-    category: 'Athletic Foundations',
+    category: 'Canine Strength (Zink)',
     description: 'Three-position transition exercise cycling between a beg (seated forelimb lift), standing, and back to beg. Targets hind limb strength, core stability, and hip extensor endurance. The beg position loads the lumbar paraspinals and hip flexors.',
     equipment: ['Non-slip surface', 'High-value treats', 'Wall or corner for initial support (optional)'],
     setup: 'Dog on a non-slip surface. Handler stands in front. For initial sessions, position dog near a wall for support.',
@@ -328,7 +328,7 @@ const ATHLETIC_FOUNDATIONS = [
   {
     code: 'AF_PEABODYS',
     name: 'Peabodys',
-    category: 'Athletic Foundations',
+    category: 'Canine Strength (Zink)',
     description: 'Walking exercise where the dog is lured to maintain a head-up, collected posture with shortened stride and elevated weight-bearing on the hind limbs. Named after the classic marching posture, this exercise targets hamstrings, gluteals, and lumbar extensors.',
     equipment: ['Non-slip surface or firm grass', 'High-value treats', 'Short leash'],
     setup: 'Dog on leash in a standing position. Handler walks beside the dog with treat held just above nose level.',
@@ -367,7 +367,7 @@ const ATHLETIC_FOUNDATIONS = [
   {
     code: 'AF_WALK_BACKWARD',
     name: 'Walk Backward',
-    category: 'Athletic Foundations',
+    category: 'Canine Strength (Zink)',
     description: 'Controlled reverse ambulation to target hip extensors, hamstrings, and proprioceptive awareness. Backward walking increases hind limb joint flexion angles and requires deliberate conscious placement, making it valuable for neurological and orthopedic rehabilitation.',
     equipment: ['Non-slip surface', 'Treats', 'Narrow hallway or guide rails (optional)'],
     setup: 'Dog standing in a hallway or between two guide rails. Handler faces the dog with treats at chest level.',
@@ -406,7 +406,7 @@ const ATHLETIC_FOUNDATIONS = [
   {
     code: 'AF_RETRIEVE_UPHILL',
     name: 'Retrieve Uphill',
-    category: 'Athletic Foundations',
+    category: 'Canine Strength (Zink)',
     description: 'Controlled fetch on an inclined surface to increase hind limb drive during the uphill return phase. The incline loads the gluteals, hamstrings, and gastrocnemius eccentrically on descent and concentrically on ascent, providing functional strengthening.',
     equipment: ['Moderate incline or hill (10–20 degrees)', 'Fetch toy or ball', 'Long leash for control'],
     setup: 'Handler at the top of a moderate grassy incline. Dog at the handler\'s side, leashed for initial sessions.',
@@ -445,7 +445,7 @@ const ATHLETIC_FOUNDATIONS = [
   {
     code: 'AF_STAND_DOWN_STAND',
     name: 'Stand-Down-Stand',
-    category: 'Athletic Foundations',
+    category: 'Canine Strength (Zink)',
     description: 'Controlled transitions between standing and down positions to eccentrically load the quadriceps on descent and concentrically load hip/stifle extensors on ascent. Builds functional strength for daily activities like lying down and rising.',
     equipment: ['Non-slip surface', 'Treats for luring'],
     setup: 'Dog standing squarely on a non-slip surface. Handler in front or beside the dog.',
@@ -484,7 +484,7 @@ const ATHLETIC_FOUNDATIONS = [
   {
     code: 'AF_TUG',
     name: 'Tug',
-    category: 'Athletic Foundations',
+    category: 'Canine Strength (Zink)',
     description: 'Controlled tug-of-war to strengthen the cervical musculature, forelimb extensors, core stabilizers, and hind limb drive. When performed with rules, tug provides an isometric and concentric loading pattern that improves jaw strength, neck stability, and overall body engagement.',
     equipment: ['Sturdy tug toy (rope, rubber, or firehose)', 'Non-slip surface'],
     setup: 'Dog standing on a non-slip surface. Handler holds the tug toy with both hands. Ensure adequate space for movement.',
@@ -523,7 +523,7 @@ const ATHLETIC_FOUNDATIONS = [
   {
     code: 'AF_CRAWL',
     name: 'Crawl',
-    category: 'Athletic Foundations',
+    category: 'Canine Strength (Zink)',
     description: 'Army crawl movement where the dog moves forward from a down position without rising to a stand. Engages the hip flexors, shoulder extensors, and core musculature in a low-profile, high-engagement pattern. Promotes body awareness and controlled limb coordination.',
     equipment: ['Non-slip surface', 'High-value treats', 'Low barrier (chair, limbo bar) optional'],
     setup: 'Dog in a down position on a non-slip surface. Handler kneels in front with a treat at ground level.',
@@ -562,7 +562,7 @@ const ATHLETIC_FOUNDATIONS = [
   {
     code: 'AF_RETRIEVE_LAND_WATER',
     name: 'Retrieve on Land & Water',
-    category: 'Athletic Foundations',
+    category: 'Canine Strength (Zink)',
     description: 'Dual-environment fetch combining land-based sprinting with aquatic swimming during the return phase. The transition between terrain and water provides a comprehensive cardiovascular and musculoskeletal workout with the buoyancy-assisted recovery of the water phase.',
     equipment: ['Floating fetch toy', 'Shallow-entry body of water (lake, calm pond)', 'Long leash', 'Canine life vest'],
     setup: 'Handler at the water\'s edge with a gentle, gradual entry slope. Dog wearing a life vest (required for safety). Calm water conditions only.',
@@ -606,7 +606,7 @@ const ATHLETIC_FOUNDATIONS = [
   {
     code: 'AF_STEP_OVER_POLES',
     name: 'Step Over Poles',
-    category: 'Athletic Foundations',
+    category: 'Canine Strength (Zink)',
     description: 'Walking over a series of ground poles (cavaletti) set at a height that requires deliberate limb elevation. Improves joint flexion angles, stride length awareness, proprioceptive input, and conscious limb placement — critical after orthopedic or neurological injury.',
     equipment: ['4–6 ground poles or PVC pipes', 'Pole supports or cones (adjustable height)', 'Non-slip surface', 'Treats'],
     setup: 'Set poles in a straight line, spaced 1 body length apart. Start at ground level and raise as proficiency improves. Place on a non-slip surface.',
@@ -645,7 +645,7 @@ const ATHLETIC_FOUNDATIONS = [
   {
     code: 'AF_STEP_THROUGH_LADDER',
     name: 'Step Through a Ladder',
-    category: 'Athletic Foundations',
+    category: 'Canine Strength (Zink)',
     description: 'Walking through a ladder placed flat on the ground to promote precise paw placement, spatial awareness, and deliberate limb coordination. Each rung space requires the dog to consciously plan foot falls, activating cortical motor pathways and proprioceptive processing.',
     equipment: ['Agility ladder or standard ladder laid flat', 'Non-slip surface', 'Treats'],
     setup: 'Place ladder flat on the ground on a non-slip surface. Ensure rungs are spaced appropriately for the dog\'s stride (one body-length segments work well).',
@@ -684,7 +684,7 @@ const ATHLETIC_FOUNDATIONS = [
   {
     code: 'AF_RANDOM_GROUND_POLES',
     name: 'Random Ground Poles',
-    category: 'Athletic Foundations',
+    category: 'Canine Strength (Zink)',
     description: 'Navigating poles scattered randomly on the ground at varying angles and spacings. Unlike structured cavaletti, this challenges adaptive motor planning, improves cognitive-motor integration, and requires real-time proprioceptive adjustment at each step.',
     equipment: ['6–10 ground poles or pool noodles', 'Non-slip surface', 'Treats'],
     setup: 'Scatter poles randomly across a 3x3 meter area at various angles and spacings. Some parallel, some crossed, some closer, some further apart.',
@@ -723,7 +723,7 @@ const ATHLETIC_FOUNDATIONS = [
   {
     code: 'AF_SPINS',
     name: 'Spins',
-    category: 'Athletic Foundations',
+    category: 'Canine Strength (Zink)',
     description: 'Lured tight-circle turning in both directions to promote lateral flexion, activate the obliques and lateral trunk stabilizers, and improve proprioceptive awareness through the inner and outer limbs. Reveals asymmetry in trunk flexibility and limb loading.',
     equipment: ['Non-slip surface', 'High-value treats'],
     setup: 'Dog standing on a non-slip surface with room to turn a full circle. Handler stands in front.',
@@ -767,7 +767,7 @@ const ATHLETIC_FOUNDATIONS = [
   {
     code: 'AF_COOKIE_STRETCHES',
     name: 'Cookie Stretches',
-    category: 'Athletic Foundations',
+    category: 'Canine Strength (Zink)',
     description: 'Lure-guided cervical and trunk stretches using treat targeting to achieve lateral flexion, ventral flexion, and extension. A cornerstone flexibility exercise that systematically mobilizes the cervical and thoracolumbar spine through full range of motion.',
     equipment: ['Non-slip surface', 'Small, soft treats (multiple)'],
     setup: 'Dog standing squarely on a non-slip surface. Handler kneels beside the dog. Have 10–15 small treats ready.',
@@ -806,7 +806,7 @@ const ATHLETIC_FOUNDATIONS = [
   {
     code: 'AF_PLAY_BOW',
     name: 'Play Bow',
-    category: 'Athletic Foundations',
+    category: 'Canine Strength (Zink)',
     description: 'Lured or cued thoracic limb flexion with the chest lowering toward the ground while hind limbs remain standing. Stretches the thoracolumbar extensors, hip flexors, and latissimus dorsi while loading the hind limbs in a weight-bearing extended position.',
     equipment: ['Non-slip surface', 'High-value treats'],
     setup: 'Dog standing squarely on a non-slip surface. Handler in front at the dog\'s level.',
@@ -845,7 +845,7 @@ const ATHLETIC_FOUNDATIONS = [
   {
     code: 'AF_CAT_STRETCH',
     name: 'Cat Stretch',
-    category: 'Athletic Foundations',
+    category: 'Canine Strength (Zink)',
     description: 'Spinal flexion and extension stretch mimicking the feline arching and sagging posture. Mobilizes the thoracolumbar spine, stretches the ventral and dorsal trunk musculature, and promotes intervertebral segmental motion.',
     equipment: ['Non-slip surface', 'Treats', 'Gentle manual guidance (optional)'],
     setup: 'Dog standing squarely on a non-slip surface. Handler kneels beside the dog.',
@@ -884,7 +884,7 @@ const ATHLETIC_FOUNDATIONS = [
   {
     code: 'AF_SPINE_STRETCH',
     name: 'Spine Stretch',
-    category: 'Athletic Foundations',
+    category: 'Canine Strength (Zink)',
     description: 'Sustained longitudinal spinal traction stretch achieved through a gentle play bow with forelimb walk-out. Decompresses intervertebral spaces, stretches the longissimus dorsi and multifidus muscles, and elongates the ventral abdominal fascia.',
     equipment: ['Non-slip surface', 'High-value treats'],
     setup: 'Dog standing on a non-slip surface. Handler in front with treats.',
@@ -923,7 +923,7 @@ const ATHLETIC_FOUNDATIONS = [
   {
     code: 'AF_PASSIVE_ROM',
     name: 'Passive Range of Motion',
-    category: 'Athletic Foundations',
+    category: 'Canine Strength (Zink)',
     description: 'Manual joint mobilization through available range by the handler or therapist. Applied to all major appendicular joints to maintain flexibility, prevent contracture, and assess joint health. Fundamental to any rehabilitation program.',
     equipment: ['Soft padded surface', 'Treats for calming', 'Towel for limb support'],
     setup: 'Dog in lateral recumbency on a padded surface. Affected limb accessible. Handler positioned beside the dog.',
@@ -967,7 +967,7 @@ const ATHLETIC_FOUNDATIONS = [
   {
     code: 'AF_TROT_ON_LEASH',
     name: 'Trot on Leash',
-    category: 'Athletic Foundations',
+    category: 'Canine Strength (Zink)',
     description: 'Controlled leash trotting at a sustained pace to build cardiovascular endurance, improve gait symmetry, and condition the musculoskeletal system. The trot is the preferred gait for rehabilitation assessment as it is a symmetrical, diagonal gait pattern.',
     equipment: ['4–6 foot fixed leash (not retractable)', 'Flat collar or harness', 'Flat, even surface'],
     setup: 'Dog on leash at handler\'s side. Flat, even surface such as sidewalk, packed trail, or firm grass. Warm up with 5 minutes of walking first.',
@@ -1006,7 +1006,7 @@ const ATHLETIC_FOUNDATIONS = [
   {
     code: 'AF_TREADMILL',
     name: 'Treadmill',
-    category: 'Athletic Foundations',
+    category: 'Canine Strength (Zink)',
     description: 'Controlled walking or trotting on a motorized or manual treadmill for consistent-pace cardiovascular conditioning. Allows precise speed control, eliminates terrain variables, and enables indoor training regardless of weather. Facilitates gait analysis during exercise.',
     equipment: ['Canine or human treadmill', 'Side rails or leash attachment point', 'Non-slip treadmill belt', 'Treats'],
     setup: 'Introduce the treadmill while OFF first. Allow the dog to stand on the stationary belt. Secure with a short leash to an overhead point — never around the neck unattended.',
@@ -1045,7 +1045,7 @@ const ATHLETIC_FOUNDATIONS = [
   {
     code: 'AF_PULL_SCOOTER',
     name: 'Pull a Scooter',
-    category: 'Athletic Foundations',
+    category: 'Canine Strength (Zink)',
     description: 'Controlled draft work where the dog pulls a person on a kick scooter at a trot. Provides sustained cardiovascular and musculoskeletal loading through harness-driven forward propulsion. Engages the chest, shoulders, core, and hind limb drive chain.',
     equipment: ['Well-fitted pulling harness (NOT collar)', 'Kick scooter with brakes', 'Bungee line attachment (shock absorption)', 'Flat, smooth surface'],
     setup: 'Fit the dog with a proper pulling harness distributing force across the chest. Attach bungee line from harness to scooter. Flat surface, low traffic area.',
@@ -1084,7 +1084,7 @@ const ATHLETIC_FOUNDATIONS = [
   {
     code: 'AF_TROT_POWERED_SCOOTER',
     name: 'Trot Behind a Powered Scooter',
-    category: 'Athletic Foundations',
+    category: 'Canine Strength (Zink)',
     description: 'Controlled trotting alongside or behind a slow-moving powered scooter for sustained cardiovascular conditioning. The scooter sets a consistent pace, allowing the handler to focus on monitoring gait quality. The dog is NOT pulling — it is pacing alongside.',
     equipment: ['Low-speed electric scooter or golf cart', 'Standard leash and harness', 'Flat, traffic-free surface', 'Water for hydration'],
     setup: 'Dog on leash attached to handler (NOT to the scooter). Handler rides the scooter at a slow, steady speed matching the dog\'s natural trot. Traffic-free area only.',
@@ -1123,7 +1123,7 @@ const ATHLETIC_FOUNDATIONS = [
   {
     code: 'AF_INLINE_SKATING_TROT',
     name: 'Trot with a Person Inline Skating',
-    category: 'Athletic Foundations',
+    category: 'Canine Strength (Zink)',
     description: 'Sustained trotting alongside a handler on inline skates for cardiovascular endurance training. The skating handler can match the dog\'s natural trot speed efficiently. Provides an extended, consistent-pace cardiovascular workout on smooth surfaces.',
     equipment: ['Inline skates with brakes', 'Hands-free waist leash system', 'Dog harness', 'Smooth, flat surface', 'Protective gear for handler'],
     setup: 'Handler in inline skates with protective gear. Dog in a well-fitted harness attached to a hands-free waist belt with bungee shock absorber. Smooth, flat, traffic-free path.',
@@ -1162,7 +1162,7 @@ const ATHLETIC_FOUNDATIONS = [
   {
     code: 'AF_SWIM_LONG_DISTANCE',
     name: 'Swim Long Distances',
-    category: 'Athletic Foundations',
+    category: 'Canine Strength (Zink)',
     description: 'Sustained open-water or pool swimming for cardiovascular endurance and full-body conditioning. Swimming is a non-weight-bearing exercise that provides resistance through all limbs while eliminating concussive joint forces, making it ideal for conditioning without joint stress.',
     equipment: ['Canine life vest (required)', 'Safe body of water (pool, lake, calm river)', 'Long line for safety', 'Towels', 'Fresh water for drinking'],
     setup: 'Dog fitted with a properly sized canine life vest. Water temperature between 24–28°C (75–82°F) is ideal. Gradual entry point available. Handler in water or at water\'s edge with safety line.',

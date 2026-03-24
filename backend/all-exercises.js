@@ -18,6 +18,9 @@ const EXERCISES_PART7 = require('./exercises-part7');
 const EXERCISES_PART8 = require('./exercises-part8');
 const EXERCISES_PART9 = require('./exercises-part9');
 const EXERCISES_PART10 = require('./exercises-part10');
+const EXERCISES_PART11 = require('./exercises-part11');
+const EXERCISES_PART12 = require('./exercises-part12');
+const EXERCISES_PART13 = require('./exercises-part13');
 
 // ============================================================================
 // MEDICAL-GRADE ENHANCEMENT SYSTEM
@@ -62,7 +65,10 @@ const ALL_EXERCISES_RAW = [
   ...EXERCISES_PART7,  // 60 exercises - Advanced Hydrotherapy, Geriatric, Neuro, Post-Surgical
   ...EXERCISES_PART8,  // 35 exercises - Sport Conditioning & Complementary Therapies
   ...EXERCISES_PART9,  // 40 exercises - Pediatric, Palliative, Breed-Specific
-  ...EXERCISES_PART10  // 30 exercises - Athletic Foundations: General Rehab
+  ...EXERCISES_PART10,  // 30 exercises - Athletic Foundations: General Rehab
+  ...EXERCISES_PART11,  // 12 exercises - Phase-Specific UWTM & Aquatic Protocols
+  ...EXERCISES_PART12,  // 10 exercises - Soft Tissue, Sport Conditioning & Return to Function
+  ...EXERCISES_PART13   // 15 exercises - Feline Rehabilitation (Species Expansion)
 ];
 
 const ALL_EXERCISES_BASE = ALL_EXERCISES_RAW.filter(ex => !DUPLICATE_CODES.has(ex.code));

@@ -8,6 +8,9 @@ function LoginView({ onLogin, onRegister }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
+  const [credentialType, setCredentialType] = useState("DVM");
+  const [credentialNumber, setCredentialNumber] = useState("");
+  const [credentialAttested, setCredentialAttested] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -32,7 +35,11 @@ function LoginView({ onLogin, onRegister }) {
     setLoading(true);
     let result;
     if (isRegistering) {
-      result = await onRegister(username, password, displayName || username);
+      result = await onRegister(username, password, displayName || username, {
+        credential_type: credentialType,
+        credential_number: credentialNumber,
+        credential_attested: credentialAttested,
+      });
     } else {
       result = await onLogin(username, password);
     }
@@ -75,7 +82,7 @@ function LoginView({ onLogin, onRegister }) {
             margin: 0,
           }}>K9 REHAB PRO{"\u2122"}</h1>
           <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 11, marginTop: 6, letterSpacing: 1 }}>
-            EVIDENCE-BASED REHABILITATION PROTOCOLS
+            B.E.A.U.{"\u2122"} &mdash; CLINICAL PROTOCOL INTELLIGENCE
           </p>
         </div>
 
@@ -169,6 +176,51 @@ function LoginView({ onLogin, onRegister }) {
               </div>
             )}
 
+            {isRegistering && (
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ display: "block", color: "rgba(255,255,255,0.7)", fontSize: 11, fontWeight: 600, marginBottom: 6, letterSpacing: 0.5 }}>
+                  CREDENTIAL TYPE
+                </label>
+                <select
+                  value={credentialType}
+                  onChange={(e) => setCredentialType(e.target.value)}
+                  style={{
+                    width: "100%", padding: "10px 14px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.15)",
+                    background: "rgba(255,255,255,0.06)", color: "#fff", fontSize: 14,
+                    outline: "none", boxSizing: "border-box",
+                  }}
+                >
+                  <option value="DVM" style={{ background: "#1a1a2e" }}>DVM — Doctor of Veterinary Medicine</option>
+                  <option value="CCRP" style={{ background: "#1a1a2e" }}>CCRP — Certified Canine Rehab Practitioner</option>
+                  <option value="CCRT" style={{ background: "#1a1a2e" }}>CCRT — Certified Canine Rehab Therapist</option>
+                  <option value="RVT" style={{ background: "#1a1a2e" }}>RVT — Registered Veterinary Technician</option>
+                  <option value="Student" style={{ background: "#1a1a2e" }}>Student / Trainee</option>
+                </select>
+              </div>
+            )}
+
+            {isRegistering && credentialType !== "Student" && (
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ display: "block", color: "rgba(255,255,255,0.7)", fontSize: 11, fontWeight: 600, marginBottom: 6, letterSpacing: 0.5 }}>
+                  LICENSE / CREDENTIAL NUMBER
+                </label>
+                <input
+                  type="text"
+                  value={credentialNumber}
+                  onChange={(e) => setCredentialNumber(e.target.value)}
+                  style={{
+                    width: "100%", padding: "10px 14px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.15)",
+                    background: "rgba(255,255,255,0.06)", color: "#fff", fontSize: 14,
+                    outline: "none", boxSizing: "border-box", transition: "border-color 0.2s",
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = C.teal}
+                  onBlur={(e) => e.target.style.borderColor = "rgba(255,255,255,0.15)"}
+                  placeholder="e.g., DVM-12345"
+                  required
+                />
+              </div>
+            )}
+
             <div style={{ marginBottom: 24 }}>
               <label style={{ display: "block", color: "rgba(255,255,255,0.7)", fontSize: 11, fontWeight: 600, marginBottom: 6, letterSpacing: 0.5 }}>
                 PASSWORD
@@ -190,9 +242,24 @@ function LoginView({ onLogin, onRegister }) {
               />
             </div>
 
+            {isRegistering && (
+              <label style={{
+                display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 20,
+                cursor: "pointer", color: "rgba(255,255,255,0.6)", fontSize: 11, lineHeight: 1.4,
+              }}>
+                <input
+                  type="checkbox"
+                  checked={credentialAttested}
+                  onChange={(e) => setCredentialAttested(e.target.checked)}
+                  style={{ accentColor: C.teal, marginTop: 2, flexShrink: 0 }}
+                />
+                I attest that my credentials are accurate and I am authorized to use clinical decision-support tools within my scope of practice.
+              </label>
+            )}
+
             <button
               type="submit"
-              disabled={loading || serverDown}
+              disabled={loading || serverDown || (isRegistering && !credentialAttested)}
               style={{
                 width: "100%", padding: "12px 0", borderRadius: 8, border: "none",
                 background: `linear-gradient(135deg, ${C.teal}, #39FF7E)`,

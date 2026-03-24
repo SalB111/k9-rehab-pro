@@ -10,7 +10,7 @@ export default function Step4RehabGoals({ form, setField, goToStep }) {
     <>
       {/* -- Section Header + Problem List -- */}
       <div style={{ background: C.navy, border: `1px solid ${C.navy}`, borderRadius: 10, padding: "16px 20px", marginBottom: 10, color: "#fff" }}>
-        <SectionHead icon={FiAward} title="Section 4 — Rehabilitation Goals & Prognosis" />
+        <SectionHead icon={FiAward} title="Rehabilitation Goals & Prognosis" />
         <div style={{ fontSize: 11, fontWeight: 700, color: C.teal, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10, marginTop: 14 }}>
           Problem List
         </div>
@@ -153,7 +153,7 @@ export default function Step4RehabGoals({ form, setField, goToStep }) {
           </div>
           <select style={{ ...S.select, width: "100%", border: `1.5px solid ${C.border}`, marginBottom: 12 }}
             value={form.prognosisRating} onChange={e => setField("prognosisRating", e.target.value)}>
-            <option value="">Select prognosis...</option>
+            <option value="">--- Select ---</option>
             <option value="Excellent">Excellent — Full return to prior function expected</option>
             <option value="Good">Good — Significant improvement expected, minor residual deficits</option>
             <option value="Fair">Fair — Moderate improvement expected, functional limitations likely</option>

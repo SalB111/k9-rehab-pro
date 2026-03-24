@@ -1102,7 +1102,7 @@ const EXERCISES_PART9 = [
   {
     code: 'STAIR_DESCEND',
     name: 'Stair Descending (Controlled)',
-    category: 'Active Therapeutic',
+    category: 'Active Assisted',
     description: 'Controlled stair descent for eccentric muscle strengthening of the quadriceps and hip extensors. Descending stairs requires coordinated eccentric contraction to control body weight against gravity, building functional strength for daily living activities.',
     equipment: ['Stairs with non-slip surface', 'Leash', 'Harness or sling (if needed)', 'Non-slip stair treads recommended'],
     setup: 'Select stairs with non-slip surface and good footing. Handler positions on the downhill side for safety. For post-surgical patients, use a sling or harness for initial support.',
@@ -1141,7 +1141,7 @@ const EXERCISES_PART9 = [
   {
     code: 'DIAGONAL_WALK',
     name: 'Diagonal Walking',
-    category: 'Active Therapeutic',
+    category: 'Active Assisted',
     description: 'Cross-body coordination exercise where the dog walks in diagonal patterns to engage contralateral limb pairs simultaneously. Promotes core stabilization, spinal health, and neuromotor coordination — especially valuable for IVDD maintenance and spinal rehab.',
     equipment: ['Non-slip surface', 'Leash', 'Cones or markers (optional)', 'Treats for motivation'],
     setup: 'Set up a clear, non-slip walking area. Optional: place cones in a diagonal grid pattern to guide the path. Handler walks alongside to direct diagonal movement.',
@@ -1180,7 +1180,7 @@ const EXERCISES_PART9 = [
   {
     code: 'JOG_LEASH',
     name: 'Jogging (Controlled Leash)',
-    category: 'Active Therapeutic',
+    category: 'Active Assisted',
     description: 'Controlled on-leash jogging at a pace faster than trot but slower than full run. Builds cardiovascular fitness, normalizes gait speed, and prepares for return to unrestricted activity. Used in the final phase of post-surgical rehabilitation.',
     equipment: ['Flat collar or harness', 'Standard 4-6 foot leash', 'Level, non-slip surface', 'Appropriate footwear for handler'],
     setup: 'Select a flat, even surface (grass field, rubberized track, or smooth path). Ensure dog has been warmed up with 5-10 minutes of walking. Handler must be able to jog comfortably alongside.',
@@ -1220,7 +1220,7 @@ const EXERCISES_PART9 = [
   {
     code: 'LAND_TREADMILL',
     name: 'Land Treadmill Walking/Trotting',
-    category: 'Active Therapeutic',
+    category: 'Active Assisted',
     description: 'Controlled walking or trotting on a motorized land treadmill for consistent-pace gait training. Allows precise speed control, eliminates terrain variables, enables indoor training, and facilitates gait observation. Different from underwater treadmill — no buoyancy support.',
     equipment: ['Canine or human treadmill (low-speed capable)', 'Side rails or safety leash attachment', 'Non-slip treadmill belt', 'Treats for motivation'],
     setup: 'Introduce treadmill while OFF first. Allow dog to stand on stationary belt. Secure with a short safety leash to overhead point — never tighten around neck. Start at slowest speed setting.',
@@ -1261,7 +1261,7 @@ const EXERCISES_PART9 = [
   {
     code: 'FETCH_CONTROLLED',
     name: 'Retrieve / Fetch (Controlled Distance)',
-    category: 'Active Therapeutic',
+    category: 'Active Assisted',
     description: 'Controlled land-based fetch at short distances to develop sprint acceleration and deceleration control. Used in final rehabilitation phases to restore functional activity patterns. Distance is strictly limited to prevent overexertion on the surgical limb.',
     equipment: ['Tennis ball or soft toy', 'Flat, non-slip surface (grass preferred)', 'Long leash for safety (20-30 ft)', 'Treats for recall'],
     setup: 'Select a flat grass surface free of holes or obstacles. Attach long line for safety. Mark a maximum distance with a cone. Keep throws low and straight — no high tosses.',
@@ -1341,7 +1341,7 @@ const EXERCISES_PART9 = [
   {
     code: 'WEIGHT_SHIFT_CC',
     name: 'Weight-Shift Standing (Cranial/Caudal)',
-    category: 'Active Therapeutic',
+    category: 'Active Assisted',
     description: 'Controlled forward and backward weight shifting to load forelimbs and hindlimbs alternately. Complements lateral weight shifting by challenging the sagittal plane. Promotes hind limb loading awareness and pelvic stabilization, especially important post-TPLO and for OA patients.',
     equipment: ['Non-slip mat', 'Treats or toy for motivation', 'Handler support if needed'],
     setup: 'Position dog in square standing stance on non-slip surface. Handler stands beside the dog with treats positioned to guide forward/backward shifting.',
@@ -1621,7 +1621,7 @@ const EXERCISES_PART9 = [
   {
     code: 'CAVALETTI_ELEV',
     name: 'Cavaletti - Elevated Height',
-    category: 'Cavaletti & Obstacle',
+    category: 'Balance & Proprioception',
     description: 'Walking over cavaletti rails set at elevated height to increase joint flexion demand during stepping. Higher rail height forces greater stifle, hip, and hock flexion compared to standard-height cavaletti. Targets ROM improvement and strengthening through increased range demand. Distinct from CAVALETTI_RAILS (low height for gait patterning).',
     equipment: ['Cavaletti rail set (adjustable height)', 'Non-slip surface', 'Treats', 'Leash for pacing'],
     setup: 'Set cavaletti rails at elevated height appropriate for dog size (approximately hock height or slightly above). Space rails 1-1.5 body lengths apart. Place on non-slip surface.',
@@ -1659,7 +1659,7 @@ const EXERCISES_PART9 = [
   {
     code: 'CAVALETTI_WEAVE',
     name: 'Cavaletti - Weave Pattern',
-    category: 'Cavaletti & Obstacle',
+    category: 'Balance & Proprioception',
     description: 'Walking through cavaletti rails arranged in a weave or curved pattern to add lateral weight shifting challenge. Combines the stepping demands of cavaletti with directional changes. Targets multi-directional proprioception, lateral stabilization, and dynamic balance during locomotion. Used as an advanced cavaletti progression.',
     equipment: ['Cavaletti rail set', 'Non-slip surface', 'Treats', 'Leash for pacing'],
     setup: 'Arrange cavaletti rails in a curved or offset pattern creating a weave path. Rail height at standard or slightly elevated. Ensure adequate spacing for the turn radius.',

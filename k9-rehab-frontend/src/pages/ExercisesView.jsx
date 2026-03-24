@@ -1,14 +1,17 @@
 import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import {
-  FiSearch, FiChevronDown, FiBook, FiMonitor, FiArrowUp, FiPlay, FiGrid, FiList
+  FiSearch, FiChevronDown, FiBook, FiMonitor, FiArrowUp, FiPlay, FiGrid, FiList, FiPrinter, FiLayers
 } from "react-icons/fi";
 import C from "../constants/colors";
 import S from "../constants/styles";
 import { API } from "../api/axios";
 import { getK9Icon } from "../K9Icons";
 import StoryboardPlayer from "../components/StoryboardPlayer";
+import AnatomyViewer3D from "../components/AnatomyViewer3D";
 import { useToast } from "../components/Toast";
+
+const PrintableHandout = React.lazy(() => import("../components/handout/PrintableHandout"));
 
 // ─────────────────────────────────────────────
 // EVIDENCE SECTION — Evidence-based reference display
@@ -80,7 +83,7 @@ function EvidenceSection({ grade, refs }) {
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{
-                    marginLeft: "auto", background: C.teal, color: "#fff",
+                    marginLeft: "auto", background: C.teal, color: C.surface,
                     padding: "2px 10px", borderRadius: 4, fontSize: 10, fontWeight: 700,
                     textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 3,
                     whiteSpace: "nowrap"
@@ -91,7 +94,7 @@ function EvidenceSection({ grade, refs }) {
               )}
             </div>
             {/* Citation text */}
-            <p style={{ fontSize: 11, color: C.textMid, margin: 0, lineHeight: 1.6, fontStyle: "italic" }}>
+            <p style={{ fontSize: 11, color: C.text, margin: 0, lineHeight: 1.6, fontStyle: "italic" }}>
               {ref.citation}
             </p>
             {/* Key findings */}
@@ -111,8 +114,9 @@ function EvidenceSection({ grade, refs }) {
 // ─────────────────────────────────────────────
 // EXERCISE CARD (expandable)
 // ─────────────────────────────────────────────
-function ExerciseCard({ e, onOpenStoryboard, onUseInProtocol }) {
+function ExerciseCard({ e, onOpenStoryboard, onUseInProtocol, onPrintHandout }) {
   const [open, setOpen] = useState(false);
+  const [showAnatomy, setShowAnatomy] = useState(false);
   const cardTopRef = useRef(null);
   const diffColor = e.difficulty_level === "Easy" ? "green" : e.difficulty_level === "Advanced" ? "orange" : "blue";
 
@@ -140,6 +144,19 @@ function ExerciseCard({ e, onOpenStoryboard, onUseInProtocol }) {
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
           <span style={S.badge("blue")}>{e.category}</span>
           <span style={S.badge(diffColor)}>{e.difficulty_level}</span>
+          {e.evidence_tier && (
+            <span style={{
+              fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 6,
+              background: e.evidence_tier === "Evidence-Based" ? `${C.green}18` :
+                          e.evidence_tier === "Evidence-Adjacent" ? `${C.teal}18` : `${C.amber}18`,
+              color: e.evidence_tier === "Evidence-Based" ? C.green :
+                     e.evidence_tier === "Evidence-Adjacent" ? C.teal : C.amber,
+              border: `1px solid ${e.evidence_tier === "Evidence-Based" ? C.green :
+                       e.evidence_tier === "Evidence-Adjacent" ? C.teal : C.amber}33`,
+            }}>
+              {e.evidence_tier}
+            </span>
+          )}
         </div>
         {!open && e.description && (
           <p style={{ fontSize: 12, color: C.textLight, margin: "8px 0 0", lineHeight: 1.5,
@@ -154,19 +171,34 @@ function ExerciseCard({ e, onOpenStoryboard, onUseInProtocol }) {
         <div style={{ borderTop: `1px solid ${C.borderLight}`, padding: "0 20px 20px" }}>
           {/* Description */}
           {e.description && (
-            <p style={{ fontSize: 13, color: C.textMid, lineHeight: 1.6, margin: "16px 0" }}>
+            <p style={{ fontSize: 13, color: C.text, lineHeight: 1.6, margin: "16px 0" }}>
               {e.description}
             </p>
+          )}
+
+          {/* Clinical Tags */}
+          {e.clinical_tags?.length > 0 && (
+            <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginBottom: 16 }}>
+              {e.clinical_tags.map((tag, i) => (
+                <span key={i} style={{
+                  background: `${C.teal}12`, color: C.teal, padding: "3px 10px",
+                  borderRadius: 20, fontSize: 10, fontWeight: 600, letterSpacing: "0.3px",
+                  border: `1px solid ${C.teal}22`,
+                }}>
+                  {tag.replace(/_/g, " ")}
+                </span>
+              ))}
+            </div>
           )}
 
           {/* Equipment */}
           {e.equipment?.length > 0 && (
             <div style={{ marginBottom: 16 }}>
-              <div style={{ ...S.label, color: C.navy, marginBottom: 6 }}>Equipment</div>
+              <div style={{ ...S.label, color: C.text, marginBottom: 6 }}>Equipment</div>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 {e.equipment.map((item, i) => (
-                  <span key={i} style={{ background: C.tealLight, color: C.teal, padding: "3px 10px",
-                    borderRadius: 20, fontSize: 12, fontWeight: 500 }}>{item}</span>
+                  <span key={i} style={{ background: C.bg, color: C.text, padding: "3px 10px",
+                    borderRadius: 20, fontSize: 12, fontWeight: 500, border: `1px solid ${C.border}` }}>{item}</span>
                 ))}
               </div>
             </div>
@@ -175,18 +207,18 @@ function ExerciseCard({ e, onOpenStoryboard, onUseInProtocol }) {
           {/* Setup */}
           {e.setup && (
             <div style={{ marginBottom: 16 }}>
-              <div style={{ ...S.label, color: C.navy, marginBottom: 4 }}>Setup</div>
-              <p style={{ fontSize: 13, color: C.textMid, margin: 0, lineHeight: 1.5 }}>{e.setup}</p>
+              <div style={{ ...S.label, color: C.text, marginBottom: 4 }}>Setup</div>
+              <p style={{ fontSize: 13, color: C.text, margin: 0, lineHeight: 1.5 }}>{e.setup}</p>
             </div>
           )}
 
           {/* Steps */}
           {e.steps?.length > 0 && (
             <div style={{ marginBottom: 16 }}>
-              <div style={{ ...S.label, color: C.navy, marginBottom: 8 }}>Step-by-Step Instructions</div>
+              <div style={{ ...S.label, color: C.text, marginBottom: 8 }}>Step-by-Step Instructions</div>
               <ol style={{ margin: 0, paddingLeft: 20 }}>
                 {e.steps.map((step, i) => (
-                  <li key={i} style={{ fontSize: 13, color: C.textMid, marginBottom: 6, lineHeight: 1.5 }}>
+                  <li key={i} style={{ fontSize: 13, color: C.text, marginBottom: 6, lineHeight: 1.5 }}>
                     {step}
                   </li>
                 ))}
@@ -197,11 +229,11 @@ function ExerciseCard({ e, onOpenStoryboard, onUseInProtocol }) {
           <div style={S.grid(2)}>
             {/* Good Form */}
             {e.good_form?.length > 0 && (
-              <div style={{ background: C.greenBg, borderRadius: 8, padding: 14 }}>
+              <div style={{ background: C.surface, borderRadius: 8, padding: 14, border: `1px solid ${C.border}`, borderLeft: `3px solid ${C.green}` }}>
                 <div style={{ ...S.label, color: C.green, marginBottom: 8 }}>Good Form</div>
                 <ul style={{ margin: 0, paddingLeft: 16 }}>
                   {e.good_form.map((item, i) => (
-                    <li key={i} style={{ fontSize: 12, color: C.green, marginBottom: 4 }}>{item}</li>
+                    <li key={i} style={{ fontSize: 12, color: C.text, marginBottom: 4 }}>{item}</li>
                   ))}
                 </ul>
               </div>
@@ -209,11 +241,11 @@ function ExerciseCard({ e, onOpenStoryboard, onUseInProtocol }) {
 
             {/* Common Mistakes */}
             {e.common_mistakes?.length > 0 && (
-              <div style={{ background: C.amberBg, borderRadius: 8, padding: 14 }}>
+              <div style={{ background: C.surface, borderRadius: 8, padding: 14, border: `1px solid ${C.border}`, borderLeft: `3px solid ${C.amber}` }}>
                 <div style={{ ...S.label, color: C.amber, marginBottom: 8 }}>Common Mistakes</div>
                 <ul style={{ margin: 0, paddingLeft: 16 }}>
                   {e.common_mistakes.map((item, i) => (
-                    <li key={i} style={{ fontSize: 12, color: C.amber, marginBottom: 4 }}>{item}</li>
+                    <li key={i} style={{ fontSize: 12, color: C.text, marginBottom: 4 }}>{item}</li>
                   ))}
                 </ul>
               </div>
@@ -222,11 +254,11 @@ function ExerciseCard({ e, onOpenStoryboard, onUseInProtocol }) {
 
           {/* Red Flags */}
           {e.red_flags?.length > 0 && (
-            <div style={{ background: C.redBg, borderRadius: 8, padding: 14, marginTop: 12 }}>
-              <div style={{ ...S.label, color: C.red, marginBottom: 8 }}>🚩 Red Flags — Stop Immediately</div>
+            <div style={{ background: C.surface, borderRadius: 8, padding: 14, marginTop: 12, border: `1px solid ${C.border}`, borderLeft: `3px solid ${C.red}` }}>
+              <div style={{ ...S.label, color: C.red, marginBottom: 8 }}>Red Flags — Stop Immediately</div>
               <ul style={{ margin: 0, paddingLeft: 16 }}>
                 {e.red_flags.map((flag, i) => (
-                  <li key={i} style={{ fontSize: 12, color: C.red, marginBottom: 4, fontWeight: 500 }}>{flag}</li>
+                  <li key={i} style={{ fontSize: 12, color: C.text, marginBottom: 4, fontWeight: 500 }}>{flag}</li>
                 ))}
               </ul>
             </div>
@@ -235,19 +267,19 @@ function ExerciseCard({ e, onOpenStoryboard, onUseInProtocol }) {
           {/* Contraindications + Progression */}
           <div style={{ ...S.grid(2), marginTop: 12 }}>
             {e.contraindications && (
-              <div style={{ background: C.redBg, borderRadius: 8, padding: 14 }}>
+              <div style={{ background: C.surface, borderRadius: 8, padding: 14, border: `1px solid ${C.border}`, borderLeft: `3px solid ${C.red}` }}>
                 <div style={{ ...S.label, color: C.red, marginBottom: 8 }}>Contraindications</div>
                 <ul style={{ margin: 0, paddingLeft: 16 }}>
                   {(Array.isArray(e.contraindications) ? e.contraindications : [e.contraindications]).map((c, i) => (
-                    <li key={i} style={{ fontSize: 12, color: C.red, marginBottom: 4 }}>{c}</li>
+                    <li key={i} style={{ fontSize: 12, color: C.text, marginBottom: 4 }}>{c}</li>
                   ))}
                 </ul>
               </div>
             )}
             {e.progression && (
-              <div style={{ background: C.tealLight, borderRadius: 8, padding: 14 }}>
+              <div style={{ background: C.surface, borderRadius: 8, padding: 14, border: `1px solid ${C.border}`, borderLeft: `3px solid ${C.teal}` }}>
                 <div style={{ ...S.label, color: C.teal, marginBottom: 6 }}>Progression</div>
-                <p style={{ fontSize: 12, color: C.teal, margin: 0, lineHeight: 1.5 }}>{e.progression}</p>
+                <p style={{ fontSize: 12, color: C.text, margin: 0, lineHeight: 1.5 }}>{e.progression}</p>
               </div>
             )}
           </div>
@@ -255,14 +287,14 @@ function ExerciseCard({ e, onOpenStoryboard, onUseInProtocol }) {
           {/* Clinical Parameters — Dosage, Timing, Classification */}
           {(e.clinical_parameters || e.clinical_classification) && (
             <div style={{ marginTop: 12 }}>
-              <div style={{ ...S.label, color: C.navy, marginBottom: 8 }}>Clinical Parameters</div>
+              <div style={{ ...S.label, color: C.text, marginBottom: 8 }}>Clinical Parameters</div>
               <div style={S.grid(3)}>
                 {/* Dosage */}
                 {e.clinical_parameters?.dosage && (
-                  <div style={{ background: C.greenBg, borderRadius: 8, padding: 12 }}>
+                  <div style={{ background: C.surface, borderRadius: 8, padding: 12, border: `1px solid ${C.border}`, borderLeft: `3px solid ${C.green}` }}>
                     <div style={{ fontSize: 10, fontWeight: 700, color: C.green, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 6 }}>Dosage</div>
                     {Object.entries(e.clinical_parameters.dosage).map(([k, v]) => (
-                      <div key={k} style={{ fontSize: 11, color: C.green, marginBottom: 3 }}>
+                      <div key={k} style={{ fontSize: 11, color: C.text, marginBottom: 3 }}>
                         <span style={{ fontWeight: 600 }}>{k.replace(/_/g, " ")}:</span> {v}
                       </div>
                     ))}
@@ -270,10 +302,10 @@ function ExerciseCard({ e, onOpenStoryboard, onUseInProtocol }) {
                 )}
                 {/* Post-Surgical Timing */}
                 {e.clinical_parameters?.post_surgical_timing && (
-                  <div style={{ background: C.tealLight, borderRadius: 8, padding: 12 }}>
+                  <div style={{ background: C.surface, borderRadius: 8, padding: 12, border: `1px solid ${C.border}`, borderLeft: `3px solid ${C.teal}` }}>
                     <div style={{ fontSize: 10, fontWeight: 700, color: C.teal, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 6 }}>Post-Surgical Timing</div>
                     {Object.entries(e.clinical_parameters.post_surgical_timing).map(([k, v]) => (
-                      <div key={k} style={{ fontSize: 11, color: C.teal, marginBottom: 3 }}>
+                      <div key={k} style={{ fontSize: 11, color: C.text, marginBottom: 3 }}>
                         <span style={{ fontWeight: 600 }}>{k.replace(/_/g, " ")}:</span> {v}
                       </div>
                     ))}
@@ -281,18 +313,18 @@ function ExerciseCard({ e, onOpenStoryboard, onUseInProtocol }) {
                 )}
                 {/* Classification */}
                 {e.clinical_classification && (
-                  <div style={{ background: "#FAF5FF", borderRadius: 8, padding: 12 }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: "#6B46C1", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 6 }}>Classification</div>
-                    <div style={{ fontSize: 11, color: "#553C9A", marginBottom: 3 }}>
+                  <div style={{ background: C.surface, borderRadius: 8, padding: 12, border: `1px solid ${C.border}`, borderLeft: `3px solid ${C.teal}` }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: C.text, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 6 }}>Classification</div>
+                    <div style={{ fontSize: 11, color: C.text, marginBottom: 3 }}>
                       <span style={{ fontWeight: 600 }}>Type:</span> {e.clinical_classification.intervention_type}
                     </div>
                     {e.clinical_classification.rehab_phases?.length > 0 && (
-                      <div style={{ fontSize: 11, color: "#553C9A", marginBottom: 3 }}>
+                      <div style={{ fontSize: 11, color: C.text, marginBottom: 3 }}>
                         <span style={{ fontWeight: 600 }}>Phases:</span> {e.clinical_classification.rehab_phases.join(", ")}
                       </div>
                     )}
                     {e.clinical_classification.primary_indications?.length > 0 && (
-                      <div style={{ fontSize: 11, color: "#553C9A", marginBottom: 3 }}>
+                      <div style={{ fontSize: 11, color: C.text, marginBottom: 3 }}>
                         <span style={{ fontWeight: 600 }}>Indications:</span> {e.clinical_classification.primary_indications.join(", ")}
                       </div>
                     )}
@@ -304,11 +336,11 @@ function ExerciseCard({ e, onOpenStoryboard, onUseInProtocol }) {
 
           {/* Safety */}
           {e.safety && (
-            <div style={{ background: C.amberBg, borderRadius: 8, padding: 14, marginTop: 12 }}>
+            <div style={{ background: C.surface, borderRadius: 8, padding: 14, marginTop: 12, border: `1px solid ${C.border}`, borderLeft: `3px solid ${C.amber}` }}>
               <div style={{ ...S.label, color: C.amber, marginBottom: 6 }}>Safety & Supervision</div>
-              <div style={{ display: "flex", gap: 12, flexWrap: "wrap", fontSize: 11, color: C.amber }}>
-                {e.safety.risk_level && <span><strong>Risk:</strong> {e.safety.risk_level}</span>}
-                {e.safety.supervision_required && <span><strong>Supervision:</strong> {e.safety.supervision_required}</span>}
+              <div style={{ display: "flex", gap: 12, flexWrap: "wrap", fontSize: 12, color: C.text }}>
+                {e.safety.risk_level && <span><strong style={{ color: C.amber }}>Risk:</strong> {e.safety.risk_level}</span>}
+                {e.safety.supervision_required && <span><strong style={{ color: C.amber }}>Supervision:</strong> {e.safety.supervision_required}</span>}
               </div>
             </div>
           )}
@@ -318,17 +350,63 @@ function ExerciseCard({ e, onOpenStoryboard, onUseInProtocol }) {
             <EvidenceSection grade={e.evidence_base?.grade} refs={e.evidence_base?.references} />
           </div>
 
+          {/* ── Anatomy Viewer Button ── */}
+          <button
+            onClick={(ev) => { ev.stopPropagation(); setShowAnatomy(a => !a); }}
+            style={{
+              marginTop: 12, width: "100%", padding: "10px 16px", borderRadius: 8,
+              background: showAnatomy ? "rgba(20,184,166,0.15)" : C.bg,
+              border: `1.5px solid var(--k9-teal)`,
+              cursor: "pointer", color: "var(--k9-teal)", fontSize: 12, fontWeight: 700,
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+              transition: "all 0.15s",
+            }}
+            onMouseEnter={ev => { if (!showAnatomy) { ev.currentTarget.style.background = "rgba(20,184,166,0.15)"; }}}
+            onMouseLeave={ev => { if (!showAnatomy) { ev.currentTarget.style.background = C.bg; }}}>
+            <FiLayers size={13} />
+            {showAnatomy ? "Hide Anatomy Viewer" : "View Targeted Muscles"}
+          </button>
+
+          {/* ── Inline Anatomy Viewer Panel ── */}
+          {showAnatomy && (
+            <div style={{ marginTop: 8 }}>
+              <AnatomyViewer3D
+                exerciseCode={e.code}
+                diagnosis={null}
+                species={e.code?.startsWith("FELINE_") ? "Feline" : "Canine"}
+              />
+            </div>
+          )}
+
           {/* Storyboard Button — only when storyboard exists */}
           {e.client_education?.storyboard_available && onOpenStoryboard && (
-            <button onClick={(ev) => { ev.stopPropagation(); onOpenStoryboard(e.code); }}
+            <button onClick={undefined}
               style={{
                 marginTop: 12, width: "100%", padding: "10px 16px", borderRadius: 8,
-                background: `linear-gradient(135deg, #059669, #0EA5E9)`,
-                color: "#fff", border: "none", cursor: "pointer",
+                background: `linear-gradient(135deg, ${C.green}, ${C.teal})`,
+                color: C.surface, border: "none",
                 fontSize: 12, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
                 boxShadow: "0 2px 8px rgba(14,165,233,0.3)",
+                opacity: 0.5, pointerEvents: "none",
               }}>
               <FiMonitor size={14} /> View Exercise Storyboard
+              <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 4, background: C.amberBg, color: C.amber, border: `1px solid ${C.amber}`, marginLeft: 4 }}>Coming Soon</span>
+            </button>
+          )}
+
+          {/* Print Handout Button */}
+          {onPrintHandout && (
+            <button onClick={(ev) => { ev.stopPropagation(); onPrintHandout(e); }}
+              style={{
+                marginTop: 12, width: "100%", padding: "10px 16px", borderRadius: 8,
+                background: C.bg, border: `1.5px solid ${C.teal}`, cursor: "pointer",
+                color: C.teal, fontSize: 12, fontWeight: 700,
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                transition: "all 0.15s",
+              }}
+              onMouseEnter={ev => { ev.currentTarget.style.background = C.teal; ev.currentTarget.style.color = C.surface; }}
+              onMouseLeave={ev => { ev.currentTarget.style.background = C.bg; ev.currentTarget.style.color = C.teal; }}>
+              <FiPrinter size={13} /> Print Exercise Handout
             </button>
           )}
 
@@ -342,7 +420,7 @@ function ExerciseCard({ e, onOpenStoryboard, onUseInProtocol }) {
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
                 transition: "all 0.15s",
               }}
-              onMouseEnter={ev => { ev.currentTarget.style.background = C.green; ev.currentTarget.style.color = "#fff"; }}
+              onMouseEnter={ev => { ev.currentTarget.style.background = C.green; ev.currentTarget.style.color = C.surface; }}
               onMouseLeave={ev => { ev.currentTarget.style.background = C.greenBg; ev.currentTarget.style.color = C.green; }}>
               <FiPlay size={13} /> Use in Protocol
             </button>
@@ -369,24 +447,24 @@ function ExerciseCard({ e, onOpenStoryboard, onUseInProtocol }) {
 
 // Category icon/color map — SVG icons from K9Icons.js, emoji fallback
 const CAT_META = {
-  "Passive Therapy":          { color: "#EBF8FF", text: "#2B6CB0", icon: "🤲", SvgIcon: getK9Icon("Passive Therapy") },
-  "Active Assisted":          { color: "#E6FFFA", text: "#2C7A7B", icon: "🦮", SvgIcon: getK9Icon("Active Assisted") },
-  "Strengthening":            { color: "#F0FFF4", text: "#276749", icon: "💪", SvgIcon: getK9Icon("Strengthening") },
-  "Balance & Proprioception": { color: "#FAF5FF", text: "#6B46C1", icon: "⚖️", SvgIcon: getK9Icon("Balance & Proprioception") },
-  "Aquatic Therapy":          { color: "#EBF8FF", text: "#2C5282", icon: "🌊", SvgIcon: getK9Icon("Aquatic Therapy") },
-  "Hydrotherapy":             { color: "#E0F2FE", text: "#075985", icon: "🏊", SvgIcon: getK9Icon("Hydrotherapy") },
-  "Therapeutic Modalities":   { color: "#FFF7ED", text: "#C05621", icon: "⚡", SvgIcon: getK9Icon("Therapeutic Modalities") },
-  "Manual Therapy":           { color: "#FFF5F5", text: "#C53030", icon: "👐", SvgIcon: getK9Icon("Manual Therapy") },
-  "Functional Training":      { color: "#FFFAF0", text: "#975A16", icon: "🏃", SvgIcon: getK9Icon("Functional Training") },
-  "Geriatric Care":           { color: C.bg, text: C.textMid, icon: "🐾", SvgIcon: getK9Icon("Geriatric Care") },
-  "Post-Surgical":            { color: "#FFF5F5", text: "#C53030", icon: "🩺", SvgIcon: getK9Icon("Post-Surgical") },
-  "Neurological Rehab":       { color: "#FAF5FF", text: "#553C9A", icon: "🧠", SvgIcon: getK9Icon("Neurological Rehab") },
-  "Sport Conditioning":       { color: "#F0FFF4", text: "#22543D", icon: "🏅", SvgIcon: getK9Icon("Sport Conditioning") },
-  "Complementary Therapy":    { color: "#FFFFF0", text: "#744210", icon: "🌿", SvgIcon: getK9Icon("Complementary Therapy") },
-  "Pediatric Rehabilitation": { color: "#FFF5F5", text: "#702459", icon: "🐶", SvgIcon: getK9Icon("Pediatric Rehabilitation") },
+  "Passive Therapy":          { color: C.bg, text: C.text, icon: "🤲", SvgIcon: getK9Icon("Passive Therapy") },
+  "Active Assisted":          { color: C.bg, text: C.text, icon: "🦮", SvgIcon: getK9Icon("Active Assisted") },
+  "Strengthening":            { color: C.bg, text: C.text, icon: "💪", SvgIcon: getK9Icon("Strengthening") },
+  "Balance & Proprioception": { color: C.bg, text: C.text, icon: "⚖️", SvgIcon: getK9Icon("Balance & Proprioception") },
+  "Aquatic Therapy":          { color: C.bg, text: C.text, icon: "🌊", SvgIcon: getK9Icon("Aquatic Therapy") },
+  "Hydrotherapy":             { color: C.bg, text: C.text, icon: "🏊", SvgIcon: getK9Icon("Hydrotherapy") },
+  "Therapeutic Modalities":   { color: C.bg, text: C.text, icon: "⚡", SvgIcon: getK9Icon("Therapeutic Modalities") },
+  "Manual Therapy":           { color: C.bg, text: C.text, icon: "👐", SvgIcon: getK9Icon("Manual Therapy") },
+  "Functional Training":      { color: C.bg, text: C.text, icon: "🏃", SvgIcon: getK9Icon("Functional Training") },
+  "Geriatric Care":           { color: C.bg, text: C.text, icon: "🐾", SvgIcon: getK9Icon("Geriatric Care") },
+  "Post-Surgical":            { color: C.bg, text: C.text, icon: "🩺", SvgIcon: getK9Icon("Post-Surgical") },
+  "Neurological Rehab":       { color: C.bg, text: C.text, icon: "🧠", SvgIcon: getK9Icon("Neurological Rehab") },
+  "Sport Conditioning":       { color: C.bg, text: C.text, icon: "🏅", SvgIcon: getK9Icon("Sport Conditioning") },
+  "Complementary Therapy":    { color: C.bg, text: C.text, icon: "🌿", SvgIcon: getK9Icon("Complementary Therapy") },
+  "Pediatric Rehabilitation": { color: C.bg, text: C.text, icon: "🐶", SvgIcon: getK9Icon("Pediatric Rehabilitation") },
   "Palliative Care":          { color: C.bg, text: C.text, icon: "❤️", SvgIcon: getK9Icon("Palliative Care") },
-  "Breed-Specific":           { color: "#FFFAF0", text: "#7B341E", icon: "🦴", SvgIcon: getK9Icon("Breed-Specific") },
-  "Athletic Foundations":      { color: "#E0F7FA", text: "#0E7490", icon: "🏋️", SvgIcon: getK9Icon("Athletic Foundations") },
+  "Breed-Specific":           { color: C.bg, text: C.text, icon: "🦴", SvgIcon: getK9Icon("Breed-Specific") },
+  "Canine Strength (Zink)":   { color: C.bg, text: C.text, icon: "🏋️", SvgIcon: getK9Icon("Canine Strength (Zink)") },
 };
 
 // ─────────────────────────────────────────────
@@ -400,6 +478,7 @@ function ExercisesView({ setView, setGenKey, setGenInitialStep }) {
   const [filterDiff, setFilterDiff] = useState("");
   const [collapsedCats, setCollapsedCats] = useState({});
   const [showStoryboard, setShowStoryboard] = useState(null);
+  const [handoutExercises, setHandoutExercises] = useState(null);
   const [viewMode, setViewMode] = useState("grid"); // "grid" | "list"
   const catRefs = useRef({});
   const toast = useToast();
@@ -449,7 +528,7 @@ function ExercisesView({ setView, setGenKey, setGenInitialStep }) {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "40vh", gap: 12 }}>
         <div style={{ width: 32, height: 32, borderRadius: "50%", border: `3px solid ${C.border}`, borderTopColor: C.teal, animation: "spin 0.8s linear infinite" }} />
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-        <span style={{ fontSize: 13, fontWeight: 600, color: C.navy }}>Loading exercises...</span>
+        <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>Loading exercises...</span>
       </div>
     );
   }
@@ -458,6 +537,12 @@ function ExercisesView({ setView, setGenKey, setGenInitialStep }) {
     <div>
       {/* Storyboard Player Modal */}
       {showStoryboard && <StoryboardPlayer exerciseCode={showStoryboard} onClose={() => setShowStoryboard(null)} />}
+      {/* Printable Handout Modal */}
+      {handoutExercises && (
+        <React.Suspense fallback={null}>
+          <PrintableHandout exercises={handoutExercises} onClose={() => setHandoutExercises(null)} />
+        </React.Suspense>
+      )}
       {/* Search Toolbar */}
       <div style={{ ...S.card, padding: "16px 20px" }}>
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
@@ -473,12 +558,12 @@ function ExercisesView({ setView, setGenKey, setGenInitialStep }) {
             <button onClick={goToGenerator} style={{
               display: "flex", alignItems: "center", gap: 7,
               padding: "8px 18px", borderRadius: 8, cursor: "pointer",
-              background: C.green, border: "none", color: "#fff",
+              background: C.green, border: "none", color: C.surface,
               fontSize: 12, fontWeight: 700, whiteSpace: "nowrap",
               transition: "all 0.15s", boxShadow: "0 2px 8px rgba(16,185,129,0.3)",
             }}
-            onMouseEnter={e => { e.currentTarget.style.background = "#059669"; e.currentTarget.style.boxShadow = "0 4px 12px rgba(16,185,129,0.4)"; }}
-            onMouseLeave={e => { e.currentTarget.style.background = C.green; e.currentTarget.style.boxShadow = "0 2px 8px rgba(16,185,129,0.3)"; }}>
+            onMouseEnter={e => { e.currentTarget.style.opacity = "0.85"; e.currentTarget.style.boxShadow = "0 4px 12px rgba(16,185,129,0.4)"; }}
+            onMouseLeave={e => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.boxShadow = "0 2px 8px rgba(16,185,129,0.3)"; }}>
               <FiPlay size={13} /> Build Protocol
             </button>
           )}
@@ -525,7 +610,7 @@ function ExercisesView({ setView, setGenKey, setGenInitialStep }) {
           </div>
         </div>
         <div style={{ height: 3, width: "100%", overflow: "hidden", marginBottom: 14, borderRadius: 2 }}>
-          <div style={{ width: "200%", height: "100%", background: "linear-gradient(90deg, transparent, #39FF7E, #0EA5E9, #39FF7E, transparent)", animation: "neonFlatline 3s linear infinite" }} />
+          <div style={{ width: "200%", height: "100%", background: `linear-gradient(90deg, transparent, #39FF7E, ${C.teal}, #39FF7E, transparent)`, animation: "neonFlatline 3s linear infinite" }} />
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
           {categories.map(cat => {
@@ -568,7 +653,7 @@ function ExercisesView({ setView, setGenKey, setGenInitialStep }) {
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr>
-                  {["Name", "Code", "Category", "Difficulty", "Evidence"].map(h => (
+                  {["Name", "Code", "Category", "Difficulty", "Evidence", "Tier"].map(h => (
                     <th key={h} style={{
                       padding: "10px 14px", textAlign: "left", fontSize: 10, fontWeight: 700,
                       color: C.teal, textTransform: "uppercase", letterSpacing: "0.6px",
@@ -590,13 +675,23 @@ function ExercisesView({ setView, setGenKey, setGenInitialStep }) {
                     >
                       <td style={{ padding: "8px 14px", fontSize: 12, fontWeight: 600, color: C.text, borderBottom: `1px solid ${C.border}` }}>{e.name}</td>
                       <td style={{ padding: "8px 14px", fontSize: 10, fontWeight: 600, color: C.textLight, fontFamily: "monospace", borderBottom: `1px solid ${C.border}` }}>{e.code}</td>
-                      <td style={{ padding: "8px 14px", fontSize: 11, color: C.textMid, borderBottom: `1px solid ${C.border}` }}>{e.category}</td>
+                      <td style={{ padding: "8px 14px", fontSize: 11, color: C.text, borderBottom: `1px solid ${C.border}` }}>{e.category}</td>
                       <td style={{ padding: "8px 14px", borderBottom: `1px solid ${C.border}` }}>
                         <span style={{ fontSize: 10, fontWeight: 700, color: diffColor, background: `${diffColor}18`, padding: "2px 8px", borderRadius: 6 }}>{e.difficulty_level}</span>
                       </td>
                       <td style={{ padding: "8px 14px", borderBottom: `1px solid ${C.border}` }}>
                         {e.evidence_base?.grade && (
                           <span style={{ fontSize: 10, fontWeight: 800, color: gradeColor, background: `${gradeColor}18`, padding: "2px 8px", borderRadius: 6 }}>Grade {e.evidence_base.grade}</span>
+                        )}
+                      </td>
+                      <td style={{ padding: "8px 14px", borderBottom: `1px solid ${C.border}` }}>
+                        {e.evidence_tier && (
+                          <span style={{ fontSize: 10, fontWeight: 700,
+                            color: e.evidence_tier === "Evidence-Based" ? C.green : e.evidence_tier === "Evidence-Adjacent" ? C.teal : C.amber,
+                            background: `${e.evidence_tier === "Evidence-Based" ? C.green : e.evidence_tier === "Evidence-Adjacent" ? C.teal : C.amber}18`,
+                            padding: "2px 8px", borderRadius: 6 }}>
+                            {e.evidence_tier}
+                          </span>
                         )}
                       </td>
                     </tr>
@@ -659,7 +754,7 @@ function ExercisesView({ setView, setGenKey, setGenInitialStep }) {
             </div>
             {/* Neon flatline under header */}
             <div style={{ height: 3, width: "100%", overflow: "hidden" }}>
-              <div style={{ width: "200%", height: "100%", background: "linear-gradient(90deg, transparent, #39FF7E, #0EA5E9, #39FF7E, transparent)", animation: "neonFlatline 3s linear infinite" }} />
+              <div style={{ width: "200%", height: "100%", background: `linear-gradient(90deg, transparent, #39FF7E, ${C.teal}, #39FF7E, transparent)`, animation: "neonFlatline 3s linear infinite" }} />
             </div>
 
             {/* Exercise grid */}
@@ -667,7 +762,8 @@ function ExercisesView({ setView, setGenKey, setGenInitialStep }) {
               <div style={{ padding: 16 }}>
                 <div style={S.grid(3)}>
                   {exList.map(e => <ExerciseCard key={e.code} e={e} onOpenStoryboard={setShowStoryboard}
-                    onUseInProtocol={setView ? goToGenerator : undefined} />)}
+                    onUseInProtocol={setView ? goToGenerator : undefined}
+                    onPrintHandout={(ex) => setHandoutExercises([ex])} />)}
                 </div>
                 <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 12 }}>
                   <button onClick={() => { const el = document.querySelector('[data-content-scroll]'); if (el) el.scrollTo({ top: 0, behavior: "smooth" }); else window.scrollTo({ top: 0, behavior: "smooth" }); }} style={{

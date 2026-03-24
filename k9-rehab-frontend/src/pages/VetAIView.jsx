@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import {
   FiActivity, FiAlertTriangle, FiBarChart2, FiBookOpen,
-  FiCheckCircle, FiClipboard, FiHeart, FiHome,
+  FiCheckCircle, FiClipboard, FiClock, FiDatabase, FiHeart, FiHome,
   FiSearch, FiSend, FiShield
 } from "react-icons/fi";
 import C from "../constants/colors";
@@ -10,7 +10,7 @@ import { API } from "../api/axios";
 import { useToast } from "../components/Toast";
 
 // ─────────────────────────────────────────────
-// VET AI VIEW — Clinical Assistant
+// VET AI VIEW — B.E.A.U. - Biomedical Evidence-Based Assessment Utility
 // ─────────────────────────────────────────────
 function VetAIView({ authToken }) {
   const [msgs, setMsgs] = useState([]);
@@ -21,6 +21,10 @@ function VetAIView({ authToken }) {
   const [patients, setPatients] = useState([]);
   const [showPatientPanel, setShowPatientPanel] = useState(false);
   const [aiStatus, setAiStatus] = useState(null);
+  const [sessionId, setSessionId] = useState(null);
+  const [sessionHistory, setSessionHistory] = useState([]);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [intelligence, setIntelligence] = useState(null);
   const endRef = useRef(null);
   const taRef = useRef(null);
   const toast = useToast();
@@ -29,6 +33,8 @@ function VetAIView({ authToken }) {
   useEffect(() => {
     axios.get(`${API}/patients`).then(r => setPatients(r.data?.data || r.data || [])).catch(() => toast("Failed to load patients"));
     axios.get(`${API}/vet-ai/status`).then(r => setAiStatus(r.data)).catch(() => setAiStatus({ configured: false }));
+    axios.get(`${API}/beau/sessions`).then(r => setSessionHistory(r.data?.data || [])).catch(() => {});
+    axios.get(`${API}/beau/intelligence`).then(r => setIntelligence(r.data?.data || null)).catch(() => {});
   }, []);
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs, stream]);
@@ -49,20 +55,24 @@ function VetAIView({ authToken }) {
     { icon: <FiBarChart2 size={11} />, q: "What outcome measures track CCL conservative management progress?" },
   ];
 
-  // Markdown renderer
+  // Escape raw HTML to prevent XSS from AI responses
+  const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+  // Markdown renderer (escapes HTML first, then applies formatting)
   const renderMd = (t) => {
     if (!t) return "";
     let h = "", code = false;
-    for (const ln of t.split("\n")) {
-      if (ln.startsWith("```")) { h += code ? "</pre>" : `<pre style="background:${C.bg};border:1px solid ${C.border};border-radius:8px;padding:12px;margin:8px 0;font-size:12px;overflow-x:auto;color:${C.teal}">`; code = !code; continue; }
-      if (code) { h += ln + "\n"; continue; }
+    for (const raw of t.split("\n")) {
+      if (raw.startsWith("```")) { h += code ? "</pre>" : `<pre style="background:${C.bg};border:1px solid ${C.border};border-radius:8px;padding:12px;margin:8px 0;font-size:12px;overflow-x:auto;color:${C.teal}">`; code = !code; continue; }
+      if (code) { h += esc(raw) + "\n"; continue; }
+      const ln = esc(raw);
       if (ln.startsWith("### ")) { h += `<h4 style="color:${C.teal};margin:14px 0 4px;font-size:13px;font-weight:700">${ln.slice(4)}</h4>`; continue; }
       if (ln.startsWith("## ")) { h += `<h3 style="color:${C.green};margin:16px 0 6px;font-size:14px;font-weight:700">${ln.slice(3)}</h3>`; continue; }
       if (ln.startsWith("# ")) { h += `<h2 style="color:${C.teal};margin:18px 0 8px;font-size:16px;font-weight:700">${ln.slice(2)}</h2>`; continue; }
       let l = ln.replace(/\*\*(.*?)\*\*/g, `<strong style="color:${C.text}">$1</strong>`);
       l = l.replace(/\*(.*?)\*/g, `<em style="color:${C.textLight}">$1</em>`);
       l = l.replace(/`([^`]+)`/g, `<code style="background:${C.bg};padding:1px 5px;border-radius:3px;font-size:12px;color:${C.teal}">$1</code>`);
-      if (l.match(/^[-•]\s/)) { h += `<div style="margin:3px 0 3px 16px;line-height:1.6">\u2022 ${l.replace(/^[-•]\s/, "")}</div>`; continue; }
+      if (l.match(/^[-\u2022]\s/)) { h += `<div style="margin:3px 0 3px 16px;line-height:1.6">\u2022 ${l.replace(/^[-\u2022]\s/, "")}</div>`; continue; }
       if (l.match(/^\d+\.\s/)) { h += `<div style="margin:3px 0 3px 16px;line-height:1.6">${l}</div>`; continue; }
       if (l.trim()) h += `<p style="margin:5px 0;line-height:1.65">${l}</p>`;
     }
@@ -119,12 +129,37 @@ function VetAIView({ authToken }) {
         }
       }
       setStream("");
-      setMsgs(p => [...p, { role: "assistant", content: full }]);
+      const finalMsgs = [...newMsgs, { role: "assistant", content: full }];
+      setMsgs(finalMsgs);
+      saveSession(finalMsgs);
     } catch (err) {
       setStream("");
       setMsgs(p => [...p, { role: "assistant", content: `**Connection Error**\n\n${err.message}\n\nMake sure the backend is running and ANTHROPIC_API_KEY is set in \`backend/.env\`.` }]);
     }
     setLoading(false);
+  };
+
+  const saveSession = async (allMessages) => {
+    if (allMessages.length === 0) return;
+    try {
+      const body = { messages: allMessages, patient_id: patient?.id || null };
+      if (sessionId) body.session_id = sessionId;
+      const r = await fetch(`${API}/beau/sessions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}) },
+        body: JSON.stringify(body),
+      });
+      const data = await r.json();
+      if (data?.data?.id && !sessionId) setSessionId(data.data.id);
+      axios.get(`${API}/beau/sessions`).then(r => setSessionHistory(r.data?.data || [])).catch(() => {});
+    } catch (_) {}
+  };
+
+  const loadSession = (session) => {
+    setMsgs(session.messages || []);
+    setSessionId(session.id);
+    setPatient(session.patient_id ? patients.find(p => p.id === session.patient_id) || null : null);
+    setSidebarOpen(false);
   };
 
   const pickPatient = (pt) => {
@@ -138,7 +173,7 @@ function VetAIView({ authToken }) {
   // Styles matching the app's design system
   const aiC = {
     bg: C.bg,
-    chatBg: "#fff",
+    chatBg: C.surface,
     userBubble: `linear-gradient(135deg, ${C.navy}, ${C.navyMid || "#1a3a5c"})`,
     aiBubble: C.bg,
     aiBorder: C.border,
@@ -146,14 +181,54 @@ function VetAIView({ authToken }) {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 90px)", background: aiC.bg, position: "relative" }}>
+    <div style={{ display: "flex", flexDirection: "row", height: "calc(100vh - 90px)", background: aiC.bg, position: "relative" }}>
+
+      {/* Session History Sidebar */}
+      <div style={{
+        width: sidebarOpen ? 260 : 0, overflow: "hidden", transition: "width 0.25s ease",
+        flexShrink: 0, borderRight: sidebarOpen ? `1px solid ${C.border}` : "none",
+        background: C.surface, display: "flex", flexDirection: "column",
+      }}>
+        <div style={{ padding: "12px 14px", borderBottom: `1px solid ${C.border}`, minWidth: 260 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: C.textLight, letterSpacing: "0.5px", textTransform: "uppercase" }}>
+            Session History
+          </div>
+        </div>
+        <div style={{ flex: 1, overflowY: "auto", minWidth: 260 }}>
+          {sessionHistory.length === 0 && (
+            <div style={{ padding: 14, fontSize: 11, color: C.textLight }}>No saved sessions yet.</div>
+          )}
+          {sessionHistory.map(s => (
+            <div key={s.id} onClick={() => loadSession(s)} style={{
+              padding: "10px 14px", cursor: "pointer", borderBottom: `1px solid ${C.border}`,
+              background: sessionId === s.id ? `${C.teal}10` : "transparent", transition: "background 0.1s",
+            }}
+              onMouseEnter={e => { if (sessionId !== s.id) e.currentTarget.style.background = C.bg; }}
+              onMouseLeave={e => { if (sessionId !== s.id) e.currentTarget.style.background = "transparent"; }}
+            >
+              <div style={{ fontSize: 11, fontWeight: 600, color: C.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                {s.title || "Untitled"}
+              </div>
+              <div style={{ fontSize: 10, color: C.teal, marginTop: 2 }}>
+                {s.patient_name || "Standalone"}
+              </div>
+              <div style={{ fontSize: 10, color: C.textLight, marginTop: 1 }}>
+                {s.updated_at ? new Date(s.updated_at).toLocaleDateString() + " " + new Date(s.updated_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : ""}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Main Chat Column */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
       {/* Header Bar */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 20px", borderBottom: `1px solid ${C.border}`, background: "#fff", flexShrink: 0 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 20px", borderBottom: `1px solid ${C.border}`, background: C.surface, flexShrink: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <img src="/Beau.png" alt="Beau" style={{ width: 38, height: 38, borderRadius: 10, objectFit: "cover", boxShadow: `0 0 12px rgba(14,165,233,0.3)` }} />
+          <img src="/Beau.png" alt="B.E.A.U." style={{ width: 38, height: 38, borderRadius: 10, objectFit: "cover", boxShadow: `0 0 12px rgba(14,165,233,0.3)` }} />
           <div>
             <div style={{ fontSize: 14, fontWeight: 700, color: C.text, letterSpacing: 0.5 }}>
-              Ask Beau <span style={{ color: C.teal, fontSize: 10, fontWeight: 600, background: `${C.teal}15`, padding: "2px 7px", borderRadius: 4, marginLeft: 6 }}>Clinical Assistant</span>
+              B.E.A.U. <span style={{ color: C.teal, fontSize: 10, fontWeight: 600, background: `${C.teal}15`, padding: "2px 7px", borderRadius: 4, marginLeft: 6 }}>Biomedical Evidence-Based Assessment Utility</span>
             </div>
             <div style={{ fontSize: 10, color: C.textLight, marginTop: 1 }}>Evidence-Based Decision Support • ACVSMR</div>
           </div>
@@ -168,8 +243,26 @@ function VetAIView({ authToken }) {
           <button onClick={() => setShowPatientPanel(!showPatientPanel)} style={{ background: `${C.navy}08`, border: `1px solid ${C.border}`, borderRadius: 8, color: C.text, padding: "6px 14px", cursor: "pointer", fontSize: 11, fontWeight: 600 }}>
             {patient ? "Switch Patient" : "Load Patient"}
           </button>
+          {intelligence && intelligence.total_cases > 0 && (
+            <div style={{ display: "flex", alignItems: "center", gap: 4, background: `${C.green}12`, border: `1px solid ${C.green}30`, borderRadius: 8, padding: "5px 10px" }} title={`Aggregate intelligence from ${intelligence.total_cases} prior sessions`}>
+              <FiDatabase size={10} style={{ color: C.green }} />
+              <span style={{ fontSize: 10, fontWeight: 600, color: C.green }}>{intelligence.total_cases} Cases</span>
+            </div>
+          )}
+          <a href="/wibbi-landing.html" target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 5, background: `${C.teal}10`, border: `1px solid ${C.teal}30`, borderRadius: 8, color: C.teal, padding: "6px 12px", cursor: "pointer", fontSize: 11, fontWeight: 600, textDecoration: "none" }} title="K9 Rehab Pro Platform Page">
+            <FiBookOpen size={11} /> Platform
+          </a>
+          <a href="/petvet-landing.html" target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 5, background: `${C.teal}10`, border: `1px solid ${C.teal}30`, borderRadius: 8, color: C.teal, padding: "6px 12px", cursor: "pointer", fontSize: 11, fontWeight: 600, textDecoration: "none" }} title="B.E.A.U. AI Specialist Page">
+            <FiActivity size={11} /> AI Specialist
+          </a>
+          <a href="/beau-landing.html" target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 5, background: `${C.teal}12`, border: `1px solid ${C.teal}40`, borderRadius: 8, color: C.teal, padding: "6px 12px", cursor: "pointer", fontSize: 11, fontWeight: 600, textDecoration: "none" }} title="B.E.A.U. Clinical Authority Page">
+            <FiShield size={11} /> About B.E.A.U.
+          </a>
+          <button onClick={() => setSidebarOpen(o => !o)} style={{ background: sidebarOpen ? `${C.teal}15` : `${C.navy}08`, border: `1px solid ${C.border}`, borderRadius: 8, color: sidebarOpen ? C.teal : C.text, padding: "6px 10px", cursor: "pointer", fontSize: 11, fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>
+            <FiClock size={11} /> {sidebarOpen ? "Hide" : "History"}
+          </button>
           {msgs.length > 0 && (
-            <button onClick={() => { setMsgs([]); setStream(""); setPatient(null); }} style={{ background: "transparent", border: `1px solid ${C.border}`, borderRadius: 8, color: C.textLight, padding: "6px 10px", cursor: "pointer", fontSize: 11 }}>
+            <button onClick={() => { setMsgs([]); setStream(""); setPatient(null); setSessionId(null); }} style={{ background: "transparent", border: `1px solid ${C.border}`, borderRadius: 8, color: C.textLight, padding: "6px 10px", cursor: "pointer", fontSize: 11 }}>
               Clear
             </button>
           )}
@@ -178,7 +271,7 @@ function VetAIView({ authToken }) {
 
       {/* Patient Selection Panel */}
       {showPatientPanel && (
-        <div style={{ position: "absolute", top: 58, right: 12, zIndex: 100, background: "#fff", border: `1px solid ${C.border}`, borderRadius: 12, padding: 14, width: 320, boxShadow: "0 12px 40px rgba(0,0,0,0.12)" }}>
+        <div style={{ position: "absolute", top: 58, right: 12, zIndex: 100, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, padding: 14, width: 320, boxShadow: "0 12px 40px rgba(0,0,0,0.12)" }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: C.text, marginBottom: 10, letterSpacing: 0.5 }}>SELECT PATIENT</div>
           {patients.length === 0 && <div style={{ fontSize: 12, color: C.textLight, padding: 12 }}>No patients found. Add patients in Patient Records first.</div>}
           <div style={{ maxHeight: 300, overflowY: "auto" }}>
@@ -203,7 +296,7 @@ function VetAIView({ authToken }) {
         {aiStatus && !aiStatus.configured && (
           <div style={{ background: C.amberBg, border: `1px solid ${C.amber}`, borderRadius: 10, padding: "12px 16px", marginBottom: 16, display: "flex", alignItems: "center", gap: 10 }}>
             <FiAlertTriangle size={16} style={{ color: C.amber, flexShrink: 0 }} />
-            <div style={{ fontSize: 12, color: "#5D4037" }}>
+            <div style={{ fontSize: 12, color: C.text }}>
               <strong>API Key Required:</strong> Add your Anthropic API key to <code style={{ background: C.bg, padding: "1px 4px", borderRadius: 3 }}>backend/.env</code> as <code style={{ background: C.bg, padding: "1px 4px", borderRadius: 3 }}>ANTHROPIC_API_KEY=sk-ant-...</code> then restart the backend.
             </div>
           </div>
@@ -212,14 +305,14 @@ function VetAIView({ authToken }) {
         {/* Welcome Screen */}
         {welcome && (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "60vh", textAlign: "center" }}>
-            <img src="/Beau.png" alt="Beau" style={{ width: 80, height: 80, borderRadius: 20, objectFit: "cover", marginBottom: 16, boxShadow: `0 0 30px ${C.teal}20`, border: `2px solid ${C.teal}30` }} />
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: C.text, margin: "0 0 6px" }}>Ask Beau</h1>
+            <img src="/Beau.png" alt="B.E.A.U." style={{ width: 80, height: 80, borderRadius: 20, objectFit: "cover", marginBottom: 16, boxShadow: `0 0 30px ${C.teal}20`, border: `2px solid ${C.teal}30` }} />
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: C.text, margin: "0 0 6px" }}>B.E.A.U.</h1>
             <p style={{ fontSize: 13, color: C.textLight, maxWidth: 460, lineHeight: 1.6, margin: "0 0 28px" }}>
               Evidence-based canine rehabilitation intelligence. Load a patient for personalized protocols, or ask general clinical questions.
             </p>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, maxWidth: 500, width: "100%" }}>
               {STARTERS.map((s, i) => (
-                <button key={i} onClick={() => send(s.q)} style={{ background: "#fff", border: `1px solid ${C.border}`, borderRadius: 12, padding: "14px 12px", cursor: "pointer", textAlign: "left", display: "flex", flexDirection: "column", gap: 6, transition: "all 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+                <button key={i} onClick={() => send(s.q)} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, padding: "14px 12px", cursor: "pointer", textAlign: "left", display: "flex", flexDirection: "column", gap: 6, transition: "all 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
                   <span style={{ color: C.teal }}>{s.icon}</span>
                   <span style={{ fontSize: 11, color: C.text, lineHeight: 1.5 }}>{s.q}</span>
                 </button>
@@ -288,7 +381,7 @@ function VetAIView({ authToken }) {
       )}
 
       {/* Input Area */}
-      <div style={{ padding: "10px 20px 16px", borderTop: `1px solid ${C.border}`, background: "#fff", flexShrink: 0 }}>
+      <div style={{ padding: "10px 20px 16px", borderTop: `1px solid ${C.border}`, background: C.surface, flexShrink: 0 }}>
         <div style={{ display: "flex", alignItems: "flex-end", gap: 8, background: C.bg, border: `1px solid ${C.border}`, borderRadius: 14, padding: "4px 4px 4px 16px" }}>
           <textarea
             ref={taRef}
@@ -312,8 +405,8 @@ function VetAIView({ authToken }) {
           </button>
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, padding: "0 2px" }}>
-          <span style={{ fontSize: 9, color: C.textLight }}>K9 Rehab Pro™ CDSS • Evidence-based rehabilitation support</span>
-          <span style={{ fontSize: 9, color: C.textLight }}>Powered by Claude • Millis & Levine • ACVSMR</span>
+          <span style={{ fontSize: 10, color: C.textLight }}>K9 Rehab Pro™ CDSS • Evidence-based rehabilitation support</span>
+          <span style={{ fontSize: 10, color: C.textLight }}>Powered by Claude • Millis & Levine • ACVSMR</span>
         </div>
       </div>
 
@@ -322,6 +415,7 @@ function VetAIView({ authToken }) {
         @keyframes pulse { 0%,80%,100%{opacity:.3;transform:scale(.8)} 40%{opacity:1;transform:scale(1)} }
         @keyframes blink { 50%{opacity:0} }
       `}</style>
+      </div>{/* /Main Chat Column */}
     </div>
   );
 }

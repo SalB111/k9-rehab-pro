@@ -31,6 +31,7 @@ const CATEGORY_TO_INTERVENTION = {
   'Therapeutic Modalities': INTERVENTION_TYPES.THERAPEUTIC_MODALITIES.code,
   'Functional Training': INTERVENTION_TYPES.FUNCTIONAL_REHABILITATION.code,
   'Sport Conditioning': INTERVENTION_TYPES.FUNCTIONAL_REHABILITATION.code,
+  'Canine Strength (Zink)': INTERVENTION_TYPES.FUNCTIONAL_REHABILITATION.code,
 
   // Population-specific get mapped by content
   'Geriatric Care': null,  // Will auto-assign based on exercise type
@@ -93,6 +94,12 @@ function enhanceExercise(exercise) {
     key_findings: getKeyFindings(exercise),
     certification_required: DIFFICULTY_TO_CERT[exercise.difficulty_level] || CERTIFICATION_LEVELS.BASIC.code
   };
+
+  // 3-tier evidence classification (additive — does not replace grade)
+  enhanced.evidence_tier = mapGradeToTier(enhanced.evidence_base.grade);
+
+  // Clinical tag set (inferred from exercise content)
+  enhanced.clinical_tags = inferClinicalTags(exercise);
 
   // Build clinical parameters
   enhanced.clinical_parameters = {
@@ -410,7 +417,8 @@ function inferGradeByCategory(category) {
       category === 'Hydrotherapy' ||
       category === 'Balance & Proprioception' ||
       category === 'Manual Therapy' ||
-      category === 'Therapeutic Modalities') {
+      category === 'Therapeutic Modalities' ||
+      category === 'Canine Strength (Zink)') {
     return EVIDENCE_GRADES.GRADE_B.code;
   }
 
@@ -701,9 +709,63 @@ function enhanceAllExercises(exercises) {
 }
 
 // ============================================================================
+// 3-TIER EVIDENCE CLASSIFICATION
+// ============================================================================
+function mapGradeToTier(grade) {
+  if (grade === 'A') return 'Evidence-Based';
+  if (grade === 'B') return 'Evidence-Adjacent';
+  return 'Consensus-Only'; // C and Expert Opinion
+}
+
+// ============================================================================
+// CLINICAL TAG INFERENCE
+// ============================================================================
+const CLINICAL_TAG_VOCABULARY = [
+  'strength', 'ROM', 'proprioception', 'neuromuscular', 'endurance',
+  'flexibility', 'coordination', 'pain_management', 'gait_training',
+  'weight_bearing', 'core_stability', 'joint_protection', 'edema_management',
+  'scar_mobilization', 'cardiovascular', 'balance', 'functional_mobility',
+  'sensory_integration'
+];
+
+function inferClinicalTags(exercise) {
+  const tags = new Set();
+  const text = [
+    exercise.name || '',
+    exercise.description || '',
+    exercise.category || '',
+    ...(exercise.steps || []),
+    exercise.progression || '',
+    exercise.contraindications || ''
+  ].join(' ').toLowerCase();
+
+  if (/strengthen|resistance|muscle|squat|sit.?stand|down.?stand|hill|incline|eccentric|concentric/.test(text)) tags.add('strength');
+  if (/range of motion|rom\b|flexion|extension|stretch|flexibility|prom\b|arom\b/.test(text)) tags.add('ROM');
+  if (/propriocep|wobble|bosu|balance.*pad|foam.*pad|rocker|unstable.*surface/.test(text)) tags.add('proprioception');
+  if (/neuromuscular|neuro|nerve|reflex|spinal|ivdd|myelopathy|atax/.test(text)) tags.add('neuromuscular');
+  if (/endurance|cardio|treadmill|jog|trot|swim|aerobic/.test(text)) tags.add('endurance');
+  if (/stretch|flexibility|lengthen|elongat/.test(text)) tags.add('flexibility');
+  if (/coordinat|diagonal|weave|figure.?8|lateral.*step|side.*step|cavaletti/.test(text)) tags.add('coordination');
+  if (/pain|analges|tens\b|laser|cryotherapy|cold.*therapy|heat.*therapy|modality|ultrasound|shockwave/.test(text)) tags.add('pain_management');
+  if (/gait|walk|treadmill|leash.*walk|slow.*walk|stride/.test(text)) tags.add('gait_training');
+  if (/weight.?bear|weight.?shift|load|stand|three.*leg|single.*limb/.test(text)) tags.add('weight_bearing');
+  if (/core|trunk|spinal.*stabiliz|physio.*ball|plank/.test(text)) tags.add('core_stability');
+  if (/joint.*protect|joint.*mob|mobiliz|splint|brace|support/.test(text)) tags.add('joint_protection');
+  if (/edema|swelling|lymph|compress/.test(text)) tags.add('edema_management');
+  if (/scar|adhesion|myofasc|fascial|tissue.*mobil/.test(text)) tags.add('scar_mobilization');
+  if (/cardio|heart|aerobic|swim|jog|trot/.test(text)) tags.add('cardiovascular');
+  if (/balance|equilibrium|wobble|bosu|rocker|foam.*pad|perturbat/.test(text)) tags.add('balance');
+  if (/functional|stair|ramp|platform|fetch|retrieve|obstacle|daily.*living/.test(text)) tags.add('functional_mobility');
+  if (/sensor|texture|surface.*vari|tactile|different.*surface/.test(text)) tags.add('sensory_integration');
+
+  return Array.from(tags).sort();
+}
+
+// ============================================================================
 // EXPORT
 // ============================================================================
 module.exports = {
   enhanceExercise,
-  enhanceAllExercises
+  enhanceAllExercises,
+  CLINICAL_TAG_VOCABULARY
 };

@@ -50,7 +50,11 @@ function serialize(fn) {
 // ── Initialize ──────────────────────────────────────────────────────────────
 
 async function initialize() {
-  const dbPath = process.env.DB_PATH || path.join(__dirname, '..', 'database.db');
+  const IS_PKG = typeof process.pkg !== 'undefined';
+  const defaultDbPath = IS_PKG
+    ? path.join(path.dirname(process.execPath), 'data', 'database.db')
+    : path.join(__dirname, '..', 'database.db');
+  const dbPath = process.env.DB_PATH || defaultDbPath;
   return new Promise((resolve, reject) => {
     db = new sqlite3.Database(dbPath, (err) => {
       if (err) return reject(err);
@@ -85,9 +89,34 @@ async function createTables() {
       client_email TEXT,
       client_phone TEXT,
       referring_vet TEXT,
+      rom_joint TEXT,
+      rom_flexion TEXT,
+      rom_extension TEXT,
+      rom_flexion_contralateral TEXT,
+      rom_extension_contralateral TEXT,
+      hcpi_score TEXT,
+      cbpi_pss TEXT,
+      cbpi_pis TEXT,
+      load_score TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
+
+  // ── ROM column migrations — safe no-op if columns already exist ──
+  const romCols = [
+    'rom_joint TEXT',
+    'rom_flexion TEXT',
+    'rom_extension TEXT',
+    'rom_flexion_contralateral TEXT',
+    'rom_extension_contralateral TEXT',
+    'hcpi_score TEXT',
+    'cbpi_pss TEXT',
+    'cbpi_pis TEXT',
+    'load_score TEXT'
+  ];
+  for (const col of romCols) {
+    try { await run(`ALTER TABLE patients ADD COLUMN ${col}`); } catch (_) { /* already exists */ }
+  }
 
   await run(`
     CREATE TABLE IF NOT EXISTS exercises (
@@ -162,6 +191,21 @@ async function createTables() {
       status_code INTEGER,
       detail TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+  `);
+
+  // B.E.A.U. session storage
+  await run(`
+    CREATE TABLE IF NOT EXISTS beau_sessions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      patient_id INTEGER,
+      title TEXT,
+      messages TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id),
+      FOREIGN KEY (patient_id) REFERENCES patients(id)
     )
   `);
 
@@ -317,15 +361,35 @@ async function createPatient(data) {
     `INSERT INTO patients (name, breed, age, weight, sex, condition, affected_region,
       surgery_date, lameness_grade, body_condition_score, pain_level, mobility_level,
       current_medications, medical_history, special_instructions, client_name,
-      client_email, client_phone, referring_vet)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      client_email, client_phone, referring_vet,
+      rom_joint, rom_flexion, rom_extension, rom_flexion_contralateral, rom_extension_contralateral,
+      hcpi_score, cbpi_pss, cbpi_pis, load_score)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [data.name, data.breed, data.age, data.weight, data.sex, data.condition,
      data.affected_region, data.surgery_date, data.lameness_grade, data.body_condition_score,
      data.pain_level, data.mobility_level, data.current_medications, data.medical_history,
      data.special_instructions, data.client_name, data.client_email, data.client_phone,
-     data.referring_vet]
+     data.referring_vet,
+     data.rom_joint || null, data.rom_flexion || null, data.rom_extension || null,
+     data.rom_flexion_contralateral || null, data.rom_extension_contralateral || null,
+     data.hcpi_score || null, data.cbpi_pss || null, data.cbpi_pis || null, data.load_score || null]
   );
   return { id: result.lastID };
+}
+
+async function updatePatientMeasures(id, data) {
+  const result = await run(
+    `UPDATE patients SET
+      rom_joint = ?, rom_flexion = ?, rom_extension = ?,
+      rom_flexion_contralateral = ?, rom_extension_contralateral = ?,
+      hcpi_score = ?, cbpi_pss = ?, cbpi_pis = ?, load_score = ?
+     WHERE id = ?`,
+    [data.rom_joint || null, data.rom_flexion || null, data.rom_extension || null,
+     data.rom_flexion_contralateral || null, data.rom_extension_contralateral || null,
+     data.hcpi_score || null, data.cbpi_pss || null, data.cbpi_pis || null,
+     data.load_score || null, id]
+  );
+  return { changes: result.changes };
 }
 
 async function deletePatient(id) {
@@ -625,6 +689,55 @@ async function seedExerciseLibrary() {
   console.log('✅ Exercise library seeded: 8 domains, 5 phases, 5 tiers, 50 exercises');
 }
 
+// ── B.E.A.U. Sessions ──────────────────────────────────────────────────────
+
+async function createBeauSession({ user_id, patient_id, title, messages }) {
+  const result = await run(
+    `INSERT INTO beau_sessions (user_id, patient_id, title, messages) VALUES (?, ?, ?, ?)`,
+    [user_id, patient_id || null, title || null, JSON.stringify(messages)]
+  );
+  return { id: result.lastID };
+}
+
+async function updateBeauSession(id, user_id, { title, messages }) {
+  await run(
+    `UPDATE beau_sessions SET title = ?, messages = ?, updated_at = datetime('now') WHERE id = ? AND user_id = ?`,
+    [title || null, JSON.stringify(messages), id, user_id]
+  );
+  return { id };
+}
+
+async function getBeauSessionsByUser(user_id) {
+  return all(
+    `SELECT bs.*, p.name as patient_name
+     FROM beau_sessions bs
+     LEFT JOIN patients p ON bs.patient_id = p.id
+     WHERE bs.user_id = ?
+     ORDER BY bs.updated_at DESC`,
+    [user_id]
+  );
+}
+
+async function getBeauSessionsByPatient(patient_id, user_id) {
+  return all(
+    `SELECT bs.*, p.name as patient_name
+     FROM beau_sessions bs
+     LEFT JOIN patients p ON bs.patient_id = p.id
+     WHERE bs.patient_id = ? AND bs.user_id = ?
+     ORDER BY bs.updated_at DESC`,
+    [patient_id, user_id]
+  );
+}
+
+async function getAllBeauSessions() {
+  return all(
+    `SELECT bs.*, p.name as patient_name
+     FROM beau_sessions bs
+     LEFT JOIN patients p ON bs.patient_id = p.id
+     ORDER BY bs.updated_at DESC`
+  );
+}
+
 // ── Close ───────────────────────────────────────────────────────────────────
 
 async function close() {
@@ -647,6 +760,7 @@ module.exports = {
   // Patients
   getAllPatients,
   createPatient,
+  updatePatientMeasures,
   deletePatient,
   deletePatientsById,
 
@@ -677,6 +791,13 @@ module.exports = {
   findUserByUsername,
   findUserById,
   createUser,
+
+  // B.E.A.U. Sessions
+  createBeauSession,
+  updateBeauSession,
+  getBeauSessionsByUser,
+  getBeauSessionsByPatient,
+  getAllBeauSessions,
 
   // Exercise Library v2
   exerciseLibrary,
