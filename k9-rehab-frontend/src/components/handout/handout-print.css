@@ -1,0 +1,126 @@
+/* Printable Exercise Handout — Print Stylesheet */
+/* Supports: 1, 2, 3, 3+track, 5, 6 per page layouts */
+
+/* ── Screen: visible as preview ── */
+.handout-print-area {
+  /* visible on screen as preview in the modal */
+}
+.handout-config-sidebar {
+  /* visible on screen, hidden on print */
+}
+
+/* ── Print overrides ── */
+@media print {
+  /* Hide everything except the handout */
+  body > *:not(.handout-print-root),
+  nav, .no-print, button,
+  [class*="TopNav"],
+  .handout-config-sidebar,
+  .handout-modal-backdrop,
+  .handout-toolbar {
+    display: none !important;
+  }
+
+  /* The print area becomes the only content */
+  .handout-print-root {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 99999 !important;
+    background: #fff !important;
+    overflow: visible !important;
+  }
+
+  .handout-print-area {
+    position: static !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    background: #fff !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+
+  /* Force light colors on print */
+  .handout-print-area,
+  .handout-print-area * {
+    color-adjust: exact !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Page setup */
+  @page {
+    margin: 0.4in;
+    size: letter;
+  }
+
+  /* ── 1 per page: each card = full page ── */
+  .handout-card[data-density="1"] {
+    page-break-after: always;
+    page-break-inside: avoid;
+    min-height: 90vh;
+  }
+  .handout-card[data-density="1"]:last-child {
+    page-break-after: auto;
+  }
+
+  /* ── 2 per page: break after every 2nd card ── */
+  .handout-card[data-density="2"] {
+    page-break-inside: avoid;
+    min-height: 45vh;
+  }
+  .handout-card[data-density="2"]:nth-child(2n) {
+    page-break-after: always;
+  }
+  .handout-card[data-density="2"]:last-child {
+    page-break-after: auto;
+  }
+
+  /* ── 3 per page: break after every 3rd card ── */
+  .handout-card[data-density="3"] {
+    page-break-inside: avoid;
+    min-height: 30vh;
+  }
+  .handout-card[data-density="3"]:nth-child(3n) {
+    page-break-after: always;
+  }
+  .handout-card[data-density="3"]:last-child {
+    page-break-after: auto;
+  }
+
+  /* ── 5 per page: break after every 5th card ── */
+  .handout-card[data-density="5"] {
+    page-break-inside: avoid;
+    min-height: 18vh;
+  }
+  .handout-card[data-density="5"]:nth-child(5n) {
+    page-break-after: always;
+  }
+  .handout-card[data-density="5"]:last-child {
+    page-break-after: auto;
+  }
+
+  /* ── 6 per page: break after every 6th card ── */
+  .handout-card[data-density="6"] {
+    page-break-inside: avoid;
+    min-height: 14vh;
+  }
+  .handout-card[data-density="6"]:nth-child(6n) {
+    page-break-after: always;
+  }
+  .handout-card[data-density="6"]:last-child {
+    page-break-after: auto;
+  }
+
+  /* Tracking sheet = new page */
+  .handout-tracking-sheet {
+    page-break-before: always;
+    page-break-inside: avoid;
+  }
+
+  /* Header repeats per page via position:fixed trick — browser support varies */
+  .handout-page-header {
+    position: running(pageHeader);
+  }
+}
