@@ -1,0 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* K9 Medical Theme — mapped from constants/colors.js to HSL */
+    --background: 210 40% 98%;       /* #F8FAFC */
+    --foreground: 222 47% 11%;       /* #0F172A */
+
+    --card: 0 0% 100%;               /* #FFFFFF */
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    --primary: 199 89% 48%;          /* #0EA5E9 — teal */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 210 40% 96%;        /* #F1F5F9 */
+    --secondary-foreground: 215 20% 40%;
+
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%; /* #475569 */
+
+    --accent: 160 84% 39%;           /* #059669 — green */
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 72% 51%;        /* #DC2626 — red */
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 214 32% 91%;           /* #E2E8F0 */
+    --input: 214 32% 91%;
+    --ring: 199 89% 48%;             /* teal focus ring */
+
+    --radius: 0.625rem;              /* 10px — matches S.card borderRadius */
+  }
+
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
