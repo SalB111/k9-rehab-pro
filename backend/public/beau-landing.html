@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>B.E.A.U. — AI Clinical Decision Support | K9 Rehab Pro</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #041410; color: #E1F5EE; line-height: 1.6; }
+    a { text-decoration: none; color: inherit; }
+    .container { max-width: 1080px; margin: 0 auto; padding: 0 2rem; }
+    nav { display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; height: 64px; background: rgba(4,20,16,0.96); border-bottom: 0.5px solid #0F6E56; position: sticky; top: 0; z-index: 100; }
+    .nav-logo { display: flex; align-items: center; gap: 10px; }
+    .nav-logo-box { width: 34px; height: 34px; border-radius: 7px; background: #1D9E75; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; color: #E1F5EE; }
+    .nav-links { display: flex; gap: 2rem; font-size: 14px; color: #5DCAA5; }
+    .btn-demo { background: #1D9E75; color: #E1F5EE; border: none; padding: 9px 22px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; }
+    .beau-badge { font-size: 11px; color: #5DCAA5; background: rgba(29,158,117,0.2); padding: 2px 8px; border-radius: 4px; border: 0.5px solid #1D9E75; margin-left: 8px; }
+    .tag { display: inline-block; background: rgba(29,158,117,0.15); color: #5DCAA5; font-size: 12px; font-weight: 500; padding: 5px 14px; border-radius: 20px; border: 1px solid #0F6E56; margin-bottom: 1.25rem; }
+    .btn-cta { background: #1D9E75; color: #E1F5EE; border: none; padding: 13px 36px; border-radius: 8px; font-size: 15px; font-weight: 500; cursor: pointer; display: inline-block; }
+    .btn-ghost { background: transparent; color: #5DCAA5; border: 1px solid #0F6E56; padding: 13px 36px; border-radius: 8px; font-size: 15px; cursor: pointer; display: inline-block; }
+    .divider { border: none; border-top: 0.5px solid rgba(15,110,86,0.4); }
+    section { padding: 5rem 0; }
+    .sec-dark { background: rgba(4,52,44,0.3); }
+    h1 { font-size: 54px; font-weight: 500; line-height: 1.1; }
+    h2 { font-size: 38px; font-weight: 500; line-height: 1.2; }
+    h3 { font-size: 16px; font-weight: 500; }
+    .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 5rem; align-items: center; }
+    .g3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+    .card { background: rgba(8,80,65,0.2); border: 0.5px solid #0F6E56; border-radius: 12px; padding: 1.75rem; }
+    .card:hover { border-color: #5DCAA5; }
+    .icon-box { width: 44px; height: 44px; border-radius: 10px; background: rgba(29,158,117,0.2); border: 0.5px solid #1D9E75; display: flex; align-items: center; justify-content: center; margin-bottom: 1.25rem; }
+    .phase-card { background: rgba(8,80,65,0.25); border: 0.5px solid #0F6E56; border-radius: 12px; padding: 2rem; position: relative; overflow: hidden; }
+    .phase-num-bg { font-size: 80px; font-weight: 500; color: rgba(29,158,117,0.1); position: absolute; top: -10px; right: 16px; line-height: 1; user-select: none; }
+    .stat-bar { display: grid; grid-template-columns: repeat(4, 1fr); border: 0.5px solid #0F6E56; border-radius: 12px; overflow: hidden; }
+    .stat-item { padding: 3rem 2rem; border-right: 1px solid rgba(15,110,86,0.4); text-align: center; }
+    .stat-item:last-child { border-right: none; }
+    .stat-num { font-size: 52px; font-weight: 500; color: #5DCAA5; line-height: 1; }
+    .stat-label { font-size: 13px; color: #9FE1CB; margin-top: 10px; line-height: 1.4; }
+    .check-row { display: flex; gap: 1rem; align-items: flex-start; margin-bottom: 1rem; }
+    .check-dot { width: 20px; height: 20px; border-radius: 50%; background: rgba(29,158,117,0.2); border: 0.5px solid #1D9E75; flex-shrink: 0; margin-top: 2px; display: flex; align-items: center; justify-content: center; }
+    .phase-badge { background: rgba(29,158,117,0.2); color: #5DCAA5; font-size: 11px; font-weight: 500; padding: 4px 12px; border-radius: 6px; display: inline-block; margin-bottom: 1rem; border: 0.5px solid #1D9E75; }
+    .phase-footer { margin-top: 1.5rem; padding-top: 1.25rem; border-top: 0.5px solid rgba(15,110,86,0.4); }
+    .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .metric-card { padding: 1.75rem; border: 0.5px solid #0F6E56; border-radius: 12px; }
+    .metric-val { font-size: 32px; font-weight: 500; color: #5DCAA5; margin-bottom: 0.5rem; }
+    footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 3rem; }
+    @media (max-width: 768px) {
+      h1 { font-size: 36px; } h2 { font-size: 28px; }
+      .g2, .g3, .stat-bar, .metric-grid { grid-template-columns: 1fr; }
+      .stat-item { border-right: none; border-bottom: 1px solid rgba(15,110,86,0.3); }
+      .nav-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">
+    <div class="nav-logo-box">K9</div>
+    <span style="font-weight:500;font-size:15px">K9 Rehab Pro</span>
+    <span class="beau-badge">B.E.A.U.</span>
+  </div>
+  <div class="nav-links">
+    <a href="#">About B.E.A.U.</a>
+    <a href="#">Clinical features</a>
+    <a href="#">Safety</a>
+    <a href="#">Evidence</a>
+  </div>
+  <button class="btn-demo">Book a demo</button>
+</nav>
+
+<!-- HERO -->
+<section style="min-height:88vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:6rem 2rem;position:relative;overflow:hidden;">
+  <div style="position:absolute;inset:0;pointer-events:none;">
+    <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(29,158,117,0.07) 0%,transparent 70%);"></div>
+    <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:900px;height:900px;border-radius:50%;border:0.5px solid rgba(15,110,86,0.18);"></div>
+    <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:1200px;height:1200px;border-radius:50%;border:0.5px solid rgba(15,110,86,0.09);"></div>
+  </div>
+  <div style="position:relative;max-width:840px;">
+    <div class="tag">Biometric Evidence-based Assessment Utility</div>
+    <h1 style="margin-bottom:1.5rem;">AI clinical decision support. Built for veterinary rehabilitation.</h1>
+    <p style="font-size:20px;color:#9FE1CB;line-height:1.65;max-width:680px;margin:0 auto 2.5rem;">
+      B.E.A.U. is the first AI system purpose-built to generate evidence-based, individualized rehabilitation protocols — verified against ACVSMR standards and the Millis &amp; Levine methodology. For canine rehabilitation specialists who refuse to guess.
+    </p>
+    <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;margin-bottom:2.5rem;">
+      <button class="btn-cta">Book a demo</button>
+      <button class="btn-ghost">Explore B.E.A.U.</button>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:0.5rem;flex-wrap:wrap;">
+      <span style="font-size:12px;color:#5DCAA5;">Clinically verified by</span>
+      <span style="font-size:13px;font-weight:500;color:#9FE1CB;padding:4px 12px;border:0.5px solid #0F6E56;border-radius:6px;">Millis &amp; Levine</span>
+      <span style="font-size:13px;font-weight:500;color:#9FE1CB;padding:4px 12px;border:0.5px solid #0F6E56;border-radius:6px;">ACVSMR</span>
+      <span style="font-size:13px;font-weight:500;color:#9FE1CB;padding:4px 12px;border:0.5px solid #0F6E56;border-radius:6px;">K9 Rehab Pro</span>
+    </div>
+  </div>
+</section>
+
+<!-- STANDARDS BAR -->
+<hr class="divider">
+<div style="padding:1.1rem 0;background:rgba(8,80,65,0.15);">
+  <div class="container" style="display:flex;align-items:center;gap:2rem;justify-content:center;flex-wrap:wrap;">
+    <span style="font-size:12px;color:#5DCAA5;letter-spacing:0.08em;">CLINICAL STANDARDS</span>
+    <span style="font-size:14px;font-weight:500;color:#9FE1CB;padding:6px 16px;border:0.5px solid #0F6E56;border-radius:6px;">ACVSMR</span>
+    <span style="font-size:14px;font-weight:500;color:#9FE1CB;padding:6px 16px;border:0.5px solid #0F6E56;border-radius:6px;">Millis &amp; Levine</span>
+    <span style="font-size:14px;font-weight:500;color:#9FE1CB;padding:6px 16px;border:0.5px solid #0F6E56;border-radius:6px;">Evidence-based rehabilitation</span>
+    <span style="font-size:14px;font-weight:500;color:#9FE1CB;padding:6px 16px;border:0.5px solid #0F6E56;border-radius:6px;">3-tier clinical taxonomy</span>
+  </div>
+</div>
+<hr class="divider">
+
+
+<!-- INDUSTRY CHALLENGE -->
+<section class="sec-dark">
+  <div class="container">
+    <div style="text-align:center;margin-bottom:3.5rem;">
+      <div class="tag">The clinical gap B.E.A.U. closes</div>
+      <h2 style="margin-bottom:1rem;">Veterinary rehabilitation has a clinical decision support crisis.</h2>
+    </div>
+    <div class="g3">
+      <div style="text-align:center;padding:2.5rem 1.5rem;border:0.5px solid #0F6E56;border-radius:12px;">
+        <div style="font-size:48px;font-weight:500;color:#5DCAA5;margin-bottom:0.75rem;">6</div>
+        <div style="font-size:15px;color:#9FE1CB;font-weight:500;margin-bottom:0.5rem;">Direct competitors</div>
+        <div style="font-size:13px;color:#5DCAA5;line-height:1.6;">Equicantis, SHARC, GoGoCharlie, Canine Exercise Solutions, Cavanti, Equipro Connect — none offer AI clinical decision support.</div>
+      </div>
+      <div style="text-align:center;padding:2.5rem 1.5rem;border:0.5px solid #1D9E75;border-radius:12px;background:rgba(29,158,117,0.06);">
+        <div style="font-size:48px;font-weight:500;color:#5DCAA5;margin-bottom:0.75rem;">0</div>
+        <div style="font-size:15px;color:#9FE1CB;font-weight:500;margin-bottom:0.5rem;">Competitors with B.E.A.U.</div>
+        <div style="font-size:13px;color:#5DCAA5;line-height:1.6;">No other veterinary rehabilitation platform has ACVSMR-aligned AI protocol generation. B.E.A.U. is exclusive to K9 Rehab Pro.</div>
+      </div>
+      <div style="text-align:center;padding:2.5rem 1.5rem;border:0.5px solid #0F6E56;border-radius:12px;">
+        <div style="font-size:48px;font-weight:500;color:#5DCAA5;margin-bottom:0.75rem;">1st</div>
+        <div style="font-size:15px;color:#9FE1CB;font-weight:500;margin-bottom:0.5rem;">AI built for vet rehab</div>
+        <div style="font-size:13px;color:#5DCAA5;line-height:1.6;">B.E.A.U. is the first AI clinical decision support system purpose-built for veterinary rehabilitation specialists.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<section>
+  <div class="container">
+    <div style="text-align:center;margin-bottom:3.5rem;">
+      <div class="tag">Clinical data foundation</div>
+      <h2 style="margin-bottom:1rem;">Built on verified clinical knowledge.</h2>
+      <p style="font-size:16px;color:#9FE1CB;max-width:560px;margin:0 auto;line-height:1.65;">Every B.E.A.U. output draws from a rigorously structured clinical knowledge base — not general AI training data.</p>
+    </div>
+    <div class="stat-bar">
+      <div class="stat-item"><div class="stat-num">223</div><div class="stat-label">Evidence-graded exercises across 14 clinical categories</div></div>
+      <div class="stat-item"><div class="stat-num">52</div><div class="stat-label">Verified ACVSMR-aligned protocol codes</div></div>
+      <div class="stat-item"><div class="stat-num">3</div><div class="stat-label">Tier difficulty taxonomy — Easy / Moderate / Advanced</div></div>
+      <div class="stat-item"><div class="stat-num">14</div><div class="stat-label">Clinical exercise categories mapped to conditions</div></div>
+    </div>
+  </div>
+</section>
+<hr class="divider">
+
+
+<!-- PRODUCTS & FEATURES -->
+<section class="sec-dark">
+  <div class="container">
+    <div style="text-align:center;margin-bottom:3.5rem;">
+      <div class="tag">Products &amp; features</div>
+      <h2 style="margin-bottom:1rem;">What B.E.A.U. does.</h2>
+      <p style="font-size:16px;color:#9FE1CB;max-width:540px;margin:0 auto;line-height:1.65;">Five interlocking clinical capabilities. All evidence-based. All ACVSMR-aligned. All exclusive to K9 Rehab Pro.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem;">
+      <div class="card">
+        <div class="icon-box">
+          <svg width="22" height="22" fill="none" viewBox="0 0 22 22"><path d="M11 2a9 9 0 100 18A9 9 0 0011 2z" stroke="#5DCAA5" stroke-width="1.5"/><path d="M11 7v4l3 3" stroke="#5DCAA5" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
+        <h3 style="color:#E1F5EE;margin-bottom:0.6rem;">Biometric patient intake</h3>
+        <p style="font-size:13px;color:#5DCAA5;line-height:1.65;">Captures species, breed, age, body weight, BCS, condition, pain score, ROM deficit, gait grade, and muscle atrophy classification before generating any protocol output.</p>
+      </div>
+      <div class="card">
+        <div class="icon-box">
+          <svg width="22" height="22" fill="none" viewBox="0 0 22 22"><rect x="3" y="3" width="16" height="16" rx="3" stroke="#5DCAA5" stroke-width="1.5"/><path d="M7 11l3 3 5-5" stroke="#5DCAA5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <h3 style="color:#E1F5EE;margin-bottom:0.6rem;">AI protocol generation</h3>
+        <p style="font-size:13px;color:#5DCAA5;line-height:1.65;">Generates a fully individualized, phase-appropriate exercise protocol from the verified library — matched to condition, recovery phase, and patient biometrics.</p>
+      </div>
+      <div class="card">
+        <div class="icon-box">
+          <svg width="22" height="22" fill="none" viewBox="0 0 22 22"><path d="M4 17V8l7-4 7 4v9" stroke="#5DCAA5" stroke-width="1.5" stroke-linejoin="round"/><rect x="8" y="12" width="6" height="5" rx="1" stroke="#5DCAA5" stroke-width="1.5"/></svg>
+        </div>
+        <h3 style="color:#E1F5EE;margin-bottom:0.6rem;">Evidence grading</h3>
+        <p style="font-size:13px;color:#5DCAA5;line-height:1.65;">Every protocol output includes an evidence confidence score. Exercises are selected from the Easy / Moderate / Advanced taxonomy aligned to Millis &amp; Levine criteria.</p>
+      </div>
+      <div class="card">
+        <div class="icon-box">
+          <svg width="22" height="22" fill="none" viewBox="0 0 22 22"><path d="M11 3v4M11 15v4M3 11h4M15 11h4" stroke="#5DCAA5" stroke-width="1.5" stroke-linecap="round"/><circle cx="11" cy="11" r="3" stroke="#5DCAA5" stroke-width="1.5"/></svg>
+        </div>
+        <h3 style="color:#E1F5EE;margin-bottom:0.6rem;">Phase-based progression</h3>
+        <p style="font-size:13px;color:#5DCAA5;line-height:1.65;">Protocol outputs are phase-structured. B.E.A.U. maps exercises to the correct rehabilitation phase — acute, subacute, or active recovery — with defined progression milestones.</p>
+      </div>
+      <div class="card">
+        <div class="icon-box">
+          <svg width="22" height="22" fill="none" viewBox="0 0 22 22"><path d="M3 17l4-4 4 4 4-5 4 5" stroke="#5DCAA5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <h3 style="color:#E1F5EE;margin-bottom:0.6rem;">Clinical dashboard integration</h3>
+        <p style="font-size:13px;color:#5DCAA5;line-height:1.65;">B.E.A.U.-generated protocols link directly to the patient record. Track adherence, pain score trends, ROM improvement, and phase transitions across 113 active protocols.</p>
+      </div>
+      <div class="card" style="background:rgba(29,158,117,0.1);border-color:#1D9E75;">
+        <div class="icon-box" style="background:rgba(29,158,117,0.3);border-color:#5DCAA5;">
+          <svg width="22" height="22" fill="none" viewBox="0 0 22 22"><path d="M11 3l2.5 5h5l-4 3.5 1.5 5.5L11 14l-5 3 1.5-5.5-4-3.5h5z" stroke="#5DCAA5" stroke-width="1.5" stroke-linejoin="round"/></svg>
+        </div>
+        <h3 style="color:#E1F5EE;margin-bottom:0.6rem;">ACVSMR protocol coding</h3>
+        <p style="font-size:13px;color:#5DCAA5;line-height:1.65;">52 verified protocol codes map B.E.A.U. outputs to ACVSMR-recognized clinical conditions. Documentation from day one aligns with the governing body for veterinary rehabilitation.</p>
+        <div style="margin-top:1rem;display:inline-block;background:rgba(29,158,117,0.2);color:#5DCAA5;font-size:11px;padding:3px 10px;border-radius:4px;border:0.5px solid #1D9E75;">52 verified codes active</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- VALIDATION PROCESS -->
+<section>
+  <div class="container">
+    <div style="text-align:center;margin-bottom:3.5rem;">
+      <div class="tag">Clinical validation</div>
+      <h2 style="margin-bottom:1rem;">Our clinical validation process.</h2>
+      <p style="font-size:16px;color:#9FE1CB;max-width:560px;margin:0 auto;line-height:1.65;">B.E.A.U. protocol outputs are validated through a three-stage clinical verification process — mirroring the highest standards of veterinary AI governance.</p>
+    </div>
+    <div class="g3">
+      <div class="phase-card">
+        <div class="phase-num-bg">1</div>
+        <div class="phase-badge">Phase 1</div>
+        <h3 style="font-size:17px;color:#E1F5EE;margin-bottom:0.75rem;">Protocol library validation</h3>
+        <p style="font-size:13px;color:#5DCAA5;line-height:1.65;">Every exercise in the 223-item library is benchmarked against Millis &amp; Levine criteria. Clinical indications, dosing parameters, and progression criteria are reviewed for accuracy before inclusion.</p>
+        <div class="phase-footer">
+          <div style="font-size:12px;color:#9FE1CB;">Validation standard</div>
+          <div style="font-size:13px;color:#5DCAA5;margin-top:4px;">Millis &amp; Levine evidence-based rehabilitation methodology</div>
+        </div>
+      </div>
+      <div class="phase-card">
+        <div class="phase-num-bg">2</div>
+        <div class="phase-badge">Phase 2</div>
+        <h3 style="font-size:17px;color:#E1F5EE;margin-bottom:0.75rem;">B.E.A.U. output verification</h3>
+        <p style="font-size:13px;color:#5DCAA5;line-height:1.65;">Generated protocols are reviewed against clinical case data by rehabilitation specialists. B.E.A.U.'s exercise selection, difficulty assignment, and dosing are evaluated for each patient profile.</p>
+        <div class="phase-footer">
+          <div style="font-size:12px;color:#9FE1CB;">Tested on</div>
+          <div style="font-size:13px;color:#5DCAA5;margin-top:4px;">Real patient cases including Dylan — Alaskan Malamute, DJD bilateral hip</div>
+        </div>
+      </div>
+      <div class="phase-card">
+        <div class="phase-num-bg">3</div>
+        <div class="phase-badge">Phase 3</div>
+        <h3 style="font-size:17px;color:#E1F5EE;margin-bottom:0.75rem;">Continuous clinical monitoring</h3>
+        <p style="font-size:13px;color:#5DCAA5;line-height:1.65;">Protocol outputs are continuously monitored against patient outcome data. ACVSMR alignment and Millis &amp; Levine benchmarks are re-evaluated as the exercise library and protocol engine evolve.</p>
+        <div class="phase-footer">
+          <div style="font-size:12px;color:#9FE1CB;">Governing standard</div>
+          <div style="font-size:13px;color:#5DCAA5;margin-top:4px;">ACVSMR protocol codes — 52 verified and active</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<hr class="divider">
+
+
+<!-- SAFETY STANDARDS -->
+<section class="sec-dark">
+  <div class="container">
+    <div class="g2">
+      <div>
+        <div class="tag">Safety standards</div>
+        <h2 style="margin-bottom:1.25rem;">Taking clinical safety seriously.</h2>
+        <p style="font-size:15px;color:#9FE1CB;line-height:1.7;margin-bottom:1.25rem;">Applying AI to veterinary rehabilitation requires the highest standards of clinical validity. B.E.A.U. is not a general-purpose language model — it is a domain-specific clinical decision support system with strict boundaries.</p>
+        <p style="font-size:15px;color:#9FE1CB;line-height:1.7;margin-bottom:2rem;">B.E.A.U. operates in strict verification mode. Clinical accuracy is non-negotiable and takes priority over speed or convenience. Every output is grounded in evidence, not probability.</p>
+        <div class="check-row"><div class="check-dot"><svg width="10" height="10" fill="none" viewBox="0 0 10 10"><path d="M2 5l2 2 4-4" stroke="#5DCAA5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div><p style="font-size:14px;color:#5DCAA5;line-height:1.6;">No hallucinated clinical content — all outputs are drawn from the verified 223-exercise library</p></div>
+        <div class="check-row"><div class="check-dot"><svg width="10" height="10" fill="none" viewBox="0 0 10 10"><path d="M2 5l2 2 4-4" stroke="#5DCAA5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div><p style="font-size:14px;color:#5DCAA5;line-height:1.6;">ACVSMR protocol codes provide an auditable clinical reference for every generated protocol</p></div>
+        <div class="check-row"><div class="check-dot"><svg width="10" height="10" fill="none" viewBox="0 0 10 10"><path d="M2 5l2 2 4-4" stroke="#5DCAA5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div><p style="font-size:14px;color:#5DCAA5;line-height:1.6;">B.E.A.U. is a decision support tool, not a replacement for clinician judgment — designed to augment, not override, the rehabilitation specialist</p></div>
+        <div class="check-row"><div class="check-dot"><svg width="10" height="10" fill="none" viewBox="0 0 10 10"><path d="M2 5l2 2 4-4" stroke="#5DCAA5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div><p style="font-size:14px;color:#5DCAA5;line-height:1.6;">Difficulty taxonomy enforced at every layer — Easy / Moderate / Advanced labels are clinically defined, not arbitrary</p></div>
+      </div>
+      <div style="border:0.5px solid #0F6E56;border-radius:12px;overflow:hidden;">
+        <div style="background:rgba(8,80,65,0.4);padding:1.25rem;border-bottom:0.5px solid #0F6E56;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:32px;height:32px;border-radius:50%;background:#1D9E75;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#E1F5EE;">B</div>
+            <div>
+              <div style="font-size:13px;font-weight:500;color:#E1F5EE;">B.E.A.U. safety output</div>
+              <div style="font-size:11px;color:#5DCAA5;">Dylan — DJD bilateral hip · Phase 2</div>
+            </div>
+            <div style="margin-left:auto;background:#1D9E75;color:#E1F5EE;font-size:10px;padding:3px 10px;border-radius:4px;">Verified</div>
+          </div>
+        </div>
+        <div style="padding:1.5rem;background:rgba(4,20,16,0.8);">
+          <div style="display:flex;flex-direction:column;gap:0.75rem;">
+            <div style="background:rgba(8,80,65,0.3);border:0.5px solid #0F6E56;border-radius:8px;padding:1rem;">
+              <div style="font-size:11px;color:#9FE1CB;margin-bottom:6px;">Exercise 1 — Easy</div>
+              <div style="font-size:13px;color:#E1F5EE;font-weight:500;">Sit-to-stand</div>
+              <div style="font-size:12px;color:#5DCAA5;margin-top:3px;">3×8 reps · Hindlimb loading focus · Bilateral</div>
+              <div style="margin-top:8px;font-size:11px;color:#9FE1CB;">Evidence basis: hindlimb extensor strengthening — Millis &amp; Levine Ch. 14</div>
+            </div>
+            <div style="background:rgba(8,80,65,0.3);border:0.5px solid #0F6E56;border-radius:8px;padding:1rem;">
+              <div style="font-size:11px;color:#9FE1CB;margin-bottom:6px;">Exercise 2 — Moderate</div>
+              <div style="font-size:13px;color:#E1F5EE;font-weight:500;">Cavaletti rails</div>
+              <div style="font-size:12px;color:#5DCAA5;margin-top:3px;">2×6 reps · 1 min rest · Hip flexion/extension</div>
+              <div style="margin-top:8px;font-size:11px;color:#9FE1CB;">Evidence basis: proprioceptive challenge, gait re-education</div>
+            </div>
+            <div style="background:rgba(8,80,65,0.3);border:0.5px solid #0F6E56;border-radius:8px;padding:1rem;">
+              <div style="font-size:11px;color:#9FE1CB;margin-bottom:6px;">Exercise 3 — Easy</div>
+              <div style="font-size:13px;color:#E1F5EE;font-weight:500;">Balance board — bilateral</div>
+              <div style="font-size:12px;color:#5DCAA5;margin-top:3px;">3×30s · Neuromuscular re-education</div>
+              <div style="margin-top:8px;font-size:11px;color:#9FE1CB;">Evidence basis: postural stability, neuromuscular control</div>
+            </div>
+          </div>
+          <div style="margin-top:1.25rem;padding:0.75rem 1rem;background:rgba(29,158,117,0.1);border:0.5px solid #1D9E75;border-radius:8px;display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:12px;color:#9FE1CB;">Evidence confidence</span>
+            <span style="font-size:14px;font-weight:500;color:#5DCAA5;">80% — ACVSMR verified</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ETHICAL AI -->
+<section>
+  <div class="container">
+    <div class="g2">
+      <div>
+        <div class="tag">Ethical AI</div>
+        <h2 style="margin-bottom:1.25rem;">Practicing ethical veterinary AI.</h2>
+        <p style="font-size:15px;color:#9FE1CB;line-height:1.7;margin-bottom:1.25rem;">B.E.A.U. is built on the conviction that AI in clinical veterinary medicine must be transparent, auditable, and bounded by the evidence. We embrace the relationship between clinicians and technology — harnessing both to improve outcomes for canine patients.</p>
+        <p style="font-size:15px;color:#9FE1CB;line-height:1.7;margin-bottom:2rem;">Our mission is clinical accuracy without hallucination. B.E.A.U. does not generate content outside its verified knowledge base. Every recommendation is traceable to a specific exercise, clinical category, and evidence standard.</p>
+        <a href="#" style="display:inline-flex;align-items:center;gap:8px;font-size:14px;color:#5DCAA5;border-bottom:0.5px solid #0F6E56;padding-bottom:2px;">Learn about B.E.A.U.'s clinical framework →</a>
+      </div>
+      <div class="metric-grid">
+        <div class="metric-card"><div class="metric-val">100%</div><div style="font-size:13px;color:#9FE1CB;line-height:1.5;">Outputs traceable to verified clinical sources</div></div>
+        <div class="metric-card"><div class="metric-val">Zero</div><div style="font-size:13px;color:#9FE1CB;line-height:1.5;">Hallucinated exercise recommendations in verified outputs</div></div>
+        <div class="metric-card"><div class="metric-val">STRICT</div><div style="font-size:13px;color:#9FE1CB;line-height:1.5;">Verification mode — clinical accuracy over speed, always</div></div>
+        <div class="metric-card" style="border-color:#1D9E75;background:rgba(29,158,117,0.06);"><div class="metric-val">Augment</div><div style="font-size:13px;color:#9FE1CB;line-height:1.5;">B.E.A.U. supports clinician judgment — never replaces it</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+<hr class="divider">
+
+<!-- CTA -->
+<section class="sec-dark" style="text-align:center;">
+  <div class="container">
+    <div class="tag">Book a demo</div>
+    <h2 style="margin-bottom:1.25rem;max-width:600px;margin-left:auto;margin-right:auto;">Ready to put B.E.A.U. to work in your rehabilitation clinic?</h2>
+    <p style="font-size:17px;color:#9FE1CB;max-width:500px;margin:0 auto 2.5rem;line-height:1.65;">See how B.E.A.U. generates a fully individualized, ACVSMR-aligned protocol for a real patient case — in under 60 seconds.</p>
+    <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
+      <button class="btn-cta">Book a demo</button>
+      <button class="btn-ghost">Explore K9 Rehab Pro</button>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer style="background:#020e0b;border-top:0.5px solid #0F6E56;padding:3rem 2rem;">
+  <div class="container">
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:3rem;margin-bottom:3rem;">
+      <div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem;">
+          <div class="nav-logo-box">K9</div>
+          <span style="font-weight:500;font-size:14px;color:#E1F5EE;">K9 Rehab Pro</span>
+          <span class="beau-badge">B.E.A.U.</span>
+        </div>
+        <p style="font-size:13px;color:#5DCAA5;line-height:1.7;max-width:260px;">The only veterinary rehabilitation platform with ACVSMR-aligned AI clinical decision support. Built on Millis &amp; Levine. Exclusive to K9 Rehab Pro.</p>
+      </div>
+      <div>
+        <p style="font-weight:500;font-size:11px;color:#9FE1CB;margin-bottom:1rem;letter-spacing:0.06em;">B.E.A.U.</p>
+        <div style="display:flex;flex-direction:column;gap:0.6rem;">
+          <a href="#" style="font-size:13px;color:#5DCAA5;">Protocol generation</a>
+          <a href="#" style="font-size:13px;color:#5DCAA5;">Exercise library</a>
+          <a href="#" style="font-size:13px;color:#5DCAA5;">Evidence grading</a>
+          <a href="#" style="font-size:13px;color:#5DCAA5;">Safety standards</a>
+        </div>
+      </div>
+      <div>
+        <p style="font-weight:500;font-size:11px;color:#9FE1CB;margin-bottom:1rem;letter-spacing:0.06em;">Standards</p>
+        <div style="display:flex;flex-direction:column;gap:0.6rem;">
+          <a href="#" style="font-size:13px;color:#5DCAA5;">ACVSMR alignment</a>
+          <a href="#" style="font-size:13px;color:#5DCAA5;">Millis &amp; Levine</a>
+          <a href="#" style="font-size:13px;color:#5DCAA5;">Protocol codes</a>
+          <a href="#" style="font-size:13px;color:#5DCAA5;">Clinical taxonomy</a>
+        </div>
+      </div>
+      <div>
+        <p style="font-weight:500;font-size:11px;color:#9FE1CB;margin-bottom:1rem;letter-spacing:0.06em;">Company</p>
+        <div style="display:flex;flex-direction:column;gap:0.6rem;">
+          <a href="#" style="font-size:13px;color:#5DCAA5;">About</a>
+          <a href="#" style="font-size:13px;color:#5DCAA5;">Book a demo</a>
+          <a href="#" style="font-size:13px;color:#5DCAA5;">Contact</a>
+        </div>
+      </div>
+    </div>
+    <div style="border-top:0.5px solid rgba(15,110,86,0.4);padding-top:1.5rem;display:flex;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+      <p style="font-size:12px;color:#5DCAA5;">© 2025 K9 Rehab Pro. All rights reserved.</p>
+      <p style="font-size:12px;color:#5DCAA5;">ACVSMR-aligned · Millis &amp; Levine verified · B.E.A.U. powered</p>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

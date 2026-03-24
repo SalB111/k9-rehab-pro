@@ -1,9 +1,0 @@
-];
-
-// Combine all exercises from Part 5
-const EXERCISES_PART5 = [
-  ...AQUATIC_EXERCISES,
-  ...FUNCTIONAL_EXERCISES
-];
-
-module.exports = EXERCISES_PART5;

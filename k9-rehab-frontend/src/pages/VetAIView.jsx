@@ -297,7 +297,7 @@ function VetAIView({ authToken }) {
           <div style={{ background: C.amberBg, border: `1px solid ${C.amber}`, borderRadius: 10, padding: "12px 16px", marginBottom: 16, display: "flex", alignItems: "center", gap: 10 }}>
             <FiAlertTriangle size={16} style={{ color: C.amber, flexShrink: 0 }} />
             <div style={{ fontSize: 12, color: C.text }}>
-              <strong>API Key Required:</strong> Add your Anthropic API key to <code style={{ background: C.bg, padding: "1px 4px", borderRadius: 3 }}>backend/.env</code> as <code style={{ background: C.bg, padding: "1px 4px", borderRadius: 3 }}>ANTHROPIC_API_KEY=sk-ant-...</code> then restart the backend.
+              <strong>API Key Required:</strong> Add your Anthropic API key to <code style={{ background: C.bg, padding: "1px 4px", borderRadius: 3 }}>backend/.env</code> as <code style={{ background: C.bg, padding: "1px 4px", borderRadius: 3 }}>ANTHROPIC_API_KEY=your-key-here</code> then restart the backend.
             </div>
           </div>
         )}

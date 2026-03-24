@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>K9 Rehab Pro — Veterinary Rehabilitation Platform</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #fff; color: #1a1a1a; line-height: 1.6; }
+    a { text-decoration: none; color: inherit; }
+    img { max-width: 100%; display: block; }
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 2rem; }
+
+    /* NAV */
+    nav { display: flex; align-items: center; justify-content: space-between; padding: 0 2.5rem; height: 68px; background: #fff; border-bottom: 1px solid #e8f5f0; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 0 rgba(15,110,86,0.08); }
+    .logo { display: flex; align-items: center; gap: 10px; }
+    .logo-box { width: 36px; height: 36px; border-radius: 8px; background: #0F6E56; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; color: #fff; letter-spacing: -0.5px; }
+    .logo-text { font-weight: 700; font-size: 17px; color: #0F6E56; }
+    .logo-badge { font-size: 10px; color: #1D9E75; background: #E1F5EE; padding: 2px 8px; border-radius: 4px; border: 0.5px solid #9FE1CB; margin-left: 6px; }
+    .nav-links { display: flex; align-items: center; gap: 2rem; font-size: 14px; color: #444; }
+    .nav-links a:hover { color: #0F6E56; }
+    .nav-cta { display: flex; gap: 10px; }
+    .btn-outline { border: 1.5px solid #0F6E56; color: #0F6E56; padding: 8px 20px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; background: transparent; }
+    .btn-primary { background: #0F6E56; color: #fff; border: none; padding: 9px 22px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+    .btn-primary:hover { background: #085041; }
+
+    /* HERO */
+    .hero { background: linear-gradient(135deg, #f0faf6 0%, #e1f5ee 60%, #f8fcfa 100%); padding: 5rem 2rem 4rem; }
+    .hero-label { display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: 0.1em; color: #0F6E56; text-transform: uppercase; margin-bottom: 1rem; background: #E1F5EE; padding: 5px 14px; border-radius: 20px; border: 1px solid #9FE1CB; }
+    .hero h1 { font-size: 50px; font-weight: 700; line-height: 1.1; color: #0a2e23; max-width: 680px; margin-bottom: 1.5rem; }
+    .hero h1 span { color: #0F6E56; }
+    .hero p { font-size: 18px; color: #3d6b5e; max-width: 560px; margin-bottom: 2.5rem; line-height: 1.7; }
+    .hero-btns { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .btn-hero { background: #0F6E56; color: #fff; border: none; padding: 13px 32px; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; }
+    .btn-hero-ghost { background: transparent; color: #0F6E56; border: 2px solid #0F6E56; padding: 13px 32px; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; }
+    .hero-stats { display: flex; gap: 3rem; margin-top: 3.5rem; padding-top: 2rem; border-top: 1px solid #c5e8da; flex-wrap: wrap; }
+    .hero-stat-n { font-size: 36px; font-weight: 700; color: #0F6E56; }
+    .hero-stat-l { font-size: 13px; color: #3d6b5e; margin-top: 2px; }
+
+    /* SECTION COMMON */
+    section { padding: 5rem 0; }
+    .sec-label { font-size: 12px; font-weight: 700; letter-spacing: 0.1em; color: #0F6E56; text-transform: uppercase; margin-bottom: 0.75rem; }
+    .sec-h2 { font-size: 36px; font-weight: 700; color: #0a2e23; line-height: 1.2; margin-bottom: 1.25rem; }
+    .sec-p { font-size: 16px; color: #4a6b60; line-height: 1.75; }
+    .sec-alt { background: #f8fcfa; }
+    .sec-dark { background: #0a2e23; }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">
+    <div class="logo-box">K9</div>
+    <span class="logo-text">K9 Rehab Pro</span>
+    <span class="logo-badge">B.E.A.U.</span>
+  </div>
+  <div class="nav-links">
+    <a href="#">Solutions</a>
+    <a href="#">Exercise library</a>
+    <a href="#">Platform</a>
+    <a href="#">Pricing</a>
+    <a href="#">Company</a>
+  </div>
+  <div class="nav-cta">
+    <button class="btn-outline">Log in</button>
+    <button class="btn-primary">Free trial</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-label">Solutions for Veterinary Rehabilitation</div>
+    <h1>Comprehensive rehabilitation tools for <span>canine recovery.</span></h1>
+    <p>K9 Rehab Pro, in partnership with ACVSMR standards and Millis &amp; Levine methodology, offers the most clinically rigorous home exercise library and AI protocol engine for canine rehabilitation professionals.</p>
+    <div class="hero-btns">
+      <button class="btn-hero">Get a free trial</button>
+      <button class="btn-hero-ghost">Explore B.E.A.U.</button>
+    </div>
+    <div class="hero-stats">
+      <div>
+        <div class="hero-stat-n">235</div>
+        <div class="hero-stat-l">Evidence-graded exercises</div>
+      </div>
+      <div>
+        <div class="hero-stat-n">52</div>
+        <div class="hero-stat-l">ACVSMR protocol codes</div>
+      </div>
+      <div>
+        <div class="hero-stat-n">13</div>
+        <div class="hero-stat-l">Clinical condition pathways</div>
+      </div>
+      <div>
+        <div class="hero-stat-n">B.E.A.U.</div>
+        <div class="hero-stat-l">AI clinical decision support</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- EXERCISE GALLERY — Wibbi-style filter + card grid -->
+<style>
+.gallery-wrap { background: #f8fcfa; padding: 5rem 0; }
+.gallery-filters { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 2.5rem; }
+.filter-btn { padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; border: 1.5px solid #c5e8da; color: #0F6E56; background: #fff; transition: all 0.2s; }
+.filter-btn.active, .filter-btn:hover { background: #0F6E56; color: #fff; border-color: #0F6E56; }
+.gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1.25rem; }
+.ex-card { background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #e8f5f0; transition: box-shadow 0.2s; }
+.ex-card:hover { box-shadow: 0 4px 20px rgba(15,110,86,0.12); }
+.ex-thumb { background: #e1f5ee; height: 160px; display: flex; align-items: center; justify-content: center; position: relative; }
+.ex-thumb-icon { width: 56px; height: 56px; border-radius: 50%; background: #0F6E56; display: flex; align-items: center; justify-content: center; }
+.ex-play { position: absolute; bottom: 10px; right: 10px; width: 32px; height: 32px; border-radius: 50%; background: rgba(15,110,86,0.9); display: flex; align-items: center; justify-content: center; }
+.ex-diff { position: absolute; top: 10px; left: 10px; font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 8px; }
+.diff-easy { background: #E1F5EE; color: #0F6E56; }
+.diff-mod { background: #FEF3C7; color: #92400E; }
+.diff-adv { background: #FEE2E2; color: #991B1B; }
+.ex-body { padding: 14px 16px; }
+.ex-cat { font-size: 10px; font-weight: 700; color: #9FE1CB; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px; }
+.ex-name { font-size: 14px; font-weight: 600; color: #0a2e23; }
+.ex-desc { font-size: 12px; color: #6b8f85; margin-top: 4px; line-height: 1.5; }
+</style>
+
+<div class="gallery-wrap">
+  <div class="container">
+    <div class="sec-label">Exercise library</div>
+    <h2 class="sec-h2" style="max-width:600px;">Find the canine rehab exercises you need — evidence-graded and ACVSMR-aligned.</h2>
+    <p class="sec-p" style="max-width:560px;margin-bottom:2rem;">Explore our 235-exercise library across 14 clinical categories. Every exercise classified Easy / Moderate / Advanced against Millis &amp; Levine criteria — not general fitness definitions.</p>
+    <div class="gallery-filters">
+      <button class="filter-btn active">All (235)</button>
+      <button class="filter-btn">Therapeutic Exercise</button>
+      <button class="filter-btn">Hydrotherapy</button>
+      <button class="filter-btn">Neurological Rehab</button>
+      <button class="filter-btn">Balance &amp; Proprioception</button>
+      <button class="filter-btn">Post-Surgical</button>
+      <button class="filter-btn">Geriatric Care</button>
+      <button class="filter-btn">Passive Therapy</button>
+    </div>
+    <div class="gallery-grid" id="exerciseGrid">
+
+      <!-- Card 1 -->
+      <div class="ex-card">
+        <div class="ex-thumb">
+          <div class="ex-diff diff-easy">Easy</div>
+          <div class="ex-thumb-icon"><svg width="28" height="28" fill="none" viewBox="0 0 28 28"><circle cx="14" cy="14" r="10" stroke="#fff" stroke-width="2"/><path d="M10 14l3 3 5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="ex-play"><svg width="12" height="12" viewBox="0 0 12 12" fill="#fff"><polygon points="3,1 11,6 3,11"/></svg></div>
+        </div>
+        <div class="ex-body">
+          <div class="ex-cat">Therapeutic Exercise</div>
+          <div class="ex-name">Sit-to-stand</div>
+          <div class="ex-desc">Hindlimb extensor strengthening. Bilateral weight-bearing. 3×10 reps.</div>
+        </div>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="ex-card">
+        <div class="ex-thumb" style="background:#ddf0e8;">
+          <div class="ex-diff diff-mod">Moderate</div>
+          <div class="ex-thumb-icon"><svg width="28" height="28" fill="none" viewBox="0 0 28 28"><rect x="4" y="4" width="20" height="20" rx="4" stroke="#fff" stroke-width="2"/><path d="M9 14h10M14 9v10" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></div>
+          <div class="ex-play"><svg width="12" height="12" viewBox="0 0 12 12" fill="#fff"><polygon points="3,1 11,6 3,11"/></svg></div>
+        </div>
+        <div class="ex-body">
+          <div class="ex-cat">Therapeutic Exercise</div>
+          <div class="ex-name">Cavaletti rails</div>
+          <div class="ex-desc">Proprioceptive challenge. Hip flexion/extension range. 2×8 reps.</div>
+        </div>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="ex-card">
+        <div class="ex-thumb" style="background:#cce8f4;">
+          <div class="ex-diff diff-easy">Easy</div>
+          <div class="ex-thumb-icon" style="background:#0369a1;"><svg width="28" height="28" fill="none" viewBox="0 0 28 28"><path d="M6 20c4-8 12-8 16 0" stroke="#fff" stroke-width="2" stroke-linecap="round"/><circle cx="14" cy="11" r="4" stroke="#fff" stroke-width="2"/></svg></div>
+          <div class="ex-play"><svg width="12" height="12" viewBox="0 0 12 12" fill="#fff"><polygon points="3,1 11,6 3,11"/></svg></div>
+        </div>
+        <div class="ex-body">
+          <div class="ex-cat">Hydrotherapy</div>
+          <div class="ex-name">UWTM Phase I — Acute Protocol</div>
+          <div class="ex-desc">Hip-level water, 62% WB reduction. 0.5–1.0 mph. 3–5 min. Weeks 1–4.</div>
+        </div>
+      </div>
+
+      <!-- Card 4 -->
+      <div class="ex-card">
+        <div class="ex-thumb" style="background:#e8e1f5;">
+          <div class="ex-diff diff-easy">Easy</div>
+          <div class="ex-thumb-icon" style="background:#7c3aed;"><svg width="28" height="28" fill="none" viewBox="0 0 28 28"><circle cx="14" cy="14" r="10" stroke="#fff" stroke-width="2"/><path d="M14 9v5l3 3" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></div>
+          <div class="ex-play"><svg width="12" height="12" viewBox="0 0 12 12" fill="#fff"><polygon points="3,1 11,6 3,11"/></svg></div>
+        </div>
+        <div class="ex-body">
+          <div class="ex-cat">Balance &amp; Proprioception</div>
+          <div class="ex-name">Balance board — bilateral</div>
+          <div class="ex-desc">Postural stability. Neuromuscular re-education. 3×30 seconds.</div>
+        </div>
+      </div>
+
+      <!-- Card 5 -->
+      <div class="ex-card">
+        <div class="ex-thumb" style="background:#fef3c7;">
+          <div class="ex-diff diff-adv">Advanced</div>
+          <div class="ex-thumb-icon" style="background:#b45309;"><svg width="28" height="28" fill="none" viewBox="0 0 28 28"><path d="M8 20V12l6-6 6 6v8" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><rect x="11" y="14" width="6" height="6" rx="1" stroke="#fff" stroke-width="2"/></svg></div>
+          <div class="ex-play"><svg width="12" height="12" viewBox="0 0 12 12" fill="#fff"><polygon points="3,1 11,6 3,11"/></svg></div>
+        </div>
+        <div class="ex-body">
+          <div class="ex-cat">Neurological Rehab</div>
+          <div class="ex-name">Sling walking — Grade III-IV support</div>
+          <div class="ex-desc">Supported ambulation. Hindquarter sling. IVDD / DM Stage 2.</div>
+        </div>
+      </div>
+
+      <!-- Card 6 -->
+      <div class="ex-card">
+        <div class="ex-thumb" style="background:#dcfce7;">
+          <div class="ex-diff diff-mod">Moderate</div>
+          <div class="ex-thumb-icon" style="background:#15803d;"><svg width="28" height="28" fill="none" viewBox="0 0 28 28"><path d="M7 21V14M14 21V8M21 21V12" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></svg></div>
+          <div class="ex-play"><svg width="12" height="12" viewBox="0 0 12 12" fill="#fff"><polygon points="3,1 11,6 3,11"/></svg></div>
+        </div>
+        <div class="ex-body">
+          <div class="ex-cat">Post-Surgical</div>
+          <div class="ex-name">UWTM Post-TPLO Protocol</div>
+          <div class="ex-desc">Week-by-week TPLO-gated dosing. Weeks 2–16. Speed and depth progress by milestone.</div>
+        </div>
+      </div>
+
+    </div>
+    <div style="text-align:center;margin-top:2.5rem;">
+      <button class="btn-primary" style="padding:12px 36px;font-size:15px;">Browse full exercise library</button>
+      <p style="font-size:13px;color:#6b8f85;margin-top:0.75rem;">235 exercises · 14 categories · Easy / Moderate / Advanced taxonomy</p>
+    </div>
+  </div>
+</div>
+
+<!-- CLINICAL STANDARDS PARTNERS — Wibbi "Trusted Content Partners" -->
+<style>
+.partners { padding: 3rem 0; border-top: 1px solid #e8f5f0; border-bottom: 1px solid #e8f5f0; }
+.partners-label { text-align: center; font-size: 12px; font-weight: 700; letter-spacing: 0.1em; color: #9FE1CB; text-transform: uppercase; margin-bottom: 1.75rem; }
+.partners-row { display: flex; align-items: center; justify-content: center; gap: 3.5rem; flex-wrap: wrap; }
+.partner-item { text-align: center; }
+.partner-badge { display: inline-block; font-size: 14px; font-weight: 700; color: #0F6E56; background: #E1F5EE; padding: 10px 22px; border-radius: 10px; border: 1.5px solid #9FE1CB; margin-bottom: 6px; }
+.partner-sub { font-size: 11px; color: #6b8f85; max-width: 140px; }
+</style>
+
+<section class="partners">
+  <div class="container">
+    <div class="partners-label">Clinical standards &amp; evidence base</div>
+    <div class="partners-row">
+      <div class="partner-item">
+        <div class="partner-badge">ACVSMR</div>
+        <div class="partner-sub">American College of Veterinary Sports Medicine &amp; Rehabilitation</div>
+      </div>
+      <div class="partner-item">
+        <div class="partner-badge">Millis &amp; Levine</div>
+        <div class="partner-sub">Canine Rehabilitation and Physical Therapy — primary evidence reference</div>
+      </div>
+      <div class="partner-item">
+        <div class="partner-badge">Zink &amp; Van Dyke</div>
+        <div class="partner-sub">Canine Sports Medicine and Rehabilitation</div>
+      </div>
+      <div class="partner-item">
+        <div class="partner-badge">B.E.A.U.</div>
+        <div class="partner-sub">AI clinical decision support — exclusive to K9 Rehab Pro</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES — Wibbi alternating left/right layout -->
+<style>
+.feat { padding: 5rem 0; }
+.feat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5rem; align-items: center; }
+.feat-grid.reverse { direction: rtl; }
+.feat-grid.reverse > * { direction: ltr; }
+.feat-visual { background: #e1f5ee; border-radius: 16px; height: 340px; display: flex; align-items: center; justify-content: center; border: 1px solid #c5e8da; overflow: hidden; }
+.feat-list { list-style: none; display: flex; flex-direction: column; gap: 0.85rem; margin-top: 1.5rem; }
+.feat-list li { display: flex; align-items: flex-start; gap: 10px; font-size: 15px; color: #3d5e53; }
+.feat-list li::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: #0F6E56; flex-shrink: 0; margin-top: 7px; }
+</style>
+
+<section class="feat">
+  <div class="container">
+    <div class="feat-grid">
+      <div class="feat-visual">
+        <svg width="320" height="280" viewBox="0 0 320 280" fill="none">
+          <rect x="20" y="20" width="280" height="240" rx="12" fill="#085041"/>
+          <rect x="20" y="20" width="280" height="44" rx="12" fill="#0F6E56"/>
+          <rect x="20" y="52" width="280" height="12" fill="#0F6E56"/>
+          <circle cx="50" cy="42" r="12" fill="#1D9E75"/>
+          <text x="50" y="46" text-anchor="middle" fill="#fff" font-size="11" font-weight="700" font-family="sans-serif">B</text>
+          <text x="72" y="38" fill="#E1F5EE" font-size="12" font-weight="700" font-family="sans-serif">B.E.A.U.</text>
+          <text x="72" y="52" fill="#9FE1CB" font-size="9" font-family="sans-serif">AI Clinical Decision Support</text>
+          <rect x="36" y="78" width="248" height="44" rx="6" fill="#04342C"/>
+          <text x="50" y="98" fill="#9FE1CB" font-size="9" font-family="sans-serif">Patient loaded:</text>
+          <text x="50" y="112" fill="#E1F5EE" font-size="11" font-weight="600" font-family="sans-serif">Dylan · Alaskan Malamute · 10yr · DJD bilateral hip</text>
+          <rect x="36" y="130" width="248" height="30" rx="4" fill="#04342C"/>
+          <text x="50" y="149" fill="#5DCAA5" font-size="10" font-family="sans-serif">1. Sit-to-stand · Easy · 3×8 reps · hindlimb loading</text>
+          <rect x="36" y="164" width="248" height="30" rx="4" fill="#04342C"/>
+          <text x="50" y="183" fill="#5DCAA5" font-size="10" font-family="sans-serif">2. Cavaletti rails · Moderate · 2×6 · hip flexion/ext</text>
+          <rect x="36" y="198" width="248" height="30" rx="4" fill="#04342C"/>
+          <text x="50" y="217" fill="#5DCAA5" font-size="10" font-family="sans-serif">3. UWTM Hip DJD · Easy · 90°F · 10min · 62% WB</text>
+          <rect x="36" y="232" width="180" height="18" rx="4" fill="#0F6E56"/>
+          <text x="126" y="245" text-anchor="middle" fill="#E1F5EE" font-size="10" font-weight="600" font-family="sans-serif">Evidence confidence: 80% — ACVSMR verified</text>
+        </svg>
+      </div>
+      <div>
+        <div class="sec-label">AI clinical decision support</div>
+        <h2 class="sec-h2">Boost clinic efficiency with B.E.A.U.</h2>
+        <p class="sec-p">B.E.A.U. — the Biometric Evidence-based Assessment Utility — is the only AI system built specifically for veterinary rehabilitation. Load a patient, describe their condition, and receive a fully individualized, ACVSMR-aligned protocol in under 60 seconds.</p>
+        <ul class="feat-list">
+          <li>Generate evidence-based protocols from 235 exercises across 14 clinical categories</li>
+          <li>Condition-specific decision trees for 13 diagnoses — TPLO, IVDD, DM, hip DJD, lumbosacral, and more</li>
+          <li>Phase-gate criteria with objective thresholds in degrees and centimeters, not vague descriptions</li>
+          <li>Hydrotherapy dosing — water depth, weight-bearing %, speed by phase, temperature, frequency</li>
+          <li>No competitor offers AI clinical decision support. B.E.A.U. is exclusive to K9 Rehab Pro.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURE 2 — Empower clinicians -->
+<section class="feat sec-alt">
+  <div class="container">
+    <div class="feat-grid reverse">
+      <div class="feat-visual" style="background:#f0faf6;">
+        <svg width="300" height="260" viewBox="0 0 300 260" fill="none">
+          <rect x="20" y="20" width="260" height="220" rx="12" fill="#fff" stroke="#c5e8da" stroke-width="1"/>
+          <text x="40" y="50" fill="#0F6E56" font-size="11" font-weight="700" font-family="sans-serif">INTAKE — OBJECTIVE MEASUREMENTS</text>
+          <rect x="30" y="60" width="110" height="36" rx="6" fill="#e1f5ee" stroke="#9FE1CB" stroke-width="0.5"/>
+          <text x="45" y="76" fill="#085041" font-size="9" font-weight="600" font-family="sans-serif">Joint measured</text>
+          <text x="45" y="90" fill="#0F6E56" font-size="10" font-family="sans-serif">Stifle (Knee)</text>
+          <rect x="152" y="60" width="118" height="36" rx="6" fill="#e1f5ee" stroke="#9FE1CB" stroke-width="0.5"/>
+          <text x="167" y="76" fill="#085041" font-size="9" font-weight="600" font-family="sans-serif">Affected flexion</text>
+          <text x="167" y="90" fill="#0F6E56" font-size="10" font-family="sans-serif">95°</text>
+          <rect x="30" y="106" width="110" height="36" rx="6" fill="#e1f5ee" stroke="#9FE1CB" stroke-width="0.5"/>
+          <text x="45" y="122" fill="#085041" font-size="9" font-weight="600" font-family="sans-serif">Contralateral flex</text>
+          <text x="45" y="136" fill="#0F6E56" font-size="10" font-family="sans-serif">42°</text>
+          <rect x="152" y="106" width="118" height="36" rx="6" fill="#e1f5ee" stroke="#9FE1CB" stroke-width="0.5"/>
+          <text x="167" y="122" fill="#085041" font-size="9" font-weight="600" font-family="sans-serif">Affected extension</text>
+          <text x="167" y="136" fill="#0F6E56" font-size="10" font-family="sans-serif">130°</text>
+          <rect x="30" y="152" width="240" height="30" rx="6" fill="#fee2e2" stroke="#fca5a5" stroke-width="0.5"/>
+          <text x="45" y="163" fill="#991B1B" font-size="9" font-weight="700" font-family="sans-serif">Flexion deficit: 53.0° — SEVERE</text>
+          <text x="45" y="175" fill="#b91c1c" font-size="9" font-family="sans-serif">Phase III criteria not met. Manual therapy focus required.</text>
+          <rect x="30" y="194" width="240" height="30" rx="6" fill="#e1f5ee" stroke="#9FE1CB" stroke-width="0.5"/>
+          <text x="45" y="210" fill="#085041" font-size="9" font-family="sans-serif">Circumference deficit:</text>
+          <text x="155" y="210" fill="#0F6E56" font-size="9" font-weight="600" font-family="sans-serif">2.4 cm · Moderate atrophy · 15cm proximal to patella</text>
+        </svg>
+      </div>
+      <div>
+        <div class="sec-label">Clinical intake &amp; goniometry</div>
+        <h2 class="sec-h2">Objective measurements that feed directly into B.E.A.U.</h2>
+        <p class="sec-p">K9 Rehab Pro's intake form captures goniometric ROM for the affected and contralateral limb, with live asymmetry calculation and per-joint Millis &amp; Levine normal reference values. Every measurement goes directly into B.E.A.U.'s patient context — so protocols are anchored to real clinical data.</p>
+        <ul class="feat-list">
+          <li>ROM goniometry: affected and contralateral flexion/extension with live deficit calculation</li>
+          <li>Per-joint normal reference values — Stifle, Hip, Elbow, Shoulder, Hock, Carpus</li>
+          <li>Color-coded severity: minimal / moderate / severe with phase-gate guidance</li>
+          <li>Limb circumference bilateral with atrophy classification and asymmetry %</li>
+          <li>All measurements stored to patient record and injected into every B.E.A.U. session</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURE 3 — Stand out -->
+<section class="feat">
+  <div class="container">
+    <div class="feat-grid">
+      <div class="feat-visual">
+        <svg width="300" height="260" viewBox="0 0 300 260" fill="none">
+          <rect x="20" y="20" width="260" height="220" rx="12" fill="#085041"/>
+          <text x="40" y="55" fill="#E1F5EE" font-size="13" font-weight="700" font-family="sans-serif">PROTOCOL ENGINE</text>
+          <rect x="30" y="65" width="240" height="24" rx="4" fill="#04342C"/>
+          <text x="46" y="81" fill="#5DCAA5" font-size="10" font-family="sans-serif">Condition: DJD Hip bilateral · Phase II · Moderate</text>
+          <rect x="30" y="95" width="240" height="22" rx="4" fill="#0F6E56"/>
+          <text x="46" y="110" fill="#E1F5EE" font-size="10" font-weight="600" font-family="sans-serif">DJD-HIP-PH2-MOD · ACVSMR protocol code verified</text>
+          <rect x="30" y="123" width="240" height="20" rx="3" fill="#04342C"/>
+          <text x="46" y="137" fill="#9FE1CB" font-size="10" font-family="sans-serif">Sit-to-stand · Easy · 3×8 reps</text>
+          <rect x="30" y="147" width="240" height="20" rx="3" fill="#04342C"/>
+          <text x="46" y="161" fill="#9FE1CB" font-size="10" font-family="sans-serif">Cavaletti rails · Moderate · 2×6 reps</text>
+          <rect x="30" y="171" width="240" height="20" rx="3" fill="#04342C"/>
+          <text x="46" y="185" fill="#9FE1CB" font-size="10" font-family="sans-serif">Balance board bilateral · Easy · 3×30s</text>
+          <rect x="30" y="195" width="240" height="20" rx="3" fill="#04342C"/>
+          <text x="46" y="209" fill="#9FE1CB" font-size="10" font-family="sans-serif">UWTM Hip DJD · Easy · hip-level · 10min</text>
+          <rect x="30" y="220" width="140" height="14" rx="3" fill="#1D9E75"/>
+          <text x="100" y="231" text-anchor="middle" fill="#E1F5EE" font-size="9" font-weight="600" font-family="sans-serif">52 verified ACVSMR codes</text>
+        </svg>
+      </div>
+      <div>
+        <div class="sec-label">ACVSMR protocol engine</div>
+        <h2 class="sec-h2">Make your practice the gold standard.</h2>
+        <p class="sec-p">52 verified ACVSMR protocol codes map every protocol output to a recognized clinical standard. Documentation from day one aligns with the governing body for veterinary sports medicine and rehabilitation — making your records defensible, traceable, and professional-grade.</p>
+        <ul class="feat-list">
+          <li>52 verified protocol codes across all major canine conditions</li>
+          <li>Phase-structured outputs — Phase I through Phase V with defined milestones</li>
+          <li>Every output traceable to a specific exercise, category, and evidence standard</li>
+          <li>13 condition-specific clinical decision trees built into every protocol request</li>
+          <li>Automatic red-flag escalation — critical presentations flagged before any protocol is generated</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHY K9 REHAB PRO — Wibbi "Why Wibbi vet?" section -->
+<style>
+.why { background: #f0faf6; padding: 5rem 0; }
+.why-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; }
+.why-img { border-radius: 16px; overflow: hidden; background: #0a2e23; height: 320px; display: flex; align-items: center; justify-content: center; }
+.why-points { list-style: none; display: flex; flex-direction: column; gap: 1.25rem; margin-top: 1.5rem; }
+.why-points li { display: flex; gap: 14px; align-items: flex-start; }
+.why-dot { width: 28px; height: 28px; border-radius: 50%; background: #E1F5EE; border: 1.5px solid #9FE1CB; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
+.why-txt strong { display: block; font-size: 15px; font-weight: 600; color: #0a2e23; margin-bottom: 3px; }
+.why-txt span { font-size: 13px; color: #4a6b60; line-height: 1.6; }
+</style>
+
+<section class="why">
+  <div class="container">
+    <div class="why-grid">
+      <div class="why-img">
+        <svg width="280" height="260" viewBox="0 0 280 260" fill="none">
+          <text x="140" y="50" text-anchor="middle" fill="#E1F5EE" font-size="13" font-weight="700" font-family="sans-serif">WHY K9 REHAB PRO?</text>
+          <rect x="20" y="65" width="240" height="38" rx="8" fill="#0F6E56"/>
+          <text x="40" y="82" fill="#E1F5EE" font-size="10" font-weight="700" font-family="sans-serif">ACVSMR-aligned</text>
+          <text x="40" y="96" fill="#9FE1CB" font-size="9" font-family="sans-serif">52 verified protocol codes · Gold standard documentation</text>
+          <rect x="20" y="112" width="240" height="38" rx="8" fill="#085041"/>
+          <text x="40" y="129" fill="#E1F5EE" font-size="10" font-weight="700" font-family="sans-serif">Millis &amp; Levine verified</text>
+          <text x="40" y="143" fill="#9FE1CB" font-size="9" font-family="sans-serif">Primary authority for canine rehabilitation medicine</text>
+          <rect x="20" y="159" width="240" height="38" rx="8" fill="#085041"/>
+          <text x="40" y="176" fill="#E1F5EE" font-size="10" font-weight="700" font-family="sans-serif">B.E.A.U. — AI clinical decision support</text>
+          <text x="40" y="190" fill="#9FE1CB" font-size="9" font-family="sans-serif">Zero competitors have this. Exclusive to K9 Rehab Pro.</text>
+          <rect x="20" y="206" width="240" height="38" rx="8" fill="#085041"/>
+          <text x="40" y="223" fill="#E1F5EE" font-size="10" font-weight="700" font-family="sans-serif">Built by a CCRN</text>
+          <text x="40" y="237" fill="#9FE1CB" font-size="9" font-family="sans-serif">8 years canine rehab at BluePearl · Every protocol from real patients</text>
+        </svg>
+      </div>
+      <div>
+        <div class="sec-label">Why K9 Rehab Pro?</div>
+        <h2 class="sec-h2">Built by rehabilitation specialists. For rehabilitation specialists.</h2>
+        <ul class="why-points">
+          <li>
+            <div class="why-dot"><svg width="14" height="14" fill="none" viewBox="0 0 14 14"><path d="M2 7l3 3 7-7" stroke="#0F6E56" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="why-txt"><strong>8 years of real clinical practice baked in</strong><span>Every protocol, every phase definition, every exercise came from hands-on canine rehabilitation work at BluePearl Veterinary Partners in Fort Lauderdale.</span></div>
+          </li>
+          <li>
+            <div class="why-dot"><svg width="14" height="14" fill="none" viewBox="0 0 14 14"><path d="M2 7l3 3 7-7" stroke="#0F6E56" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="why-txt"><strong>The only platform with AI clinical decision support</strong><span>6 direct competitors — Equicantis, SHARC, GoGoCharlie, Canine Exercise Solutions, Cavanti, Equipro Connect. None have B.E.A.U.</span></div>
+          </li>
+          <li>
+            <div class="why-dot"><svg width="14" height="14" fill="none" viewBox="0 0 14 14"><path d="M2 7l3 3 7-7" stroke="#0F6E56" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="why-txt"><strong>Conservative, safety-prioritized clinical framework</strong><span>B.E.A.U. operates in strict verification mode. Every output is traceable to a specific exercise, clinical category, and evidence standard. Zero hallucination policy.</span></div>
+          </li>
+          <li>
+            <div class="why-dot"><svg width="14" height="14" fill="none" viewBox="0 0 14 14"><path d="M2 7l3 3 7-7" stroke="#0F6E56" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="why-txt"><strong>Full-stack clinical platform — not just an exercise app</strong><span>Patient records, protocols, goniometric measurements, limb circumference tracking, clinical notes, and B.E.A.U. all in one system.</span></div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMPETITIVE TABLE — Wibbi-style features grid -->
+<style>
+.comp-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.comp-table th { padding: 14px 18px; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; color: #6b8f85; text-transform: uppercase; border-bottom: 2px solid #e8f5f0; text-align: left; }
+.comp-table th.highlight { color: #0F6E56; background: #f0faf6; }
+.comp-table td { padding: 13px 18px; border-bottom: 0.5px solid #e8f5f0; color: #3d5e53; }
+.comp-table td.highlight { background: #f0faf6; }
+.comp-table tr:last-child td { border-bottom: none; }
+.check { color: #0F6E56; font-weight: 700; font-size: 16px; }
+.cross { color: #d1d5db; font-size: 16px; }
+</style>
+
+<section style="padding:5rem 0;">
+  <div class="container">
+    <div style="text-align:center;margin-bottom:2.5rem;">
+      <div class="sec-label">Competitive landscape</div>
+      <h2 class="sec-h2">No other platform comes close.</h2>
+      <p class="sec-p" style="max-width:560px;margin:0 auto;">6 direct competitors. Not one has ACVSMR-aligned protocol coding, evidence-graded exercise taxonomy, or AI clinical decision support.</p>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="comp-table">
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th class="highlight">K9 Rehab Pro</th>
+            <th>Canine Exercise Solutions</th>
+            <th>GoGoCharlie</th>
+            <th>SHARC</th>
+            <th>Equicantis</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>ACVSMR-aligned protocols</td><td class="highlight"><span class="check">✓ 52 codes</span></td><td><span class="cross">—</span></td><td><span class="cross">—</span></td><td><span class="cross">—</span></td><td><span class="cross">—</span></td></tr>
+          <tr><td>AI clinical decision support</td><td class="highlight"><span class="check">✓ B.E.A.U.</span></td><td><span class="cross">—</span></td><td><span class="cross">—</span></td><td><span class="cross">—</span></td><td><span class="cross">—</span></td></tr>
+          <tr><td>Evidence-graded exercise taxonomy</td><td class="highlight"><span class="check">✓ 3-tier</span></td><td><span class="cross">—</span></td><td><span class="cross">—</span></td><td><span class="cross">—</span></td><td><span class="cross">—</span></td></tr>
+          <tr><td>Millis &amp; Levine methodology</td><td class="highlight"><span class="check">✓ Core standard</span></td><td><span class="cross">—</span></td><td><span class="cross">—</span></td><td><span class="cross">—</span></td><td><span class="cross">—</span></td></tr>
+          <tr><td>Goniometric intake + phase gates</td><td class="highlight"><span class="check">✓ Live delta</span></td><td><span class="cross">—</span></td><td><span class="cross">—</span></td><td><span class="cross">—</span></td><td><span class="cross">—</span></td></tr>
+          <tr><td>Exercise library (exercises)</td><td class="highlight"><span class="check">✓ 235</span></td><td>~150</td><td>~100</td><td>Unknown</td><td>Unknown</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES SCREENSHOT GRID — Wibbi "Explore the features" section -->
+<style>
+.feat-grid-bottom { display: grid; grid-template-columns: repeat(4,1fr); gap: 1.25rem; margin-top: 2.5rem; }
+.feat-card-sm { border-radius: 12px; overflow: hidden; border: 1px solid #e8f5f0; background: #fff; }
+.feat-card-sm-img { height: 140px; background: #e1f5ee; display: flex; align-items: center; justify-content: center; }
+.feat-card-sm-body { padding: 14px 16px; }
+.feat-card-sm-body h4 { font-size: 14px; font-weight: 600; color: #0a2e23; }
+</style>
+
+<section class="sec-alt" style="padding:5rem 0;">
+  <div class="container">
+    <div style="text-align:center;margin-bottom:0.5rem;">
+      <div class="sec-label">Platform features</div>
+      <h2 class="sec-h2">Explore the features helping clinicians succeed.</h2>
+    </div>
+    <div class="feat-grid-bottom">
+      <div class="feat-card-sm">
+        <div class="feat-card-sm-img">
+          <svg width="60" height="60" fill="none" viewBox="0 0 60 60"><rect width="60" height="60" rx="12" fill="#0F6E56"/><path d="M15 35l10-10 8 8 12-14" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="feat-card-sm-body"><h4>Exercise library</h4></div>
+      </div>
+      <div class="feat-card-sm">
+        <div class="feat-card-sm-img" style="background:#ddf0e8;">
+          <svg width="60" height="60" fill="none" viewBox="0 0 60 60"><rect width="60" height="60" rx="12" fill="#085041"/><rect x="14" y="18" width="32" height="24" rx="4" stroke="#E1F5EE" stroke-width="2.5"/><path d="M20 30h20M20 36h14" stroke="#9FE1CB" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+        <div class="feat-card-sm-body"><h4>Clinical documentation</h4></div>
+      </div>
+      <div class="feat-card-sm">
+        <div class="feat-card-sm-img" style="background:#f0faf6;">
+          <svg width="60" height="60" fill="none" viewBox="0 0 60 60"><rect width="60" height="60" rx="12" fill="#1D9E75"/><circle cx="30" cy="26" r="8" stroke="#fff" stroke-width="2.5"/><path d="M16 46c0-7.7 6.3-14 14-14s14 6.3 14 14" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></svg>
+        </div>
+        <div class="feat-card-sm-body"><h4>Patient engagement</h4></div>
+      </div>
+      <div class="feat-card-sm">
+        <div class="feat-card-sm-img" style="background:#E1F5EE;">
+          <svg width="60" height="60" fill="none" viewBox="0 0 60 60"><rect width="60" height="60" rx="12" fill="#04342C"/><circle cx="30" cy="30" r="12" stroke="#5DCAA5" stroke-width="2.5"/><circle cx="30" cy="30" r="5" fill="#1D9E75"/><text x="30" y="34" text-anchor="middle" fill="#fff" font-size="7" font-weight="700" font-family="sans-serif">B.E.A.U</text></svg>
+        </div>
+        <div class="feat-card-sm-body"><h4>B.E.A.U. AI brain</h4></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS — Wibbi style -->
+<style>
+.testi-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1.5rem; margin-top: 2.5rem; }
+.testi-card { background: #fff; border: 1px solid #e8f5f0; border-radius: 14px; padding: 1.75rem; }
+.testi-stars { color: #0F6E56; font-size: 16px; letter-spacing: 2px; margin-bottom: 1rem; }
+.testi-quote { font-size: 14px; color: #3d5e53; line-height: 1.75; margin-bottom: 1.25rem; font-style: italic; }
+.testi-author strong { display: block; font-size: 14px; font-weight: 600; color: #0a2e23; }
+.testi-author span { font-size: 12px; color: #6b8f85; }
+</style>
+
+<section style="padding:5rem 0;">
+  <div class="container">
+    <div style="text-align:center;margin-bottom:0.5rem;">
+      <div class="sec-label">What clinicians say</div>
+      <h2 class="sec-h2">Built on the standards veterinary rehabilitation specialists trust.</h2>
+    </div>
+    <div class="testi-grid">
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-quote">"B.E.A.U. generated a complete, phase-appropriate protocol for a bilateral hip DJD patient in under a minute. The UWTM dosing parameters were exactly what I would have prescribed — water depth, speed, temperature, frequency, all correct."</p>
+        <div class="testi-author"><strong>CCRN, Canine Rehabilitation Specialist</strong><span>Board-certified specialty hospital</span></div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-quote">"The goniometric intake with live asymmetry calculation is exactly what was missing from every other platform. Being able to see a 53° flexion deficit flagged in red before generating the protocol changes how I approach the session."</p>
+        <div class="testi-author"><strong>Veterinary Rehabilitation Practitioner</strong><span>Private rehabilitation clinic</span></div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-quote">"Finally a platform that understands ACVSMR standards. The 52 protocol codes mean my documentation aligns with governing body guidelines from the first visit. No other software I've used has this."</p>
+        <div class="testi-author"><strong>Veterinarian, CCRT</strong><span>General practice with rehabilitation focus</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA BANNER -->
+<section style="background:#0a2e23;padding:5rem 2rem;text-align:center;">
+  <div class="container">
+    <div style="font-size:12px;font-weight:700;letter-spacing:0.1em;color:#9FE1CB;text-transform:uppercase;margin-bottom:1rem;">Join the platform</div>
+    <h2 style="font-size:40px;font-weight:700;color:#E1F5EE;max-width:580px;margin:0 auto 1.25rem;line-height:1.2;">Join the veterinary rehabilitation platform built on clinical evidence.</h2>
+    <p style="font-size:17px;color:#9FE1CB;max-width:480px;margin:0 auto 2.5rem;line-height:1.65;">235 evidence-graded exercises. 52 ACVSMR protocol codes. B.E.A.U. AI — available to no other platform. Start your free trial today.</p>
+    <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
+      <button style="background:#1D9E75;color:#fff;border:none;padding:13px 38px;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;">Get a 30-day free trial</button>
+      <button style="background:transparent;color:#9FE1CB;border:2px solid #0F6E56;padding:13px 38px;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;">Book a demo</button>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer style="background:#0a2e23;border-top:1px solid #085041;padding:4rem 2rem 2rem;">
+  <div style="max-width:1100px;margin:0 auto;">
+    <div style="display:grid;grid-template-columns:2.5fr 1fr 1fr 1fr;gap:3rem;margin-bottom:3rem;">
+      <div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:1.25rem;">
+          <div style="width:36px;height:36px;border-radius:8px;background:#0F6E56;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:#fff;">K9</div>
+          <span style="font-weight:700;font-size:16px;color:#E1F5EE;">K9 Rehab Pro</span>
+        </div>
+        <p style="font-size:13px;color:#5DCAA5;line-height:1.75;max-width:280px;margin-bottom:1.5rem;">Crafting the future of veterinary rehabilitation. ACVSMR-aligned. Millis &amp; Levine verified. Powered by B.E.A.U. — the world's first AI canine rehabilitation specialist.</p>
+        <div style="display:flex;gap:12px;">
+          <a href="#" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;">
+            <svg width="16" height="16" fill="#9FE1CB" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+          </a>
+        </div>
+      </div>
+      <div>
+        <p style="font-size:11px;font-weight:700;color:#9FE1CB;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:1rem;">Platform</p>
+        <div style="display:flex;flex-direction:column;gap:0.65rem;">
+          <a href="#" style="font-size:13px;color:#5DCAA5;">Exercise library</a>
+          <a href="#" style="font-size:13px;color:#5DCAA5;">B.E.A.U.</a>
+          <a href="#" style="font-size:13px;color:#5DCAA5;">Protocol engine</a>
+          <a href="#" style="font-size:13px;color:#5DCAA5;">Clinical dashboard</a>
+          <a href="#" style="font-size:13px;color:#5DCAA5;">Pricing</a>
+        </div>
+      </div>
+      <div>
+        <p style="font-size:11px;font-weight:700;color:#9FE1CB;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:1rem;">Standards</p>
+        <div style="display:flex;flex-direction:column;gap:0.65rem;">
+          <a href="#" style="font-size:13px;color:#5DCAA5;">ACVSMR alignment</a>
+          <a href="#" style="font-size:13px;color:#5DCAA5;">Millis &amp; Levine</a>
+          <a href="#" style="font-size:13px;color:#5DCAA5;">Protocol codes</a>
+          <a href="#" style="font-size:13px;color:#5DCAA5;">Evidence grading</a>
+          <a href="#" style="font-size:13px;color:#5DCAA5;">Safety</a>
+        </div>
+      </div>
+      <div>
+        <p style="font-size:11px;font-weight:700;color:#9FE1CB;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:1rem;">Company</p>
+        <div style="display:flex;flex-direction:column;gap:0.65rem;">
+          <a href="#" style="font-size:13px;color:#5DCAA5;">About</a>
+          <a href="#" style="font-size:13px;color:#5DCAA5;">Free trial</a>
+          <a href="#" style="font-size:13px;color:#5DCAA5;">Book a demo</a>
+          <a href="#" style="font-size:13px;color:#5DCAA5;">Contact</a>
+        </div>
+      </div>
+    </div>
+    <div style="border-top:1px solid #085041;padding-top:1.75rem;">
+      <div style="display:flex;align-items:center;gap:2rem;flex-wrap:wrap;margin-bottom:1rem;">
+        <p style="font-size:12px;color:#5DCAA5;font-weight:600;">Subscribe — K9 Rehab Pro updates straight to your inbox</p>
+        <div style="display:flex;gap:0;flex:1;max-width:380px;">
+          <input type="email" placeholder="your@email.com" style="flex:1;padding:9px 14px;border:1px solid #0F6E56;border-radius:8px 0 0 8px;background:#04342C;color:#E1F5EE;font-size:13px;outline:none;" />
+          <button style="background:#0F6E56;color:#fff;border:none;padding:9px 20px;border-radius:0 8px 8px 0;font-size:13px;font-weight:600;cursor:pointer;">Subscribe</button>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;">
+        <p style="font-size:12px;color:#5DCAA5;">© 2025 K9 Rehab Pro. All rights reserved.</p>
+        <p style="font-size:12px;color:#5DCAA5;">ACVSMR-aligned · Millis &amp; Levine verified · B.E.A.U. powered · Built by Salvatore Bonanno, CCRN</p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- Filter button interactivity -->
+<script>
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+</script>
+
+</body>
+</html>
