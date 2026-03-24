@@ -16,7 +16,6 @@ export default defineConfig({
   build: {
     outDir: 'build',
     sourcemap: false,       // No source maps in production (smaller deploy)
-    cssMinify: 'lightningcss', // Faster CSS minification
     rollupOptions: {
       output: {
         manualChunks(id) {
