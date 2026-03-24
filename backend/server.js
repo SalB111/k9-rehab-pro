@@ -2487,7 +2487,7 @@ async function startServer() {
     }
 
     // Start HTTP server
-    app.listen(PORT, () => {
+    app.listen(PORT, '0.0.0.0', () => {
       console.log(`\n${'='.repeat(60)}`);
       console.log(`🚀 K9-REHAB-PRO Backend Server Running`);
       console.log(`${'='.repeat(60)}`);
