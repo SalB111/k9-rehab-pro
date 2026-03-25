@@ -18,10 +18,11 @@ function ClientsView({ setView, setSelectedPatient }) {
   const [form, setForm] = useState({ name: "", breed: "", age: "", weight: "", sex: "Male", condition: "", client_name: "", client_email: "", client_phone: "" });
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [deleting, setDeleting] = useState(false);
+  const [loading, setLoading] = useState(true);
   const toast = useToast();
 
   useEffect(() => {
-    axios.get(`${API}/patients`).then(r => setClients(r.data?.data || r.data || [])).catch(() => toast("Failed to load patients"));
+    axios.get(`${API}/patients`).then(r => setClients(r.data?.data || r.data || [])).catch(() => toast("Failed to load patients")).finally(() => setLoading(false));
   }, []);
 
   const submit = async (e) => {
@@ -73,6 +74,16 @@ function ClientsView({ setView, setSelectedPatient }) {
     (c.condition || "").toLowerCase().includes(search.toLowerCase())
   );
   const allSelected = filtered.length > 0 && selectedIds.size === filtered.length;
+
+  if (loading) {
+    return (
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "40vh", gap: 12 }}>
+        <div style={{ width: 32, height: 32, borderRadius: "50%", border: `3px solid ${C.border}`, borderTopColor: C.teal, animation: "spin 0.8s linear infinite" }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        <span style={{ fontSize: 13, fontWeight: 600, color: C.teal }}>Loading patients...</span>
+      </div>
+    );
+  }
 
   return (
     <div>
