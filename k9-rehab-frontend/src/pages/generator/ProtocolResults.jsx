@@ -73,13 +73,13 @@ export default function ProtocolResults({ protocol, setProtocol, setWizardStep, 
       {/* ── CDSS / Veterinary Oversight Disclaimer Banner ── */}
       <div style={{
         padding: "12px 20px", marginBottom: 10, borderRadius: 8,
-        background: "linear-gradient(135deg, #1E3A5F 0%, #0A2540 100%)",
-        border: "1px solid #2E4A6F",
+        background: `linear-gradient(135deg, ${C.navyMid} 0%, ${C.navy} 100%)`,
+        border: `1px solid ${C.navyLight}`,
         display: "flex", alignItems: "center", gap: 12,
       }}>
-        <FiShield size={18} style={{ color: "#FBBF24", flexShrink: 0 }} />
+        <FiShield size={18} style={{ color: C.amber, flexShrink: 0 }} />
         <div>
-          <div style={{ fontSize: 11, fontWeight: 800, color: "#FBBF24", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 2 }}>
+          <div style={{ fontSize: 11, fontWeight: 800, color: C.amber, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 2 }}>
             Clinical Decision-Support Output — Veterinary Review Required
           </div>
           <div style={{ fontSize: 10, color: "rgba(255,255,255,0.8)", lineHeight: 1.5 }}>
@@ -276,7 +276,7 @@ export default function ProtocolResults({ protocol, setProtocol, setWizardStep, 
               <span style={S.badge("blue")}>{protocol.condition}</span>
               <span style={S.badge("green")}>{protocol.affected_region}</span>
               <span style={S.badge("blue")}>{totalWeeks} Weeks</span>
-              <span style={{ ...S.badge("green"), background: "rgba(124,58,237,0.12)", color: "#7C3AED" }}>{phaseGroups.length} Phases</span>
+              <span style={{ ...S.badge("green"), background: C.purpleBg, color: C.purple }}>{phaseGroups.length} Phases</span>
             </div>
             <p style={{ margin: 0, color: C.textLight, fontSize: 11 }}>
               Protocol ID: {protocol.patient_id} · Generated {new Date(protocol.generated_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })} · {protocol.total_exercises} exercises in library
@@ -584,7 +584,7 @@ export default function ProtocolResults({ protocol, setProtocol, setWizardStep, 
 
       {/* ── Legal Disclaimer & ACVSMR Standards Footer ── */}
       <div style={{
-        ...S.card, background: "#0A2540", border: "1px solid #1E3A5F",
+        ...S.card, background: C.navy, border: `1px solid ${C.navyMid}`,
         padding: "16px 20px",
       }}>
         <div style={{ fontSize: 10, color: "rgba(255,255,255,0.5)", lineHeight: 1.7 }}>

@@ -53,7 +53,7 @@ function LoginView({ onLogin, onRegister }) {
     <div style={{
       position: "fixed", inset: 0, zIndex: 2000,
       display: "flex", alignItems: "center", justifyContent: "center",
-      background: `linear-gradient(135deg, ${C.navy} 0%, #0F3460 50%, #1a1a2e 100%)`,
+      background: `linear-gradient(135deg, ${C.navy} 0%, ${C.navyMid} 50%, ${C.navy} 100%)`,
       fontFamily: "'Inter', -apple-system, sans-serif",
     }}>
       {/* Subtle grid overlay */}
@@ -190,11 +190,11 @@ function LoginView({ onLogin, onRegister }) {
                     outline: "none", boxSizing: "border-box",
                   }}
                 >
-                  <option value="DVM" style={{ background: "#1a1a2e" }}>DVM — Doctor of Veterinary Medicine</option>
-                  <option value="CCRP" style={{ background: "#1a1a2e" }}>CCRP — Certified Canine Rehab Practitioner</option>
-                  <option value="CCRT" style={{ background: "#1a1a2e" }}>CCRT — Certified Canine Rehab Therapist</option>
-                  <option value="RVT" style={{ background: "#1a1a2e" }}>RVT — Registered Veterinary Technician</option>
-                  <option value="Student" style={{ background: "#1a1a2e" }}>Student / Trainee</option>
+                  <option value="DVM" style={{ background: C.navy }}>DVM — Doctor of Veterinary Medicine</option>
+                  <option value="CCRP" style={{ background: C.navy }}>CCRP — Certified Canine Rehab Practitioner</option>
+                  <option value="CCRT" style={{ background: C.navy }}>CCRT — Certified Canine Rehab Therapist</option>
+                  <option value="RVT" style={{ background: C.navy }}>RVT — Registered Veterinary Technician</option>
+                  <option value="Student" style={{ background: C.navy }}>Student / Trainee</option>
                 </select>
               </div>
             )}

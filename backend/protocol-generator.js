@@ -43,7 +43,7 @@ const PROTOCOL_DEFINITIONS = {
           { code: 'NMES_QUAD',        sets: '15-20 min',           frequency: '1-2x/day',   progression: 'Increase intensity, combine with active exercise' },
           { code: 'PEMF_THERAPY',     sets: '20-30 min',           frequency: '1-2x/day',   progression: 'Reduce frequency over time' }
         ],
-        contraindications: 'No off-leash activity. No jumping. No stairs. No forced ROM past pain threshold. No running. No swimming.',
+        contraindications: 'No off-leash activity. No jumping. No stairs. No forced ROM past pain threshold. No running. No uncontrolled swimming (controlled UWTM may begin in Phase 2).',
         progressionCriteria: 'Willingness to bear weight on surgical limb. Incision healing well. Pain score consistently < 3/10. No effusion increase.'
       },
       {

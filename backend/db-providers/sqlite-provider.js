@@ -41,15 +41,6 @@ function all(sql, params = []) {
   });
 }
 
-function serialize(fn) {
-  return new Promise((resolve, reject) => {
-    db.serialize(() => {
-      try { fn(); resolve(); }
-      catch (e) { reject(e); }
-    });
-  });
-}
-
 // ── Initialize ──────────────────────────────────────────────────────────────
 
 async function initialize() {

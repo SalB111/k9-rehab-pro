@@ -21,12 +21,12 @@ export default function Step2ClinicalAssessment({ form, setField, goToStep }) {
           <div>
             <label style={S.label}>Primary Diagnosis *</label>
             {form.species === "Feline" && (
-              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6, padding: "4px 10px", borderRadius: 6, background: "#7c3aed22", border: "1px solid #7c3aed" }}>
-                <TbCat size={13} style={{ color: "#a78bfa" }} />
-                <span style={{ fontSize: 11, color: "#a78bfa", fontWeight: 600 }}>Feline diagnoses shown. To switch to canine, update the species selection in Step 1.</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6, padding: "4px 10px", borderRadius: 6, background: C.purpleBg, border: `1px solid ${C.purple}` }}>
+                <TbCat size={13} style={{ color: C.purpleLight }} />
+                <span style={{ fontSize: 11, color: C.purpleLight, fontWeight: 600 }}>Feline diagnoses shown. To switch to canine, update the species selection in Step 1.</span>
               </div>
             )}
-            <select style={{ ...S.select, width: "100%", fontWeight: 600, border: `1.5px solid ${form.species === "Feline" ? "#7c3aed" : C.border}` }} value={form.diagnosis} onChange={e => setField("diagnosis", e.target.value)}>
+            <select style={{ ...S.select, width: "100%", fontWeight: 600, border: `1.5px solid ${form.species === "Feline" ? C.purple : C.border}` }} value={form.diagnosis} onChange={e => setField("diagnosis", e.target.value)}>
               <option value="">--- Select ---</option>
               {form.species === "Feline"
                 ? Object.entries(FELINE_DIAGNOSES).map(([group, items]) => (

@@ -25,6 +25,9 @@
   --k9-text:         #0F172A;
   --k9-text-mid:     #475569;
   --k9-text-light:   #94A3B8;
+  --k9-purple:       #7C3AED;
+  --k9-purple-light: #a78bfa;
+  --k9-purple-bg:    #F5F3FF;
 }
 
 /* ── Clinical Dark ── */
@@ -49,6 +52,9 @@
   --k9-text:         #F1F5F9;
   --k9-text-mid:     #CBD5E1;
   --k9-text-light:   #94A3B8;
+  --k9-purple:       #A78BFA;
+  --k9-purple-light: #C4B5FD;
+  --k9-purple-bg:    #1E1338;
 }
 
 /* ── High Contrast ── */
@@ -73,6 +79,9 @@
   --k9-text:         #FFFFFF;
   --k9-text-mid:     #E5E7EB;
   --k9-text-light:   #D1D5DB;
+  --k9-purple:       #C4B5FD;
+  --k9-purple-light: #DDD6FE;
+  --k9-purple-bg:    #1A0E2E;
 }
 
 body {

@@ -220,7 +220,7 @@ export default function Step5ProtocolParams({ form, setField, generate, allExerc
             position: "relative", overflow: "hidden", color: "#fff",
           }}>
             {/* Decorative top accent */}
-            <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 4, background: "linear-gradient(90deg, #0F4C81, #0EA5E9, #10B981)" }} />
+            <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 4, background: `linear-gradient(90deg, ${C.navy}, ${C.teal}, ${C.green})` }} />
 
             <div style={{ ...S.sectionHeader(), marginTop: 4, marginBottom: 0 }}>
               <FiCheckCircle size={14} style={{ color: C.teal }} /> PRE-PROTOCOL SUMMARY
@@ -270,7 +270,7 @@ export default function Step5ProtocolParams({ form, setField, generate, allExerc
                     }}>MMT: {form.mmtGrade}/5</span>
                   )}
                   {form.ivddGrade && (
-                    <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: "rgba(124,58,237,0.15)", color: "#7C3AED" }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: C.purpleBg, color: C.purple }}>
                       IVDD: Grade {form.ivddGrade}
                     </span>
                   )}
@@ -687,7 +687,7 @@ export default function Step5ProtocolParams({ form, setField, generate, allExerc
             display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 10,
             padding: "18px 56px", borderRadius: 12, border: `2px solid ${C.green}`,
             fontSize: 16, fontWeight: 800, letterSpacing: "0.5px", cursor: "pointer",
-            background: "linear-gradient(135deg, #059669 0%, #10B981 50%, #34D399 100%)",
+            background: `linear-gradient(135deg, ${C.green} 0%, ${C.green} 50%, #34D399 100%)`,
             color: "#fff",
             boxShadow: "0 0 20px rgba(16,185,129,0.5), 0 0 40px rgba(16,185,129,0.3), 0 0 60px rgba(16,185,129,0.15), inset 0 1px 0 rgba(255,255,255,0.2)",
             transition: "all 0.3s ease",

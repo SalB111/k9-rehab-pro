@@ -23,6 +23,9 @@ const C = {
   text:      "var(--k9-text)",
   textMid:   "var(--k9-text-mid)",
   textLight: "var(--k9-text-light)",
+  purple:    "var(--k9-purple)",
+  purpleLight: "var(--k9-purple-light)",
+  purpleBg:  "var(--k9-purple-bg)",
 };
 
 export default C;

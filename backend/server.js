@@ -23,7 +23,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const db = require('./db-provider');
-const { selectExercisesForWeek, PROTOCOL_DEFINITIONS, validateIntake, getExcludedCodes } = require('./protocol-generator'); // ✅ ACVSMR-aligned 4-protocol system
+const { selectExercisesForWeek, PROTOCOL_DEFINITIONS, validateIntake, getExcludedCodes, getProtocolType } = require('./protocol-generator'); // ✅ ACVSMR-aligned 4-protocol system
 const { ALL_EXERCISES, getExerciseByCode, searchExercises } = require('./all-exercises');
 const { CORE_REFERENCES, EXERCISE_EVIDENCE_MAP } = require('./evidence-references');
 const ANTHROPIC_MODEL = process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-20250514';
@@ -1179,7 +1179,6 @@ async function generateProtocolAsync(formData, patientId) {
   }
 
   // Get protocol metadata
-  const { getProtocolType } = require('./protocol-generator');
   const protocolType = getProtocolType(formData.diagnosis, formData.affectedRegion, formData.treatmentApproach);
   const protocolDef = PROTOCOL_DEFINITIONS[protocolType];
 
@@ -2630,14 +2629,14 @@ async function startServer() {
       console.log(`📦 DB Provider: ${process.env.DB_PROVIDER || 'sqlite'}`);
       console.log(`${'='.repeat(60)}\n`);
 
-      // Auto-open browser in production/pkg mode
-      if (fs.existsSync(FRONTEND_BUILD)) {
+      // Auto-open browser in local/pkg mode (not on Render)
+      if (fs.existsSync(FRONTEND_BUILD) && !process.env.RENDER) {
         const url = `http://localhost:${PORT}`;
         console.log(`🌐 Opening browser: ${url}`);
-        const { exec } = require('child_process');
-        if (process.platform === 'win32') exec(`start ${url}`);
-        else if (process.platform === 'darwin') exec(`open ${url}`);
-        else exec(`xdg-open ${url}`);
+        const { execFile } = require('child_process');
+        if (process.platform === 'win32') execFile('cmd', ['/c', 'start', url]);
+        else if (process.platform === 'darwin') execFile('open', [url]);
+        else execFile('xdg-open', [url]);
       }
     });
   } catch (err) {

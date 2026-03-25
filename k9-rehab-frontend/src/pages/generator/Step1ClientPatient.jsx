@@ -116,7 +116,7 @@ export default function Step1ClientPatient({ form, setField, goToStep, handleWei
                 onClick={() => { setField("species", sp); setField("breed", ""); setField("diagnosis", ""); }}
                 style={{
                   padding: "7px 22px", fontSize: 13, fontWeight: 700, cursor: "pointer", border: "none", outline: "none",
-                  background: form.species === sp ? (sp === "Feline" ? "#7c3aed" : C.teal) : C.surface,
+                  background: form.species === sp ? (sp === "Feline" ? C.purple : C.teal) : C.surface,
                   color: form.species === sp ? "#fff" : C.textMid,
                   display: "flex", alignItems: "center", gap: 6, transition: "all 0.15s"
                 }}
@@ -129,17 +129,17 @@ export default function Step1ClientPatient({ form, setField, goToStep, handleWei
 
           {/* HCM breed warning for feline */}
           {form.species === "Feline" && form.breed && FELINE_HCM_BREEDS.has(form.breed) && (
-            <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 12px", borderRadius: 6, background: "#7c3aed22", border: "1.5px solid #7c3aed" }}>
-              <FiAlertTriangle size={14} style={{ color: "#a78bfa", flexShrink: 0 }} />
-              <span style={{ fontSize: 11, color: "#a78bfa", fontWeight: 600 }}>HCM-risk breed — confirm cardiac clearance before initiating aquatic or high-intensity exercises</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 12px", borderRadius: 6, background: C.purpleBg, border: `1.5px solid ${C.purple}` }}>
+              <FiAlertTriangle size={14} style={{ color: C.purpleLight, flexShrink: 0 }} />
+              <span style={{ fontSize: 11, color: C.purpleLight, fontWeight: 600 }}>HCM-risk breed — confirm cardiac clearance before initiating aquatic or high-intensity exercises</span>
             </div>
           )}
 
           {/* Geriatric OA flag for cats >10yr */}
           {form.species === "Feline" && parseFloat(form.age) >= 10 && (
-            <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 12px", borderRadius: 6, background: "#f5a62322", border: "1.5px solid #f5a623" }}>
-              <FiAlertTriangle size={14} style={{ color: "#f5a623", flexShrink: 0 }} />
-              <span style={{ fontSize: 11, color: "#f5a623", fontWeight: 600 }}>Geriatric cat ≥10yr — OA screening recommended (high radiographic prevalence in this age group)</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 12px", borderRadius: 6, background: C.amberBg, border: `1.5px solid ${C.amber}` }}>
+              <FiAlertTriangle size={14} style={{ color: C.amber, flexShrink: 0 }} />
+              <span style={{ fontSize: 11, color: C.amber, fontWeight: 600 }}>Geriatric cat ≥10yr — OA screening recommended (high radiographic prevalence in this age group)</span>
             </div>
           )}
         </div>
@@ -306,7 +306,7 @@ export default function Step1ClientPatient({ form, setField, goToStep, handleWei
             transition: "all 0.2s", flex: 1 }}>
             <input type="checkbox" checked={form.clientConsentObtained} onChange={e => setField("clientConsentObtained", e.target.checked)}
               style={{ accentColor: C.green, width: 16, height: 16, cursor: "pointer" }} />
-            Client informed of rehabilitation plan, risks, alternatives, and estimated costs. Verbal/written consent obtained.
+            Client has been informed of the rehabilitation plan, associated risks, alternatives, and estimated costs. Verbal or written consent has been obtained.
           </label>
           <div style={{ minWidth: 160 }}>
             <label style={S.label}>Consent Date</label>

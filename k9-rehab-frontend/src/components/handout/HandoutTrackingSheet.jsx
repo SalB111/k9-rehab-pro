@@ -70,7 +70,7 @@ export default function HandoutTrackingSheet({ exercises, clinicName, patientNam
 
       {/* Footer */}
       <div style={{ textAlign: "center", marginTop: 16, fontSize: 8, color: "#CBD5E1" }}>
-        K9 Rehab Pro — Clinical Decision-Support System — Not a substitute for veterinary judgment
+        K9 Rehab Pro™ — Clinical Decision-Support System — Not a substitute for veterinary judgment
       </div>
     </div>
   );
