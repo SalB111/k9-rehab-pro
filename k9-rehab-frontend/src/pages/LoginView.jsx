@@ -18,15 +18,27 @@ function LoginView({ onLogin, onRegister }) {
   const [serverDown, setServerDown] = useState(false);
 
   useEffect(() => {
-    // Check if backend is up and if any users exist
-    axios.get(`${API}/auth/status`)
-      .then(res => {
-        if (res.data && !res.data.has_users) {
-          setIsFirstUser(true);
-          setIsRegistering(true);
+    // Check if backend is up and if any users exist — retry up to 3 times
+    let cancelled = false;
+    async function checkServer(attempts = 3) {
+      for (let i = 0; i < attempts; i++) {
+        try {
+          const res = await axios.get(`${API}/auth/status`, { timeout: 5000 });
+          if (cancelled) return;
+          if (res.data && !res.data.has_users) {
+            setIsFirstUser(true);
+            setIsRegistering(true);
+          }
+          setServerDown(false);
+          return;
+        } catch {
+          if (i < attempts - 1) await new Promise(r => setTimeout(r, 2000));
         }
-      })
-      .catch(() => setServerDown(true));
+      }
+      if (!cancelled) setServerDown(true);
+    }
+    checkServer();
+    return () => { cancelled = true; };
   }, []);
 
   const handleSubmit = async (e) => {
