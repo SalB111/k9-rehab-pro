@@ -2564,10 +2564,25 @@ const FRONTEND_BUILD = IS_PKG
     ? path.join(__dirname, 'public')
     : path.join(__dirname, '..', 'k9-rehab-frontend', 'build');
 if (fs.existsSync(FRONTEND_BUILD)) {
-  app.use(express.static(FRONTEND_BUILD));
-  // SPA fallback — serve index.html for any non-API route
+  // Hashed assets (JS/CSS) — cache forever (filename changes on rebuild)
+  app.use('/assets', express.static(path.join(FRONTEND_BUILD, 'assets'), {
+    maxAge: '1y',
+    immutable: true,
+  }));
+  // All other static files — no cache (index.html, favicon, etc.)
+  app.use(express.static(FRONTEND_BUILD, {
+    maxAge: 0,
+    etag: false,
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith('.html')) {
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      }
+    },
+  }));
+  // SPA fallback — serve index.html for any non-API route (no cache)
   app.get('*', (req, res, next) => {
     if (req.path.startsWith('/api')) return next();
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.sendFile(path.join(FRONTEND_BUILD, 'index.html'));
   });
   console.log('✅ Frontend: serving production build');
