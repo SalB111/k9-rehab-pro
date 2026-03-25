@@ -108,7 +108,7 @@ export default function Step1ClientPatient({ form, setField, goToStep, handleWei
 
         {/* ── SPECIES TOGGLE ── */}
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-          <span style={{ fontSize: 12, fontWeight: 600, color: C.muted, textTransform: "uppercase", letterSpacing: 1 }}>Species</span>
+          <span style={{ fontSize: 12, fontWeight: 600, color: C.textMid, textTransform: "uppercase", letterSpacing: 1 }}>Species</span>
           <div style={{ display: "flex", gap: 0, borderRadius: 8, overflow: "hidden", border: `1.5px solid ${C.border}` }}>
             {["Canine", "Feline"].map(sp => (
               <button
@@ -116,8 +116,8 @@ export default function Step1ClientPatient({ form, setField, goToStep, handleWei
                 onClick={() => { setField("species", sp); setField("breed", ""); setField("diagnosis", ""); }}
                 style={{
                   padding: "7px 22px", fontSize: 13, fontWeight: 700, cursor: "pointer", border: "none", outline: "none",
-                  background: form.species === sp ? (sp === "Feline" ? "#7c3aed" : C.blue) : C.surface,
-                  color: form.species === sp ? "#fff" : C.muted,
+                  background: form.species === sp ? (sp === "Feline" ? "#7c3aed" : C.teal) : C.surface,
+                  color: form.species === sp ? "#fff" : C.textMid,
                   display: "flex", alignItems: "center", gap: 6, transition: "all 0.15s"
                 }}
               >

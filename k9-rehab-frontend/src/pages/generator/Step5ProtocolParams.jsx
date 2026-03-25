@@ -3,7 +3,7 @@ import { FiCalendar, FiChevronRight, FiAlertTriangle, FiShield, FiCheckCircle, F
 import C from "../../constants/colors";
 import S from "../../constants/styles";
 import SectionHead from "./SectionHead";
-import { CONDITIONS } from "./constants";
+import { CONDITIONS, FELINE_DIAGNOSES } from "./constants";
 
 export default function Step5ProtocolParams({ form, setField, generate, allExercises, complianceAgreed, setComplianceAgreed, complianceOpen, setComplianceOpen, error, goToStep, loading }) {
   return (
@@ -184,6 +184,10 @@ export default function Step5ProtocolParams({ form, setField, generate, allExerc
             const found = items.find(c => c.value === form.diagnosis);
             if (found) return found.label;
           }
+          for (const [, items] of Object.entries(FELINE_DIAGNOSES)) {
+            const found = items.find(c => c.value === form.diagnosis);
+            if (found) return found.label;
+          }
           return form.diagnosis || "Not selected";
         })();
         // Find category the diagnosis belongs to
@@ -341,12 +345,12 @@ export default function Step5ProtocolParams({ form, setField, generate, allExerc
                       Incision: {form.incisionStatus}
                     </span>
                   )}
-                  {(form.activityRestrictions || []).length > 0 && (
+                  {form.activityRestrictions && form.activityRestrictions.trim() && (
                     <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 10px", borderRadius: 4, background: C.amberBg, color: C.amber, border: "1px solid rgba(217,119,6,0.3)" }}>
-                      {(form.activityRestrictions || []).length} Restriction(s)
+                      Activity Restrictions
                     </span>
                   )}
-                  {(!form.allergies || !form.allergies.trim()) && form.temperament === "Cooperative" && (form.activityRestrictions || []).length === 0 && (!form.incisionStatus || form.incisionStatus === "Clean/Dry/Intact") && (
+                  {(!form.allergies || !form.allergies.trim()) && form.temperament === "Cooperative" && (!form.activityRestrictions || !form.activityRestrictions.trim()) && (!form.incisionStatus || form.incisionStatus === "Clean/Dry/Intact") && (
                     <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 10px", borderRadius: 4, background: C.greenBg, color: C.green }}>No active flags</span>
                   )}
                 </div>
@@ -386,9 +390,9 @@ export default function Step5ProtocolParams({ form, setField, generate, allExerc
               {/* Rehab Goals */}
               <div style={{ flex: 1, background: C.bg, border: `1.5px solid ${C.border}`, borderRadius: 10, padding: "12px 16px" }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: C.teal, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 6 }}>Rehab Goals</div>
-                {(form.rehabGoals || []).length > 0 ? (
+                {([...(form.stGoals || []), ...(form.ltGoals || [])]).length > 0 ? (
                   <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
-                    {(form.rehabGoals || []).map(g => (
+                    {[...(form.stGoals || []), ...(form.ltGoals || [])].map(g => (
                       <span key={g} style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 4, background: "rgba(14,165,233,0.15)", color: C.teal }}>
                         {g.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())}
                       </span>
