@@ -65,7 +65,7 @@ export default function DashboardView({ setView }) {
 
   const STATS = [
     { label: "Active Patients", value: patients.length, img: "/2.png", color: C.teal },
-    { label: "Protocols Available", value: "4 \u00d7 4 Phases", icon: FiFileText, color: "#7C3AED" },
+    { label: "Protocols Available", value: "4 Protocols", icon: FiFileText, color: "#7C3AED" },
     { label: "Exercise Library", value: exercises.length, img: "/Beau.png", color: C.navy },
     { label: "Unique Conditions", value: Object.keys(conditionCounts).length || "\u2014", icon: TbDog, color: C.amber },
   ];

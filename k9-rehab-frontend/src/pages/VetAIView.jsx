@@ -273,7 +273,7 @@ function VetAIView({ authToken }) {
       {/* Patient Selection Panel */}
       {showPatientPanel && (
         <div style={{ position: "absolute", top: 58, right: 12, zIndex: 100, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, padding: 14, width: 320, boxShadow: "0 12px 40px rgba(0,0,0,0.12)" }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: C.text, marginBottom: 10, letterSpacing: 0.5 }}>SELECT PATIENT</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: C.text, marginBottom: 10, letterSpacing: 0.5 }}>Select Patient</div>
           {patients.length === 0 && <div style={{ fontSize: 12, color: C.textLight, padding: 12 }}>No patients found. Add patients in Patient Records first.</div>}
           <div style={{ maxHeight: 300, overflowY: "auto" }}>
             {patients.map(pt => (

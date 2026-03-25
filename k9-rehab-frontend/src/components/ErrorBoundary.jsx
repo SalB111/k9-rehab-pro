@@ -26,7 +26,7 @@ export default class ErrorBoundary extends React.Component {
           <div style={{ fontSize: 48, marginBottom: 16 }}>{"\u26A0"}</div>
           <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 8 }}>Something went wrong</h2>
           <p style={{ fontSize: 14, color: C.textMid, maxWidth: 420, marginBottom: 24 }}>
-            An unexpected error occurred in the application. This has been logged for review.
+            An unexpected error occurred. Any unsaved protocol data may need to be re-entered. Select "Try Again" to reload this section, or refresh the page.
           </p>
           <button
             onClick={() => this.setState({ hasError: false, error: null })}

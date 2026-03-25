@@ -470,12 +470,19 @@ function getProtocolType(diagnosis, affectedRegion, treatmentApproach) {
     return 'oa';
   }
 
+  // ── VESTIBULAR → OA (NOT IVDD) ──
+  // Vestibular disease is NOT a spinal condition — it affects the inner ear
+  // and brainstem. Needs balance/proprioception rehab, not spinal passive ROM.
+  if (d.includes('vestibular')) {
+    return 'oa';
+  }
+
   // ── IVDD / SPINE / NEUROLOGICAL ──
   if (d.includes('ivdd') || d.includes('fce') ||
       d.includes('myelopathy') || d.includes('degenerative m') ||
       d.includes('lumbosacral') || d.includes('cauda equina') ||
       d.includes('spondylomyelopathy') || d.includes('wobbler') ||
-      d.includes('vestibular') || d.includes('neuropathy') ||
+      d.includes('neuropathy') ||
       d.includes('spinal') ||
       r.includes('spine') || r.includes('cervical') ||
       r.includes('thoracolumbar') || r.includes('lumbosacral')) {
@@ -646,6 +653,10 @@ const CONTRAINDICATION_MAP = {
   'implant':       ['SHOCKWAVE', 'US_PULSED'],
   'non-ambulatory':['SLOW_TROT', 'JOG_LEASH', 'SLOW_WALK', 'CAVALETTI_RAILS', 'CAVALETTI_VAR', 'CAVALETTI_ELEV', 'CAVALETTI_WEAVE', 'STAIR_CLIMB', 'STAIR_DESCEND', 'HILL_CLIMB', 'BACKWARD_HILL', 'POLE_WEAVE', 'FIGURE_8', 'UNEVEN_TERRAIN', 'DIAGONAL_WALK', 'LAND_TREADMILL', 'FETCH_CONTROLLED', 'WEIGHT_SHIFT_CC', 'LADDER_WALK'],
   'fracture unstable': ['WEIGHT_SHIFT', 'WOBBLE_BOARD', 'WOBBLE_BOARD_ADV', 'ROCKER_BOARD', 'BALANCE_PAD', 'BOSU_STAND', 'BOSU_FRONT', 'BOSU_HIND', 'CAVALETTI_RAILS', 'CAVALETTI_VAR', 'CAVALETTI_ELEV', 'CAVALETTI_WEAVE', 'STAIR_CLIMB', 'PERTURBATION', 'PERTURBATION_ADV', 'TRAMPOLINE_STAND'],
+  // Cervical spine conditions (wobbler/CSM) — no neck flexion, no vigorous head movement
+  'wobbler':           ['FETCH_CONTROLLED', 'WATER_RETRIEVE', 'POOL_SWIM'],
+  'cervical':          ['FETCH_CONTROLLED', 'WATER_RETRIEVE', 'POOL_SWIM'],
+  'csm':               ['FETCH_CONTROLLED', 'WATER_RETRIEVE', 'POOL_SWIM'],
 };
 
 // ============================================================================

@@ -741,8 +741,13 @@ app.post('/api/generate-protocol', async (req, res) => {
       protocol.red_flag_warnings = validation.warnings;
     }
 
-    // Save protocol (fire-and-forget)
-    db.createProtocol(patientId, protocol).catch(err => console.error('Error saving protocol:', err));
+    // Save protocol — awaited so we can warn the clinician on failure
+    try {
+      await db.createProtocol(patientId, protocol);
+    } catch (saveErr) {
+      console.error('Error saving protocol:', saveErr);
+      protocol._saveWarning = 'Protocol generated but could not be saved to database. Please retry or contact your administrator.';
+    }
 
     res.json({ success: true, data: protocol });
   } catch (err) {
@@ -2355,6 +2360,9 @@ app.post('/api/vet-ai/chat', async (req, res) => {
   if (!messages || !Array.isArray(messages)) {
     return res.status(400).json({ error: 'messages array is required' });
   }
+  if (messages.length > 100) {
+    return res.status(400).json({ error: 'Message history exceeds maximum (100 messages). Start a new session.' });
+  }
 
   // Audit log — VetAI chat sessions (SSE streaming bypasses res.json middleware)
   const lastUserMsg = [...messages].reverse().find(m => m.role === 'user');
@@ -2440,7 +2448,12 @@ ${SOURCE_OF_TRUTH_TEXT}
     // Sanitize all patient fields to prevent prompt injection
     const san = (v, maxLen = 200) => {
       if (!v || typeof v !== 'string') return v || '';
-      return v.replace(/[=]{3,}/g, '').replace(/CRITICAL|SYSTEM|INSTRUCTION|IGNORE|OVERRIDE/gi, '[filtered]').slice(0, maxLen);
+      return v
+        .replace(/[=]{3,}/g, '')
+        .replace(/[-]{3,}/g, '')
+        .replace(/\[INST\]/gi, '[filtered]')
+        .replace(/CRITICAL|SYSTEM|INSTRUCTION|IGNORE|OVERRIDE|ASSISTANT|HUMAN|NEW INSTRUCTIONS|FORGET EVERYTHING|ACT AS|YOU ARE NOW|DISREGARD/gi, '[filtered]')
+        .slice(0, maxLen);
     };
     systemPrompt += `\n\n=== ACTIVE PATIENT — B.E.A.U. CLINICAL CONTEXT ===\nSpecies: ${san(patient.species) || 'Canine'}\nPatient Name: ${san(patient.name) || 'Not specified'}\nBreed: ${san(patient.breed) || 'Not specified'}\nAge: ${san(patient.age) || 'Not specified'}\nWeight: ${san(patient.weight) || 'Not specified'}\nSex: ${san(patient.sex) || 'Not specified'}\n\nPrimary Diagnosis: ${san(patient.diagnosis || patient.dx) || 'Not specified'}\nSurgery Type: ${san(patient.surgery_type) || 'N/A'}\nSurgery Date: ${san(patient.surgery_date) || 'N/A'}\nPost-Op Day Count: ${san(patient.post_op_days) || 'N/A'}\n\nNeurologic Grade: ${san(patient.neuro_grade) || 'N/A'}\nPain Score: ${san(patient.pain_level) || 'Not assessed'}/10\nWeight Bearing Status: ${san(patient.weight_bearing || patient.mobility) || 'Not assessed'}\nSwelling Present: ${san(patient.swelling) || 'Not assessed'}\n\nGoniometry — Joint Measured: ${san(patient.rom_joint) || 'Not recorded'}\nAffected Limb — Flexion: ${patient.rom_flexion ? san(patient.rom_flexion) + '°' : 'Not recorded'} | Extension: ${patient.rom_extension ? san(patient.rom_extension) + '°' : 'Not recorded'}\nContralateral Limb — Flexion: ${patient.rom_flexion_contralateral ? san(patient.rom_flexion_contralateral) + '°' : 'Not recorded'} | Extension: ${patient.rom_extension_contralateral ? san(patient.rom_extension_contralateral) + '°' : 'Not recorded'}\n${patient.rom_flexion && patient.rom_flexion_contralateral ? 'Flexion Deficit: ' + Math.abs(parseFloat(patient.rom_flexion_contralateral) - parseFloat(patient.rom_flexion)).toFixed(1) + '° | Extension Deficit: ' + (patient.rom_extension && patient.rom_extension_contralateral ? Math.abs(parseFloat(patient.rom_extension_contralateral) - parseFloat(patient.rom_extension)).toFixed(1) + '°' : 'N/A') : ''}\n\nValidated Outcome Measures:\n- Helsinki Chronic Pain Index (HCPI): ${patient.hcpi_score ? san(patient.hcpi_score) + '/44 — ' + (+patient.hcpi_score < 12 ? 'Below chronic pain threshold' : +patient.hcpi_score < 24 ? 'Mild-moderate chronic pain' : 'Significant chronic pain — pain management review required') : 'Not recorded'}\n- CBPI Pain Severity Score (PSS): ${patient.cbpi_pss ? san(patient.cbpi_pss) + '/10 — ' + (+patient.cbpi_pss <= 2 ? 'Mild/well-controlled' : +patient.cbpi_pss <= 5 ? 'Moderate pain' : 'Severe pain — pain control before progressive exercise') : 'Not recorded'}\n- CBPI Pain Interference Score (PIS): ${patient.cbpi_pis ? san(patient.cbpi_pis) + '/10 — ' + (+patient.cbpi_pis <= 1.5 ? 'Minimal functional interference' : +patient.cbpi_pis <= 4 ? 'Moderate interference' : 'Severe interference — compliance risk high') : 'Not recorded'}\n- LOAD (Liverpool OA in Dogs): ${patient.load_score ? san(patient.load_score) + '/52 — ' + (+patient.load_score <= 5 ? 'Mild OA impact' : +patient.load_score <= 20 ? 'Moderate OA — aquatic priority' : 'Severe OA — comfort-focused protocol') : 'Not recorded'}\n\nCurrent Medications: ${san(patient.medications, 500) || 'None listed'}\nActivity Goal: ${san(patient.activity_goal) || 'Return to normal function'}\nHome Environment: ${san(patient.home_environment) || 'Not specified'}\n\nAdditional Notes: ${san(patient.notes, 500) || 'None'}\n\nThis patient is now active. Address ${san(patient.name) || 'this patient'} by name. Apply the Block 1-3 clinical framework. Assign phase based on diagnosis and post-op timeline. Generate protocol table. Apply all contraindications relevant to this diagnosis. End with Block 4 disclaimer.`;
   }

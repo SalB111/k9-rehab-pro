@@ -11,10 +11,10 @@ import { useToast } from "../components/Toast";
 
 // ── Phase names and progression criteria ──
 const PHASE_NAMES = [
-  "Acute Protection",
-  "Early Mobilization",
-  "Controlled Strengthening",
-  "Return to Function",
+  "Phase 1",
+  "Phase 2",
+  "Phase 3",
+  "Phase 4",
 ];
 const PHASE_CRITERIA = [
   "Pain controlled, incision healing, minimal edema",

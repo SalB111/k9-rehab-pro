@@ -16,7 +16,7 @@ export default function Step5ProtocolParams({ form, setField, generate, allExerc
             <label style={S.label}>Protocol Duration</label>
             <select style={{ ...S.select, width: "100%", border: `1.5px solid ${C.border}` }} value={form.protocolLength} onChange={e => setField("protocolLength", e.target.value)}>
               <option value="">--- Select ---</option>
-              <option value="6">6 weeks — Accelerated (mild)</option>
+              <option value="6">6 weeks — Mild cases / accelerated recovery</option>
               <option value="8">8 weeks — Standard post-surgical</option>
               <option value="10">10 weeks — Extended recovery</option>
               <option value="12">12 weeks — Complex / multi-joint</option>

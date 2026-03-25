@@ -12,6 +12,7 @@ let db;
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
 function run(sql, params = []) {
+  if (!db) throw new Error('Database not initialized — call initialize() first');
   return new Promise((resolve, reject) => {
     db.run(sql, params, function (err) {
       if (err) reject(err);
@@ -21,6 +22,7 @@ function run(sql, params = []) {
 }
 
 function get(sql, params = []) {
+  if (!db) throw new Error('Database not initialized — call initialize() first');
   return new Promise((resolve, reject) => {
     db.get(sql, params, (err, row) => {
       if (err) reject(err);
@@ -30,6 +32,7 @@ function get(sql, params = []) {
 }
 
 function all(sql, params = []) {
+  if (!db) throw new Error('Database not initialized — call initialize() first');
   return new Promise((resolve, reject) => {
     db.all(sql, params, (err, rows) => {
       if (err) reject(err);
@@ -59,8 +62,10 @@ async function initialize() {
     db = new sqlite3.Database(dbPath, (err) => {
       if (err) return reject(err);
       console.log('✅ Connected to SQLite database');
-      db.run('PRAGMA foreign_keys = ON');
-      resolve();
+      db.run('PRAGMA foreign_keys = ON', (pragmaErr) => {
+        if (pragmaErr) console.error('Foreign keys pragma failed:', pragmaErr.message);
+        resolve();
+      });
     });
   });
 }
@@ -115,7 +120,9 @@ async function createTables() {
     'load_score TEXT'
   ];
   for (const col of romCols) {
-    try { await run(`ALTER TABLE patients ADD COLUMN ${col}`); } catch (_) { /* already exists */ }
+    try { await run(`ALTER TABLE patients ADD COLUMN ${col}`); } catch (e) {
+      if (!e.message.includes('duplicate column')) console.error(`Migration error for column ${col}:`, e.message);
+    }
   }
 
   await run(`
@@ -331,13 +338,11 @@ async function seedExercises(exercisesList) {
 
   // Always upsert so the DB matches the master exercise list (all-exercises.js).
   // This handles new exercises being added, stale duplicates being removed, and
-  // metadata corrections being picked up on every server restart.
-  if (existing.count === masterCount) {
-    console.log(`✅ Exercises table up-to-date (${existing.count} rows)`);
-    return;
-  }
-
-  console.log(`🔄 Syncing exercises table: DB has ${existing.count}, master has ${masterCount}`);
+  // metadata corrections (name, category, description changes) being picked up on every restart.
+  const countChanged = existing.count !== masterCount;
+  console.log(countChanged
+    ? `🔄 Syncing exercises table: DB has ${existing.count}, master has ${masterCount}`
+    : `🔄 Refreshing exercises table (${masterCount} exercises)`);
 
   // 1. Upsert every exercise from the master list
   const stmt = db.prepare(

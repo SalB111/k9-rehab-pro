@@ -240,7 +240,7 @@ export default function ProtocolResults({ protocol, setProtocol, setWizardStep, 
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
             <FiAlertTriangle size={16} style={{ color: "#FCA5A5", flexShrink: 0 }} />
             <span style={{ fontSize: 12, fontWeight: 800, color: "#FCA5A5", textTransform: "uppercase", letterSpacing: "1px" }}>
-              Clinical Red Flags Detected
+              Clinical Red Flags — Review Required
             </span>
           </div>
           {protocol.red_flag_warnings.map((w, i) => (

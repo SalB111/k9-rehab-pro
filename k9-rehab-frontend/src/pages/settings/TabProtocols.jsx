@@ -77,7 +77,7 @@ export function TabProtocols({ protocolDefaults, setProtocolDefaults, flashSave,
                 <option key={n} value={n}>VAS {n}/10 {n === 4 ? "(Recommended)" : ""}</option>
               ))}
             </select>
-            <div style={sty.fieldHint}>Protocol progression halts if patient pain exceeds this threshold</div>
+            <div style={sty.fieldHint}>Progression is held when pain score reaches or exceeds this level</div>
           </div>
           <div style={sty.fieldRow}>
             <label style={sty.fieldLabel}>Weight-Bearing Requirement</label>

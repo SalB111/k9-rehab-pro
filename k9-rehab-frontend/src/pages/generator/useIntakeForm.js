@@ -36,7 +36,7 @@ export default function useIntakeForm() {
     const lbs = kg * 2.20462;
     const warnings = [];
     if (kg > 90) {
-      warnings.push(`CRITICAL: ${kg} kg = ${lbs.toFixed(0)} lbs. Did you enter LBS in the KG field? This exceeds the weight of any known dog breed. Incorrect weight will cause medication dosing errors.`);
+      warnings.push(`Weight Verification Required: ${kg} kg (${lbs.toFixed(0)} lbs) exceeds the expected range for any known breed. Please confirm — weight is used for dosing calculations.`);
     } else if (kg > 70) {
       warnings.push(`Caution: ${kg} kg (${lbs.toFixed(0)} lbs) is very heavy. Confirm this is correct — only giant breeds (Mastiff, Great Dane, Saint Bernard) typically exceed 70 kg. Accurate weight is critical for safe drug dosing.`);
     } else if (kg > 0 && kg < 1) {
@@ -68,7 +68,7 @@ export default function useIntakeForm() {
       if (lbs < 2) {
         setWeightWarning(`Warning: ${lbs} lbs = ${kg.toFixed(2)} kg — extremely low. Did you enter KG in the LBS field? Verify before calculating drug doses.`);
       } else if (lbs > 200) {
-        setWeightWarning(`CRITICAL: ${lbs} lbs = ${kg.toFixed(1)} kg. No known dog breed exceeds 200 lbs. Please verify. Incorrect weight will cause medication dosing errors.`);
+        setWeightWarning(`Weight Verification Required: ${lbs} lbs (${kg.toFixed(1)} kg) exceeds the expected range for any known breed. Please confirm — weight is used for dosing calculations.`);
       } else {
         setWeightWarning(validateWeight(kg));
       }

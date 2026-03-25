@@ -77,7 +77,7 @@ export default function Step3TreatmentPlan({ form, setField, goToStep, handleSur
               <FiAlertTriangle size={18} style={{ color: C.amber, flexShrink: 0, marginTop: 2 }} />
               <div>
                 <div style={{ fontSize: 12, fontWeight: 700, color: C.amber }}>Owner Declines Recommended Surgery</div>
-                <div style={{ fontSize: 11, color: C.amber, marginTop: 4 }}>Protocol will be generated for conservative / non-surgical management. Document informed consent and owner's understanding of prognosis differences.</div>
+                <div style={{ fontSize: 11, color: C.amber, marginTop: 4 }}>Protocol will be generated for conservative management. Document informed consent including the owner's understanding of outcomes without surgical intervention.</div>
                 <div style={{ marginTop: 8 }}>
                   <label style={{ ...S.label, fontSize: 10 }}>Reason / Notes for Declining (Document for Medical Record)</label>
                   <input style={{ ...S.input, border: `1.5px solid ${C.amber}`, background: C.amberBg, fontSize: 11 }}
