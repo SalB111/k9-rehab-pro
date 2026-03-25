@@ -18,7 +18,7 @@ export default function Step4RehabGoals({ form, setField, goToStep }) {
           Identify all functional deficits and impairments (select all that apply)
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          {["Decreased ROM", "Muscle atrophy", "Pain / nociception", "Abnormal gait pattern",
+          {["Decreased ROM", "Muscle atrophy", "Pain", "Abnormal gait pattern",
             "Edema / swelling", "Joint stiffness", "Muscle weakness", "Reduced weight bearing",
             "Proprioceptive deficit", "Neurological deficit", "Post-surgical inflammation",
             "Decreased endurance", "Balance / coordination deficit", "Soft tissue restriction",

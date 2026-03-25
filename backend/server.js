@@ -155,6 +155,10 @@ function safeError(err) {
   return process.env.NODE_ENV === 'development' ? err.message : 'Internal server error';
 }
 
+// ── Debug logging (silenced in production) ──
+const IS_DEV = process.env.NODE_ENV !== 'production';
+function debugLog(...args) { if (IS_DEV) console.log(...args); }
+
 // Authentication middleware — protects all /api routes except PUBLIC_ROUTES
 // (health, login, register, auth/status). See auth.js PUBLIC_ROUTES array.
 app.use('/api', requireAuth());
@@ -278,6 +282,16 @@ app.get('/api/auth/status', async (req, res) => {
     res.json({ has_users: count > 0 });
   } catch (err) {
     res.status(500).json({ error: 'Status check failed' });
+  }
+});
+
+// POST /api/auth/accept-tos — Record TOS acceptance server-side
+app.post('/api/auth/accept-tos', requireAuth, async (req, res) => {
+  try {
+    await db.acceptTos(req.user.id);
+    res.json({ success: true, tos_accepted_at: new Date().toISOString() });
+  } catch (err) {
+    res.status(500).json({ error: safeError(err) });
   }
 });
 
@@ -764,7 +778,7 @@ app.post('/api/generate-protocol', async (req, res) => {
 app.get('/api/videos/:exerciseCode', (req, res) => {
   try {
     const { exerciseCode } = req.params;
-    console.log(`📹 Fetching video for exercise: ${exerciseCode}`);
+    debugLog(`📹 Fetching video for exercise: ${exerciseCode}`);
 
     const videoData = getVideosByExerciseCode(exerciseCode);
 
@@ -792,7 +806,7 @@ app.get('/api/videos/:exerciseCode', (req, res) => {
 // Get all instructors
 app.get('/api/instructors', (req, res) => {
   try {
-    console.log('👨‍⚕️ Fetching all instructors');
+    debugLog('👨‍⚕️ Fetching all instructors');
     res.json({
       success: true,
       count: Object.keys(INSTRUCTORS).length,
@@ -811,7 +825,7 @@ app.get('/api/instructors', (req, res) => {
 app.get('/api/instructors/:instructorId', (req, res) => {
   try {
     const { instructorId } = req.params;
-    console.log(`👨‍⚕️ Fetching instructor: ${instructorId}`);
+    debugLog(`👨‍⚕️ Fetching instructor: ${instructorId}`);
 
     const instructor = getInstructorById(instructorId);
 
@@ -842,7 +856,7 @@ app.get('/api/video-transcripts/:exerciseCode', (req, res) => {
     const { exerciseCode } = req.params;
     const { mode } = req.query; // 'professional' or 'client'
 
-    console.log(`📝 Fetching transcript for ${exerciseCode}, mode: ${mode || 'professional'}`);
+    debugLog(`📝 Fetching transcript for ${exerciseCode}, mode: ${mode || 'professional'}`);
 
     const videoData = getVideosByExerciseCode(exerciseCode);
 
@@ -888,7 +902,7 @@ app.get('/api/video-transcripts/:exerciseCode', (req, res) => {
 app.get('/api/videos/by-instructor/:instructorId', (req, res) => {
   try {
     const { instructorId } = req.params;
-    console.log(`📹 Fetching videos by instructor: ${instructorId}`);
+    debugLog(`📹 Fetching videos by instructor: ${instructorId}`);
 
     const videos = getVideosByInstructor(instructorId);
 
@@ -917,7 +931,7 @@ app.get('/api/videos/by-instructor/:instructorId', (req, res) => {
 // Get video library statistics
 app.get('/api/videos/stats', (req, res) => {
   try {
-    console.log('📊 Fetching video library statistics');
+    debugLog('📊 Fetching video library statistics');
 
     const stats = getVideoStats();
 
@@ -1136,23 +1150,10 @@ app.get('/api/storyboard-images/:exerciseCode', (req, res) => {
 // ============================================================================
 
 async function generateProtocolAsync(formData, patientId) {
-  let exercises;
-  try {
-    exercises = await db.getAllExercisesFromDb();
-  } catch (err) {
-    console.error('Error fetching exercises:', err);
-    exercises = [];
-  }
-
-  // Parse exercises
-  const parsedExercises = exercises.map(ex => ({
-    ...ex,
-    equipment: JSON.parse(ex.equipment || '[]'),
-    steps: JSON.parse(ex.steps || '[]'),
-    good_form: JSON.parse(ex.good_form || '[]'),
-    common_mistakes: JSON.parse(ex.common_mistakes || '[]'),
-    red_flags: JSON.parse(ex.red_flags || '[]')
-  }));
+  // Use the in-memory enriched exercise array (ALL_EXERCISES) instead of bare DB rows.
+  // ALL_EXERCISES includes clinical_classification, evidence_base, safety gating metadata
+  // that the protocol generator's contraindication enforcement depends on.
+  const parsedExercises = ALL_EXERCISES;
 
   // Generate weekly breakdown
   const numWeeks = formData.protocolLength || 8;

@@ -131,7 +131,7 @@ export default function Step1ClientPatient({ form, setField, goToStep, handleWei
           {form.species === "Feline" && form.breed && FELINE_HCM_BREEDS.has(form.breed) && (
             <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 12px", borderRadius: 6, background: "#7c3aed22", border: "1.5px solid #7c3aed" }}>
               <FiAlertTriangle size={14} style={{ color: "#a78bfa", flexShrink: 0 }} />
-              <span style={{ fontSize: 11, color: "#a78bfa", fontWeight: 600 }}>HCM-risk breed — cardiac screening recommended before protocol</span>
+              <span style={{ fontSize: 11, color: "#a78bfa", fontWeight: 600 }}>HCM-risk breed — confirm cardiac clearance before initiating aquatic or high-intensity exercises</span>
             </div>
           )}
 
@@ -139,7 +139,7 @@ export default function Step1ClientPatient({ form, setField, goToStep, handleWei
           {form.species === "Feline" && parseFloat(form.age) >= 10 && (
             <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 12px", borderRadius: 6, background: "#f5a62322", border: "1.5px solid #f5a623" }}>
               <FiAlertTriangle size={14} style={{ color: "#f5a623", flexShrink: 0 }} />
-              <span style={{ fontSize: 11, color: "#f5a623", fontWeight: 600 }}>Geriatric cat ≥10yr — OA screening indicated (90% radiographic prevalence)</span>
+              <span style={{ fontSize: 11, color: "#f5a623", fontWeight: 600 }}>Geriatric cat ≥10yr — OA screening recommended (high radiographic prevalence in this age group)</span>
             </div>
           )}
         </div>

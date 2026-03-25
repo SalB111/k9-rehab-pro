@@ -158,7 +158,7 @@ export default function DashboardView({ setView }) {
             <div style={{ padding: "48px 24px", textAlign: "center", color: C.textLight }}>
               <TbDog size={32} style={{ marginBottom: 12, opacity: 0.3 }} />
               <div style={{ fontSize: 13, fontWeight: 600 }}>No patients registered yet</div>
-              <div style={{ fontSize: 11, marginTop: 4 }}>Patients are created during protocol generation</div>
+              <div style={{ fontSize: 11, marginTop: 4 }}>Generate a protocol to register your first patient</div>
             </div>
           ) : (
             <div style={{ margin: 0 }}>

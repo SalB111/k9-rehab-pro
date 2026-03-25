@@ -183,6 +183,11 @@ async function createTables() {
     )
   `);
 
+  // Add tos_accepted_at column if not present
+  try { await run('ALTER TABLE users ADD COLUMN tos_accepted_at TEXT'); } catch (e) {
+    if (!e.message.includes('duplicate column')) console.error('TOS column migration error:', e.message);
+  }
+
   // audit_log table
   await run(`
     CREATE TABLE IF NOT EXISTS audit_log (
@@ -466,6 +471,10 @@ async function getAllExercisesFromDb() {
 }
 
 // ── Health Check Counts ─────────────────────────────────────────────────────
+
+async function acceptTos(userId) {
+  return run('UPDATE users SET tos_accepted_at = ? WHERE id = ?', [new Date().toISOString(), userId]);
+}
 
 async function getPatientCount() {
   const row = await get('SELECT COUNT(*) as patientCount FROM patients');
@@ -828,6 +837,9 @@ module.exports = {
 
   // Exercises
   getAllExercisesFromDb,
+
+  // Users
+  acceptTos,
 
   // Health
   getPatientCount,

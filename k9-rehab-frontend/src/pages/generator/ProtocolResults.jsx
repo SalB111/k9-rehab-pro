@@ -104,7 +104,7 @@ export default function ProtocolResults({ protocol, setProtocol, setWizardStep, 
             display: "flex", alignItems: "center", gap: 6,
             borderColor: C.teal, color: C.teal,
           }}>
-            <FiFileText size={12} /> Client Handout
+            <FiFileText size={12} /> Owner Handout
           </button>
         )}
         <button onClick={() => {

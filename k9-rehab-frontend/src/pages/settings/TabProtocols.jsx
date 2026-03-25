@@ -49,10 +49,10 @@ export function TabProtocols({ protocolDefaults, setProtocolDefaults, flashSave,
             <label style={sty.fieldLabel}>Sessions Per Week</label>
             <select style={{ ...S.select, width: "100%" }} value={protocolDefaults.sessions_per_week}
               onChange={e => setProtocolDefaults({ ...protocolDefaults, sessions_per_week: +e.target.value })}>
-              <option value={1}>1x weekly</option>
-              <option value={2}>2x weekly</option>
-              <option value={3}>3x weekly (Recommended)</option>
-              <option value={5}>5x weekly (Intensive)</option>
+              <option value={1}>1× per week</option>
+              <option value={2}>2× per week</option>
+              <option value={3}>3× per week (Recommended)</option>
+              <option value={5}>5× per week (Intensive)</option>
             </select>
           </div>
           <div style={sty.fieldRow}>
