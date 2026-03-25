@@ -92,6 +92,9 @@ if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// ── Trust proxy (required for Render, Heroku, etc. behind reverse proxy) ──
+app.set('trust proxy', 1);
+
 // ── Security Middleware ──
 app.use(helmet({
   contentSecurityPolicy: {
