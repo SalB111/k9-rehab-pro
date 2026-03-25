@@ -1,7 +1,15 @@
 // ============================================================================
-// PROTOCOL RULES ENGINE
-// Condition + Phase → Exercise slug selection
-// Add new conditions by following the TPLO pattern below
+// PROTOCOL RULES ENGINE — LEGACY (V1 API)
+// ⚠️  DEPRECATED: This file uses informal display slugs ('prom', 'leash-walking')
+// that do NOT match the canonical exercise codes in the exercise database
+// (PROM_STIFLE, SLOW_WALK). The V1 API endpoints that consume this file
+// return slugs only, not full exercise data.
+//
+// The authoritative protocol system is protocol-generator.js which uses
+// PROTOCOL_DEFINITIONS with canonical UPPER_SNAKE_CASE exercise codes.
+//
+// This file is retained for backward compatibility with V1 API consumers.
+// New integrations should use POST /api/generate-protocol instead.
 // ============================================================================
 
 const PROTOCOL_RULES = {

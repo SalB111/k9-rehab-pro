@@ -1,6 +1,9 @@
 // ============================================================================
-// K9-REHAB-PRO DATABASE SCHEMA v1.0
-// SQLite Database Implementation
+// K9-REHAB-PRO DATABASE SCHEMA v1.0 — DEPRECATED
+// ⚠️  This file is NOT used by the application. The active database provider
+// is db-providers/sqlite-provider.js. This file creates a SEPARATE database
+// at a different path. Do not require() this file.
+// Retained for reference only — safe to delete.
 // ============================================================================
 
 const sqlite3 = require('sqlite3').verbose();

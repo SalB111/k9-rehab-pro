@@ -208,7 +208,7 @@ const STRENGTHENING_EXERCISES = [
     steps: [
       'Stand behind dog',
       'Gently lift hindlimbs off ground',
-      'Support at level of knees or thighs',
+      'Support at level of stifles or thighs',
       'Encourage forward walking on forelimbs',
       'Walk 5-10 feet initially',
       'Lower hindlimbs gently',

@@ -672,9 +672,9 @@ const EXERCISE_EVIDENCE_MAP = {
   // --------------------------------------------------------------------------
   // HYDROTHERAPY (13 exercises)
   // --------------------------------------------------------------------------
-  UWTT_FORWARD:     ['UWT_STUDY', 'MILLIS_LEVINE_2014', 'SWIMMING_STUDY'],
-  UWTT_BACKWARD:    ['UWT_STUDY', 'HILL_WALK_STUDY'],
-  UWTT_LATERAL:     ['UWT_STUDY', 'BALANCE_STUDY'],
+  UWTM_FORWARD:     ['UWT_STUDY', 'MILLIS_LEVINE_2014', 'SWIMMING_STUDY'],
+  UWTM_BACKWARD:    ['UWT_STUDY', 'HILL_WALK_STUDY'],
+  UWTM_LATERAL:     ['UWT_STUDY', 'BALANCE_STUDY'],
   POOL_TREADING:    ['SWIMMING_STUDY', 'UWT_EMG_STUDY'],
   HYDRO_JETS:       ['UWT_STUDY', 'MASSAGE_STUDY'],
   AQUA_CAVALETTI:   ['UWT_STUDY', 'CAVALETTI_STUDY'],

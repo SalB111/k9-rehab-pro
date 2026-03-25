@@ -11,7 +11,7 @@ const EXERCISES_PART7 = [
   // ADVANCED HYDROTHERAPY (15 exercises)
   // ========================================
   {
-    code: 'UWTT_FORWARD',
+    code: 'UWTM_FORWARD',
     name: 'Underwater Treadmill - Forward Walking',
     category: 'Hydrotherapy',
     description: 'Controlled forward walking in underwater treadmill utilizing buoyancy and resistance for controlled loading and cardiovascular conditioning.',
@@ -54,7 +54,7 @@ const EXERCISES_PART7 = [
   },
 
   {
-    code: 'UWTT_BACKWARD',
+    code: 'UWTM_BACKWARD',
     name: 'Underwater Treadmill - Backward Walking (Retrograde)',
     category: 'Hydrotherapy',
     description: 'Backward walking in UWTM to activate hip extensors, increase stifle flexion, and improve proprioceptive awareness.',
@@ -97,7 +97,7 @@ const EXERCISES_PART7 = [
   },
 
   {
-    code: 'UWTT_LATERAL',
+    code: 'UWTM_LATERAL',
     name: 'Underwater Treadmill - Lateral Walking (Side-stepping)',
     category: 'Hydrotherapy',
     description: 'Side-stepping in UWTM to strengthen hip abductors/adductors and improve lateral stability.',
@@ -274,7 +274,7 @@ const EXERCISES_PART7 = [
     category: 'Hydrotherapy',
     description: 'Walking in shallow water (ankle to mid-thigh depth) for gentle weight bearing reduction while maintaining proprioceptive input.',
     equipment: ['Shallow therapy pool or beach entry', 'Non-slip surface', 'Life vest optional'],
-    setup: 'Water depth ankle to knee height initially. Ensure secure footing. Temperature 80-88°F.',
+    setup: 'Water depth ankle to stifle height initially. Ensure secure footing. Temperature 80-88°F.',
     steps: [
       'Lead dog into shallow water',
       'Begin with 5-minute walking intervals',

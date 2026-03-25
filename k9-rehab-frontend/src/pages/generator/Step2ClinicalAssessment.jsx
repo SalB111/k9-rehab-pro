@@ -192,7 +192,7 @@ export default function Step2ClinicalAssessment({ form, setField, goToStep }) {
               border: (+form.bodyConditionScore >= 4 && +form.bodyConditionScore <= 5) ? "1px solid rgba(16,185,129,0.3)" : (+form.bodyConditionScore === 3 || (+form.bodyConditionScore >= 6 && +form.bodyConditionScore <= 7)) ? "1px solid rgba(217,119,6,0.3)" : "1px solid rgba(220,38,38,0.3)",
             }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: (+form.bodyConditionScore >= 4 && +form.bodyConditionScore <= 5) ? C.green : (+form.bodyConditionScore === 3 || (+form.bodyConditionScore >= 6 && +form.bodyConditionScore <= 7)) ? C.amber : C.red }}>
-                {+form.bodyConditionScore <= 2 ? "Emaciated — Rule out chronic disease, caloric supplementation required" :
+                {+form.bodyConditionScore <= 2 ? "Emaciated — Nutritional assessment and veterinary workup recommended before initiating rehabilitation" :
                  +form.bodyConditionScore === 3 ? "Underweight — Nutritional assessment recommended, adjust caloric intake" :
                  +form.bodyConditionScore <= 5 ? "Ideal Body Condition — Maintain current nutrition plan" :
                  +form.bodyConditionScore <= 7 ? "Overweight — Weight management recommended, joint protection priority" :

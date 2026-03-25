@@ -93,7 +93,18 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // ── Security Middleware ──
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      imgSrc: ["'self'", "data:", "https://images.dog.ceo", "blob:"],
+      connectSrc: ["'self'", "https://api.anthropic.com", "https://router.huggingface.co", "https://dog.ceo"],
+    }
+  }
+}));
 app.use(cors({
   origin: process.env.CORS_ORIGIN || 'http://localhost:3001',
   credentials: true,
@@ -1188,6 +1199,13 @@ async function generateProtocolAsync(formData, patientId) {
 
 // ============================================================================
 // API v1 - EXERCISE LIBRARY ENDPOINTS
+// ============================================================================
+
+// ============================================================================
+// V1 API ENDPOINTS — LEGACY
+// These endpoints use protocol-rules.js which returns informal slugs,
+// NOT canonical exercise codes. Retained for backward compatibility.
+// New integrations should use POST /api/generate-protocol.
 // ============================================================================
 
 // GET /api/v1/exercises - Get all exercises with optional filters

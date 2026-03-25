@@ -172,8 +172,8 @@ const PROTOCOL_DEFINITIONS = {
       {
         number: 3,
         name: 'Functional Strengthening',
-        weekRange: 'Weeks 6-12',
-        phaseFraction: [0.50, 1.0],
+        weekRange: 'Weeks 6-9',
+        phaseFraction: [0.50, 0.83],
         goal: 'Improve gait quality. Strengthen core and limb musculature. Challenge balance systems. Increase endurance.',
         exercises: [
           { code: 'SIT_STAND',        sets: '5-10 reps x 2-3 sets',  frequency: '2x/day',     progression: 'Slow tempo, incline surface' },
@@ -196,8 +196,8 @@ const PROTOCOL_DEFINITIONS = {
       {
         number: 4,
         name: 'Maintenance & Prevention',
-        weekRange: 'Weeks 12+',
-        phaseFraction: [1.0, 1.5],  // extends beyond protocol
+        weekRange: 'Weeks 10-12+',
+        phaseFraction: [0.83, 1.0],  // Weeks 10-12 of 12-week protocol
         goal: 'Long-term spinal health. Core strength maintenance. Weight management support. Activity modification education.',
         exercises: [
           // Source-of-truth: canine_rehab_protocols.docx — IVDD Phase 4 (10 exercises)
@@ -277,8 +277,8 @@ const PROTOCOL_DEFINITIONS = {
       {
         number: 3,
         name: 'Functional Optimization',
-        weekRange: 'Weeks 8-16',
-        phaseFraction: [0.50, 1.0],
+        weekRange: 'Weeks 8-12',
+        phaseFraction: [0.50, 0.75],
         goal: 'Maximize joint function within OA limits. Build endurance. Challenge dynamic stability. Optimize body composition.',
         exercises: [
           { code: 'SIT_STAND',        sets: '5-10 reps x 2-3 sets',   frequency: '2x/day',     progression: 'Slow tempo, incline surface' },
@@ -302,8 +302,8 @@ const PROTOCOL_DEFINITIONS = {
       {
         number: 4,
         name: 'Lifelong Maintenance',
-        weekRange: 'Ongoing',
-        phaseFraction: [1.0, 1.5],
+        weekRange: 'Weeks 12-16+',
+        phaseFraction: [0.75, 1.0],
         goal: 'Sustain gains. Prevent deconditioning. Manage flares proactively. Support aging joint health.',
         exercises: [
           { code: 'SIT_STAND',        sets: '5-10 reps x 2-3 sets',   frequency: '2x/day',    progression: 'Slow tempo, incline surface' },
@@ -381,8 +381,8 @@ const PROTOCOL_DEFINITIONS = {
       {
         number: 3,
         name: 'Balance & Independence',
-        weekRange: 'Weeks 10-16',
-        phaseFraction: [0.625, 1.0],
+        weekRange: 'Weeks 10-12',
+        phaseFraction: [0.625, 0.75],
         goal: 'Maximize functional independence. Prevent falls. Improve quality of daily activities (eating, toileting, stairs).',
         exercises: [
           { code: 'SIT_STAND',        sets: '5-10 reps x 2-3 sets',   frequency: '2x/day',     progression: 'Slow tempo, incline surface' },
@@ -405,8 +405,8 @@ const PROTOCOL_DEFINITIONS = {
       {
         number: 4,
         name: 'Lifelong Quality of Life Maintenance',
-        weekRange: 'Ongoing',
-        phaseFraction: [1.0, 1.5],
+        weekRange: 'Weeks 12-16+',
+        phaseFraction: [0.75, 1.0],
         goal: 'Sustain functional capacity as long as possible. Adapt program to declining capacity. Support owner in end-of-life quality decisions.',
         exercises: [
           // Source-of-truth: canine_rehab_protocols.docx — Geriatric Phase 4 (9 exercises)
