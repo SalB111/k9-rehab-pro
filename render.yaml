@@ -17,8 +17,6 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 3000
       - key: CORS_ORIGIN
         value: "https://k9-rehab-pro.onrender.com"
       - key: DB_PATH
