@@ -117,7 +117,7 @@ function LoginView({ onLogin, onRegister }) {
               borderRadius: 8, padding: "10px 14px", marginBottom: 16,
             }}>
               <p style={{ color: C.red, fontSize: 12, margin: 0, display: "flex", alignItems: "center", gap: 6 }}>
-                <FiAlertTriangle size={14} /> Cannot connect to server. Is the backend running?
+                <FiAlertTriangle size={14} /> Cannot connect to the K9 Rehab Pro server. Please check your network connection or contact your system administrator.
               </p>
             </div>
           )}
@@ -299,7 +299,7 @@ function LoginView({ onLogin, onRegister }) {
         <div style={{ textAlign: "center", marginTop: 24, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
           <FiShield size={12} color="rgba(255,255,255,0.25)" />
           <span style={{ color: "rgba(255,255,255,0.25)", fontSize: 10, letterSpacing: 1 }}>
-            SECURED WITH JWT AUTHENTICATION
+            SECURE LOGIN
           </span>
         </div>
       </div>

@@ -209,6 +209,26 @@ async function createTables() {
     )
   `);
 
+  // Clinic profiles
+  await run(`
+    CREATE TABLE IF NOT EXISTS clinics (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      clinic_name TEXT NOT NULL DEFAULT '',
+      contact_email TEXT DEFAULT '',
+      phone TEXT DEFAULT '',
+      address TEXT DEFAULT '',
+      website TEXT DEFAULT '',
+      license_number TEXT DEFAULT '',
+      dea_number TEXT DEFAULT '',
+      clinic_type TEXT DEFAULT 'general_practice',
+      logo_url TEXT DEFAULT '',
+      primary_color TEXT DEFAULT '#0F4C81',
+      secondary_color TEXT DEFAULT '#0EA5E9',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
   // Exercise Library v2 tables (database.js)
   await run(`CREATE TABLE IF NOT EXISTS domains (id TEXT PRIMARY KEY, name TEXT NOT NULL, description TEXT)`);
   await run(`CREATE TABLE IF NOT EXISTS phases (id INTEGER PRIMARY KEY, name TEXT NOT NULL, description TEXT)`);
@@ -738,6 +758,35 @@ async function getAllBeauSessions() {
   );
 }
 
+// ── Clinics ─────────────────────────────────────────────────────────────────
+
+async function getAllClinics() {
+  return all('SELECT * FROM clinics ORDER BY id');
+}
+
+async function createClinic(data) {
+  const result = await run(
+    `INSERT INTO clinics (clinic_name, contact_email, phone, address, website, license_number, dea_number, clinic_type, logo_url, primary_color, secondary_color)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [data.clinic_name || '', data.contact_email || '', data.phone || '', data.address || '',
+     data.website || '', data.license_number || '', data.dea_number || '', data.clinic_type || 'general_practice',
+     data.logo_url || '', data.primary_color || '#0F4C81', data.secondary_color || '#0EA5E9']
+  );
+  return { id: result.lastID, ...data };
+}
+
+async function updateClinic(id, data) {
+  await run(
+    `UPDATE clinics SET clinic_name = ?, contact_email = ?, phone = ?, address = ?, website = ?,
+     license_number = ?, dea_number = ?, clinic_type = ?, logo_url = ?, primary_color = ?, secondary_color = ?,
+     updated_at = datetime('now') WHERE id = ?`,
+    [data.clinic_name || '', data.contact_email || '', data.phone || '', data.address || '',
+     data.website || '', data.license_number || '', data.dea_number || '', data.clinic_type || 'general_practice',
+     data.logo_url || '', data.primary_color || '#0F4C81', data.secondary_color || '#0EA5E9', id]
+  );
+  return { id, ...data };
+}
+
 // ── Close ───────────────────────────────────────────────────────────────────
 
 async function close() {
@@ -798,6 +847,11 @@ module.exports = {
   getBeauSessionsByUser,
   getBeauSessionsByPatient,
   getAllBeauSessions,
+
+  // Clinics
+  getAllClinics,
+  createClinic,
+  updateClinic,
 
   // Exercise Library v2
   exerciseLibrary,

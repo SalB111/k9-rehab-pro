@@ -245,7 +245,7 @@ const SOFT_TISSUE_SPORT_EXERCISES = [
   {
     code: 'CORE_CRAWL',
     name: 'Canine Creeping / Crawl Pattern',
-    category: 'Neurological Rehab',
+    category: 'Neurological Rehabilitation',
     difficulty_level: 'Moderate',
     description: 'Controlled forward crawling under a low obstacle drives diagonal limb coordination, deep core activation, and proprioceptive integration. Particularly valuable for IVDD, DM, and FCE patients relearning normal limb sequencing. Activates contralateral limb patterning lost in neurological patients.',
     equipment: ['Low tunnel or suspended bar at shoulder height', 'Treat lure', 'Non-slip mat'],

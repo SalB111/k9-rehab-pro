@@ -548,11 +548,11 @@ function ExercisesView({ setView, setGenKey, setGenInitialStep }) {
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
           <div style={{ position: "relative", flex: 1, minWidth: 200 }}>
             <FiSearch size={14} style={{ position: "absolute", left: 12, top: 11, color: C.textLight }} />
-            <input style={{ ...S.input, paddingLeft: 34, height: 38 }} placeholder="Search exercises by name or description…"
+            <input style={{ ...S.input, paddingLeft: 34, height: 38 }} placeholder="Search by name, description, or category…"
               value={search} onChange={e => setSearch(e.target.value)} />
           </div>
           <span style={{ fontSize: 12, color: C.textLight, whiteSpace: "nowrap", fontWeight: 600 }}>
-            {filtered.length} / {exercises.length}
+            {filtered.length} of {exercises.length} exercises
           </span>
           {setView && (
             <button onClick={goToGenerator} style={{

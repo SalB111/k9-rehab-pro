@@ -7,17 +7,22 @@ services:
     name: k9-rehab-pro
     runtime: node
     region: oregon
-    rootDir: backend
-    buildCommand: npm install && cd ../k9-rehab-frontend && npm install && npm run build && cp -r build ../backend/public
-    startCommand: node server.js
+    buildCommand: cd backend && npm install && cd ../k9-rehab-frontend && npm install && npm run build && cp -r build ../backend/public
+    startCommand: cd backend && node server.js
     healthCheckPath: /api/health
+    disk:
+      name: k9-data
+      mountPath: /var/data/k9-rehab-pro
+      sizeGB: 1
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
         value: 3000
       - key: CORS_ORIGIN
-        value: "*"
+        value: "https://k9-rehab-pro.onrender.com"
+      - key: DB_PATH
+        value: /var/data/k9-rehab-pro/database.db
       - key: JWT_SECRET
         generateValue: true
       - key: JWT_EXPIRES_IN

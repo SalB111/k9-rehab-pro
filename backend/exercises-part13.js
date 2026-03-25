@@ -291,7 +291,7 @@ const FELINE_REHAB_EXERCISES = [
   {
     code: 'FELINE_CAVALETTI',
     name: 'Feline Cavaletti Rails (Cat-Scale)',
-    category: 'Gait & Coordination',
+    category: 'Balance & Proprioception',
     difficulty_level: 'Moderate',
     description: 'Cat-scaled cavaletti rails positioned to promote deliberate foot placement, increase joint flexion at walk, and re-educate proprioceptive gait patterns. Cat scale: rails 2-4 cm height (wooden dowels, rulers, rolled towels), spaced 10-15 cm apart (feline stride length). Lure with treat trail or wand through rails. Functional equivalent of canine cavaletti but scaled and wand-motivated. Improves hip/stifle/hock flexion in OA, re-educates foot placement in neuro patients.',
     equipment: ['4-6 wooden dowels (1 cm diameter)', 'OR 4-6 rulers', 'OR rolled towels', 'Non-slip mat to lay rails on', 'Treat trail (small pieces)', 'Feather wand optional'],
@@ -333,7 +333,7 @@ const FELINE_REHAB_EXERCISES = [
   {
     code: 'FELINE_STAIR_WAND',
     name: 'Feline Stair & Step Reintegration (Wand-Guided)',
-    category: 'Functional & Return to Activity',
+    category: 'Functional Training',
     difficulty_level: 'Moderate',
     description: 'Progressive reintroduction to stair climbing using household stairs or platform steps. Sharp (2012) identifies stair use as a primary functional exercise for feline patients — cats are naturally climbing animals and will engage with stairs when wand-motivated. Stair ascent: primarily hip/stifle extensor strengthening (hindlimb push-off). Stair descent: eccentric quadriceps and biceps femoris loading. Also addresses environmental reintegration — a cat that cannot use stairs is functionally impaired in most home environments.',
     equipment: ['Household stairs (2-4 steps minimum)', 'OR single step (books stacked, sturdy box 10-15 cm)', 'Feather wand', 'Treats at top of step'],
@@ -461,7 +461,7 @@ const FELINE_REHAB_EXERCISES = [
   {
     code: 'FELINE_PBMT',
     name: 'Feline Photobiomodulation Therapy (PBMT) — Feline Dosing Protocol',
-    category: 'Physical Modalities',
+    category: 'Therapeutic Modalities',
     difficulty_level: 'Easy',
     description: 'Laser therapy (PBMT) for feline patients. One of the BEST initial therapies for feline pain — non-invasive, generally well-tolerated, and provides analgesia that improves compliance with subsequent manual and exercise interventions (Goldberg 2025). CRITICAL: Feline dosing is LOWER than canine due to less dense soft tissue, thinner skin, smaller treatment areas. Use manufacturer feline protocols or reduce canine dose by 25-30%. Conditions: OA, DLS, fractures, chronic wounds, stomatitis, post-op incision. NEVER perform over thorax in HCM cats without cardiology clearance.',
     equipment: ['Class III or Class IV therapeutic laser (feline protocol available)', 'Protective eyewear (handler and patient)', 'Feline-safe restraint — minimal restraint preferred'],
@@ -508,7 +508,7 @@ const FELINE_REHAB_EXERCISES = [
   {
     code: 'FELINE_TENS',
     name: 'Feline TENS (Transcutaneous Electrical Nerve Stimulation)',
-    category: 'Physical Modalities',
+    category: 'Therapeutic Modalities',
     difficulty_level: 'Moderate',
     description: 'TENS for feline pain management. Drum et al. (2015) and Sharp (2012) both confirm that cats are generally tolerant of electrophysical modalities including TENS and NMES. TENS provides analgesia through gate control mechanism (high frequency) and endorphin release (low frequency). Particularly valuable for cats where NSAIDs are limited or contraindicated (renal disease common comorbidity). Improve analgesia without pharmacological burden — enables better exercise compliance. Small electrode pads required for feline body size.',
     equipment: ['TENS unit with feline-appropriate small pads (2x2 cm)', 'Conductive gel', 'Feline-safe adhesive or elastic bandage to hold leads'],
@@ -594,7 +594,7 @@ const FELINE_REHAB_EXERCISES = [
   {
     code: 'FELINE_ENVIRON_MOD',
     name: 'Feline Environmental Modification Prescription',
-    category: 'Home Program',
+    category: 'Functional Training',
     difficulty_level: 'Easy',
     description: 'Unlike dogs, cats cannot be walked on a leash for home exercise. The feline home exercise program is ENVIRONMENTAL MODIFICATION — changing the home environment to accommodate the cat\'s physical limitations AND to progressively challenge recovery. OA behavioral signs include: reduced jumping (90% of cats >12yr have radiographic OA — Hardie 2002), avoidance of high surfaces, difficulty using litter box, reduced stair use. Environmental modification directly addresses these FMPI outcome domains: jumping up, jumping down, stair use, litter box access.',
     equipment: ['Cat ramp or steps to sofa/bed (commercial or DIY)', 'Low-entry litter box (cut down one side of box to 3-5 cm for OA cats)', 'Raised food/water bowl (reduces cervical OA pain during eating)', 'Heated bed or orthopedic cat bed', 'Non-slip mats throughout home (critical for OA cats on tile/hardwood)', 'Window perches with ramp access'],
@@ -637,7 +637,7 @@ const FELINE_REHAB_EXERCISES = [
   {
     code: 'FELINE_THERMAL',
     name: 'Feline Thermal Therapy (Warm & Cold)',
-    category: 'Physical Modalities',
+    category: 'Therapeutic Modalities',
     difficulty_level: 'Easy',
     description: 'Thermotherapy and cryotherapy applied to feline patients. Key differences from canine: (1) Cats seek warmth naturally — heated pads, warm compresses, and radiant heat are typically well-accepted and can significantly reduce OA pain and muscle tension; (2) Cryotherapy (ice/cold packs) is generally less well-tolerated — cats dislike cold on limbs. Use cold only post-acute injury/surgery; transition to heat once acute inflammation resolves (after 72 hours). Warmth before exercise improves tissue extensibility and increases compliance. Sharp (2012) recommends warm compress or heated pad as pre-treatment for all feline manual therapy sessions.',
     equipment: ['Heated pad (set to LOW — feline skin burns more easily than canine)', 'Warm damp towel (test on inner wrist: comfortable to human touch = safe for cat)', 'Ice pack wrapped in 2 towel layers (never direct cold contact on feline skin)', 'Thermometer to verify pad temperature <40°C'],

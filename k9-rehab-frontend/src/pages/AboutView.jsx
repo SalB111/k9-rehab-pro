@@ -51,7 +51,7 @@ function AboutView() {
             <h3 style={{ margin: 0, fontSize: 14, fontWeight: 900, color: C.text }}>Protocol Engine</h3>
           </div>
           <p style={{ fontSize: 12, color: C.textMid, lineHeight: 1.7, margin: 0 }}>
-            4 ACVSMR-aligned protocols (TPLO, IVDD, OA, Geriatric) with 4 gated phases each. 223 exercises classified by intervention type, phase appropriateness, and evidence grade. Automated contraindication enforcement prevents unsafe exercise selection.
+            4 ACVSMR-aligned protocols (TPLO, IVDD, OA, Geriatric) with 4 gated phases each. 260 exercises classified by intervention type, phase appropriateness, and evidence grade. Automated contraindication enforcement prevents unsafe exercise selection.
           </p>
         </div>
 
@@ -61,7 +61,7 @@ function AboutView() {
             <h3 style={{ margin: 0, fontSize: 14, fontWeight: 900, color: C.text }}>Data Privacy</h3>
           </div>
           <p style={{ fontSize: 12, color: C.textMid, lineHeight: 1.7, margin: 0 }}>
-            All patient and client data remains local to your installation. No data is transmitted to external servers, sold to third parties, or used for AI training. The platform is designed with HIPAA-aligned principles and supports state veterinary medical board recordkeeping requirements.
+            Patient records are stored within your deployment. B.E.A.U. clinical queries are processed via the Anthropic API — no patient-identifying data is included in AI requests. No data is sold to third parties or used for advertising. The platform is designed with HIPAA-aligned principles and supports state veterinary medical board recordkeeping requirements.
           </p>
         </div>
       </div>

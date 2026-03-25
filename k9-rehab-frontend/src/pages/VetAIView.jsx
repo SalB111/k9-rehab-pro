@@ -134,7 +134,8 @@ function VetAIView({ authToken }) {
       saveSession(finalMsgs);
     } catch (err) {
       setStream("");
-      setMsgs(p => [...p, { role: "assistant", content: `**Connection Error**\n\n${err.message}\n\nMake sure the backend is running and ANTHROPIC_API_KEY is set in \`backend/.env\`.` }]);
+      setMsgs(p => [...p, { role: "assistant", content: `**B.E.A.U. is temporarily unavailable.**\n\nPlease check that the server is running. If the issue persists, contact your system administrator.` }]);
+      console.error('VetAI connection error:', err);
     }
     setLoading(false);
   };
@@ -297,7 +298,7 @@ function VetAIView({ authToken }) {
           <div style={{ background: C.amberBg, border: `1px solid ${C.amber}`, borderRadius: 10, padding: "12px 16px", marginBottom: 16, display: "flex", alignItems: "center", gap: 10 }}>
             <FiAlertTriangle size={16} style={{ color: C.amber, flexShrink: 0 }} />
             <div style={{ fontSize: 12, color: C.text }}>
-              <strong>API Key Required:</strong> Add your Anthropic API key to <code style={{ background: C.bg, padding: "1px 4px", borderRadius: 3 }}>backend/.env</code> as <code style={{ background: C.bg, padding: "1px 4px", borderRadius: 3 }}>ANTHROPIC_API_KEY=your-key-here</code> then restart the backend.
+              <strong>B.E.A.U. is not configured.</strong> Contact your system administrator to complete the AI setup.
             </div>
           </div>
         )}
@@ -406,7 +407,7 @@ function VetAIView({ authToken }) {
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, padding: "0 2px" }}>
           <span style={{ fontSize: 10, color: C.textLight }}>K9 Rehab Pro™ CDSS • Evidence-based rehabilitation support</span>
-          <span style={{ fontSize: 10, color: C.textLight }}>Powered by Claude • Millis & Levine • ACVSMR</span>
+          <span style={{ fontSize: 10, color: C.textLight }}>B.E.A.U.™ • Millis & Levine • ACVSMR</span>
         </div>
       </div>
 

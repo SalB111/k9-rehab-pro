@@ -2,7 +2,7 @@
 // CANINE REHABILITATION PROTOCOL SYSTEM
 // Full Hybrid Exercise Library Edition — Board-Certified Specialty Standard
 // ACVSMR-Aligned Clinical Protocols
-// 4 Conditions | 16 Phases | 52 Protocol Exercises | 223 Exercise Library | Full Modality Integration
+// 4 Conditions | 16 Phases | 52 Protocol Exercises | 260 Exercise Library | Full Modality Integration
 //
 // Source: canine_rehab_protocols.docx
 // Evidence-Based | Client-Safe | Phase-Specific
@@ -584,7 +584,9 @@ function validateIntake(formData) {
     warnings.push('RED FLAG: Absent neurological function detected. Verify deep pain perception and motor grade before initiating weight-bearing exercises.');
   }
   if (formData.neuroDeepPain && formData.neuroDeepPain.toLowerCase().includes('absent')) {
-    errors.push('Deep pain perception absent. Protocol generation blocked. Immediate veterinary neurological evaluation required.');
+    warnings.push('CRITICAL: Deep pain perception absent (Grade V). Protocol restricted to passive supportive care only. Immediate veterinary neurological evaluation required. Reassess deep pain perception every 48-72 hours.');
+    // Flag for Grade V support protocol instead of blocking entirely
+    formData._gradeVSupport = true;
   }
 
   // RED-FLAG: Post-op complication detection
@@ -594,7 +596,7 @@ function validateIntake(formData) {
   }
 
   // RED-FLAG: Post-op timing
-  if (formData.surgeryDate && formData.treatmentApproach === 'surgical') {
+  if (formData.surgeryDate && (formData.treatmentApproach || '').toLowerCase() === 'surgical') {
     const daysSinceOp = Math.floor((Date.now() - new Date(formData.surgeryDate).getTime()) / 86400000);
     if (daysSinceOp < 0) {
       warnings.push('Surgery date is in the future. Protocol will generate for pre-surgical planning.');
@@ -609,7 +611,7 @@ function validateIntake(formData) {
 
   // RED-FLAG: Complication keywords in medical history
   const historyText = (formData.medicalHistory || '').toLowerCase() + ' ' + (formData.complicationsNoted || '').toLowerCase();
-  const flagKeywords = ['seroma', 'implant failure', 'implant migration', 'non-union', 'osteomyelitis', 'septic'];
+  const flagKeywords = ['seroma', 'dehiscence', 'wound open', 'wound breakdown', 'implant failure', 'implant migration', 'non-union', 'osteomyelitis', 'septic'];
   for (const kw of flagKeywords) {
     if (historyText.includes(kw)) {
       warnings.push(`RED FLAG: "${kw}" noted in history. Verify complication is resolved before advancing weight-bearing phases.`);
@@ -629,8 +631,8 @@ const CONTRAINDICATION_MAP = {
   // Patient condition keywords → exercise codes to EXCLUDE
   // Codes aligned to PROTOCOL_DEFINITIONS exercise codes
   // Source-of-truth: canine_rehab_protocols.docx contraindication sections
-  'cardiac':       ['UNDERWATER_TREAD', 'POOL_SWIM', 'WATER_WALKING', 'WATER_RETRIEVE', 'SLOW_TROT', 'STAIR_CLIMB', 'HILL_CLIMB'],
-  'heart':         ['UNDERWATER_TREAD', 'POOL_SWIM', 'WATER_WALKING', 'WATER_RETRIEVE', 'SLOW_TROT', 'STAIR_CLIMB', 'HILL_CLIMB'],
+  'cardiac':       ['UNDERWATER_TREAD', 'POOL_SWIM', 'WATER_WALKING', 'WATER_RETRIEVE', 'SLOW_TROT', 'JOG_LEASH', 'FETCH_CONTROLLED', 'STAIR_CLIMB', 'HILL_CLIMB'],
+  'heart':         ['UNDERWATER_TREAD', 'POOL_SWIM', 'WATER_WALKING', 'WATER_RETRIEVE', 'SLOW_TROT', 'JOG_LEASH', 'FETCH_CONTROLLED', 'STAIR_CLIMB', 'HILL_CLIMB'],
   'respiratory':   ['UNDERWATER_TREAD', 'POOL_SWIM', 'WATER_WALKING', 'WATER_RETRIEVE'],
   'seizure':       ['UNDERWATER_TREAD', 'POOL_SWIM', 'WATER_WALKING', 'WATER_RETRIEVE'],
   'epilepsy':      ['UNDERWATER_TREAD', 'POOL_SWIM', 'WATER_WALKING', 'WATER_RETRIEVE'],
@@ -653,6 +655,9 @@ const CONTRAINDICATION_MAP = {
 // ============================================================================
 const WEIGHT_BEARING_EXCLUSIONS = {
   'NWB': [  // Non-weight-bearing — passive exercises + modalities ONLY
+    // NOTE: UNDERWATER_TREAD intentionally NOT excluded — UWTM at hip depth reduces
+    // weight-bearing by 62% and is the primary intervention for NWB patients
+    // (Levine et al. 2010, evidence key: UWT_STUDY)
     'SIT_STAND', 'DOWN_STAND', 'SLOW_WALK', 'FIGURE_8', 'BACKING_UP',
     'SIDE_STEP', 'HILL_CLIMB', 'BACKWARD_HILL', 'STAIR_CLIMB', 'STAIR_DESCEND',
     'STEP_OVER', 'LADDER_WALK', 'CAVALETTI_RAILS', 'CAVALETTI_VAR', 'CAVALETTI_ELEV', 'CAVALETTI_WEAVE',
@@ -662,7 +667,7 @@ const WEIGHT_BEARING_EXCLUSIONS = {
     'PERTURBATION', 'PERTURBATION_ADV', 'TRAMPOLINE_STAND',
     'THREE_LEG_STAND', 'WEIGHT_SHIFT', 'WEIGHT_SHIFT_CC',
     'SLOW_TROT', 'JOG_LEASH', 'FETCH_CONTROLLED', 'DIAGONAL_WALK', 'LAND_TREADMILL',
-    'UNEVEN_TERRAIN', 'UNDERWATER_TREAD', 'POOL_SWIM', 'WATER_WALKING',
+    'UNEVEN_TERRAIN', 'POOL_SWIM', 'WATER_WALKING',
     'WATER_RETRIEVE'
   ],
   'TTWB': [  // Toe-touch weight-bearing — no dynamic/high-load exercises
@@ -673,8 +678,9 @@ const WEIGHT_BEARING_EXCLUSIONS = {
     'BOSU_STAND', 'BOSU_FRONT', 'BOSU_HIND', 'PHYSIO_BALL',
     'PERTURBATION', 'PERTURBATION_ADV', 'TRAMPOLINE_STAND',
     'THREE_LEG_STAND', 'POLE_WEAVE', 'PLATFORM_TRANS', 'POOL_SWIM',
-    'WATER_RETRIEVE', 'UNEVEN_TERRAIN', 'DIAGONAL_WALK', 'LAND_TREADMILL',
-    'LADDER_WALK'
+    'WATER_RETRIEVE', 'UNEVEN_TERRAIN', 'LAND_TREADMILL'
+    // NOTE: LADDER_WALK and DIAGONAL_WALK intentionally NOT excluded for TTWB —
+    // both are regularly prescribed for TTWB patients in post-TPLO and IVDD rehab
   ],
   'PWB': [  // Partial weight-bearing — no high-impact/plyometric exercises
     'SLOW_TROT', 'JOG_LEASH', 'FETCH_CONTROLLED', 'STAIR_CLIMB', 'STAIR_DESCEND',
@@ -890,7 +896,7 @@ function selectExercisesForWeek(weekNum, totalWeeks, allExercises, formData) {
   // - High pain (>=8): Phase 1 only (passive + pain management)
   // - IVDD Grade IV/V: Phase 1 only (neurological support until improvement)
   // - MMT Grade 0-1: Phase 1 only (passive ROM, NMES, assisted standing)
-  const phaseLocked = formData._highPainOverride || formData._ivddSevere || formData._severeWeakness;
+  const phaseLocked = formData._highPainOverride || formData._ivddSevere || formData._severeWeakness || formData._gradeVSupport;
   let phaseIndex = phaseLocked ? 0 : getPhaseForWeek(weekNum, totalWeeks, protocolType);
   const phase = protocol.phases[phaseIndex];
   if (!phase) return [];
@@ -962,6 +968,22 @@ function selectExercisesForWeek(weekNum, totalWeeks, allExercises, formData) {
       // EVIDENCE CITATION — attach reference per exercise
       evidence_citation: EVIDENCE_MAP[rx.code] || 'Millis & Levine, Canine Rehabilitation and Physical Therapy',
     });
+  }
+
+  // ── GRADE V SUPPORT PROTOCOL FILTER ──
+  // When deep pain is absent (Grade V IVDD), restrict to passive supportive care only.
+  // These patients need: passive ROM, gentle massage, modalities, assisted standing.
+  // Active exercises are contraindicated until deep pain perception returns.
+  if (formData._gradeVSupport) {
+    const GRADE_V_ALLOWED = new Set([
+      'PROM_STIFLE', 'PROM_STIFLE_SPEC', 'PROM_HIP', 'PROM_HOCK', 'PROM_SHOULDER', 'PROM_ELBOW', 'PROM_CARPUS',
+      'MASSAGE_THERA', 'MASSAGE_EFFLEURAGE', 'STRETCH_HAMSTRING', 'STRETCH_QUAD', 'STRETCH_ILIO',
+      'COLD_THERAPY', 'HEAT_THERAPY', 'TENS_THERAPY', 'LASER_IV', 'NMES_QUAD', 'PEMF_THERAPY',
+      'ASSISTED_STANDING'
+    ]);
+    const filtered = selectedExercises.filter(ex => GRADE_V_ALLOWED.has(ex.code));
+    selectedExercises.length = 0;
+    filtered.forEach(ex => selectedExercises.push(ex));
   }
 
   // ── PHASE FALLBACK ──

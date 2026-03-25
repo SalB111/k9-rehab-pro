@@ -5,7 +5,7 @@
 // is strictly prohibited.
 //
 // Product:   K9 Rehab Pro™
-// Engine:    B.E.A.U. — Biomedical Evidence-based Analytical Unit
+// Engine:    B.E.A.U. — Biomedical Evidence-Based Assessment Utility
 // Author:    Salvatore Bonanno
 // Role:      Canine Rehabilitation Nurse (CCRN) | Software Developer | Founder
 // ============================================================================
@@ -26,6 +26,7 @@ const db = require('./db-provider');
 const { selectExercisesForWeek, PROTOCOL_DEFINITIONS, validateIntake, getExcludedCodes } = require('./protocol-generator'); // ✅ ACVSMR-aligned 4-protocol system
 const { ALL_EXERCISES, getExerciseByCode, searchExercises } = require('./all-exercises');
 const { CORE_REFERENCES, EXERCISE_EVIDENCE_MAP } = require('./evidence-references');
+const ANTHROPIC_MODEL = process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-20250514';
 const { INTERVENTION_TYPES, REHAB_PHASES, PRIMARY_INDICATIONS } = require('./exercise-taxonomy');
 const {
   VIDEO_LIBRARY,
@@ -94,7 +95,7 @@ const PORT = process.env.PORT || 3000;
 // ── Security Middleware ──
 app.use(helmet());
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || true,
+  origin: process.env.CORS_ORIGIN || 'http://localhost:3001',
   credentials: true,
 }));
 app.use(express.json({ limit: '1mb' })); // Increased for VetAI chat history
@@ -299,7 +300,7 @@ app.get('/api/health', async (req, res) => {
       patientCount,
       protocolCount,
       protocols: ['TPLO (16wk)', 'IVDD (12wk)', 'OA (16wk)', 'Geriatric (16wk)'],
-      evidenceCoverage: '50/50 exercise codes'
+      evidenceCoverage: '52/52 protocol exercise codes'
     });
   } catch (err) {
     res.json({
@@ -312,7 +313,7 @@ app.get('/api/health', async (req, res) => {
       patientCount: 0,
       protocolCount: 0,
       protocols: ['TPLO (16wk)', 'IVDD (12wk)', 'OA (16wk)', 'Geriatric (16wk)'],
-      evidenceCoverage: '50/50 exercise codes'
+      evidenceCoverage: '52/52 protocol exercise codes'
     });
   }
 });
@@ -657,8 +658,13 @@ app.post('/api/patients/delete-batch', requireRole('admin'), async (req, res) =>
   if (!ids || !Array.isArray(ids) || ids.length === 0) {
     return res.status(400).json({ error: 'No patient IDs provided' });
   }
+  // Validate all IDs are positive integers
+  const validIds = ids.map(id => parseInt(id, 10)).filter(id => Number.isInteger(id) && id > 0);
+  if (validIds.length !== ids.length) {
+    return res.status(400).json({ error: 'All IDs must be positive integers' });
+  }
   try {
-    const result = await db.deletePatientsById(ids);
+    const result = await db.deletePatientsById(validIds);
     res.json({ success: true, message: `${result.changes} patient(s) deleted`, data: { deleted: result.changes } });
   } catch (err) {
     res.status(500).json({ error: safeError(err) });
@@ -1040,9 +1046,17 @@ app.get('/api/storyboard-images/:exerciseCode/:frameNumber', async (req, res) =>
     const frameIdx = parseInt(frameNumber, 10) - 1; // 1-indexed from client
 
     // Check cache first
-    const cacheFile = path.join(STORYBOARD_IMAGE_DIR, `${exerciseCode}_frame${frameNumber}.jpg`);
+    const cacheFile = path.join(STORYBOARD_IMAGE_DIR, `${exerciseCode}_frame${frameNumber}.png`);
+    const legacyCacheFile = path.join(STORYBOARD_IMAGE_DIR, `${exerciseCode}_frame${frameNumber}.jpg`);
+    // Check PNG cache first, then legacy .jpg files
     if (fs.existsSync(cacheFile)) {
+      res.setHeader('Content-Type', 'image/png');
       return res.sendFile(cacheFile);
+    }
+    if (fs.existsSync(legacyCacheFile)) {
+      // Legacy files are actually PNG data saved with .jpg extension
+      res.setHeader('Content-Type', 'image/png');
+      return res.sendFile(legacyCacheFile);
     }
 
     // Need HF token
@@ -1087,7 +1101,7 @@ app.get('/api/storyboard-images/:exerciseCode/:frameNumber', async (req, res) =>
     fs.writeFileSync(cacheFile, imageBuffer);
     console.log(`✅ Cached ${cacheFile} (${(imageBuffer.length / 1024).toFixed(1)} KB)`);
 
-    res.setHeader('Content-Type', 'image/jpeg');
+    res.setHeader('Content-Type', 'image/png');
     res.send(imageBuffer);
   } catch (error) {
     console.error('❌ Image generation error:', error.message);
@@ -1294,6 +1308,40 @@ app.get('/api/v1/programs/conditions/:condition/phases', (req, res) => {
 
 
 // ============================================================================
+// CLINIC PROFILE ENDPOINTS
+// ============================================================================
+
+// GET /api/clinics — list all clinic profiles
+app.get('/api/clinics', async (req, res) => {
+  try {
+    const clinics = await db.getAllClinics();
+    res.json(clinics);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to load clinics' });
+  }
+});
+
+// POST /api/clinics — create a clinic profile
+app.post('/api/clinics', async (req, res) => {
+  try {
+    const clinic = await db.createClinic(req.body);
+    res.status(201).json(clinic);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to create clinic' });
+  }
+});
+
+// PUT /api/clinics/:id — update a clinic profile
+app.put('/api/clinics/:id', async (req, res) => {
+  try {
+    const clinic = await db.updateClinic(req.params.id, req.body);
+    res.json(clinic);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update clinic' });
+  }
+});
+
+// ============================================================================
 // AUDIT LOG ENDPOINTS — Must-Have #8
 // ============================================================================
 
@@ -1334,6 +1382,31 @@ app.get('/api/audit-log/export', async (req, res) => {
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', `attachment; filename=k9_rehab_audit_log_${new Date().toISOString().slice(0,10)}.csv`);
     res.send(csvRows.join('\n'));
+  } catch (err) {
+    res.status(500).json({ error: safeError(err) });
+  }
+});
+
+// POST /api/safety-report — log adverse event / safety concern to audit trail
+app.post('/api/safety-report', requireAuth, async (req, res) => {
+  const { type, severity, exercise, description, patient_id, patient_name, protocol_type } = req.body;
+  if (!type || !description) {
+    return res.status(400).json({ error: 'type and description are required' });
+  }
+  try {
+    const detail = JSON.stringify({ type, severity, exercise, description, patient_name, protocol_type });
+    await db.insertAuditLog({
+      action: 'SAFETY_REPORT',
+      resource_type: 'safety_concern',
+      resource_id: patient_id ? String(patient_id) : null,
+      user_label: req.user?.username || 'unknown',
+      ip_address: req.ip,
+      request_method: 'POST',
+      request_path: '/api/safety-report',
+      status_code: 201,
+      detail
+    });
+    res.status(201).json({ success: true, message: 'Safety concern logged to audit trail' });
   } catch (err) {
     res.status(500).json({ error: safeError(err) });
   }
@@ -1460,6 +1533,14 @@ async function generateClinicalPatterns() {
       if (!Array.isArray(messages)) continue;
 
       const fullText = messages.map(m => m.content || '').join(' ');
+
+      // Reset regex lastIndex for each session (stateful /g regexes retain position)
+      phaseRegex.lastIndex = 0;
+      diagnosisRegex.lastIndex = 0;
+      exerciseCodeRegex.lastIndex = 0;
+      temperamentRegex.lastIndex = 0;
+      redFlagRegex.lastIndex = 0;
+      equipmentRegex.lastIndex = 0;
 
       // Phase mentions
       let match;
@@ -1598,13 +1679,13 @@ app.get('/api/beau/intelligence', async (req, res) => {
 // Block 3: Rehabilitation Phase Definitions
 // Block 4: Mandatory Disclaimer
 
-const BEAUS_BRAIN_AI_PROMPT = `You are B.E.A.U. — the Biomedical Evidence-based Analytical Unit powering K9 Rehab Pro™.
+const BEAUS_BRAIN_AI_PROMPT = `You are B.E.A.U. — the Biomedical Evidence-Based Assessment Utility powering K9 Rehab Pro™.
 
 You were built by Salvatore Bonanno, CCRN — a Certified Canine Rehabilitation Nurse who spent 8 years running the canine rehabilitation department at BluePearl Veterinary Partners in Fort Lauderdale, Florida. He built the department from scratch inside Lauderdale Veterinary Specialists in 2016, continued through the Mars Petcare acquisition, and ran it until 2024. Every protocol, every exercise, every phase definition in this system came from real clinical work with real patients. You are the infrastructure he wished existed.
 
 === BLOCK 1: SYSTEM IDENTITY & CLINICAL FRAMEWORK ===
 
-You are B.E.A.U. — Biomedical Evidence-based Analytical Unit.
+You are B.E.A.U. — Biomedical Evidence-Based Assessment Utility.
 
 You operate at ACVSMR-level clinical knowledge standards, grounded in:
 - Millis & Levine: Canine Rehabilitation and Physical Therapy (primary reference)
@@ -1659,7 +1740,7 @@ Clinical Principles You Must Apply:
 - Biomechanical compensation awareness
 - Conservative progression bias
 
-When generating exercise protocols, always select the MAXIMUM clinically appropriate number of exercises for the patient's phase. For Phase IV and Phase V patients, always include functional movement patterns including: figure-8 walking, backward walking, lateral stepping, circle walking, sit-to-stand, cavaletti rails, ramp walking, balance disc, platform step-ups, and controlled leash walking. Never generate fewer than 8 exercises for a maintenance or return-to-function case. Cross-reference the patient's available equipment and environment and use every piece of equipment mentioned. If the patient has a nervous temperament, sequence exercises from least to most challenging.
+When generating exercise protocols, select a clinically appropriate number of exercises for the patient's phase, condition severity, and tolerance. For Phase IV (Return to Function / Lifelong Maintenance) patients, include functional movement patterns as appropriate: figure-8 walking, backward walking, lateral stepping, circle walking, sit-to-stand, cavaletti rails, ramp walking, balance disc, platform step-ups, and controlled leash walking. For frail, cardiac, or severe-OA patients, reduce the exercise count to what is safely tolerable — as few as 3-4 exercises may be appropriate. Cross-reference the patient's available equipment and environment. If the patient has a nervous temperament, sequence exercises from least to most challenging.
 
 If required information is missing, request clarification BEFORE generating a plan.
 
@@ -1693,16 +1774,13 @@ Phase II – Controlled Loading:
 Phase III – Strength Development:
 6–16 weeks. Progressive strengthening, proprioception, balance work, cavaletti, inclines, sit-to-stands.
 
-Phase IV – Return to Function:
-16+ weeks. Sport-specific or daily-function training, advanced balance, agility foundations, higher intensity.
-
-Phase V – Lifelong Maintenance:
-For chronic, geriatric, or long-term cases. MUST include the full functional movement toolkit: figure-8 patterns, backward walking, lateral stepping/side walking, circle walking (both directions), sit-to-stands, cavaletti, ramp work, balance disc, platform step-ups, controlled leash walking at varied speeds. Assign Phase V when the patient is 6+ months post-op, chronic condition, or geriatric.
+Phase IV – Return to Function / Lifelong Maintenance:
+16+ weeks or chronic/geriatric cases. For surgical patients: sport-specific or daily-function training, advanced balance, agility foundations, higher intensity. For chronic, geriatric, or long-term cases: functional movement maintenance including figure-8 patterns, backward walking, lateral stepping, circle walking, sit-to-stands, cavaletti, ramp work, balance exercises, and controlled leash walking — scaled to patient tolerance and health status.
 
 === BLOCK 4: MANDATORY DISCLAIMER ===
 
 End every full rehabilitation protocol with:
-"⚕️ B.E.A.U. Clinical Notice: This rehabilitation plan is generated by K9 Rehab Pro™ as a Clinical Decision Support System (CDSS). All protocols must be reviewed and approved by a licensed veterinarian before application to any patient. B.E.A.U. does not establish a VCPR, provide medical diagnosis, or replace licensed veterinary judgment. — Powered by K9 Rehab Pro™"
+"B.E.A.U. Clinical Notice: This rehabilitation plan is generated by K9 Rehab Pro™ as a Clinical Decision Support System (CDSS). All protocols must be reviewed and approved by a licensed veterinarian before application to any patient. B.E.A.U. does not establish a VCPR, provide medical diagnosis, or replace licensed veterinary judgment. — Powered by K9 Rehab Pro™"
 
 === B.E.A.U. EXERCISE DATABASE ===
 
@@ -1932,7 +2010,7 @@ Phase III → Phase IV (cleared when ALL met):
 ✓ Confident gait on uneven terrain
 ✓ Able to trot without visible lameness for 2+ minutes
 
-Phase IV → Phase V / Maintenance (cleared when ALL met):
+Phase IV → Lifelong Maintenance (cleared when ALL met):
 ✓ Functionally pain-free for 4+ weeks
 ✓ Activity level appropriate for age/breed
 ✓ Owner educated on home program and monitoring
@@ -2278,6 +2356,24 @@ app.post('/api/vet-ai/chat', async (req, res) => {
     return res.status(400).json({ error: 'messages array is required' });
   }
 
+  // Audit log — VetAI chat sessions (SSE streaming bypasses res.json middleware)
+  const lastUserMsg = [...messages].reverse().find(m => m.role === 'user');
+  db.insertAuditLog({
+    action: 'VETAI_CHAT',
+    resource_type: 'vetai_session',
+    resource_id: patient?.id ? String(patient.id) : null,
+    user_label: req.user?.username || 'anonymous',
+    ip_address: req.ip,
+    request_method: 'POST',
+    request_path: '/api/vet-ai/chat',
+    status_code: 200,
+    detail: JSON.stringify({
+      message_count: messages.length,
+      patient_name: patient?.name || null,
+      query_preview: lastUserMsg ? lastUserMsg.content.substring(0, 100) : null
+    })
+  }).catch(err => console.error('VetAI audit log error:', err));
+
   // Build system prompt with source-of-truth document injected on every request
   let systemPrompt = BEAUS_BRAIN_AI_PROMPT;
 
@@ -2360,7 +2456,7 @@ ${SOURCE_OF_TRUTH_TEXT}
     res.setHeader('X-Accel-Buffering', 'no');
 
     const stream = await client.messages.stream({
-      model: 'claude-sonnet-4-20250514',
+      model: ANTHROPIC_MODEL,
       max_tokens: 4096,
       system: systemPrompt,
       messages: messages.map(m => ({ role: m.role, content: m.content })),
@@ -2392,7 +2488,7 @@ app.get('/api/vet-ai/status', (req, res) => {
   const configured = apiKey && apiKey !== 'your-anthropic-api-key-here';
   res.json({
     configured,
-    model: 'claude-sonnet-4-20250514',
+    model: ANTHROPIC_MODEL,
     exerciseCount: ALL_EXERCISES.length,
     categories: [...new Set(ALL_EXERCISES.map(e => e.category))].length
   });
@@ -2442,6 +2538,11 @@ if (fs.existsSync(FRONTEND_BUILD)) {
   });
   console.log('✅ Frontend: serving production build');
 }
+
+// 404 handler for unmatched API routes (must be after all route definitions)
+app.use('/api', (req, res) => {
+  res.status(404).json({ error: `API endpoint not found: ${req.method} ${req.path}` });
+});
 
 async function startServer() {
   try {

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import {
-  FiFileText, FiCheckCircle,
+  FiFileText, FiCheckCircle, FiXCircle,
   FiBookOpen, FiClipboard, FiActivity
 } from "react-icons/fi";
 import { TbDog } from "react-icons/tb";
@@ -201,12 +201,6 @@ export default function DashboardView({ setView }) {
             <div style={{ marginBottom: 12 }}>
               <div style={S.sectionHeader()}>
                 <FiActivity size={13} style={{ color: C.teal }} /> Condition Distribution
-              <span style={{
-                marginLeft: "auto", fontSize: 9, fontWeight: 700,
-                color: C.amber, background: C.amberBg,
-                padding: "2px 8px", borderRadius: 8,
-                textTransform: "uppercase", letterSpacing: "0.5px",
-              }}>Sample Data</span>
               </div>
             </div>
             <NeonLine />
@@ -245,7 +239,7 @@ export default function DashboardView({ setView }) {
                 <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span style={{ fontSize: 12, color: C.textMid, fontWeight: 600 }}>{item.label}</span>
                   <span style={{ fontSize: 11, fontWeight: 700, color: item.ok ? C.green : C.red, display: "flex", alignItems: "center", gap: 4 }}>
-                    <FiCheckCircle size={11} /> {item.detail}
+                    {item.ok ? <FiCheckCircle size={11} /> : <FiXCircle size={11} />} {item.detail}
                   </span>
                 </div>
               ))}

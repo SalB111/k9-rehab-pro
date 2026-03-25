@@ -1,5 +1,5 @@
 import React from "react";
-import { FiLock, FiShield, FiCheckCircle, FiClock } from "react-icons/fi";
+import { FiLock, FiShield, FiCheckCircle } from "react-icons/fi";
 import C from "../../constants/colors";
 import S from "../../constants/styles";
 import { sty } from "./constants";
@@ -45,30 +45,26 @@ export function TabSecurity({ security, setSecurity, flashSave, isOpen, toggleSe
           desc="Record all protocol generation, patient modifications, and data access events" />
       </SettingsSection>
 
-      <SettingsSection id="sec_compliance" open={isOpen("sec_compliance")} onToggle={toggleSection} icon={FiShield} title="Compliance & Security Roadmap">
+      <SettingsSection id="sec_compliance" open={isOpen("sec_compliance")} onToggle={toggleSection} icon={FiShield} title="Security & Compliance">
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {[
-            ["AES-256 Encryption at Rest", false, "Planned — requires encrypted database layer"],
-            ["TLS 1.3 Encryption in Transit", false, "Planned — requires SSL certificate and HTTPS configuration"],
-            ["Role-Based Access Control (RBAC)", false, "Planned — requires authentication system implementation"],
-            ["Zero-Knowledge Sensitive Fields", false, "Planned — requires field-level encryption architecture"],
-            ["Automated Backup & Disaster Recovery", false, "Planned — requires cloud infrastructure and scheduling"],
+            ["JWT Authentication & Role-Based Access", true, "Active — clinician and admin roles enforced"],
+            ["Audit Trail Logging", true, "Active — all data operations and safety reports logged"],
             ["State Veterinary Board Alignment", true, "Active — protocol logic follows state practice act guidelines"],
-            ["No Data Sold, Shared, or Used for Advertising", true, "Active — all data remains local to this installation"],
+            ["No Data Sold, Shared, or Used for Advertising", true, "Active — patient data remains within your deployment"],
           ].map(([label, ok, statusNote]) => (
             <div key={label} style={{
               display: "flex", alignItems: "center", justifyContent: "space-between",
               padding: "12px 16px", borderRadius: 8,
-              background: ok ? "rgba(16,185,129,0.1)" : "rgba(245,158,11,0.08)",
-              border: `1px solid ${ok ? "rgba(16,185,129,0.3)" : "rgba(245,158,11,0.3)"}`,
+              background: "rgba(16,185,129,0.1)",
+              border: "1px solid rgba(16,185,129,0.3)",
             }}>
               <div>
                 <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{label}</span>
                 <div style={{ fontSize: 11, color: C.textLight, marginTop: 2 }}>{statusNote}</div>
               </div>
-              <span style={sty.statusBadge(ok)}>
-                {ok ? <FiCheckCircle size={11} /> : <FiClock size={11} />}
-                {ok ? " Active" : " Planned"}
+              <span style={sty.statusBadge(true)}>
+                <FiCheckCircle size={11} /> Active
               </span>
             </div>
           ))}
@@ -78,9 +74,18 @@ export function TabSecurity({ security, setSecurity, flashSave, isOpen, toggleSe
           background: C.navy, color: "#fff", fontSize: 11, lineHeight: 1.7,
         }}>
           <div style={{ fontWeight: 700, fontSize: 12, marginBottom: 6, color: C.teal }}>
-            Current Security Status — Transparency Notice
+            Security Overview
           </div>
-          K9 Rehab Pro currently operates as a locally-hosted clinical decision-support system. All patient and client data is stored locally on this device using SQLite and is not transmitted to external servers. No data is sold, shared, or used for advertising. Enterprise-grade security features including encryption at rest, TLS in transit, role-based access control, and HIPAA-grade data protection are on the development roadmap and will be implemented prior to multi-user or cloud deployment. All clinical protocols comply with evidence-based veterinary rehabilitation standards (Millis & Levine, ACVSMR). This platform supports clinicians — it does not replace licensed veterinary judgment.
+          <ul style={{ margin: 0, paddingLeft: 16 }}>
+            <li>Patient and client data is stored in your deployment database</li>
+            <li>Authentication via JWT with bcrypt password hashing</li>
+            <li>VetAI queries are processed via Anthropic API — no patient-identifying data is included in AI requests</li>
+            <li>No data is sold to third parties or used for advertising</li>
+            <li>All clinical protocols comply with ACVSMR and Millis & Levine standards</li>
+          </ul>
+          <div style={{ marginTop: 8, color: "rgba(255,255,255,0.5)" }}>
+            Security features are continuously enhanced. Contact your system administrator for deployment-specific security details.
+          </div>
         </div>
       </SettingsSection>
 

@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
+import axios from "axios";
 import {
   FiShield, FiPrinter, FiPlus, FiAlertTriangle, FiCheckCircle,
   FiCalendar, FiFileText, FiHeart, FiAward, FiSearch, FiChevronDown
@@ -18,6 +19,7 @@ export default function ProtocolResults({ protocol, setProtocol, setWizardStep, 
   const [showSafetyReport, setShowSafetyReport] = useState(false);
   const [safetyReport, setSafetyReport] = useState({ type: "", exercise: "", description: "", severity: "moderate" });
   const [safetySubmitted, setSafetySubmitted] = useState(false);
+  const [safetyFallback, setSafetyFallback] = useState(false);
   const [activeAnatomyExercise, setActiveAnatomyExercise] = useState(null);
 
   // Extract unique HEP exercises (exclude clinic-only codes)
@@ -139,7 +141,9 @@ export default function ProtocolResults({ protocol, setProtocol, setWizardStep, 
             <div style={{ padding: "16px 20px", background: C.greenBg, borderRadius: 6, border: `1px solid ${C.green}33` }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <FiCheckCircle size={14} style={{ color: C.green }} />
-                <span style={{ fontSize: 12, fontWeight: 700, color: C.green }}>Safety concern logged to audit trail</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: C.green }}>
+                  {safetyFallback ? "Safety concern saved locally — server unavailable, please retry when connected" : "Safety concern logged to audit trail"}
+                </span>
               </div>
               <div style={{ fontSize: 10, color: C.textMid, marginTop: 6 }}>
                 Protocol ID: {protocol.patient_id} · Patient: {protocol.patient_name} · Logged: {new Date().toLocaleString()}
@@ -191,19 +195,28 @@ export default function ProtocolResults({ protocol, setProtocol, setWizardStep, 
                 </button>
                 <button
                   disabled={!safetyReport.type || !safetyReport.description.trim()}
-                  onClick={() => {
-                    // Log to console + localStorage audit (backend endpoint can be added later)
+                  onClick={async () => {
                     const entry = {
-                      timestamp: new Date().toISOString(),
+                      ...safetyReport,
                       patient_id: protocol.patient_id,
                       patient_name: protocol.patient_name,
                       protocol_type: protocol.protocol_type,
-                      ...safetyReport,
                     };
-                    const log = JSON.parse(localStorage.getItem("k9_safety_log") || "[]");
-                    log.push(entry);
-                    localStorage.setItem("k9_safety_log", JSON.stringify(log));
-                    setSafetySubmitted(true);
+                    try {
+                      const token = localStorage.getItem("k9_token");
+                      await axios.post("/api/safety-report", entry, {
+                        headers: { Authorization: `Bearer ${token}` }
+                      });
+                      setSafetySubmitted(true);
+                    } catch (err) {
+                      console.error("Safety report failed:", err);
+                      // Fallback to localStorage if backend unavailable
+                      const log = JSON.parse(localStorage.getItem("k9_safety_log") || "[]");
+                      log.push({ timestamp: new Date().toISOString(), ...entry });
+                      localStorage.setItem("k9_safety_log", JSON.stringify(log));
+                      setSafetySubmitted(true);
+                      setSafetyFallback(true);
+                    }
                   }}
                   style={{
                     ...S.btn("primary"), fontSize: 11, padding: "6px 14px",

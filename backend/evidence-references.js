@@ -376,12 +376,12 @@ const CORE_REFERENCES = {
 
   RAMP_STUDY: {
     id: 'GERI003',
-    citation: 'Lascelles BD, Henry JB, Brown J, Robertson I, Sumrell AT, Simpson W, et al. Cross-sectional study of the prevalence of radiographic degenerative joint disease in domesticated cats. Vet Surg. 2010;39(5):535-544.',
-    type: 'Journal',
-    evidence_grade: 'B',
+    citation: 'Expert opinion — environmental modification including ramps is standard practice in geriatric canine rehabilitation. Supported by Millis & Levine textbook and ACVSMR guidelines.',
+    type: 'Expert Opinion',
+    evidence_grade: 'EO',
     topics: ['Ramp training', 'Geriatric mobility', 'Joint protection', 'Functional independence'],
-    key_findings: 'Environmental modification including ramps reduces mechanical joint stress during furniture access — critical for geriatric patients with concurrent hip, stifle, or elbow disease',
-    url: 'https://pubmed.ncbi.nlm.nih.gov/?term=Lascelles+2010+degenerative+joint+disease+cats'
+    key_findings: 'Environmental modification including ramps reduces mechanical joint stress during furniture and vehicle access — standard recommendation for geriatric patients with concurrent hip, stifle, or elbow disease. No canine-specific RCT available.',
+    url: 'https://pubmed.ncbi.nlm.nih.gov/?term=ramp+environmental+modification+canine+geriatric'
   },
 
   // ========================================================================
@@ -455,12 +455,12 @@ const CORE_REFERENCES = {
 
   KINESIO_TAPE: {
     id: 'COMP002',
-    citation: 'Loyola-Sanchez A, Richardson J, MacIntyre NJ. Efficacy of ultrasound therapy for the management of knee osteoarthritis: a systematic review with meta-analysis. Osteoarthritis Cartilage. 2010;18(9):1117-1126.',
-    type: 'Journal',
-    evidence_grade: 'C',
+    citation: 'Expert opinion — adapted from human physical therapy kinesiotaping literature. No canine-specific RCT available as of 2026.',
+    type: 'Expert Opinion',
+    evidence_grade: 'EO',
     topics: ['Kinesio tape', 'Proprioception', 'Joint support', 'Edema'],
-    key_findings: 'Kinesiotaping provides proprioceptive feedback, reduces edema through skin lifting effect, and supports joint alignment during rehabilitation activities',
-    url: 'https://pubmed.ncbi.nlm.nih.gov/?term=kinesiotaping+proprioception+rehabilitation'
+    key_findings: 'Kinesiotaping is used in canine rehabilitation for proprioceptive feedback, edema reduction, and joint support. Evidence is extrapolated from human rehabilitation; canine-specific controlled trials are lacking.',
+    url: 'https://pubmed.ncbi.nlm.nih.gov/?term=kinesiotaping+canine+rehabilitation'
   },
 
   SHOCKWAVE_STUDY: {

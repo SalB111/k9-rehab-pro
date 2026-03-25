@@ -69,7 +69,7 @@ export function TabDataManagement({ isOpen, toggleSection }) {
             background: "rgba(14,165,233,0.12)", border: `1px solid rgba(14,165,233,0.3)`,
           }}>
             <div style={{ fontSize: 10, fontWeight: 700, color: C.teal, textTransform: "uppercase", letterSpacing: "0.5px" }}>Exercise Library</div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: C.teal, marginTop: 4 }}>223 Validated Exercises</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: C.teal, marginTop: 4 }}>260 Validated Exercises</div>
           </div>
           <div style={{
             flex: 1, padding: "12px 16px", borderRadius: 8,

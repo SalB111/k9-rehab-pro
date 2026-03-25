@@ -123,7 +123,7 @@ const ACTIVE_ASSISTED_EXERCISES = [
 
   {
     code: 'STAND_TALL',
-    name: 'Standing Tall (Rear Leg Dance)',
+    name: 'Standing Tall (Hindlimb Dance)',
     category: 'Active Assisted',
     description: 'Rear limb strengthening by having dog stand on hindlimbs with forelimbs elevated.',
     equipment: ['Treats', 'Wall or stable surface for support'],

@@ -78,7 +78,7 @@ export default function Step2ClinicalAssessment({ form, setField, goToStep }) {
             )}
           </div>
           <div>
-            <label style={S.label}>Lameness Grade (0-5 LOAD) <span style={{color:C.red}}>*</span></label>
+            <label style={S.label}>Lameness Grade (0-5) <span style={{color:C.red}}>*</span></label>
             {form.lamenessGrade === "" ? (
               <select style={{ ...S.select, width: "100%", border: `1.5px solid ${C.border}`, color: C.textLight }} value="" onChange={e => setField("lamenessGrade", e.target.value)}>
                 <option value="" disabled>--- Select ---</option>

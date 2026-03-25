@@ -6,7 +6,7 @@ const AQUATIC_EXERCISES = [
   {
     code: 'UNDERWATER_TREAD',
     name: 'Underwater Treadmill Walking',
-    category: 'Aquatic Therapy',
+    category: 'Hydrotherapy',
     description: 'Walking on submerged treadmill for low-impact strengthening and range of motion.',
     equipment: ['Underwater treadmill', 'Life vest (if needed)', 'Towels'],
     setup: 'Fill tank to appropriate depth (typically mid-femur to hip level). Water temperature 85-92°F.',
@@ -45,7 +45,7 @@ const AQUATIC_EXERCISES = [
   {
     code: 'POOL_SWIM',
     name: 'Therapeutic Swimming',
-    category: 'Aquatic Therapy',
+    category: 'Hydrotherapy',
     description: 'Free swimming for cardiovascular fitness and full-body strengthening with minimal joint stress.',
     equipment: ['Pool or controlled water body', 'Life vest', 'Pool ramp or steps', 'Towels'],
     setup: 'Water should be 85-90°F. Clear area. Handler in water or at edge.',
@@ -84,7 +84,7 @@ const AQUATIC_EXERCISES = [
   {
     code: 'WATER_WALKING',
     name: 'Shallow Water Walking',
-    category: 'Aquatic Therapy',
+    category: 'Hydrotherapy',
     description: 'Walking in shallow water (belly to mid-chest depth) for gentle resistance training.',
     equipment: ['Pool, pond, or beach access', 'Leash', 'Life vest (optional)', 'Towels'],
     setup: 'Select area with gradual depth. Water depth ankle to mid-chest.',
@@ -123,7 +123,7 @@ const AQUATIC_EXERCISES = [
   {
     code: 'WATER_RETRIEVE',
     name: 'Water Retrieval Exercise',
-    category: 'Aquatic Therapy',
+    category: 'Hydrotherapy',
     description: 'Fetching objects in water to combine cardiovascular exercise with motivation and fun.',
     equipment: ['Floating toys or bumpers', 'Pool or shallow water', 'Life vest', 'Towels'],
     setup: 'Select appropriate water depth. Have floating toys ready.',
@@ -162,7 +162,7 @@ const AQUATIC_EXERCISES = [
   {
     code: 'AQUA_JOG',
     name: 'Aqua Jogging',
-    category: 'Aquatic Therapy',
+    category: 'Hydrotherapy',
     description: 'Jogging in chest-deep water for advanced cardiovascular and strengthening work.',
     equipment: ['Pool', 'Life vest', 'Leash', 'Towels'],
     setup: 'Water depth at mid-chest to shoulder level. Clear swimming lane.',

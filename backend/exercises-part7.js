@@ -1309,7 +1309,7 @@ const EXERCISES_PART7 = [
   {
     code: 'NEURO_PROM',
     name: 'Neurological Passive Range of Motion',
-    category: 'Neurological Rehab',
+    category: 'Neurological Rehabilitation',
     description: 'PROM specifically adapted for neurological patients to prevent contracture and maintain neural pathways.',
     equipment: ['Padded surface', 'Towels for positioning'],
     setup: 'Dog in lateral recumbency with affected side up. Support limbs throughout.',
@@ -1352,7 +1352,7 @@ const EXERCISES_PART7 = [
   {
     code: 'NEURO_STIM',
     name: 'Sensory Stimulation Therapy',
-    category: 'Neurological Rehab',
+    category: 'Neurological Rehabilitation',
     description: 'Tactile, thermal, and proprioceptive stimulation to awaken sensory pathways and promote neural recovery.',
     equipment: ['Various textures (brushes, towels)', 'Ice/warm packs', 'Massage tools'],
     setup: 'Dog in comfortable position. Access to all affected areas.',
@@ -1395,7 +1395,7 @@ const EXERCISES_PART7 = [
   {
     code: 'ASSISTED_STANDING',
     name: 'Supported Standing Practice',
-    category: 'Neurological Rehab',
+    category: 'Neurological Rehabilitation',
     description: 'Using sling or support to maintain standing position, promoting weight bearing and proprioceptive input.',
     equipment: ['Rear support sling', 'Help-em-up harness', 'or towel sling', 'Non-slip surface'],
     setup: 'Fit support harness. Dog on non-slip mat. Caregiver positioned to support.',
@@ -1438,7 +1438,7 @@ const EXERCISES_PART7 = [
   {
     code: 'CART_WALKING',
     name: 'Wheelchair/Cart Ambulation',
-    category: 'Neurological Rehab',
+    category: 'Neurological Rehabilitation',
     description: 'Using mobility cart to maintain exercise capacity and provide supported ambulation for paraplegic/paralyzed patients.',
     equipment: ['Properly fitted mobility cart', 'Support harness', 'Non-slip boots'],
     setup: 'Cart fitted to dog size. Harness secure. Protected outdoor area or indoor space.',
@@ -1481,7 +1481,7 @@ const EXERCISES_PART7 = [
   {
     code: 'STEP_OVER',
     name: 'Assisted Step-Over Obstacles',
-    category: 'Neurological Rehab',
+    category: 'Neurological Rehabilitation',
     description: 'Walking over low obstacles with support to promote hip/stifle flexion and limb coordination.',
     equipment: ['Low obstacles (1-3 inches)', 'Support sling', 'Non-slip surface'],
     setup: 'Place 4-6 obstacles in line, spaced appropriately. Support harness on dog.',
@@ -1524,7 +1524,7 @@ const EXERCISES_PART7 = [
   {
     code: 'WHEELBARROW',
     name: 'Wheelbarrowing Exercise',
-    category: 'Neurological Rehab',
+    category: 'Neurological Rehabilitation',
     description: 'Supporting hindquarters while dog walks on forelimbs only, promoting forelimb strength and upper body awareness.',
     equipment: ['Non-slip surface', 'Support harness optional'],
     setup: 'Clear pathway. Dog standing. Handler positioned at hindquarters.',
@@ -1567,7 +1567,7 @@ const EXERCISES_PART7 = [
   {
     code: 'DANCE_THERAPY',
     name: 'Rhythmic Weight Shifting (Dancing)',
-    category: 'Neurological Rehab',
+    category: 'Neurological Rehabilitation',
     description: 'Rhythmic lateral weight shifts while supported to improve balance reactions and coordination.',
     equipment: ['Support harness', 'Non-slip surface', 'Music optional'],
     setup: 'Dog in supported standing position. Handler at side or rear.',
@@ -1610,7 +1610,7 @@ const EXERCISES_PART7 = [
   {
     code: 'NEURO_MASSAGE',
     name: 'Therapeutic Massage - Neurological Focus',
-    category: 'Neurological Rehab',
+    category: 'Neurological Rehabilitation',
     description: 'Specialized massage techniques to address spasticity, improve circulation, and provide sensory input.',
     equipment: ['Massage table or pad', 'Lotion or oil', 'Warm environment'],
     setup: 'Dog in comfortable position. Access to affected areas. Calm environment.',
@@ -1653,7 +1653,7 @@ const EXERCISES_PART7 = [
   {
     code: 'LIMB_PLACEMENT',
     name: 'Conscious Proprioception Testing & Training',
-    category: 'Neurological Rehab',
+    category: 'Neurological Rehabilitation',
     description: 'Repeatedly placing paw in abnormal position to encourage conscious correction response.',
     equipment: ['Non-slip surface', 'Treats for positive reinforcement'],
     setup: 'Dog in standing position. Handler positioned at affected limb.',
@@ -1696,7 +1696,7 @@ const EXERCISES_PART7 = [
   {
     code: 'TAIL_WAGS',
     name: 'Tail Wag Facilitation',
-    category: 'Neurological Rehab',
+    category: 'Neurological Rehabilitation',
     description: 'Encouraging tail wagging through positive stimuli to promote lumbosacral motor function and assess recovery.',
     equipment: ['High-value treats', 'Favorite toys', 'Engaging stimuli'],
     setup: 'Dog in comfortable position. Caregiver with motivating items.',
@@ -1739,7 +1739,7 @@ const EXERCISES_PART7 = [
   {
     code: 'NEURO_BALANCE',
     name: 'Balance Disc Work - Neurological',
-    category: 'Neurological Rehab',
+    category: 'Neurological Rehabilitation',
     description: 'Standing on partially inflated disc with support to enhance proprioception and balance reactions in neurological patients.',
     equipment: ['Partially deflated balance disc', 'Support harness', 'Non-slip mat beneath'],
     setup: 'Disc on stable surface. Dog supported in harness. Spotter present.',
@@ -1782,7 +1782,7 @@ const EXERCISES_PART7 = [
   {
     code: 'BICYCLING',
     name: 'Passive Bicycling Motion',
-    category: 'Neurological Rehab',
+    category: 'Neurological Rehabilitation',
     description: 'Manual cycling motion of hindlimbs to maintain range, stimulate neural pathways, and prevent contracture.',
     equipment: ['Padded surface', 'Assistant helpful'],
     setup: 'Dog in lateral recumbency. Affected side up. Access to hindlimbs.',
@@ -1826,7 +1826,7 @@ const EXERCISES_PART7 = [
   {
     code: 'REFLEX_TESTING',
     name: 'Daily Neurological Reflex Assessment',
-    category: 'Neurological Rehab',
+    category: 'Neurological Rehabilitation',
     description: 'Systematic testing of spinal reflexes to monitor neurological recovery and guide therapy progression.',
     equipment: ['Reflex hammer or pen', 'Assessment chart', 'Quiet examination area'],
     setup: 'Dog in lateral recumbency. Access to all limbs. Note-taking materials ready.',
@@ -1870,7 +1870,7 @@ const EXERCISES_PART7 = [
   {
     code: 'AQUATIC_NEURO',
     name: 'Aquatic Therapy for Neurological Recovery',
-    category: 'Neurological Rehab',
+    category: 'Neurological Rehabilitation',
     description: 'Water-based exercise for neurological patients, utilizing buoyancy to enable movement practice without weight bearing demands.',
     equipment: ['Therapy pool or UWTM', 'Life vest', 'Support harness', 'Water temperature monitor'],
     setup: 'Water 82-90°F. Life vest fitted. Support available. Depth hip to chest level.',
@@ -1914,7 +1914,7 @@ const EXERCISES_PART7 = [
   {
     code: 'POSITIONAL_ROTATION',
     name: 'Therapeutic Position Changes',
-    category: 'Neurological Rehab',
+    category: 'Neurological Rehabilitation',
     description: 'Systematic body position rotation to prevent pressure sores, maintain joint mobility, and provide varied sensory input.',
     equipment: ['Multiple cushions/wedges', 'Soft bedding', 'Positioning aids'],
     setup: 'Comfortable bedding. Position supports available. Timer for rotation schedule.',
