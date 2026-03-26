@@ -48,3 +48,5 @@ build-pitch-deck.py
 build-application-pdf.py
 *.bio.pdf
 source_of_truth_temp.txt
+backend/public/assets/
+backend/public/index.html
