@@ -2564,12 +2564,9 @@ const FRONTEND_BUILD = IS_PKG
     ? path.join(__dirname, 'public')
     : path.join(__dirname, '..', 'k9-rehab-frontend', 'build');
 if (fs.existsSync(FRONTEND_BUILD)) {
-  // Hashed assets (JS/CSS) — cache forever (filename changes on rebuild)
-  app.use('/assets', express.static(path.join(FRONTEND_BUILD, 'assets'), {
-    maxAge: '1y',
-    immutable: true,
-  }));
-  // All other static files — no cache (index.html, favicon, etc.)
+  const indexPath = path.join(FRONTEND_BUILD, 'index.html');
+  const hasIndex = fs.existsSync(indexPath);
+  // Always serve static files from public/ (landing pages, images, etc.)
   app.use(express.static(FRONTEND_BUILD, {
     maxAge: 0,
     etag: false,
@@ -2579,13 +2576,22 @@ if (fs.existsSync(FRONTEND_BUILD)) {
       }
     },
   }));
-  // SPA fallback — serve index.html for any non-API route (no cache)
-  app.get('*', (req, res, next) => {
-    if (req.path.startsWith('/api')) return next();
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.sendFile(path.join(FRONTEND_BUILD, 'index.html'));
-  });
-  console.log('✅ Frontend: serving production build');
+  if (hasIndex) {
+    // Hashed assets (JS/CSS) — cache forever (filename changes on rebuild)
+    app.use('/assets', express.static(path.join(FRONTEND_BUILD, 'assets'), {
+      maxAge: '1y',
+      immutable: true,
+    }));
+    // SPA fallback — serve index.html for any non-API route (no cache)
+    app.get('*', (req, res, next) => {
+      if (req.path.startsWith('/api')) return next();
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.sendFile(indexPath);
+    });
+    console.log('✅ Frontend: serving production build');
+  } else {
+    console.warn('⚠️  Frontend: public/ exists but index.html missing — SPA fallback disabled');
+  }
 }
 
 // 404 handler for unmatched API routes (must be after all route definitions)
