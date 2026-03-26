@@ -7,7 +7,7 @@ services:
     name: k9-rehab-pro
     runtime: node
     region: oregon
-    buildCommand: cd backend && npm install && cd ../k9-rehab-frontend && npm install && npm run build && rm -rf ../backend/public/assets ../backend/public/index.html && cp -r build/* ../backend/public/
+    buildCommand: cd backend && npm install
     startCommand: cd backend && node server.js
     healthCheckPath: /api/health
     disk:

@@ -48,6 +48,4 @@ build-pitch-deck.py
 build-application-pdf.py
 *.bio.pdf
 source_of_truth_temp.txt
-# Frontend build output (rebuilt on each deploy)
-backend/public/assets/
-backend/public/index.html
+# Frontend build output committed for reliable deploys
