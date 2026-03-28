@@ -1,6 +1,6 @@
 import axios from "axios";
 
-export const API = import.meta.env.VITE_API_URL || "/api";
+export const API = "https://k9-rehab-pro.onrender.com/api";
 
 // ─────────────────────────────────────────────
 // AXIOS AUTH INTERCEPTOR
