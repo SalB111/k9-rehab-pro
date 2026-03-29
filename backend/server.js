@@ -9,8 +9,7 @@
 // Author:    Salvatore Bonanno
 // Role:      Canine Rehabilitation Nurse (CRN) | Software Developer | Founder
 // ============================================================================
-const {
-  selectExercisesForWeek,
+const 
   PROTOCOL_DEFINITIONS,
   validateIntake,
   getExcludedCodes,
