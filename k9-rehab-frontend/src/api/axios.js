@@ -12,7 +12,7 @@ const api = axios.create({
   timeout: 15000
 });
 
-// Optional: Attach token automatically if present
+// Automatically attach token if present
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
@@ -24,4 +24,16 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+// --- REQUIRED EXPORTS (Fixes your build error) ---
+export const setupAxiosAuth = (token) => {
+  if (token) {
+    axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+  }
+};
+
+export const clearAxiosAuth = () => {
+  delete axios.defaults.headers.common["Authorization"];
+};
+
+// Default export for API calls
 export default api;
