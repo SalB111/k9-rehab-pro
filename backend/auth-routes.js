@@ -25,7 +25,6 @@ router.post("/register", async (req, res) => {
       return res.status(409).json({ error: "Username already exists" });
     }
 
-    // db-provider handles hashing internally
     const user = await db.createUser({
       username,
       password,
