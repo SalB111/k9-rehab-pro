@@ -1,18 +1,15 @@
-import React, { useEffect, useState, Suspense, lazy } from "react";
+// =========================
+// App.jsx — FINAL PATCH
+// =========================
 
-// ── Constants & Config ──
+import React, { useEffect, useState, Suspense, lazy } from "react";
+import api, { setupAxiosAuth, clearAxiosAuth } from "./api/axios";
 import C from "./constants/colors";
 import S from "./constants/styles";
-import api, { API, setupAxiosAuth, clearAxiosAuth } from "./api/axios";
-
-// ── Components ──
 import TopNav from "./components/TopNav";
 import { ToastProvider } from "./components/Toast";
-
-// ── Eager-loaded pages ──
 import LoginView from "./pages/LoginView";
 
-// ── Lazy-loaded pages ──
 const GeneratorView      = lazy(() => import("./pages/GeneratorView"));
 const DashboardView      = lazy(() => import("./pages/DashboardView"));
 const ExercisesView      = lazy(() => import("./pages/ExercisesView"));
@@ -23,9 +20,6 @@ const AboutView          = lazy(() => import("./pages/AboutView"));
 const ClientsView        = lazy(() => import("./pages/ClientsView"));
 const PatientDetailView  = lazy(() => import("./pages/PatientDetailView"));
 
-// ─────────────────────────────────────────────
-// APP — Slim Orchestrator
-// ─────────────────────────────────────────────
 export default function App() {
   const [view, setView] = useState("home");
   const [genKey, setGenKey] = useState(0);
@@ -33,30 +27,23 @@ export default function App() {
   const [brand, setBrand] = useState({ clinicName: "K9 Rehab Pro™", accent: "#0F4C81" });
   const [selectedPatient, setSelectedPatient] = useState(null);
 
-  // ── Authentication State ──
-  const [authToken, setAuthToken] = useState(null);
+  const [authToken, setAuthToken] = useState(localStorage.getItem("token"));
   const [currentUser, setCurrentUser] = useState(null);
 
-  // Configure axios interceptor when token changes
   useEffect(() => {
     if (authToken) {
-      setupAxiosAuth(authToken, () => {
-        setAuthToken(null);
-        setCurrentUser(null);
-      });
+      setupAxiosAuth(authToken);
     } else {
       clearAxiosAuth();
     }
   }, [authToken]);
 
-  // ── LOGIN ──
+  // ===== LOGIN (FINAL) =====
   const handleLogin = async (username, password) => {
     try {
-      const res = await api.post("/auth/login", {
-        username,
-        password
-      });
+      const res = await api.post("/auth/login", { username, password });
 
+      localStorage.setItem("token", res.data.token);
       setAuthToken(res.data.token);
       setCurrentUser(res.data.user);
 
@@ -69,7 +56,7 @@ export default function App() {
     }
   };
 
-  // ── REGISTER ──
+  // ===== REGISTER (FINAL) =====
   const handleRegister = async (username, password, displayName, credentials = {}) => {
     try {
       const res = await api.post("/auth/register", {
@@ -79,6 +66,7 @@ export default function App() {
         ...credentials,
       });
 
+      localStorage.setItem("token", res.data.token);
       setAuthToken(res.data.token);
       setCurrentUser(res.data.user);
 
@@ -91,20 +79,20 @@ export default function App() {
     }
   };
 
+  // ===== LOGOUT (FINAL) =====
   const handleLogout = () => {
+    localStorage.removeItem("token");
     setAuthToken(null);
     setCurrentUser(null);
     setView("home");
   };
 
-  // ── Live Clock ──
   const [liveTime, setLiveTime] = useState(new Date());
   useEffect(() => {
     const timer = setInterval(() => setLiveTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // ── Auth Gate ──
   if (!authToken) {
     return (
       <ToastProvider>
@@ -113,7 +101,6 @@ export default function App() {
     );
   }
 
-  // ── Terms of Service Gate ──
   const TOS_VERSION = 1;
   const tosAccepted = localStorage.getItem("k9_tos_accepted");
   const tosVersion = parseInt(localStorage.getItem("k9_tos_version") || "0", 10);
@@ -124,12 +111,11 @@ export default function App() {
   if (needsTos) {
     return (
       <ToastProvider>
-        {/* TOS modal unchanged */}
+        {/* TOS modal */}
       </ToastProvider>
     );
   }
 
-  // ── Loading Spinner for Lazy Chunks ──
   const ChunkSpinner = () => (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "40vh", gap: 16 }}>
       <div
@@ -146,47 +132,19 @@ export default function App() {
     </div>
   );
 
-  // ── ACTIVE VIEW RENDERER ──
   const renderView = () => {
     switch (view) {
-      case "home":
-        return <GeneratorView key={genKey} initialStep={1} />;
-      case "generator":
-        return <GeneratorView key={genKey} initialStep={genInitialStep} />;
-      case "dashboard":
-        return <DashboardView setView={setView} />;
-      case "exercises":
-        return (
-          <ExercisesView
-            setView={setView}
-            setGenKey={setGenKey}
-            setGenInitialStep={setGenInitialStep}
-          />
-        );
-      case "sessions":
-        return <SessionsView />;
-      case "beau":
-        return <BEAUView authToken={authToken} />;
-      case "settings":
-        return <SettingsView brand={brand} setBrand={setBrand} />;
-      case "about":
-        return <AboutView />;
-      case "clients":
-        return (
-          <ClientsView
-            setView={setView}
-            setSelectedPatient={setSelectedPatient}
-          />
-        );
-      case "patient-detail":
-        return (
-          <PatientDetailView
-            patient={selectedPatient}
-            setView={setView}
-          />
-        );
-      default:
-        return <GeneratorView key={genKey} initialStep={1} />;
+      case "home":      return <GeneratorView key={genKey} initialStep={1} />;
+      case "generator": return <GeneratorView key={genKey} initialStep={genInitialStep} />;
+      case "dashboard": return <DashboardView setView={setView} />;
+      case "exercises": return <ExercisesView setView={setView} setGenKey={setGenKey} setGenInitialStep={setGenInitialStep} />;
+      case "sessions":  return <SessionsView />;
+      case "beau":      return <BEAUView authToken={authToken} />;
+      case "settings":  return <SettingsView brand={brand} setBrand={setBrand} />;
+      case "about":     return <AboutView />;
+      case "clients":   return <ClientsView setView={setView} setSelectedPatient={setSelectedPatient} />;
+      case "patient-detail": return <PatientDetailView patient={selectedPatient} setView={setView} />;
+      default:          return <GeneratorView key={genKey} initialStep={1} />;
     }
   };
 
