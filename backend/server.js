@@ -1,9 +1,7 @@
 // ============================================================================
 // K9 REHAB PRO™ — ENHANCED SERVER
-// © 2025 Salvatore Bonanno. All rights reserved.
-// Proprietary software. Unauthorized use, reproduction, or distribution
-// is strictly prohibited.
 // ============================================================================
+
 const express = require('express');
 const cors = require('cors');
 
@@ -28,13 +26,20 @@ const authRoutes = require("./auth-routes");
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
+
+// ---- Render Health Check (MUST BE FIRST) ----
+app.get("/health", (req, res) => {
+  res.status(200).send("OK");
+});
+
+// ---- Auth Routes ----
 app.use("/api/auth", authRoutes);
 
 // ============================================================================
 // API ROUTES (ALL PREFIXED WITH /api)
 // ============================================================================
 
-// ---- Health Check ----
+// ---- API Health Check ----
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Backend running' });
 });

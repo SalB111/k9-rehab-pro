@@ -1,6 +1,5 @@
 // ============================================================================
 // K9-REHAB-PRO — AUTH ROUTES (Login + Register)
-// Uses bcrypt, JWT, and db-provider
 // ============================================================================
 
 const express = require("express");
