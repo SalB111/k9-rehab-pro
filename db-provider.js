@@ -6,19 +6,35 @@
 const sqlite3 = require("sqlite3").verbose();
 const bcrypt = require("bcryptjs");
 
-// ---- Open Database ----
-const db = new sqlite3.Database("./k9rehab.db");
+let db;
 
-// ---- Ensure Users Table Exists ----
-db.run(`
-  CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT UNIQUE NOT NULL,
-    password_hash TEXT NOT NULL,
-    display_name TEXT,
-    role TEXT DEFAULT 'clinician'
-  )
-`);
+// ============================================================================
+// INITIALIZE DATABASE (REQUIRED)
+// ============================================================================
+function initialize() {
+  if (db) return db; // prevent double init
+
+  db = new sqlite3.Database("./k9rehab.db", (err) => {
+    if (err) {
+      console.error("Failed to open SQLite DB:", err);
+    } else {
+      console.log("SQLite DB initialized");
+    }
+  });
+
+  // Ensure users table exists
+  db.run(`
+    CREATE TABLE IF NOT EXISTS users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT UNIQUE NOT NULL,
+      password_hash TEXT NOT NULL,
+      display_name TEXT,
+      role TEXT DEFAULT 'clinician'
+    )
+  `);
+
+  return db;
+}
 
 // ============================================================================
 // FIND USER BY USERNAME
@@ -84,6 +100,7 @@ async function createUser({ username, password, display_name, role }) {
 // EXPORTS
 // ============================================================================
 module.exports = {
+  initialize,
   findUserByUsername,
   findUserById,
   createUser
