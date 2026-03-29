@@ -10,9 +10,9 @@ import { API } from "../api/axios";
 import { useToast } from "../components/Toast";
 
 // ─────────────────────────────────────────────
-// VET AI VIEW — B.E.A.U. - Biomedical Evidence-Based Assessment Utility
+// BEAU AI VIEW — B.E.A.U. - Biomedical Evidence-based Analytical Unit
 // ─────────────────────────────────────────────
-function VetAIView({ authToken }) {
+function BEAUView({ authToken }) {
   const [msgs, setMsgs] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -135,7 +135,7 @@ function VetAIView({ authToken }) {
     } catch (err) {
       setStream("");
       setMsgs(p => [...p, { role: "assistant", content: `**B.E.A.U. is temporarily unavailable.**\n\nPlease check that the server is running. If the issue persists, contact your system administrator.` }]);
-      console.error('VetAI connection error:', err);
+      console.error('BEAU connection error:', err);
     }
     setLoading(false);
   };
@@ -421,4 +421,4 @@ function VetAIView({ authToken }) {
   );
 }
 
-export default VetAIView;
+export default BEAUView;
