@@ -51,16 +51,25 @@ export default function App() {
   }, [authToken]);
 
   // ── LOGIN ──
-  const handleLogin = async (username, password) => {
-    try {
-      const res = await axios.post(`${API}/auth/login`, { username, password });
-      setAuthToken(res.data.token);
-      setCurrentUser(res.data.user);
-      return { success: true };
-    } catch (err) {
-      return { success: false, message: err.response?.data?.error || "Login failed" };
-    }
-  };
+const handleLogin = async (username, password) => {
+  try {
+    const res = await api.post("/auth/login", {
+      username,
+      password
+    });
+
+    setAuthToken(res.data.token);
+    setCurrentUser(res.data.user);
+
+    return { success: true };
+
+  } catch (err) {
+    return {
+      success: false,
+      message: err.response?.data?.error || "Login failed"
+    };
+  }
+};
 
   // ── REGISTER ──
   const handleRegister = async (username, password, displayName, credentials = {}) => {

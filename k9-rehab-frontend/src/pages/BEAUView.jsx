@@ -92,7 +92,7 @@ function BEAUView({ authToken }) {
     if (taRef.current) taRef.current.style.height = "auto";
 
     try {
-      const res = await fetch(`${API}/vet-ai/chat`, {
+      const res = await fetch(`${API}/beau/chat`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
