@@ -9,6 +9,15 @@
 // Author:    Salvatore Bonanno
 // Role:      Canine Rehabilitation Nurse (CRN) | Software Developer | Founder
 // ============================================================================
+const {
+  selectExercisesForWeek,
+  PROTOCOL_DEFINITIONS,
+  validateIntake,
+  getExcludedCodes,
+  getProtocolType
+} = require('./protocol-generator');
+
+const feline = require('./beau-feline');
 
 const path = require('path');
 
@@ -148,7 +157,7 @@ app.use(
 // Handle preflight explicitly (helps with some proxies)
 app.options('*', cors());
 
-app.use(express.json({ limit: '1mb' })); // Increased for VetAI chat history
+app.use(express.json({ limit: '1mb' })); // Increased for BEAU chat history
 
 // Rate limiting — general (300 req / 15 min per IP)
 const generalLimiter = rateLimit({
@@ -1546,7 +1555,7 @@ app.get('/api/beau/sessions/patient/:patientId', async (req, res) => {
 });
 
 // ============================================================================
-// AGGREGATE CLINICAL INTELLIGENCE — Pattern extraction from B.E.A.U. — Biomedical Evidence‑based Analytical Unit sessions
+// AGGREGATE CLINICAL INTELLIGENCE — Pattern extraction from B.E.A.U. — Biomedical          Evidence‑based Analytical Unit sessions
 // ============================================================================
 
 let _clinicalPatternsCache = null;
@@ -2402,6 +2411,17 @@ app.post('/api/beau/chat', async (req, res) => {
   }
 
   const { messages, patient } = req.body;
+
+// ── Species-Adaptive Override: Feline Patients ──
+if (patient?.species?.toLowerCase() === 'feline') {
+  const felinePlan = feline.generateFelinePlan(patient);
+  return res.json({
+    type: 'feline_plan',
+    species: 'feline',
+    data: felinePlan
+  });
+}
+
   if (!messages || !Array.isArray(messages)) {
     return res.status(400).json({ error: 'messages array is required' });
   }
@@ -2530,7 +2550,7 @@ ${SOURCE_OF_TRUTH_TEXT}
     res.write(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
     res.end();
   } catch (err) {
-    console.error('VetAI error:', err.message);
+    console.error('BEAU error:', err.message);
     // If headers already sent (streaming started), end the stream
     if (res.headersSent) {
       res.write(`data: ${JSON.stringify({ type: 'error', text: safeError(err) })}\n\n`);
@@ -2541,7 +2561,7 @@ ${SOURCE_OF_TRUTH_TEXT}
   }
 });
 
-// GET /api/vet-ai/status — Check if VetAI is configured
+// GET /api//status — Check if BEAU is configured
 app.get('/api/vet-ai/status', (req, res) => {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   const configured = apiKey && apiKey !== 'your-anthropic-api-key-here';
