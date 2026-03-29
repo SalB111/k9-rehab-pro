@@ -86,6 +86,29 @@ app.post('/api/feline-protocol', async (req, res) => {
 });
 
 // ============================================================================
+// ONE-TIME ADMIN USER CREATION
+// Creates admin:admin123 if it does not exist
+// ============================================================================
+(async () => {
+  try {
+    const existing = await db.findUserByUsername("admin");
+    if (!existing) {
+      await db.createUser({
+        username: "admin",
+        password: "admin123",
+        display_name: "Administrator",
+        role: "admin"
+      });
+      console.log("✔ Admin user created: admin / admin123");
+    } else {
+      console.log("✔ Admin user already exists");
+    }
+  } catch (err) {
+    console.error("Admin creation error:", err);
+  }
+})();
+
+// ============================================================================
 // START SERVER
 // ============================================================================
 const PORT = process.env.PORT || 10000;
