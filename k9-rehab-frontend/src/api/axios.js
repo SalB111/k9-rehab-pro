@@ -1,50 +1,27 @@
 import axios from "axios";
 
+// FINAL, CORRECT, PRODUCTION API URL
 export const API = "https://k9-rehab-pro.onrender.com/api";
 
-// ─────────────────────────────────────────────
-// AXIOS AUTH INTERCEPTOR
-// ─────────────────────────────────────────────
-let _axiosAuthInterceptorId = null;
-let _axiosResInterceptorId = null;
+// Create a preconfigured axios instance
+const api = axios.create({
+  baseURL: API,
+  headers: {
+    "Content-Type": "application/json"
+  },
+  timeout: 15000
+});
 
-export function setupAxiosAuth(token, onUnauthorized) {
-  // Clear previous interceptors
-  if (_axiosAuthInterceptorId !== null) {
-    axios.interceptors.request.eject(_axiosAuthInterceptorId);
-  }
-  if (_axiosResInterceptorId !== null) {
-    axios.interceptors.response.eject(_axiosResInterceptorId);
-  }
-  // Request interceptor — inject Bearer token
-  _axiosAuthInterceptorId = axios.interceptors.request.use(
-    (config) => {
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-      return config;
-    },
-    (error) => Promise.reject(error)
-  );
-  // Response interceptor — handle 401
-  _axiosResInterceptorId = axios.interceptors.response.use(
-    (response) => response,
-    (error) => {
-      if (error.response && error.response.status === 401) {
-        onUnauthorized();
-      }
-      return Promise.reject(error);
+// Optional: Attach token automatically if present
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
-  );
-}
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
-export function clearAxiosAuth() {
-  if (_axiosAuthInterceptorId !== null) {
-    axios.interceptors.request.eject(_axiosAuthInterceptorId);
-    _axiosAuthInterceptorId = null;
-  }
-  if (_axiosResInterceptorId !== null) {
-    axios.interceptors.response.eject(_axiosResInterceptorId);
-    _axiosResInterceptorId = null;
-  }
-}
+export default api;
