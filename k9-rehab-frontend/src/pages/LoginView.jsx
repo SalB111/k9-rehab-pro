@@ -42,24 +42,21 @@ function LoginView({ onLogin, onRegister }) {
   }, []);
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-    let result;
-    if (isRegistering) {
-      result = await onRegister(username, password, displayName || username, {
-        credential_type: credentialType,
-        credential_number: credentialNumber,
-        credential_attested: credentialAttested,
-      });
-    } else {
-      result = await onLogin(username, password);
-    }
-    setLoading(false);
+  e.preventDefault();
+  setError("");
+
+  try {
+    const result = await onLogin(username, password);
+
     if (!result.success) {
-      setError(result.message);
+      setError(result.message || "Login failed");
+      return;
     }
-  };
+
+  } catch (err) {
+    setError("Login failed");
+  }
+};
 
   return (
     <div style={{
