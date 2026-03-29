@@ -5,6 +5,9 @@
 const express = require('express');
 const cors = require('cors');
 
+// ---- Database Initialization ----
+const db = require("./db-providers/sqlite-provider");
+
 // ---- Protocol Engine Imports ----
 const {
   selectExercisesForWeek,
@@ -26,6 +29,9 @@ const authRoutes = require("./auth-routes");
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
+
+// ---- Initialize Database (REQUIRED) ----
+db.initialize();
 
 // ---- Render Health Check (MUST BE FIRST) ----
 app.get("/health", (req, res) => {
