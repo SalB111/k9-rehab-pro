@@ -5,15 +5,19 @@
   "author": "Salvatore Bonanno <salvatore@k9rehabpro.com>",
   "license": "UNLICENSED",
   "private": true,
+
+  "engines": {
+    "node": "18.x"
+  },
+
   "main": "server.js",
   "bin": "server.js",
-  "engines": {
-    "node": ">=18.0.0"
-  },
+
   "scripts": {
     "start": "node server.js",
     "package": "pkg . --targets node18-win-x64 --output ../K9_Rehab_Pro_Demo/K9RehabPro.exe"
   },
+
   "pkg": {
     "assets": [
       "../k9-rehab-frontend/build/**/*",
@@ -37,6 +41,7 @@
       "auth.js"
     ]
   },
+
   "dependencies": {
     "@anthropic-ai/sdk": "^0.78.0",
     "@supabase/supabase-js": "^2.95.3",
@@ -50,6 +55,7 @@
     "mammoth": "^1.11.0",
     "sqlite3": "^6.0.1"
   },
+
   "devDependencies": {
     "supabase": "^2.76.9"
   }
