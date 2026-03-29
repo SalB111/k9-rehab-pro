@@ -16,18 +16,31 @@ const path = require('path');
 const IS_PKG = typeof process.pkg !== 'undefined';
 const APP_ROOT = IS_PKG ? path.dirname(process.execPath) : path.join(__dirname, '..');
 
-require('dotenv').config({ override: true, path: IS_PKG ? path.join(APP_ROOT, '.env') : path.join(__dirname, '.env') });
+require('dotenv').config({
+  override: true,
+  path: IS_PKG ? path.join(APP_ROOT, '.env') : path.join(__dirname, '.env')
+});
 
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const db = require('./db-provider');
-const { selectExercisesForWeek, PROTOCOL_DEFINITIONS, validateIntake, getExcludedCodes, getProtocolType } = require('./protocol-generator'); // ✅ ACVSMR-aligned 4-protocol system
+const {
+  selectExercisesForWeek,
+  PROTOCOL_DEFINITIONS,
+  validateIntake,
+  getExcludedCodes,
+  getProtocolType
+} = require('./protocol-generator'); // ✅ ACVSMR-aligned 4-protocol system
 const { ALL_EXERCISES, getExerciseByCode, searchExercises } = require('./all-exercises');
 const { CORE_REFERENCES, EXERCISE_EVIDENCE_MAP } = require('./evidence-references');
 const ANTHROPIC_MODEL = process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-20250514';
-const { INTERVENTION_TYPES, REHAB_PHASES, PRIMARY_INDICATIONS } = require('./exercise-taxonomy');
+const {
+  INTERVENTION_TYPES,
+  REHAB_PHASES,
+  PRIMARY_INDICATIONS
+} = require('./exercise-taxonomy');
 const {
   VIDEO_LIBRARY,
   INSTRUCTORS,
@@ -45,7 +58,6 @@ const {
   getExercisesWithStoryboards,
   getStoryboardStats
 } = require('./storyboard-references');
-// ExerciseLibraryDB now comes from db-provider as db.exerciseLibrary
 const {
   getExerciseSlugsForPhase,
   getAvailableConditions,
@@ -61,22 +73,21 @@ const { generateBlock14SystemPromptContent } = require('./muscle-atlas');
 const mammoth = require('mammoth');
 
 // ── Evidence-Based References → Verification ──
-// The exercise-enhancer.js already sets evidence_base with reference-derived
-// grades (v2 algorithm: journal A → Grade A, journal B → Grade B,
-// textbook-only in limited categories → Grade C, etc.)
-// We just verify the linking was done correctly at startup.
-const evidenceLinked = ALL_EXERCISES.filter(ex => ex.evidence_base && ex.evidence_base.references && ex.evidence_base.references.length > 0).length;
+const evidenceLinked = ALL_EXERCISES.filter(
+  ex => ex.evidence_base && ex.evidence_base.references && ex.evidence_base.references.length > 0
+).length;
 console.log(`✅ Evidence references linked: ${evidenceLinked}/${ALL_EXERCISES.length} exercises`);
 
 // ── Source-of-Truth Protocol Document ──
-// Loaded once at startup, injected into every VetAI prompt
 let SOURCE_OF_TRUTH_TEXT = '';
 (async () => {
   try {
     const docPath = path.join(APP_ROOT, 'CanineRehabProtocols', 'canine_rehab_protocols.docx');
     const result = await mammoth.extractRawText({ path: docPath });
     SOURCE_OF_TRUTH_TEXT = result.value;
-    console.log(`✅ Source-of-truth loaded: canine_rehab_protocols.docx (${SOURCE_OF_TRUTH_TEXT.length} chars)`);
+    console.log(
+      `✅ Source-of-truth loaded: canine_rehab_protocols.docx (${SOURCE_OF_TRUTH_TEXT.length} chars)`
+    );
   } catch (err) {
     console.error('⚠️  Failed to load source-of-truth document:', err.message);
   }
@@ -85,7 +96,9 @@ let SOURCE_OF_TRUTH_TEXT = '';
 // ── JWT Secret Validation ──
 if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
   console.error('FATAL: JWT_SECRET must be set in .env and be at least 32 characters.');
-  console.error('Generate one with: node -e "console.log(require(\'crypto\').randomBytes(64).toString(\'hex\'))"');
+  console.error(
+    "Generate one with: node -e \"console.log(require('crypto').randomBytes(64).toString('hex'))\""
+  );
   process.exit(1);
 }
 
@@ -96,22 +109,45 @@ const PORT = process.env.PORT || 3000;
 app.set('trust proxy', 1);
 
 // ── Security Middleware ──
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      fontSrc: ["'self'", "https://fonts.gstatic.com"],
-      imgSrc: ["'self'", "data:", "https://images.dog.ceo", "blob:"],
-      connectSrc: ["'self'", "https://api.anthropic.com", "https://router.huggingface.co", "https://dog.ceo"],
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+        styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+        fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+        imgSrc: ["'self'", 'data:', 'https://images.dog.ceo', 'blob:'],
+        // Allow frontend to connect to backend + external APIs
+        connectSrc: [
+          "'self'",
+          'https://k9-rehab-pro.onrender.com',
+          'https://api.anthropic.com',
+          'https://router.huggingface.co',
+          'https://dog.ceo'
+        ]
+      }
     }
-  }
-}));
-app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:3001',
-  credentials: true,
-}));
+  })
+);
+
+// ── CORS (Render: frontend + backend + local dev) ──
+app.use(
+  cors({
+    origin: [
+      'https://k9-rehab-pro-frontend.onrender.com',
+      'https://k9-rehab-pro.onrender.com',
+      'http://localhost:3001'
+    ],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+  })
+);
+
+// Handle preflight explicitly (helps with some proxies)
+app.options('*', cors());
+
 app.use(express.json({ limit: '1mb' })); // Increased for VetAI chat history
 
 // Rate limiting — general (300 req / 15 min per IP)
@@ -120,7 +156,7 @@ const generalLimiter = rateLimit({
   max: 300,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: 'Too many requests, please try again later' },
+  message: { error: 'Too many requests, please try again later' }
 });
 app.use('/api', generalLimiter);
 
@@ -130,11 +166,10 @@ const authLimiter = rateLimit({
   max: 50,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: 'Too many login attempts, please try again later' },
+  message: { error: 'Too many login attempts, please try again later' }
 });
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
-
 // ============================================================================
 // AUDIT LOG — Must-Have #8: Compliance audit trail
 // ============================================================================
