@@ -1,0 +1,145 @@
+# Query: generate-protocol
+# ContextLines: 1
+
+31 results - 22 files
+
+ADDRESS_FIELDS_ZIP_LOOKUP.md:
+  373  ```javascript
+  374: POST /generate-protocol
+  375  {
+
+BACKEND_INTEGRATION_COMPLETE.md:
+   34  ```
+   35: POST /api/generate-protocol   ← Main protocol generation
+   36  GET  /api/health               ← Server health check
+
+  216  
+  217: **Step 2:** Send POST request to `/api/generate-protocol` with patient data
+  218  
+
+BUILD_STATUS.md:
+  36    - POST /api/patients
+  37:   - POST /api/generate-protocol ⭐
+  38  - ✅ **Protocol Generation** (basic logic working)
+
+CLAUDE.md:
+  288  - `GET /api/conditions/grouped` — Conditions by category
+  289: - `POST /api/generate-protocol` — Generate rehab protocol (main endpoint)
+  290  
+
+COMPLETE_REBUILD_PLAN.md:
+  385  GET  /api/conditions/:code/exercises // Recommended exercises
+  386: POST /api/generate-protocol      // Enhanced protocol generation
+  387  ```
+
+COMPLETE_SYSTEM_VERIFICATION.md:
+  183  **Protocol Management**
+  184: - ✅ POST /api/generate-protocol - Generate new protocol
+  185  - ✅ GET /api/protocols - Get all protocols
+
+  204  - ✅ GET /api/conditions → Loads diagnosis dropdown (8 options)
+  205: - ✅ POST /api/generate-protocol → Creates 48-exercise protocols
+  206  - ✅ GET /api/patients → Retrieves patient database
+
+  515  
+  516: - ✅ Backend exposes: POST /api/generate-protocol
+  517: - ✅ Frontend consumes: POST /api/generate-protocol  
+  518  - ✅ Data format: Matches perfectly
+
+LOADING_ANIMATION_IMPLEMENTATION.md:
+  91    try {
+  92:     const response = await axios.post(`${API_BASE}/generate-protocol`, formData);
+  93      setProtocolData(response.data);
+
+MULTIPLE_DIAGNOSIS_DROPDOWNS.md:
+  286  ```javascript
+  287: POST /generate-protocol
+  288  {
+
+PHASE_2_COMPLETE.md:
+  120  - POST /api/patients - Create patient
+  121: - POST /api/generate-protocol - **THE MAIN EVENT!**
+  122  
+
+SESSION_SAVE_SUMMARY.md:
+   87  - **Status:** Running (assumed)
+   88: - **API:** `/api/generate-protocol`
+   89  
+
+  121    try {
+  122:     const response = await axios.post(`${API_BASE}/generate-protocol`, formData);
+  123      setProtocolData(response.data);
+
+SESSION_SUMMARY_FEB_11_2026.md:
+  511  ```javascript
+  512: POST http://localhost:3000/generate-protocol
+  513  
+
+SYSTEM_STATUS_50_EXERCISES.md:
+  89  ```
+  90: POST /api/generate-protocol   → Generate rehabilitation protocol
+  91  GET  /api/health               → Server health check
+
+backend\API_REFERENCE.md:
+   42  ```http
+   43: POST /generate-protocol
+   44  ```
+
+  207  // 1. Generate protocol (patient auto-created)
+  208: POST /api/generate-protocol
+  209  // Returns: protocolId, patient_id
+
+backend\FINAL_BUILD_SUMMARY.md:
+  118  **Core Protocol (5)**
+  119: - POST /api/generate-protocol
+  120  - POST /api/safety-screening
+
+backend\PROJECT_COMPLETION.md:
+  120  ### Core (5)
+  121: 1. `POST /api/generate-protocol` - Generate protocol + save to DB
+  122  2. `POST /api/safety-screening` - Evaluate patient safety
+
+backend\protocol-rules.js:
+  11  // This file is retained for backward compatibility with V1 API consumers.
+  12: // New integrations should use POST /api/generate-protocol instead.
+  13  // ============================================================================
+
+backend\README_DATABASE.md:
+  109  ### Core Protocol Generation (Original)
+  110: - `POST /api/generate-protocol` - Generate protocol (now saves to DB automatically)
+  111  - `POST /api/safety-screening` - Evaluate patient safety
+
+  180  ```javascript
+  181: POST http://localhost:3000/api/generate-protocol
+  182  Content-Type: application/json
+
+  358  1. **Generate Protocol**
+  359:    - POST /api/generate-protocol
+  360     - Patient + Protocol saved automatically
+
+  428  # Generate protocol
+  429: curl -X POST http://localhost:3000/api/generate-protocol \
+  430    -H "Content-Type: application/json" \
+
+backend\public\assets\GeneratorView-Bzd7UkNB.js:
+  18          }
+  19: ⟪ 940 characters skipped ⟫x(null),r(null);const z=new Promise(W=>setTimeout(W,11e3));try{const W={};for(const[oe,K]of Object.entries(k))K===""||K===null||K===void 0||(W[oe]=K);const[{data:G}]=await Promise.all([te.post(`${se}/generate-protocol`,{...W,age:+k.age||0,weight:+k.weightLbs||+k.weightKg*2.20462||0,protocolLength:+k.protocolLength||8}),z]);r((G==null?void 0:G.data)||G),N()}catch(W){x(((H=(C=W.response)==null?void 0:C.data)==null?void 0:H.error)||"Failed to generate protocol")}finally{a(!1)}},U=(z,C)=>{r(H=>({...H,weeks:H.weeks.map((W,G)=>G===z?{...W,exercises:W.exercises.filter((oe,K)=>K!==C)}:W)}))},ee=(z,C)=>{r(H=>({...H,weeks:H.weeks.map((W,G)=>G===z?{...W,exercises:[...W.exercises,{exercise:C,code:C.code,name:C.name,category:C.category,sets:3,reps:10,frequency:"2x daily",duration_minutes:10,equipment:C.equipment,setup:C.setup,steps:C.steps,good_form:C.good_form,common_mistakes:C.common_mistakes,red_flags:C.red_flags,progression:C.progression,contraindications:C.contraindications,notes:"Added manually by clinician"}]}:W)})),p(!1),j("")},je=c.filter(z=>{var C;return z.name.toLowerCase().includes(b.toLowerCase())||((C=z.category)==null?void 0:C.toLowerCase().includes(b.toLowerCase()))});return d?e
+
+docs\enterprise\K9_REHAB_PRO_PLATFORM_SPECIFICATION.md:
+  848  | GET | `/api/conditions/grouped` | Required | Conditions by category |
+  849: | POST | `/api/generate-protocol` | Required | Generate rehab protocol |
+  850  
+
+docs\enterprise\SECURITY_ARCHITECTURE.md:
+  102  | timestamp | UTC timestamp of the action |
+  103: | action | HTTP method + path (e.g., "POST /generate-protocol") |
+  104  | resource_type | API resource category (patients, protocols, etc.) |
+
+k9-rehab-frontend\src\pages\GeneratorView.jsx:
+  108        const [{ data: resp }] = await Promise.all([
+  109:         axios.post(`${API}/generate`, {
+  110            ...cleanedForm,
+
+K9_Rehab_Pro_Demo\public\assets\GeneratorView-DbXfpZwX.js:
+  18          }
+  19: ⟪ 940 characters skipped ⟫x(null),r(null);const B=new Promise(E=>setTimeout(E,11e3));try{const E={};for(const[re,U]of Object.entries(z))U===""||U===null||U===void 0||(E[re]=U);const[{data:_}]=await Promise.all([le.post(`${ae}/generate-protocol`,{...E,age:+z.age||0,weight:+z.weightLbs||+z.weightKg*2.20462||0,protocolLength:+z.protocolLength||8}),B]);r((_==null?void 0:_.data)||_),J()}catch(E){x(((G=(j=E.response)==null?void 0:j.data)==null?void 0:G.error)||"Failed to generate protocol")}finally{l(!1)}},ye=(B,j)=>{r(G=>({...G,weeks:G.weeks.map((E,_)=>_===B?{...E,exercises:E.exercises.filter((re,U)=>U!==j)}:E)}))},me=(B,j)=>{r(G=>({...G,weeks:G.weeks.map((E,_)=>_===B?{...E,exercises:[...E.exercises,{exercise:j,code:j.code,name:j.name,category:j.category,sets:3,reps:10,frequency:"2x daily",duration_minutes:10,equipment:j.equipment,setup:j.setup,steps:j.steps,good_form:j.good_form,common_mistakes:j.common_mistakes,red_flags:j.red_flags,progression:j.progression,contraindications:j.contraindications,notes:"Added manually by clinician"}]}:E)})),p(!1),S("")},ve=c.filter(B=>{var j;return B.name.toLowerCase().includes(y.toLowerCase())||((j=B.category)==null?void 0:j.toLowerCase().includes(y.toLowerCase()))});return d?
