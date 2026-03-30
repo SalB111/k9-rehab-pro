@@ -6,7 +6,7 @@ const express = require('express');
 const cors = require('cors');
 
 // ---- Database Initialization ----
-const db = require("./db-providers/sqlite-provider");
+const { initialize, createTables, findUserByUsername, createUser } = require("./db-providers/sqlite-provider");
 
 // ---- Protocol Engine Imports ----
 const {
@@ -31,7 +31,10 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
 // ---- Initialize Database (REQUIRED) ----
-db.initialize();
+(async () => {
+  await initialize();
+  await createTables();
+})();
 
 // ---- Render Health Check (MUST BE FIRST) ----
 app.get("/health", (req, res) => {
@@ -87,13 +90,13 @@ app.post('/api/feline-protocol', async (req, res) => {
 
 // ============================================================================
 // ONE-TIME ADMIN USER CREATION
-// Creates admin:admin123 if it does not exist
 // ============================================================================
+
 (async () => {
   try {
-    const existing = await db.findUserByUsername("admin");
+    const existing = await findUserByUsername("admin");
     if (!existing) {
-      await db.createUser({
+      await createUser({
         username: "admin",
         password: "admin123",
         display_name: "Administrator",
