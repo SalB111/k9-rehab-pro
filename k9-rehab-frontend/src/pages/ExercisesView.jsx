@@ -491,7 +491,7 @@ function ExercisesView({ setView, setGenKey, setGenInitialStep }) {
   };
 
   useEffect(() => {
-    axios.get(`${API}/exercises`).then(r => setExercises(r.data?.data || r.data || [])).catch(() => toast("Failed to load exercises")).finally(() => setLoading(false));
+    axios.get(`${API}/v2/exercises`).then(r => setExercises(r.data?.data || r.data || [])).catch(() => toast("Failed to load exercises")).finally(() => setLoading(false));
   }, []);
 
   const categories = [...new Set(exercises.map(e => e.category))].sort();
