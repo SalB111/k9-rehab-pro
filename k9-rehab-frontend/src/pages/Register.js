@@ -1,31 +1,35 @@
 import React, { useState } from "react";
-import { login } from "../services/authService";
+import { register } from "../services/authService";
 
-export default function Login() {
+export default function Register() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setSuccess("");
 
     try {
-      const res = await login(username, password);
-      console.log("Login success:", res.data);
-
-      window.location.href = "/dashboard";
+      await register(username, password);
+      setSuccess("Account created successfully!");
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 800);
     } catch (err) {
-      console.error("Login failed:", err);
-      setError("Invalid username or password");
+      console.error("Registration failed:", err);
+      setError("Unable to create account");
     }
   };
 
   return (
-    <div className="login-container">
-      <h2>Sign In</h2>
+    <div className="register-container">
+      <h2>Create Account</h2>
 
       {error && <div className="error-box">{error}</div>}
+      {success && <div className="success-box">{success}</div>}
 
       <form onSubmit={handleSubmit}>
         <input
@@ -48,10 +52,10 @@ export default function Login() {
           required
         />
 
-        <button type="submit">SIGN IN</button>
+        <button type="submit">CREATE ACCOUNT</button>
       </form>
 
-      <a href="/register">Need an account? Create Account</a>
+      <a href="/login">Already have an account? Sign In</a>
     </div>
   );
 }
