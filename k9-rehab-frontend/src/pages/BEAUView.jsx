@@ -29,13 +29,30 @@ function BEAUView({ authToken }) {
   const taRef = useRef(null);
   const toast = useToast();
 
-  // Load patients from DB + check AI status
-  useEffect(() => {
-    axios.get(`${API}/patients`).then(r => setPatients(r.data?.data || r.data || [])).catch(() => toast("Failed to load patients"));
-    axios.get(`${API}/vet-ai/status`).then(r => setAiStatus(r.data)).catch(() => setAiStatus({ configured: false }));
-    axios.get(`${API}/beau/sessions`).then(r => setSessionHistory(r.data?.data || [])).catch(() => {});
-    axios.get(`${API}/beau/intelligence`).then(r => setIntelligence(r.data?.data || null)).catch(() => {});
-  }, []);
+// Load patients + AI status ONLY if authenticated
+useEffect(() => {
+  if (!authToken) return; // ⛔ Prevents all 4 API calls before login
+
+  axios
+    .get(`${API}/patients`)
+    .then(r => setPatients(r.data?.data || r.data || []))
+    .catch(() => toast("Failed to load patients"));
+
+  axios
+    .get(`${API}/vet-ai/status`)
+    .then(r => setAiStatus(r.data))
+    .catch(() => setAiStatus({ configured: false }));
+
+  axios
+    .get(`${API}/beau/sessions`)
+    .then(r => setSessionHistory(r.data?.data || []))
+    .catch(() => {});
+
+  axios
+    .get(`${API}/beau/intelligence`)
+    .then(r => setIntelligence(r.data?.data || null))
+    .catch(() => {});
+}, [authToken]);
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs, stream]);
 

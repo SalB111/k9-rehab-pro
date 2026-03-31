@@ -1,0 +1,52 @@
+{
+  "protocolId": "POST-AMPUTATION-12WK",
+  "species": "canine",
+  "condition": "post-amputation",
+  "phases": {
+    "week1-2": {
+      "label": "Balance & Early Mobility",
+      "exercises": [
+        {
+          "id": "EARLY-MOBILITY",
+          "homeSafe": true
+        },
+        {
+          "id": "WEIGHT-SHIFTING",
+          "homeSafe": true
+        }
+      ]
+    },
+    "week3-6": {
+      "label": "Strength & Stability",
+      "exercises": [
+        {
+          "id": "LEASH-WALK",
+          "homeSafe": true
+        },
+        {
+          "id": "BALANCE-PROP",
+          "homeSafe": true
+        }
+      ]
+    },
+    "week7-12": {
+      "label": "Advanced Balance & Functional Strength",
+      "exercises": [
+        {
+          "id": "SIT-TO-STAND",
+          "homeSafe": true
+        },
+        {
+          "id": "CAVALETTI",
+          "homeSafe": true
+        },
+        {
+          "id": "HYDRO-LIGHT",
+          "homeSafe": true
+        }
+      ]
+    }
+  },
+  "version": "1.0.0",
+  "hash": "9773536fa234bf3935ef5ce788da746b2ee806e2e6dcbafe5729ddecc90b8dfd"
+}

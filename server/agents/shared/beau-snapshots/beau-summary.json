@@ -1,0 +1,12 @@
+{
+  "generatedAt": "2026-03-31T01:13:54.855Z",
+  "protocolCount": 9,
+  "species": {
+    "canine": 8,
+    "feline": 1
+  },
+  "exercises": [
+    "canine",
+    "feline"
+  ]
+}

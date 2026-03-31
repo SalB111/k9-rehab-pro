@@ -1,0 +1,56 @@
+{
+  "protocolId": "RETURN-TO-SPORT-12WK",
+  "species": "canine",
+  "condition": "return-to-sport",
+  "phases": {
+    "week1-2": {
+      "label": "Foundation Strength & Mobility",
+      "exercises": [
+        {
+          "id": "LEASH-WALK",
+          "homeSafe": true
+        },
+        {
+          "id": "SIT-TO-STAND",
+          "homeSafe": true
+        }
+      ]
+    },
+    "week3-6": {
+      "label": "Strength, Balance & Coordination",
+      "exercises": [
+        {
+          "id": "BALANCE-PROP",
+          "homeSafe": true
+        },
+        {
+          "id": "WEIGHT-SHIFTING",
+          "homeSafe": true
+        },
+        {
+          "id": "CAVALETTI",
+          "homeSafe": true
+        }
+      ]
+    },
+    "week7-12": {
+      "label": "Advanced Strength & Sport Readiness",
+      "exercises": [
+        {
+          "id": "STAIRS-RAMP",
+          "homeSafe": true
+        },
+        {
+          "id": "HYDRO-LIGHT",
+          "homeSafe": true
+        },
+        {
+          "id": "CAVALETTI",
+          "homeSafe": true
+        }
+      ]
+    }
+  },
+  "version": "1.0.0",
+  "hash": "57bbcba90ef9365ff17045f45ca0655c5d56eba191e2d8cb2cc8dce1ce83dc5a"
+}

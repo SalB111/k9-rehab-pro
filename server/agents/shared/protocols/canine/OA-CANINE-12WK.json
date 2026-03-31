@@ -1,0 +1,56 @@
+{
+  "protocolId": "OA-CANINE-12WK",
+  "species": "canine",
+  "condition": "osteoarthritis",
+  "phases": {
+    "week1-2": {
+      "label": "Mobility & Pain Modulation",
+      "exercises": [
+        {
+          "id": "PROM-FLEX-EXT",
+          "homeSafe": true
+        },
+        {
+          "id": "EARLY-MOBILITY",
+          "homeSafe": true
+        }
+      ]
+    },
+    "week3-6": {
+      "label": "Low-Impact Strengthening",
+      "exercises": [
+        {
+          "id": "LEASH-WALK",
+          "homeSafe": true
+        },
+        {
+          "id": "WEIGHT-SHIFTING",
+          "homeSafe": true
+        },
+        {
+          "id": "BALANCE-PROP",
+          "homeSafe": true
+        }
+      ]
+    },
+    "week7-12": {
+      "label": "Strength, Endurance & Joint Support",
+      "exercises": [
+        {
+          "id": "SIT-TO-STAND",
+          "homeSafe": true
+        },
+        {
+          "id": "CAVALETTI",
+          "homeSafe": true
+        },
+        {
+          "id": "HYDRO-LIGHT",
+          "homeSafe": true
+        }
+      ]
+    }
+  },
+  "version": "1.0.0",
+  "hash": "ed6ff05c6974f3994a1e9d0045186289492ea10462745533ea9c038e1ec4ed05"
+}

@@ -1,0 +1,441 @@
+{
+  "protocols": [
+    {
+      "protocolId": "CCL-CONSERVATIVE-12WK",
+      "species": "canine",
+      "condition": "ccl-conservative",
+      "phases": {
+        "week1-2": {
+          "label": "Acute",
+          "exercises": [
+            {
+              "id": "PROM-FLEX-EXT",
+              "homeSafe": true
+            },
+            {
+              "id": "EARLY-MOBILITY",
+              "homeSafe": true
+            }
+          ]
+        },
+        "week3-6": {
+          "label": "Sub-acute",
+          "exercises": [
+            {
+              "id": "LEASH-WALK",
+              "homeSafe": true
+            },
+            {
+              "id": "WEIGHT-SHIFTING",
+              "homeSafe": true
+            }
+          ]
+        },
+        "week7-12": {
+          "label": "Strength & Proprioception",
+          "exercises": [
+            {
+              "id": "SIT-TO-STAND",
+              "homeSafe": true
+            },
+            {
+              "id": "BALANCE-PROP",
+              "homeSafe": true
+            },
+            {
+              "id": "CAVALETTI",
+              "homeSafe": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "protocolId": "GERIATRIC-MOBILITY-12WK",
+      "species": "canine",
+      "condition": "geriatric-mobility",
+      "phases": {
+        "week1-2": {
+          "label": "Gentle Mobility & Comfort",
+          "exercises": [
+            {
+              "id": "EARLY-MOBILITY",
+              "homeSafe": true
+            },
+            {
+              "id": "PROM-FLEX-EXT",
+              "homeSafe": true
+            }
+          ]
+        },
+        "week3-6": {
+          "label": "Low-Impact Strength & Stability",
+          "exercises": [
+            {
+              "id": "LEASH-WALK",
+              "homeSafe": true
+            },
+            {
+              "id": "WEIGHT-SHIFTING",
+              "homeSafe": true
+            }
+          ]
+        },
+        "week7-12": {
+          "label": "Balance, Endurance & Joint Support",
+          "exercises": [
+            {
+              "id": "BALANCE-PROP",
+              "homeSafe": true
+            },
+            {
+              "id": "SIT-TO-STAND",
+              "homeSafe": true
+            },
+            {
+              "id": "HYDRO-LIGHT",
+              "homeSafe": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "protocolId": "IVDD-CONSERVATIVE-12WK",
+      "species": "canine",
+      "condition": "ivdd-conservative",
+      "phases": {
+        "week1-2": {
+          "label": "Acute",
+          "exercises": [
+            {
+              "id": "PROM-FLEX-EXT",
+              "homeSafe": true
+            },
+            {
+              "id": "EARLY-MOBILITY",
+              "homeSafe": true
+            }
+          ]
+        },
+        "week3-6": {
+          "label": "Sub-acute",
+          "exercises": [
+            {
+              "id": "LEASH-WALK",
+              "homeSafe": true
+            },
+            {
+              "id": "WEIGHT-SHIFTING",
+              "homeSafe": true
+            }
+          ]
+        },
+        "week7-12": {
+          "label": "Strength & Proprioception",
+          "exercises": [
+            {
+              "id": "BALANCE-PROP",
+              "homeSafe": true
+            },
+            {
+              "id": "SIT-TO-STAND",
+              "homeSafe": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "protocolId": "OA-CANINE-12WK",
+      "species": "canine",
+      "condition": "osteoarthritis",
+      "phases": {
+        "week1-2": {
+          "label": "Mobility & Pain Modulation",
+          "exercises": [
+            {
+              "id": "PROM-FLEX-EXT",
+              "homeSafe": true
+            },
+            {
+              "id": "EARLY-MOBILITY",
+              "homeSafe": true
+            }
+          ]
+        },
+        "week3-6": {
+          "label": "Low-Impact Strengthening",
+          "exercises": [
+            {
+              "id": "LEASH-WALK",
+              "homeSafe": true
+            },
+            {
+              "id": "WEIGHT-SHIFTING",
+              "homeSafe": true
+            },
+            {
+              "id": "BALANCE-PROP",
+              "homeSafe": true
+            }
+          ]
+        },
+        "week7-12": {
+          "label": "Strength, Endurance & Joint Support",
+          "exercises": [
+            {
+              "id": "SIT-TO-STAND",
+              "homeSafe": true
+            },
+            {
+              "id": "CAVALETTI",
+              "homeSafe": true
+            },
+            {
+              "id": "HYDRO-LIGHT",
+              "homeSafe": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "protocolId": "POST-AMPUTATION-12WK",
+      "species": "canine",
+      "condition": "post-amputation",
+      "phases": {
+        "week1-2": {
+          "label": "Balance & Early Mobility",
+          "exercises": [
+            {
+              "id": "EARLY-MOBILITY",
+              "homeSafe": true
+            },
+            {
+              "id": "WEIGHT-SHIFTING",
+              "homeSafe": true
+            }
+          ]
+        },
+        "week3-6": {
+          "label": "Strength & Stability",
+          "exercises": [
+            {
+              "id": "LEASH-WALK",
+              "homeSafe": true
+            },
+            {
+              "id": "BALANCE-PROP",
+              "homeSafe": true
+            }
+          ]
+        },
+        "week7-12": {
+          "label": "Advanced Balance & Functional Strength",
+          "exercises": [
+            {
+              "id": "SIT-TO-STAND",
+              "homeSafe": true
+            },
+            {
+              "id": "CAVALETTI",
+              "homeSafe": true
+            },
+            {
+              "id": "HYDRO-LIGHT",
+              "homeSafe": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "protocolId": "POST-FRACTURE-12WK",
+      "species": "canine",
+      "condition": "post-fracture",
+      "phases": {
+        "week1-2": {
+          "label": "Protection & Gentle Mobility",
+          "exercises": [
+            {
+              "id": "PROM-FLEX-EXT",
+              "homeSafe": true
+            },
+            {
+              "id": "EARLY-MOBILITY",
+              "homeSafe": true
+            }
+          ]
+        },
+        "week3-6": {
+          "label": "Controlled Strengthening",
+          "exercises": [
+            {
+              "id": "LEASH-WALK",
+              "homeSafe": true
+            },
+            {
+              "id": "WEIGHT-SHIFTING",
+              "homeSafe": true
+            }
+          ]
+        },
+        "week7-12": {
+          "label": "Strength, Proprioception & Return to Function",
+          "exercises": [
+            {
+              "id": "BALANCE-PROP",
+              "homeSafe": true
+            },
+            {
+              "id": "SIT-TO-STAND",
+              "homeSafe": true
+            },
+            {
+              "id": "CAVALETTI",
+              "homeSafe": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "protocolId": "RETURN-TO-SPORT-12WK",
+      "species": "canine",
+      "condition": "return-to-sport",
+      "phases": {
+        "week1-2": {
+          "label": "Foundation Strength & Mobility",
+          "exercises": [
+            {
+              "id": "LEASH-WALK",
+              "homeSafe": true
+            },
+            {
+              "id": "SIT-TO-STAND",
+              "homeSafe": true
+            }
+          ]
+        },
+        "week3-6": {
+          "label": "Strength, Balance & Coordination",
+          "exercises": [
+            {
+              "id": "BALANCE-PROP",
+              "homeSafe": true
+            },
+            {
+              "id": "WEIGHT-SHIFTING",
+              "homeSafe": true
+            },
+            {
+              "id": "CAVALETTI",
+              "homeSafe": true
+            }
+          ]
+        },
+        "week7-12": {
+          "label": "Advanced Strength & Sport Readiness",
+          "exercises": [
+            {
+              "id": "STAIRS-RAMP",
+              "homeSafe": true
+            },
+            {
+              "id": "HYDRO-LIGHT",
+              "homeSafe": true
+            },
+            {
+              "id": "CAVALETTI",
+              "homeSafe": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "protocolId": "TPLO-8WK",
+      "species": "canine",
+      "condition": "post-tplo",
+      "phases": {
+        "week1-2": {
+          "label": "Acute",
+          "exercises": [
+            {
+              "id": "PROM-FLEX-EXT",
+              "homeSafe": true
+            },
+            {
+              "id": "EARLY-MOBILITY",
+              "homeSafe": true
+            }
+          ]
+        },
+        "week3-6": {
+          "label": "Sub-acute",
+          "exercises": [
+            {
+              "id": "LEASH-WALK",
+              "homeSafe": true
+            },
+            {
+              "id": "SIT-TO-STAND",
+              "homeSafe": true
+            },
+            {
+              "id": "WEIGHT-SHIFTING",
+              "homeSafe": true
+            },
+            {
+              "id": "BALANCE-PROP",
+              "homeSafe": true
+            }
+          ]
+        },
+        "week7-12": {
+          "label": "Strength & Proprioception",
+          "exercises": [
+            {
+              "id": "CAVALETTI",
+              "homeSafe": true
+            },
+            {
+              "id": "STAIRS-RAMP",
+              "homeSafe": true
+            },
+            {
+              "id": "HYDRO-LIGHT",
+              "homeSafe": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "protocolId": "FELINE-POST-ORTHO-8WK",
+      "species": "feline",
+      "condition": "post-orthopedic",
+      "phases": {
+        "week1-2": {
+          "label": "Acute",
+          "exercises": [
+            {
+              "id": "FELINE-PROM",
+              "homeSafe": true
+            }
+          ]
+        },
+        "week3-6": {
+          "label": "Sub-acute",
+          "exercises": [
+            {
+              "id": "FELINE-PAW-REACH",
+              "homeSafe": true
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

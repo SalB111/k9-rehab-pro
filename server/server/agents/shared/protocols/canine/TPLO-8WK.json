@@ -1,0 +1,31 @@
+{
+  "protocolId": "TPLO-8WK",
+  "species": "canine",
+  "condition": "post-tplo",
+  "phases": {
+    "week1-2": {
+      "label": "Acute",
+      "exercises": [
+        { "id": "PROM-FLEX-EXT", "homeSafe": true },
+        { "id": "EARLY-MOBILITY", "homeSafe": true }
+      ]
+    },
+    "week3-6": {
+      "label": "Sub-acute",
+      "exercises": [
+        { "id": "LEASH-WALK", "homeSafe": true },
+        { "id": "SIT-TO-STAND", "homeSafe": true },
+        { "id": "WEIGHT-SHIFTING", "homeSafe": true },
+        { "id": "BALANCE-PROP", "homeSafe": true }
+      ]
+    },
+    "week7-12": {
+      "label": "Strength & Proprioception",
+      "exercises": [
+        { "id": "CAVALETTI", "homeSafe": true },
+        { "id": "STAIRS-RAMP", "homeSafe": true },
+        { "id": "HYDRO-LIGHT", "homeSafe": true }
+      ]
+    }
+  }
+}

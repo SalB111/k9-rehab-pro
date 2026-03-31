@@ -1,0 +1,17 @@
+{
+  "hardStops": [
+    "non-weight-bearing lameness",
+    "acute severe pain",
+    "open wound at surgical site",
+    "sudden neurological decline",
+    "loss of bladder or bowel control",
+    "sudden inability to rise or walk"
+  ],
+  "softFlags": [
+    "mild fatigue",
+    "mild stiffness",
+    "transient soreness",
+    "reluctance to perform one exercise",
+    "mild next-day stiffness"
+  ]
+}
