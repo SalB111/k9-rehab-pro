@@ -1,120 +1,74 @@
 // ============================================================================
-// K9 REHAB PRO™ — ENHANCED SERVER
+// K9-REHAB-PRO — MAIN BACKEND SERVER (CLEAN, MODERN, PRODUCTION READY)
 // ============================================================================
 
-const express = require('express');
-const cors = require('cors');
+const express = require("express");
+const cors = require("cors");
+const bcrypt = require("bcryptjs");
+const path = require("path");
 
-// ---- Database Initialization ----
-const { initialize, createTables, findUserByUsername, createUser } = require("./db-providers/sqlite-provider");
-
-// ---- Protocol Engine Imports ----
-const {
-  selectExercisesForWeek,
-  getProtocolType,
-  getPhaseForWeek,
-  validateIntake,
-  getExcludedCodes,
-  PROTOCOL_DEFINITIONS,
-  EVIDENCE_MAP,
-  parseReps
-} = require('./protocol-generator');
-
-const feline = require('./beau-feline');
-
-// ---- Auth Routes ----
+const db = require("./db-providers/sqlite-provider");
 const authRoutes = require("./auth-routes");
 
-// ---- App Setup ----
 const app = express();
+const PORT = process.env.PORT || 10000;
+
+// ---------------------------------------------------------------------------
+// MIDDLEWARE
+// ---------------------------------------------------------------------------
+
 app.use(cors());
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json());
 
-// ---- Initialize Database (REQUIRED) ----
-(async () => {
-  await initialize();
-  await createTables();
-})();
+// ---------------------------------------------------------------------------
+// HEALTH CHECK
+// ---------------------------------------------------------------------------
 
-// ---- Render Health Check (MUST BE FIRST) ----
-app.get("/health", (req, res) => {
-  res.status(200).send("OK");
+app.get("/api/health", (req, res) => {
+  res.json({ status: "ok", message: "Backend running" });
 });
 
-// ---- Auth Routes ----
+// ---------------------------------------------------------------------------
+// AUTH ROUTES
+// ---------------------------------------------------------------------------
+
 app.use("/api/auth", authRoutes);
 
-// ============================================================================
-// API ROUTES (ALL PREFIXED WITH /api)
-// ============================================================================
-
-// ---- API Health Check ----
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'Backend running' });
-});
-
-// ---- Get All Protocol Definitions ----
-app.get('/api/protocol-definitions', (req, res) => {
-  res.json(PROTOCOL_DEFINITIONS);
-});
-
-// ---- Generate Weekly Exercises ----
-app.post('/api/generate-week', (req, res) => {
-  try {
-    const { weekNum, totalWeeks, allExercises, formData } = req.body;
-
-    const weekExercises = selectExercisesForWeek(
-      weekNum,
-      totalWeeks,
-      allExercises,
-      formData
-    );
-
-    res.json({ weekExercises });
-  } catch (err) {
-    console.error('Error generating week:', err);
-    res.status(500).json({ error: 'Failed to generate week' });
-  }
-});
-
-// ---- Feline Protocol Endpoint ----
-app.post('/api/feline-protocol', async (req, res) => {
-  try {
-    const result = await feline.generateFelineProtocol(req.body);
-    res.json(result);
-  } catch (err) {
-    console.error('Feline protocol error:', err);
-    res.status(500).json({ error: 'Failed to generate feline protocol' });
-  }
-});
-
-// ============================================================================
-// ONE-TIME ADMIN USER CREATION
-// ============================================================================
+// ---------------------------------------------------------------------------
+// INITIALIZATION SEQUENCE (CRITICAL ORDER)
+// ---------------------------------------------------------------------------
 
 (async () => {
   try {
-    const existing = await findUserByUsername("admin");
-    if (!existing) {
-      await createUser({
-        username: "admin",
-        password: "admin123",
-        display_name: "Administrator",
-        role: "admin"
-      });
-      console.log("✔ Admin user created: admin / admin123");
+    console.log("K9 Rehab Pro backend starting…");
+
+    // 1. Connect to SQLite
+    await db.initialize();
+
+    // 2. Create all tables (including USERS)
+    await db.createTables();
+
+    // 3. Seed V2 exercise library
+    await db.seedV2Library();
+
+    // 4. Create default admin ONLY AFTER tables exist
+    const existingAdmin = await db.findUserByUsername("admin");
+
+    if (!existingAdmin) {
+      const passwordHash = await bcrypt.hash("Rehab2026!", 10);
+      await db.createUser("admin", passwordHash, "admin");
+      console.log("✅ Default admin user created");
     } else {
-      console.log("✔ Admin user already exists");
+      console.log("Admin user already exists");
     }
+
+    // 5. Start server
+    app.listen(PORT, () => {
+      console.log(`K9 Rehab Pro backend running on port ${PORT}`);
+    });
+
   } catch (err) {
-    console.error("Admin creation error:", err);
+    console.error("❌ Fatal startup error:", err);
+    process.exit(1);
   }
 })();
-
-// ============================================================================
-// START SERVER
-// ============================================================================
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => {
-  console.log(`K9 Rehab Pro backend running on port ${PORT}`);
-});
