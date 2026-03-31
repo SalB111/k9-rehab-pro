@@ -6,7 +6,6 @@ import React, { useEffect, useState, Suspense, lazy } from "react";
 import api, { setupAxiosAuth, clearAxiosAuth } from "./api/axios";
 import C from "./constants/colors";
 import S from "./constants/styles";
-import TopNav from "./components/TopNav";
 import { ToastProvider } from "./components/Toast";
 import LoginView from "./pages/LoginView";
 
@@ -163,19 +162,6 @@ export default function App() {
   return (
     <ToastProvider>
       <div className="k9-app-content" style={S.app}>
-        <TopNav
-          view={view}
-          setView={setView}
-          brand={brand}
-          dateStr={dateStr}
-          timeStr={timeStr}
-          currentUser={currentUser}
-          onLogout={handleLogout}
-          genKey={genKey}
-          setGenKey={setGenKey}
-          setGenInitialStep={setGenInitialStep}
-        />
-
         <div style={S.main}>
           <div style={S.content} data-content-scroll>
             <Suspense fallback={<ChunkSpinner />}>
