@@ -72,6 +72,17 @@ async function initialize() {
 
 async function createTables() {
 
+  // USERS TABLE (AUTH)
+  await run(`
+    CREATE TABLE IF NOT EXISTS users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT UNIQUE NOT NULL,
+      password_hash TEXT NOT NULL,
+      role TEXT NOT NULL DEFAULT 'user',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
   // Patients
   await run(`
     CREATE TABLE IF NOT EXISTS patients (
@@ -122,63 +133,6 @@ async function createTables() {
       contraindicated_exercises TEXT,
       special_considerations TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
-
-  // Protocols
-  await run(`
-    CREATE TABLE IF NOT EXISTS protocols (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      patient_id INTEGER,
-      protocol_data TEXT NOT NULL,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (patient_id) REFERENCES patients(id)
-    )
-  `);
-
-  // Users
-  await run(`
-    CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      username TEXT UNIQUE NOT NULL,
-      password_hash TEXT NOT NULL,
-      role TEXT NOT NULL DEFAULT 'clinician',
-      display_name TEXT,
-      tos_accepted_at TEXT,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
-
-  // Audit Log
-  await run(`
-    CREATE TABLE IF NOT EXISTS audit_log (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      timestamp TEXT NOT NULL DEFAULT (datetime('now')),
-      action TEXT NOT NULL,
-      resource_type TEXT,
-      resource_id TEXT,
-      user_label TEXT DEFAULT 'system',
-      ip_address TEXT,
-      request_method TEXT,
-      request_path TEXT,
-      status_code INTEGER,
-      detail TEXT,
-      created_at TEXT NOT NULL DEFAULT (datetime('now'))
-    )
-  `);
-
-  // BEAU Sessions
-  await run(`
-    CREATE TABLE IF NOT EXISTS beau_sessions (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id INTEGER NOT NULL,
-      patient_id INTEGER,
-      title TEXT,
-      messages TEXT NOT NULL,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES users(id),
-      FOREIGN KEY (patient_id) REFERENCES patients(id)
     )
   `);
 
@@ -417,6 +371,26 @@ async function seedV2Library() {
 }
 
 // ---------------------------------------------------------------------------
+// AUTH HELPERS — USERS
+// ---------------------------------------------------------------------------
+
+async function findUserByUsername(username) {
+  return await get(
+    `SELECT * FROM users WHERE username = ?`,
+    [username]
+  );
+}
+
+async function createUser(username, passwordHash, role = "user") {
+  await run(
+    `INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)`,
+    [username, passwordHash, role]
+  );
+
+  return await findUserByUsername(username);
+}
+
+// ---------------------------------------------------------------------------
 // EXPORTS
 // ---------------------------------------------------------------------------
 
@@ -426,5 +400,7 @@ module.exports = {
   seedV2Library,
   run,
   get,
-  all
+  all,
+  findUserByUsername,
+  createUser
 };
