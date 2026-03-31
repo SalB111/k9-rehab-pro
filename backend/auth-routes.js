@@ -1,87 +1,55 @@
-// ============================================================================
-// K9-REHAB-PRO — AUTH ROUTES (Login + Register)
-// ============================================================================
-
 const express = require("express");
+const bcrypt = require("bcryptjs");
+const db = require("./db-providers/sqlite-provider");
+
 const router = express.Router();
-const db = require("./db-provider");
-const { verifyPassword, generateToken } = require("./auth");
 
-// ============================================================================
-// POST /api/auth/register
-// ============================================================================
-
+// ---------------------------------------------------------------------------
+// REGISTER
+// ---------------------------------------------------------------------------
 router.post("/register", async (req, res) => {
   try {
-    const { username, password, display_name } = req.body;
+    const { username, password, role } = req.body;
 
     if (!username || !password) {
       return res.status(400).json({ error: "Username and password required" });
     }
 
-    const existing = await db.findUserByUsername(username);
-    if (existing) {
-      return res.status(409).json({ error: "Username already exists" });
-    }
+    // Hash password correctly
+    const passwordHash = await bcrypt.hash(password, 10);
 
-    const user = await db.createUser({
-      username,
-      password,
-      display_name,
-      role: "clinician"
-    });
+    // Create user with correct argument order
+    await db.createUser(username, passwordHash, role || "user");
 
-    const token = generateToken(user);
-
-    return res.json({
-      token,
-      user: {
-        id: user.id,
-        username: user.username,
-        role: user.role,
-        display_name: user.display_name
-      }
-    });
+    res.json({ message: "User registered successfully" });
 
   } catch (err) {
     console.error("Registration error:", err);
-    return res.status(500).json({ error: "Registration failed" });
+    res.status(500).json({ error: "Registration failed" });
   }
 });
 
-// ============================================================================
-// POST /api/auth/login
-// ============================================================================
-
+// ---------------------------------------------------------------------------
+// LOGIN
+// ---------------------------------------------------------------------------
 router.post("/login", async (req, res) => {
   try {
     const { username, password } = req.body;
 
     const user = await db.findUserByUsername(username);
-    if (!user) {
-      return res.status(401).json({ error: "Invalid username or password" });
-    }
+    if (!user) return res.status(401).json({ error: "Invalid credentials" });
 
-    const valid = await verifyPassword(password, user.password_hash);
-    if (!valid) {
-      return res.status(401).json({ error: "Invalid username or password" });
-    }
+    const valid = await bcrypt.compare(password, user.password_hash);
+    if (!valid) return res.status(401).json({ error: "Invalid credentials" });
 
-    const token = generateToken(user);
-
-    return res.json({
-      token,
-      user: {
-        id: user.id,
-        username: user.username,
-        role: user.role,
-        display_name: user.display_name
-      }
+    res.json({
+      message: "Login successful",
+      user: { id: user.id, username: user.username, role: user.role }
     });
 
   } catch (err) {
     console.error("Login error:", err);
-    return res.status(500).json({ error: "Login failed" });
+    res.status(500).json({ error: "Login failed" });
   }
 });
 
