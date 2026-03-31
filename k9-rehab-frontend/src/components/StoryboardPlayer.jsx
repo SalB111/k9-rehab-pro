@@ -288,7 +288,6 @@ function StoryboardPlayer({ exerciseCode, onClose }) {
         {/* ── HEADER ── */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 24px", borderBottom: `1px solid ${C.border}`, background: C.navy }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            {branding.asclepius_symbol && <img src="/rod_of_asclepius.png" alt="⚕" style={{ width: 24, height: 24, objectFit: "contain" }} />}
             <div>
               <div style={{ fontSize: 16, fontWeight: 800, color: "#fff", fontFamily: branding.font_title || "'Exo 2', sans-serif" }}>
                 {storyboard.exercise_name}

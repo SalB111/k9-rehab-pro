@@ -11,7 +11,6 @@ function AboutView() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 900, margin: "0 auto" }}>
       <div style={{ ...S.card, border: `1px solid ${C.border}`, borderTop: `4px solid ${C.teal}`, padding: "32px 36px", textAlign: "center" }}>
-        <img src="/rod_of_asclepius.png" alt="Rod of Asclepius" style={{ width: 64, height: 64, marginBottom: 12, objectFit: "contain" }} />
         <h1 style={{ fontSize: 28, fontWeight: 900, color: C.text, margin: "0 0 8px",
           fontFamily: "'Exo 2', 'Orbitron', sans-serif", letterSpacing: "2px" }}>
           K9 REHAB PRO
