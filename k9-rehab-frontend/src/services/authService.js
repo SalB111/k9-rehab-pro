@@ -1,6 +1,7 @@
 import axios from "axios";
 
-const API_URL = process.env.REACT_APP_API_URL;
+// VITE uses import.meta.env — NOT process.env
+const API_URL = import.meta.env.VITE_API_URL;
 
 // REGISTER
 export async function register(username, password) {
