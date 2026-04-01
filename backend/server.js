@@ -20,6 +20,7 @@ const PORT = process.env.PORT || 10000;
 
 app.use(cors({
   origin: [
+    "https://k9-rehab-pro.vercel.app"
     "https://k9-rehab-pro-frontend.onrender.com",
     "https://k9-rehab-pro.onrender.com",
     "http://localhost:3001",
