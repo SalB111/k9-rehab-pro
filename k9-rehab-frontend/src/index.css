@@ -4,30 +4,30 @@
    ThemeProvider toggles .dark / .high-contrast on <html>
    ───────────────────────────────────────────── */
 
-/* ── Clinical Light (default) ── */
+/* -- Clinical Light (default) -- */
 :root {
-  --k9-navy:         #0A2540;
-  --k9-navy-mid:     #0F3460;
-  --k9-navy-light:   #164E80;
-  --k9-teal:         #0EA5E9;
-  --k9-teal-dark:    #0284C7;
-  --k9-teal-light:   #E0F2FE;
-  --k9-green:        #059669;
-  --k9-green-bg:     #ECFDF5;
-  --k9-amber:        #D97706;
-  --k9-amber-bg:     #FFFBEB;
-  --k9-red:          #DC2626;
-  --k9-red-bg:       #FEF2F2;
-  --k9-bg:           #F8FAFC;
+  --k9-navy:         #1A5F8A;
+  --k9-navy-mid:     #2272A0;
+  --k9-navy-light:   #378ADD;
+  --k9-teal:         #1D9E75;
+  --k9-teal-dark:    #0F6E56;
+  --k9-teal-light:   #E1F5EE;
+  --k9-green:        #1D9E75;
+  --k9-green-bg:     #E1F5EE;
+  --k9-amber:        #BA7517;
+  --k9-amber-bg:     #FAEEDA;
+  --k9-red:          #A32D2D;
+  --k9-red-bg:       #FCEBEB;
+  --k9-bg:           #F4F8FD;
   --k9-surface:      #FFFFFF;
-  --k9-border:       #E2E8F0;
-  --k9-border-light: #F1F5F9;
-  --k9-text:         #0F172A;
-  --k9-text-mid:     #475569;
-  --k9-text-light:   #94A3B8;
-  --k9-purple:       #7C3AED;
-  --k9-purple-light: #a78bfa;
-  --k9-purple-bg:    #F5F3FF;
+  --k9-border:       #B5D4F4;
+  --k9-border-light: #E6F1FB;
+  --k9-text:         #0C2340;
+  --k9-text-mid:     #2E5F8A;
+  --k9-text-light:   #7AAACF;
+  --k9-purple:       #534AB7;
+  --k9-purple-light: #AFA9EC;
+  --k9-purple-bg:    #EEEDFE;
 }
 
 /* ── Clinical Dark ── */

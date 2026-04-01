@@ -4,7 +4,7 @@ const ThemeCtx = createContext({ theme: "clinical_light", setTheme: () => {} });
 
 export function ThemeProvider({ children }) {
   const [theme, setThemeState] = useState(() => {
-    try { return localStorage.getItem("k9-theme") || "clinical_dark"; }
+    try { return localStorage.getItem("k9-theme") || "clinical_light"; }
     catch { return "clinical_dark"; }
   });
 
