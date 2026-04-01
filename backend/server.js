@@ -1,5 +1,5 @@
-// ============================================================================
-// K9-REHAB-PRO — BACKEND SERVER (PRODUCTION READY)
+﻿// ============================================================================
+// K9-REHAB-PRO â€” BACKEND SERVER (PRODUCTION READY)
 // ============================================================================
 
 const express = require("express");
@@ -20,7 +20,7 @@ const PORT = process.env.PORT || 10000;
 
 app.use(cors({
   origin: [
-    "https://k9-rehab-pro.vercel.app"
+    "https://k9-rehab-pro.vercel.app",
     "https://k9-rehab-pro-frontend.onrender.com",
     "https://k9-rehab-pro.onrender.com",
     "http://localhost:3001",
@@ -290,9 +290,9 @@ app.put("/api/clinics/:id", async (req, res) => {
     if (!existingAdmin) {
       const passwordHash = await bcrypt.hash("Rehab2026!", 10);
       await db.createUser("admin", passwordHash, "admin");
-      console.log("✅ Default admin user created");
+      console.log("âœ… Default admin user created");
     } else {
-      console.log("✅ Admin user exists");
+      console.log("âœ… Admin user exists");
     }
 
     app.listen(PORT, () => {
@@ -300,8 +300,9 @@ app.put("/api/clinics/:id", async (req, res) => {
     });
 
   } catch (err) {
-    console.error("❌ Fatal startup error:", err);
+    console.error("âŒ Fatal startup error:", err);
     process.exit(1);
   }
 })();
 // deploy trigger
+
