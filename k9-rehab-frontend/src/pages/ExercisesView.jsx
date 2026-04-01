@@ -491,7 +491,7 @@ function ExercisesView({ setView, setGenKey, setGenInitialStep }) {
   };
 
   useEffect(() => {
-    api.get("/v2/exercises`).then(r => setExercises(r.data?.data || r.data || [])).catch(() => toast("Failed to load exercises")).finally(() => setLoading(false));
+    api.get("/exercises").then(r => setExercises(r.data?.data || r.data || [])).catch(() => toast("Failed to load exercises")).finally(() => setLoading(false));
   }, []);
 
   const categories = [...new Set(exercises.map(e => e.category))].sort();
@@ -788,4 +788,5 @@ function ExercisesView({ setView, setGenKey, setGenInitialStep }) {
 }
 
 export default ExercisesView;
+
 
