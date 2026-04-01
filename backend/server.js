@@ -303,3 +303,4 @@ app.put("/api/clinics/:id", async (req, res) => {
     process.exit(1);
   }
 })();
+// deploy trigger
