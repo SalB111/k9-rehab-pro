@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../api/axios";
 import {
   FiFileText, FiCheckCircle, FiXCircle,
   FiBookOpen, FiClipboard, FiActivity
@@ -28,9 +28,9 @@ export default function DashboardView({ setView }) {
 
   useEffect(() => {
     Promise.all([
-      axios.get(`${API}/patients`).catch(() => ({ data: { data: [] } })),
-      axios.get(`${API}/exercises`).catch(() => ({ data: { data: [] } })),
-      axios.get(`${API}/health`).then(() => true).catch(() => false),
+      api.get("/patients").catch(() => ({ data: { data: [] } })),
+      api.get("/exercises").catch(() => ({ data: { data: [] } })),
+      api.get("/health").then(() => true).catch(() => false),
     ]).then(([pRes, eRes, health]) => {
       setPatients(pRes.data?.data || pRes.data || []);
       setExercises(eRes.data?.data || eRes.data || []);
