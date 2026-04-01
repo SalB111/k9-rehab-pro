@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 import api from "../api/axios";
 import {
   FiFileText, FiCheckCircle, FiXCircle,
@@ -10,16 +10,16 @@ import S from "../constants/styles";
 import { API } from "../api/axios";
 import ClinicalFooter from "../components/ClinicalFooter";
 
-// Neon flatline divider — shared across all pages
+// Neon flatline divider â€” shared across all pages
 const NeonLine = () => (
   <div style={{ height: 3, width: "100%", overflow: "hidden", borderRadius: 2 }}>
     <div style={{ width: "200%", height: "100%", background: "linear-gradient(90deg, transparent, #39FF7E, #0EA5E9, #39FF7E, transparent)", animation: "neonFlatline 3s linear infinite" }} />
   </div>
 );
 
-// ─────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // DASHBOARD VIEW
-// ─────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export default function DashboardView({ setView }) {
   const [patients, setPatients] = useState([]);
   const [exercises, setExercises] = useState([]);
@@ -67,12 +67,12 @@ export default function DashboardView({ setView }) {
     { label: "Active Patients", value: patients.length, img: "/2.png", color: C.teal },
     { label: "Protocols Available", value: "4 Protocols", icon: FiFileText, color: "#7C3AED" },
     { label: "Exercise Library", value: exercises.length, img: "/Beau.png", color: C.navy },
-    { label: "Unique Conditions", value: Object.keys(conditionCounts).length || "\u2014", icon: TbDog, color: C.amber },
+    { label: "Unique Conditions", value: Object.keys(conditionCounts).length || "—", icon: TbDog, color: C.amber },
   ];
 
   return (
     <div>
-      {/* ── KPI STAT CARDS — white card ── */}
+      {/* â”€â”€ KPI STAT CARDS â€” white card â”€â”€ */}
       <div style={{ ...S.card, padding: 20 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
           <div style={S.sectionHeader()}>
@@ -143,7 +143,7 @@ export default function DashboardView({ setView }) {
         </div>
       </div>
 
-      {/* ── TWO-COLUMN LAYOUT ── */}
+      {/* â”€â”€ TWO-COLUMN LAYOUT â”€â”€ */}
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 10 }}>
 
         {/* LEFT: Recent Patients */}
@@ -176,14 +176,14 @@ export default function DashboardView({ setView }) {
                       onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}>
                       <td style={S.td}>
                         <div style={{ fontWeight: 700, color: C.text, fontSize: 13 }}>{p.name}</div>
-                        <div style={{ fontSize: 10, color: C.textLight }}>Owner: {p.client_name || "\u2014"}</div>
+                        <div style={{ fontSize: 10, color: C.textLight }}>Owner: {p.client_name || "—"}</div>
                       </td>
-                      <td style={{ ...S.td, fontSize: 12 }}>{p.breed || "\u2014"}</td>
+                      <td style={{ ...S.td, fontSize: 12 }}>{p.breed || "—"}</td>
                       <td style={S.td}>
-                        {p.condition ? <span style={S.badge("blue")}>{p.condition}</span> : "\u2014"}
+                        {p.condition ? <span style={S.badge("blue")}>{p.condition}</span> : "—"}
                       </td>
                       <td style={{ ...S.td, fontSize: 11, color: C.textLight }}>
-                        {p.created_at ? new Date(p.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "\u2014"}
+                        {p.created_at ? new Date(p.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}
                       </td>
                     </tr>
                   ))}
@@ -248,10 +248,10 @@ export default function DashboardView({ setView }) {
         </div>
       </div>
 
-      {/* ── PROTOCOL ENGINE ── */}
+      {/* â”€â”€ PROTOCOL ENGINE â”€â”€ */}
       <div style={{ ...S.card, padding: 20 }}>
         <div style={S.sectionHeader()}>
-          <FiFileText size={13} style={{ color: C.teal }} /> ACVSMR-Aligned Protocol Engine \u2014 4 Evidence-Based Pathways
+          <FiFileText size={13} style={{ color: C.teal }} /> ACVSMR-Aligned Protocol Engine — 4 Evidence-Based Pathways
         </div>
         <div style={{ marginTop: 8, marginBottom: 14 }}>
           <NeonLine />
@@ -271,15 +271,16 @@ export default function DashboardView({ setView }) {
                 <span style={{ fontSize: 12, fontWeight: 700, color: C.text }}>{p.name}</span>
               </div>
               <div style={{ fontSize: 10, color: C.textLight }}>
-                {p.phases} Phases \u00b7 {p.weeks} \u00b7 Gated Progression
+                {p.phases} Phases · {p.weeks} · Gated Progression
               </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* ── CLINICAL STANDARDS FOOTER ── */}
+      {/* â”€â”€ CLINICAL STANDARDS FOOTER â”€â”€ */}
       <ClinicalFooter variant="subtle" />
     </div>
   );
 }
+
