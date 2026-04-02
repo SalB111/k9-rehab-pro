@@ -38,7 +38,7 @@ export default function LoginView({ onLogin, onRegister }) {
           {/* Logo */}
           <div className="flex items-center gap-3 mb-16">
             <div className="relative">
-              <img src="/logo.svg" alt="" className="w-10 h-10" />
+              <img src="/logo512.png" alt="" className="w-10 h-10" />
               <div className="absolute inset-0 w-10 h-10 rounded-full bg-[#1D9E75]/20 animate-pulse" />
             </div>
             <div>
@@ -89,7 +89,7 @@ export default function LoginView({ onLogin, onRegister }) {
       <div className="flex-1 flex items-center justify-center p-8 bg-[#F4F8FD] lg:rounded-l-[40px] relative">
         {/* Mobile Logo */}
         <div className="absolute top-8 left-8 flex items-center gap-2 lg:hidden">
-          <img src="/logo.svg" alt="" className="w-7 h-7" />
+          <img src="/logo512.png" alt="" className="w-7 h-7" />
           <span className="font-logo text-sm font-black tracking-[2px] text-[#0C2340]">K9 REHAB PRO</span>
         </div>
 

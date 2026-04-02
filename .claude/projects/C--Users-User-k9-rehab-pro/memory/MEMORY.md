@@ -1,0 +1,4 @@
+- [Deployment & hosting](reference_deployment.md) — GitHub, Railway (backend), Vercel (frontend) URLs
+- [B.E.A.U. Master Prompt v3.1](reference_beau_prompt.md) — 223 exercises, 18 categories, canine+feline AI system prompt
+- [Agent pipeline architecture](project_agent_pipeline.md) — 5-agent orchestrated protocol generation pipeline, ready to integrate
+- [Leap / Mars Petcare context](project_leap_context.md) — Solo founder building for accelerator demo, lean & polished over feature-complete

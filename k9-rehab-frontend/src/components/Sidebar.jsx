@@ -27,7 +27,7 @@ export default function Sidebar({ view, setView, currentUser, onLogout }) {
         onClick={() => setView("dashboard")}
       >
         <div className="relative flex-shrink-0">
-          <img src="/logo.svg" alt="" className="w-8 h-8" />
+          <img src="/logo512.png" alt="" className="w-8 h-8" />
           <div className="absolute inset-0 w-8 h-8 rounded-full bg-[#1D9E75]/30 animate-pulse" />
         </div>
         {!collapsed && (

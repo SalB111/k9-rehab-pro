@@ -38,7 +38,7 @@ export default function TopNav({ brand, setView }) {
         }}
       >
         <img
-          src="/logo.svg"
+          src="/logo512.png"
           alt="K9 Rehab Pro"
           style={{
             width: 30,
