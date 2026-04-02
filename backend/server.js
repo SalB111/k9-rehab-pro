@@ -35,6 +35,15 @@ app.use(express.json());
 // HEALTH CHECK
 // ---------------------------------------------------------------------------
 
+// Redirect non-prefixed routes to /api/* (handles VITE_API_URL without /api suffix)
+app.use((req, res, next) => {
+  if (!req.path.startsWith("/api") && !req.path.startsWith("/assets") && req.path !== "/") {
+    const apiPath = `/api${req.path}`;
+    req.url = apiPath;
+  }
+  next();
+});
+
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", message: "K9 Rehab Pro backend running" });
 });
