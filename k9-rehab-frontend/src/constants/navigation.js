@@ -1,6 +1,6 @@
 import {
   FiBookOpen, FiClipboard, FiSettings,
-  FiBarChart2, FiHeart, FiCpu, FiUsers, FiFileText,
+  FiBarChart2, FiHeart, FiCpu, FiUsers, FiFileText, FiBook,
 } from "react-icons/fi";
 
 const NAV = [
@@ -10,6 +10,7 @@ const NAV = [
   { id: "exercises",  label: "Exercise Library",     icon: FiBookOpen,   desc: "125 evidence-based exercises" },
   { id: "sessions",   label: "SOAP Notes",           icon: FiClipboard,  desc: "SOAP notes & outcomes" },
   { id: "beau",       label: "B.E.A.U.",             icon: FiCpu,        desc: "Biomedical Evidence-Based Analytical Unit" },
+  { id: "docs",       label: "Documentation",       icon: FiBook,       desc: "Technical reference docs" },
   { id: "settings",   label: "Settings",            icon: FiSettings,   desc: "Configuration" },
   { id: "about",      label: "About",               icon: FiHeart,      desc: "Platform & methodology" },
 ];

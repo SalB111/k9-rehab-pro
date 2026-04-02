@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VSI OpenVMS Calling Standard</title>
+  <style>
+    /* Reset */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+      color: #333;
+      background: #fff;
+    }
+
+    a { color: #0366d6; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* Header */
+    .site-header {
+      background: #fff;
+      border-bottom: 1px solid #e1e4e8;
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      height: 56px;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 18px;
+      color: #1a3a5c;
+    }
+
+    .logo svg {
+      width: 32px;
+      height: 32px;
+    }
+
+    .back-link {
+      font-size: 14px;
+      color: #0366d6;
+    }
+
+    .back-link:hover { text-decoration: underline; }
+
+    /* Layout */
+    .layout {
+      display: flex;
+      margin-top: 56px;
+      min-height: calc(100vh - 56px);
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 320px;
+      min-width: 320px;
+      background: #f6f8fa;
+      border-right: 1px solid #e1e4e8;
+      overflow-y: auto;
+      position: fixed;
+      top: 56px;
+      bottom: 0;
+      left: 0;
+      padding: 16px 0;
+      font-size: 13.5px;
+    }
+
+    .sidebar-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #1a3a5c;
+      padding: 8px 20px 12px;
+      border-bottom: 1px solid #e1e4e8;
+      margin-bottom: 8px;
+    }
+
+    .nav-section {
+      margin-bottom: 4px;
+    }
+
+    .nav-section-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 20px;
+      font-weight: 600;
+      color: #24292e;
+      cursor: pointer;
+      user-select: none;
+      font-size: 13.5px;
+    }
+
+    .nav-section-header:hover {
+      background: #ebeef1;
+    }
+
+    .nav-section-header .arrow {
+      font-size: 10px;
+      transition: transform 0.15s;
+      color: #6a737d;
+      width: 12px;
+      display: inline-block;
+    }
+
+    .nav-section.open > .nav-section-header .arrow {
+      transform: rotate(90deg);
+    }
+
+    .nav-items {
+      display: none;
+      padding-left: 18px;
+    }
+
+    .nav-section.open > .nav-items {
+      display: block;
+    }
+
+    .nav-item {
+      display: block;
+      padding: 4px 20px;
+      color: #586069;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .nav-item:hover {
+      color: #0366d6;
+      text-decoration: none;
+      background: #ebeef1;
+    }
+
+    .nav-item.active {
+      color: #0366d6;
+      font-weight: 600;
+      background: #e1e8f0;
+      border-right: 3px solid #0366d6;
+    }
+
+    /* Content */
+    .content {
+      margin-left: 320px;
+      flex: 1;
+      padding: 32px 48px 80px;
+      max-width: 900px;
+    }
+
+    .content h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: #1a3a5c;
+      margin-bottom: 8px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #e1e4e8;
+    }
+
+    .content h2 {
+      font-size: 22px;
+      font-weight: 600;
+      color: #24292e;
+      margin-top: 36px;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #e1e4e8;
+    }
+
+    .content h3 {
+      font-size: 18px;
+      font-weight: 600;
+      color: #24292e;
+      margin-top: 28px;
+      margin-bottom: 10px;
+    }
+
+    .content h4 {
+      font-size: 15px;
+      font-weight: 600;
+      color: #24292e;
+      margin-top: 20px;
+      margin-bottom: 8px;
+    }
+
+    .content p {
+      margin-bottom: 14px;
+      line-height: 1.7;
+    }
+
+    .content ul, .content ol {
+      margin-bottom: 14px;
+      padding-left: 28px;
+    }
+
+    .content li {
+      margin-bottom: 6px;
+      line-height: 1.6;
+    }
+
+    .content hr {
+      border: none;
+      border-top: 1px solid #e1e4e8;
+      margin: 28px 0;
+    }
+
+    .doc-meta {
+      color: #6a737d;
+      font-size: 13px;
+      margin-bottom: 24px;
+    }
+
+    .doc-meta span {
+      margin-right: 16px;
+    }
+
+    /* Tables */
+    .content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+
+    .content table th {
+      background: #f6f8fa;
+      border: 1px solid #d1d5da;
+      padding: 8px 12px;
+      text-align: left;
+      font-weight: 600;
+      color: #24292e;
+    }
+
+    .content table td {
+      border: 1px solid #d1d5da;
+      padding: 8px 12px;
+      vertical-align: top;
+    }
+
+    .content table tr:nth-child(even) td {
+      background: #fafbfc;
+    }
+
+    /* Code blocks */
+    code {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 13px;
+      background: #f0f2f4;
+      padding: 2px 6px;
+      border-radius: 3px;
+      color: #c7254e;
+    }
+
+    pre {
+      background: #f6f8fa;
+      border: 1px solid #e1e4e8;
+      border-radius: 4px;
+      padding: 16px;
+      overflow-x: auto;
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+
+    pre code {
+      background: none;
+      padding: 0;
+      color: #24292e;
+      font-size: 13px;
+    }
+
+    /* Note/Warning boxes */
+    .note {
+      background: #f1f8ff;
+      border: 1px solid #c8e1ff;
+      border-left: 4px solid #0366d6;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      border-radius: 3px;
+      font-size: 14px;
+    }
+
+    .note-label {
+      font-weight: 700;
+      color: #0366d6;
+      margin-bottom: 4px;
+    }
+
+    .warning {
+      background: #fffbdd;
+      border: 1px solid #f9c513;
+      border-left: 4px solid #e36209;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      border-radius: 3px;
+      font-size: 14px;
+    }
+
+    .warning-label {
+      font-weight: 700;
+      color: #e36209;
+      margin-bottom: 4px;
+    }
+
+    /* Definition lists */
+    dl {
+      margin-bottom: 16px;
+    }
+
+    dt {
+      font-weight: 600;
+      margin-top: 12px;
+      color: #24292e;
+    }
+
+    dd {
+      margin-left: 20px;
+      margin-bottom: 8px;
+      color: #444;
+    }
+
+    /* Section numbers */
+    .section-num {
+      color: #6a737d;
+      font-weight: 400;
+      margin-right: 6px;
+    }
+
+    /* Footer */
+    .footer {
+      margin-left: 320px;
+      border-top: 1px solid #e1e4e8;
+      padding: 24px 48px;
+      font-size: 13px;
+      color: #6a737d;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .footer a { color: #6a737d; }
+    .footer a:hover { color: #0366d6; }
+
+    /* Breadcrumb */
+    .breadcrumb {
+      color: #6a737d;
+      font-size: 13px;
+      margin-bottom: 20px;
+    }
+
+    .breadcrumb a { color: #0366d6; }
+
+    /* Print */
+    @media print {
+      .sidebar, .site-header { display: none; }
+      .content { margin-left: 0; }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .content { margin-left: 0; padding: 20px; }
+      .footer { margin-left: 0; }
+    }
+
+    /* Scrollbar styling for sidebar */
+    .sidebar::-webkit-scrollbar { width: 6px; }
+    .sidebar::-webkit-scrollbar-track { background: transparent; }
+    .sidebar::-webkit-scrollbar-thumb { background: #c8ccd0; border-radius: 3px; }
+    .sidebar::-webkit-scrollbar-thumb:hover { background: #a0a4a8; }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="site-header">
+    <div class="header-left">
+      <a href="#" class="logo">
+        <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="32" height="32" rx="4" fill="#1a3a5c"/>
+          <text x="5" y="22" font-size="16" font-weight="bold" fill="#fff" font-family="Arial">V</text>
+          <text x="15" y="22" font-size="16" font-weight="bold" fill="#4ea6dc" font-family="Arial">S</text>
+        </svg>
+        VMS Software
+      </a>
+      <a href="#" class="back-link">&larr; All Documents</a>
+    </div>
+  </header>
+
+  <div class="layout">
+
+    <!-- Sidebar -->
+    <nav class="sidebar">
+      <div class="sidebar-title">VSI OpenVMS Calling Standard</div>
+
+      <!-- Preface -->
+      <div class="nav-section open">
+        <div class="nav-section-header" onclick="toggleSection(this)">
+          <span class="arrow">&#9654;</span> Preface
+        </div>
+        <div class="nav-items">
+          <a href="#about-vsi" class="nav-item">About VSI</a>
+          <a href="#intended-audience" class="nav-item active">Intended Audience</a>
+          <a href="#document-structure" class="nav-item">Document Structure</a>
+          <a href="#related-documents" class="nav-item">Related Documents</a>
+          <a href="#comments" class="nav-item">VSI Encourages Your Comments</a>
+          <a href="#documentation" class="nav-item">OpenVMS Documentation</a>
+          <a href="#conventions" class="nav-item">Typographical Conventions</a>
+        </div>
+      </div>
+
+      <!-- Chapter 1 -->
+      <div class="nav-section">
+        <div class="nav-section-header" onclick="toggleSection(this)">
+          <span class="arrow">&#9654;</span> Chapter 1. Introduction
+        </div>
+        <div class="nav-items">
+          <a href="#applicability" class="nav-item">1.1 Applicability</a>
+          <a href="#architectural-level" class="nav-item">1.2 Architectural Level</a>
+          <a href="#goals" class="nav-item">1.3 Goals</a>
+          <a href="#definitions" class="nav-item">1.4 Definitions</a>
+        </div>
+      </div>
+
+      <!-- Chapter 2 -->
+      <div class="nav-section">
+        <div class="nav-section-header" onclick="toggleSection(this)">
+          <span class="arrow">&#9654;</span> Chapter 2. OpenVMS VAX Conventions
+        </div>
+        <div class="nav-items">
+          <a href="#vax-register" class="nav-item">2.1 Register Usage</a>
+          <a href="#vax-scalar" class="nav-item">2.1.1 Scalar Processor</a>
+          <a href="#vax-vector" class="nav-item">2.1.2 Vector Processor</a>
+          <a href="#vax-stack" class="nav-item">2.2 Stack Usage</a>
+          <a href="#vax-calling" class="nav-item">2.3 Calling Sequence</a>
+          <a href="#vax-arglist" class="nav-item">2.4 Argument List</a>
+          <a href="#vax-returns" class="nav-item">2.5 Function Value Returns</a>
+          <a href="#vax-sync" class="nav-item">2.6 Vector/Scalar Synchronization</a>
+        </div>
+      </div>
+
+      <!-- Chapter 3 -->
+      <div class="nav-section">
+        <div class="nav-section-header" onclick="toggleSection(this)">
+          <span class="arrow">&#9654;</span> Chapter 3. OpenVMS Alpha Conventions
+        </div>
+        <div class="nav-items">
+          <a href="#alpha-register" class="nav-item">3.1 Register Usage</a>
+          <a href="#alpha-address" class="nav-item">3.2 Address Representation</a>
+          <a href="#alpha-procedure" class="nav-item">3.3 Procedure Representation</a>
+          <a href="#alpha-types" class="nav-item">3.4 Procedure Types</a>
+          <a href="#alpha-stack" class="nav-item">3.5 Procedure Call Stack</a>
+          <a href="#alpha-transfer" class="nav-item">3.6 Transfer of Control</a>
+          <a href="#alpha-data" class="nav-item">3.7 Data Passing</a>
+          <a href="#alpha-alloc" class="nav-item">3.8 Data Allocation</a>
+          <a href="#alpha-multithread" class="nav-item">3.9 Multithreaded Environments</a>
+        </div>
+      </div>
+
+      <!-- Chapter 4 -->
+      <div class="nav-section">
+        <div class="nav-section-header" onclick="toggleSection(this)">
+          <span class="arrow">&#9654;</span> Chapter 4. OpenVMS I64 Conventions
+        </div>
+        <div class="nav-items">
+          <a href="#i64-register" class="nav-item">4.1 Register Usage</a>
+          <a href="#i64-address" class="nav-item">4.2 Address Representation</a>
+          <a href="#i64-procedure" class="nav-item">4.3 Procedure Representation</a>
+          <a href="#i64-types" class="nav-item">4.4 Procedure Types</a>
+          <a href="#i64-memstack" class="nav-item">4.5 Memory Stack</a>
+          <a href="#i64-regstack" class="nav-item">4.6 Register Stack</a>
+          <a href="#i64-linkage" class="nav-item">4.7 Procedure Linkage</a>
+          <a href="#i64-callstack" class="nav-item">4.8 Procedure Call Stack</a>
+          <a href="#i64-alloc" class="nav-item">4.9 Data Allocation</a>
+        </div>
+      </div>
+
+      <!-- Chapter 5 -->
+      <div class="nav-section">
+        <div class="nav-section-header" onclick="toggleSection(this)">
+          <span class="arrow">&#9654;</span> Chapter 5. OpenVMS x86-64 Conventions
+        </div>
+        <div class="nav-items">
+          <a href="#x86-register" class="nav-item">5.1 Register Usage</a>
+          <a href="#x86-address" class="nav-item">5.2 Address and Pointer Representation</a>
+          <a href="#x86-values" class="nav-item">5.3 Procedure Values</a>
+          <a href="#x86-types" class="nav-item">5.4 Procedure Types</a>
+          <a href="#x86-overflow" class="nav-item">5.5 Stack Overflow Detection</a>
+          <a href="#x86-call" class="nav-item">5.6 Procedure Call and Return</a>
+          <a href="#x86-params" class="nav-item">5.7 Parameter and Return Value Passing</a>
+          <a href="#x86-callstack" class="nav-item">5.8 Procedure Call Stack</a>
+          <a href="#x86-data" class="nav-item">5.9 Data Alignment and Layout</a>
+          <a href="#x86-addressing" class="nav-item">5.10 Addressing</a>
+        </div>
+      </div>
+
+      <!-- Chapter 6 -->
+      <div class="nav-section">
+        <div class="nav-section-header" onclick="toggleSection(this)">
+          <span class="arrow">&#9654;</span> Chapter 6. Signature Information
+        </div>
+        <div class="nav-items">
+          <a href="#sig-overview" class="nav-item">6.1 Overview</a>
+          <a href="#sig-blocks" class="nav-item">6.2 Signature Information Blocks</a>
+        </div>
+      </div>
+
+      <!-- Chapter 7 -->
+      <div class="nav-section">
+        <div class="nav-section-header" onclick="toggleSection(this)">
+          <span class="arrow">&#9654;</span> Chapter 7. Argument Data Types
+        </div>
+        <div class="nav-items">
+          <a href="#atomic-types" class="nav-item">7.1 Atomic Data Types</a>
+          <a href="#string-types" class="nav-item">7.2 String Data Types</a>
+          <a href="#misc-types" class="nav-item">7.3 Miscellaneous Data Types</a>
+          <a href="#reserved-types" class="nav-item">7.4 Reserved Data-Type Codes</a>
+          <a href="#varying-string" class="nav-item">7.5 Varying Character String</a>
+        </div>
+      </div>
+
+      <!-- Chapter 8 -->
+      <div class="nav-section">
+        <div class="nav-section-header" onclick="toggleSection(this)">
+          <span class="arrow">&#9654;</span> Chapter 8. Argument Descriptors
+        </div>
+        <div class="nav-items">
+          <a href="#desc-proto" class="nav-item">8.1 Descriptor Prototype</a>
+          <a href="#desc-fixed" class="nav-item">8.2 Fixed-Length Descriptor</a>
+          <a href="#desc-dynamic" class="nav-item">8.3 Dynamic String Descriptor</a>
+          <a href="#desc-array" class="nav-item">8.4 Array Descriptor</a>
+          <a href="#desc-unaligned" class="nav-item">8.5 Unaligned Bit String Descriptor</a>
+        </div>
+      </div>
+
+      <!-- Chapter 9 -->
+      <div class="nav-section">
+        <div class="nav-section-header" onclick="toggleSection(this)">
+          <span class="arrow">&#9654;</span> Chapter 9. OpenVMS Conditions
+        </div>
+        <div class="nav-items">
+          <a href="#cond-values" class="nav-item">9.1 Condition Values</a>
+          <a href="#cond-handlers" class="nav-item">9.2 Condition Handlers</a>
+          <a href="#cond-options" class="nav-item">9.3 Handler Options</a>
+          <a href="#cond-operations" class="nav-item">9.4 Operations with Handlers</a>
+          <a href="#cond-properties" class="nav-item">9.5 Properties of Handlers</a>
+          <a href="#cond-return" class="nav-item">9.6 Returning from Handler</a>
+          <a href="#cond-unwind" class="nav-item">9.7 Unwind from Signal</a>
+          <a href="#cond-goto" class="nav-item">9.8 GOTO Unwind Operations</a>
+          <a href="#cond-multiple" class="nav-item">9.9 Multiple Active Signals</a>
+        </div>
+      </div>
+
+      <!-- Appendices -->
+      <div class="nav-section">
+        <div class="nav-section-header" onclick="toggleSection(this)">
+          <span class="arrow">&#9654;</span> Appendix A. Stack Unwinding (I64)
+        </div>
+        <div class="nav-items">
+          <a href="#app-a1" class="nav-item">A.1 Overview</a>
+          <a href="#app-a2" class="nav-item">A.2 Exception Handling</a>
+        </div>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section-header" onclick="toggleSection(this)">
+          <span class="arrow">&#9654;</span> Appendix B. Stack Unwinding (x86-64)
+        </div>
+        <div class="nav-items">
+          <a href="#app-b1" class="nav-item">B.1 Overview</a>
+          <a href="#app-b2" class="nav-item">B.2 Exception Handling</a>
+        </div>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section-header" onclick="toggleSection(this)">
+          <span class="arrow">&#9654;</span> Appendix C. Industry Differences
+        </div>
+        <div class="nav-items">
+          <a href="#app-c1" class="nav-item">C.1 Summary of Differences</a>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="content">
+      <div class="breadcrumb">
+        <a href="#">Documentation</a> &gt; <a href="#">OpenVMS</a> &gt; VSI OpenVMS Calling Standard
+      </div>
+
+      <h1>VSI OpenVMS Calling Standard</h1>
+      <div class="doc-meta">
+        <span>Document Version: 4.0</span>
+        <span>Operating System: VSI OpenVMS</span>
+        <span>Last Updated: June 2024</span>
+      </div>
+
+      <!-- Preface -->
+      <h2 id="preface">Preface</h2>
+      <p>
+        This document defines the requirements and conventions that govern
+        the interaction between procedures executing on the OpenVMS operating
+        system across VAX, Alpha, I64, and x86-64 architectures.
+      </p>
+      <p>
+        This standard establishes the calling mechanisms, argument passing
+        conventions, register usage rules, and condition handling procedures
+        that enable multilanguage interoperability across all supported
+        OpenVMS platforms.
+      </p>
+
+      <div class="note">
+        <div class="note-label">Note</div>
+        This document is under engineering change order (ECO) control. Changes
+        to this standard must be approved through the formal ECO process.
+      </div>
+
+      <h3 id="about-vsi">About VSI</h3>
+      <p>
+        VMS Software, Inc. (VSI) is the company that develops and supports
+        the OpenVMS operating system. VSI continues to evolve OpenVMS
+        to support modern hardware architectures while maintaining backward
+        compatibility with existing applications.
+      </p>
+
+      <h3 id="intended-audience">Intended Audience</h3>
+      <p>
+        This document is primarily intended for <strong>developers of
+        compilers and debuggers</strong> who need to understand the
+        calling conventions used on OpenVMS systems. It is also relevant
+        to systems programmers who write code at the procedure-call
+        interface level.
+      </p>
+
+      <h3 id="document-structure">Document Structure</h3>
+      <p>This document is organized as follows:</p>
+      <ul>
+        <li><strong>Chapter 1</strong> provides an introduction and key definitions</li>
+        <li><strong>Chapters 2&ndash;5</strong> describe architecture-specific calling conventions for VAX, Alpha, I64, and x86-64</li>
+        <li><strong>Chapter 6</strong> covers signature information for translated images</li>
+        <li><strong>Chapters 7&ndash;8</strong> define argument data types and descriptors</li>
+        <li><strong>Chapter 9</strong> describes the condition handling mechanism</li>
+        <li><strong>Appendices A&ndash;C</strong> provide supplementary information</li>
+      </ul>
+
+      <h3 id="conventions">Typographical Conventions</h3>
+      <p>This document uses the following conventions:</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Convention</th>
+            <th>Meaning</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>monospace</code></td>
+            <td>System commands, routine names, file names, and code examples</td>
+          </tr>
+          <tr>
+            <td><strong>Bold text</strong></td>
+            <td>Defined terms, argument names, and emphasis</td>
+          </tr>
+          <tr>
+            <td><em>Italic text</em></td>
+            <td>Variable names, manual titles, and important information</td>
+          </tr>
+          <tr>
+            <td><code>Ctrl/x</code></td>
+            <td>Hold down the Ctrl key while pressing the indicated key</td>
+          </tr>
+          <tr>
+            <td><code>[ ]</code></td>
+            <td>Optional elements in syntax descriptions</td>
+          </tr>
+          <tr>
+            <td><code>{ }</code></td>
+            <td>Required choice among alternatives</td>
+          </tr>
+          <tr>
+            <td><code>...</code></td>
+            <td>Preceding item(s) can be repeated</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <hr>
+
+      <!-- Chapter 1 -->
+      <h2 id="ch1"><span class="section-num">Chapter 1.</span> Introduction</h2>
+
+      <h3 id="applicability"><span class="section-num">1.1</span> Applicability</h3>
+      <p>
+        The interfaces, methods, and conventions specified in this manual
+        are primarily intended for use by implementers of compilers,
+        debuggers, and other run-time tools for the OpenVMS operating
+        system.
+      </p>
+      <p>
+        The conventions described here apply across all supported
+        OpenVMS architectures: VAX, Alpha, I64 (Itanium), and x86-64.
+        Architecture-specific details are provided in the relevant chapters.
+      </p>
+
+      <h3 id="goals"><span class="section-num">1.3</span> Goals</h3>
+      <p>
+        The calling standard is designed to meet the following goals:
+      </p>
+      <ul>
+        <li>Enable interoperability between routines written in different programming languages</li>
+        <li>Support efficient procedure calls while maintaining adequate debugging support</li>
+        <li>Provide a consistent framework across different hardware architectures</li>
+        <li>Define clear conventions for argument passing, register usage, and stack management</li>
+        <li>Establish condition handling mechanisms for error recovery</li>
+      </ul>
+
+      <h3 id="definitions"><span class="section-num">1.4</span> Definitions</h3>
+      <p>The following terms are used throughout this standard:</p>
+
+      <dl>
+        <dt>Procedure</dt>
+        <dd>
+          A body of code that can be invoked via a call instruction
+          and returns control to the caller upon completion. A procedure
+          may accept arguments and return a function value.
+        </dd>
+
+        <dt>Procedure Value</dt>
+        <dd>
+          A value that uniquely identifies a procedure and can be
+          used to call that procedure. On 64-bit systems, addresses
+          are 64-bit values, though applications may restrict them
+          to 32-bit representations for compatibility.
+        </dd>
+
+        <dt>Bound Procedure</dt>
+        <dd>
+          A procedure value that includes both the code address
+          and an environment pointer, allowing the procedure to
+          access its enclosing lexical scope.
+        </dd>
+
+        <dt>Call Frame</dt>
+        <dd>
+          The region of the stack allocated for a single procedure
+          activation. The call frame contains saved registers,
+          local variables, and temporary storage.
+        </dd>
+
+        <dt>Condition Handler</dt>
+        <dd>
+          A procedure that is invoked when an exception or signal
+          occurs during execution. The handler may correct the
+          error condition, unwind the stack, or resignal.
+        </dd>
+
+        <dt>Stack Unwinding</dt>
+        <dd>
+          The process of successively removing call frames from
+          the procedure call stack, invoking cleanup handlers
+          as each frame is removed.
+        </dd>
+      </dl>
+
+      <hr>
+
+      <!-- Chapter 2 -->
+      <h2 id="ch2"><span class="section-num">Chapter 2.</span> OpenVMS VAX Conventions</h2>
+
+      <h3 id="vax-register"><span class="section-num">2.1</span> Register Usage</h3>
+      <p>
+        The VAX architecture provides 16 general-purpose registers (R0&ndash;R15)
+        and a Processor Status Longword (PSL). The calling standard
+        partitions these registers into specific categories based on
+        their usage across procedure calls.
+      </p>
+
+      <h4 id="vax-scalar"><span class="section-num">2.1.1</span> Scalar Processor Registers</h4>
+      <p>
+        The following table summarizes the register usage conventions
+        for the VAX scalar processor:
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Register</th>
+            <th>Usage</th>
+            <th>Preserved</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>R0</code></td>
+            <td>Function value return (low-order)</td>
+            <td>No</td>
+          </tr>
+          <tr>
+            <td><code>R1</code></td>
+            <td>Function value return (high-order)</td>
+            <td>No</td>
+          </tr>
+          <tr>
+            <td><code>R2&ndash;R11</code></td>
+            <td>General purpose, callee-saved as specified in procedure entry mask</td>
+            <td>Per mask</td>
+          </tr>
+          <tr>
+            <td><code>R12 (AP)</code></td>
+            <td>Argument Pointer</td>
+            <td>Yes</td>
+          </tr>
+          <tr>
+            <td><code>R13 (FP)</code></td>
+            <td>Frame Pointer</td>
+            <td>Yes</td>
+          </tr>
+          <tr>
+            <td><code>R14 (SP)</code></td>
+            <td>Stack Pointer</td>
+            <td>Yes</td>
+          </tr>
+          <tr>
+            <td><code>R15 (PC)</code></td>
+            <td>Program Counter</td>
+            <td>N/A</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3 id="vax-stack"><span class="section-num">2.2</span> Stack Usage</h3>
+      <p>
+        The VAX call stack grows from high addresses toward low addresses.
+        The stack pointer (SP) always points to the top (lowest address)
+        of the stack. The calling standard requires that SP be longword
+        aligned (divisible by 4) at all times.
+      </p>
+
+      <div class="warning">
+        <div class="warning-label">Important</div>
+        Failure to maintain proper stack alignment may cause unpredictable
+        behavior, including memory access violations and incorrect
+        function return values.
+      </div>
+
+      <h3 id="vax-calling"><span class="section-num">2.3</span> Calling Sequence</h3>
+      <p>
+        The VAX architecture provides the <code>CALLG</code> and
+        <code>CALLS</code> instructions for procedure invocation:
+      </p>
+
+      <pre><code>CALLS   #n, procedure    ; Call with arguments on stack
+CALLG   arglist, procedure ; Call with argument list in memory</code></pre>
+
+      <p>
+        Both instructions create a call frame on the stack, save
+        registers specified in the procedure's entry mask, and
+        transfer control to the target procedure. The <code>RET</code>
+        instruction returns control to the caller by restoring the
+        saved registers and removing the call frame.
+      </p>
+
+      <hr>
+
+      <!-- Chapter 5 (partial) -->
+      <h2 id="ch5"><span class="section-num">Chapter 5.</span> OpenVMS x86-64 Conventions</h2>
+
+      <h3 id="x86-register"><span class="section-num">5.1</span> Register Usage</h3>
+      <p>
+        The x86-64 architecture provides 16 general-purpose registers,
+        16 SSE registers, and various system registers. The OpenVMS
+        calling standard defines specific conventions for register
+        preservation across procedure calls.
+      </p>
+
+      <h4><span class="section-num">5.1.1</span> General-Purpose Register Classes</h4>
+      <p>
+        Registers are classified by their behavior across procedure calls:
+      </p>
+      <ul>
+        <li><strong>Scratch registers</strong> &mdash; may be modified by the called procedure and are not preserved</li>
+        <li><strong>Preserved registers</strong> &mdash; must be saved and restored by any procedure that modifies them</li>
+        <li><strong>Special registers</strong> &mdash; have dedicated functions defined by the architecture or calling standard</li>
+      </ul>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Register</th>
+            <th>Usage</th>
+            <th>Class</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>RAX</code></td>
+            <td>Return value, scratch</td>
+            <td>Scratch</td>
+          </tr>
+          <tr>
+            <td><code>RBX</code></td>
+            <td>General purpose</td>
+            <td>Preserved</td>
+          </tr>
+          <tr>
+            <td><code>RCX</code></td>
+            <td>4th integer argument, scratch</td>
+            <td>Scratch</td>
+          </tr>
+          <tr>
+            <td><code>RDX</code></td>
+            <td>3rd integer argument, scratch</td>
+            <td>Scratch</td>
+          </tr>
+          <tr>
+            <td><code>RSP</code></td>
+            <td>Stack pointer</td>
+            <td>Special</td>
+          </tr>
+          <tr>
+            <td><code>RBP</code></td>
+            <td>Frame pointer (optional)</td>
+            <td>Preserved</td>
+          </tr>
+          <tr>
+            <td><code>RSI</code></td>
+            <td>2nd integer argument, scratch</td>
+            <td>Scratch</td>
+          </tr>
+          <tr>
+            <td><code>RDI</code></td>
+            <td>1st integer argument, scratch</td>
+            <td>Scratch</td>
+          </tr>
+          <tr>
+            <td><code>R8&ndash;R11</code></td>
+            <td>5th&ndash;8th arguments, scratch</td>
+            <td>Scratch</td>
+          </tr>
+          <tr>
+            <td><code>R12&ndash;R15</code></td>
+            <td>General purpose</td>
+            <td>Preserved</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3 id="x86-call"><span class="section-num">5.6</span> Procedure Call and Return</h3>
+      <p>
+        The x86-64 <code>CALL</code> instruction pushes the return address
+        onto the stack and transfers control to the target procedure.
+        The <code>RET</code> instruction pops the return address and
+        transfers control back to the caller.
+      </p>
+
+      <pre><code>; Example calling sequence
+    sub     rsp, 32          ; Allocate shadow space
+    mov     rcx, param1      ; 1st parameter in RCX
+    mov     rdx, param2      ; 2nd parameter in RDX
+    mov     r8,  param3      ; 3rd parameter in R8
+    mov     r9,  param4      ; 4th parameter in R9
+    call    target_procedure
+    add     rsp, 32          ; Deallocate shadow space</code></pre>
+
+      <div class="note">
+        <div class="note-label">Note</div>
+        The OpenVMS x86-64 calling convention requires 16-byte stack
+        alignment at the point of the <code>CALL</code> instruction.
+        The 32-byte shadow space (home area) must always be allocated
+        by the caller, even for procedures with fewer than 4 parameters.
+      </div>
+
+      <hr>
+
+      <h2 id="ch9"><span class="section-num">Chapter 9.</span> OpenVMS Conditions</h2>
+
+      <h3 id="cond-values"><span class="section-num">9.1</span> Condition Values</h3>
+      <p>
+        OpenVMS condition values are 32-bit longword values that encode
+        information about the facility that generated the condition,
+        the specific condition, and its severity. The format is:
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Bits</th>
+            <th>Field</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>31:28</td>
+            <td>Control</td>
+            <td>Control flags</td>
+          </tr>
+          <tr>
+            <td>27:16</td>
+            <td>Facility</td>
+            <td>Facility number identifying the subsystem</td>
+          </tr>
+          <tr>
+            <td>15:3</td>
+            <td>Message</td>
+            <td>Message number within the facility</td>
+          </tr>
+          <tr>
+            <td>2:0</td>
+            <td>Severity</td>
+            <td>Severity level (see below)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>Severity codes:</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th>Value</th>
+            <th>Meaning</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>0</td><td>Warning</td><td>Operation completed with qualification</td></tr>
+          <tr><td>1</td><td>Success</td><td>Operation completed successfully</td></tr>
+          <tr><td>2</td><td>Error</td><td>Operation not completed</td></tr>
+          <tr><td>3</td><td>Information</td><td>Informational message only</td></tr>
+          <tr><td>4</td><td>Fatal</td><td>Severe error, operation not recoverable</td></tr>
+        </tbody>
+      </table>
+
+      <h3 id="cond-handlers"><span class="section-num">9.2</span> Condition Handlers</h3>
+      <p>
+        A <strong>condition handler</strong> is a procedure that is
+        invoked when an exception or software-signaled condition occurs.
+        Each call frame may optionally designate a condition handler.
+        When a condition is signaled, the system searches the call
+        stack for an established handler, starting with the frame
+        in which the condition was raised.
+      </p>
+
+      <p>
+        A condition handler receives two arguments:
+      </p>
+      <ol>
+        <li><strong>Signal array</strong> &mdash; contains the condition value, signal-specific parameters, and the PC/PSL at the point of the signal</li>
+        <li><strong>Mechanism array</strong> &mdash; contains information about the state of the process at the time of the signal, including register contents</li>
+      </ol>
+
+      <p>
+        The handler can take one of the following actions:
+      </p>
+      <ul>
+        <li><strong>Continue</strong> &mdash; correct the error and resume execution at the point of the signal</li>
+        <li><strong>Resignal</strong> &mdash; decline to handle the condition; the system continues searching for another handler</li>
+        <li><strong>Unwind</strong> &mdash; terminate one or more procedure activations and transfer control to a previous frame</li>
+      </ul>
+    </main>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div>&copy; 2024 VMS Software, Inc. All rights reserved.</div>
+    <div>
+      <a href="#">Resources</a> &middot;
+      <a href="#">What We Offer</a> &middot;
+      <a href="#">What's New</a> &middot;
+      <a href="#">Contact Us</a>
+    </div>
+  </div>
+
+  <script>
+    function toggleSection(header) {
+      const section = header.parentElement;
+      section.classList.toggle('open');
+    }
+
+    // Sidebar nav click handling
+    document.querySelectorAll('.nav-item').forEach(item => {
+      item.addEventListener('click', function(e) {
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
+
+    // Smooth scrolling for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function(e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+  </script>
+</body>
+</html>
