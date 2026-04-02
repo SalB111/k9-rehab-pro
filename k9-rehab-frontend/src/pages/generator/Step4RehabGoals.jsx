@@ -237,10 +237,10 @@ export default function Step4RehabGoals({ form, setField, goToStep }) {
 
       {/* Step 4 navigation */}
       <StepNavButtons
-        onBack={() => goToStep(3)}
-        backLabel={"← Back to Treatment Plan"}
-        onNext={() => goToStep(5)}
-        nextLabel="Next: Protocol Parameters"
+        onBack={() => goToStep(4)}
+        backLabel={"← Back to Patient Status"}
+        onNext={() => goToStep(6)}
+        nextLabel="Next: Equipment & Modalities"
       />
     </>
   );

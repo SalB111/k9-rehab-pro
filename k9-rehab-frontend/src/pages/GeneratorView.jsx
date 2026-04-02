@@ -9,9 +9,12 @@ import useIntakeForm from "./generator/useIntakeForm";
 import WizardProgress from "./generator/WizardProgress";
 import Step1ClientPatient from "./generator/Step1ClientPatient";
 import Step2ClinicalAssessment from "./generator/Step2ClinicalAssessment";
-import Step3TreatmentPlan from "./generator/Step3TreatmentPlan";
-import Step4RehabGoals from "./generator/Step4RehabGoals";
-import Step5ProtocolParams from "./generator/Step5ProtocolParams";
+import Step3DiagnosticWorkup from "./generator/Step3DiagnosticWorkup";
+import Step4PatientStatus from "./generator/Step4PatientStatus";
+import Step4RehabGoals from "./generator/Step4RehabGoals";       // now Step 5
+import Step6Equipment from "./generator/Step6Equipment";
+import Step7HomeProtocol from "./generator/Step7HomeProtocol";
+import Step5ProtocolParams from "./generator/Step5ProtocolParams"; // legacy — parts moved to Step7
 import ProtocolResults from "./generator/ProtocolResults";
 import AddExerciseModal from "./generator/AddExerciseModal";
 import StepNavButtons from "./generator/StepNavButtons";
@@ -174,7 +177,7 @@ export default function GeneratorView({ initialStep }) {
     );
   }
 
-  // ═══════════ MAIN RENDER ═══════════
+  // ═══════════ MAIN RENDER — 7-STEP CLINICAL WORKFLOW ═══════════
   return (
     <div>
       {/* Wizard progress bar — visible during intake steps */}
@@ -191,31 +194,55 @@ export default function GeneratorView({ initialStep }) {
       )}
 
       {/* ═══════════ STEP 2: CLINICAL ASSESSMENT ═══════════ */}
-      {/* Combines: Diagnostics + Treatment Plan + Rehab Goals */}
+      {/* Gait, Body Condition, Objective Measurements, Manual Muscle, Validated Outcomes */}
       {!protocol && wizardStep === 2 && (
-        <>
-          <Step2ClinicalAssessment
-            form={form} setField={setField} goToStep={() => {}}
-          />
-          <Step3TreatmentPlan
-            form={form} setField={setField} goToStep={() => {}}
-            handleSurgeryDate={handleSurgeryDate} handlePostOpDay={handlePostOpDay}
-          />
-          <Step4RehabGoals
-            form={form} setField={setField} goToStep={() => {}}
-          />
-          <StepNavButtons onPrev={() => goToStep(1)} onNext={() => goToStep(3)} nextLabel="Next: Review & Generate" />
-        </>
+        <Step2ClinicalAssessment
+          form={form} setField={setField} goToStep={goToStep}
+        />
       )}
 
-      {/* ═══════════ STEP 3: REVIEW & GENERATE PROTOCOL ═══════════ */}
+      {/* ═══════════ STEP 3: DIAGNOSTIC WORKUP ═══════════ */}
+      {/* Imaging Studies, Lab Results, Functional & Special Tests */}
       {!protocol && wizardStep === 3 && (
-        <Step5ProtocolParams
-          form={form} setField={setField} generate={generate}
-          allExercises={allExercises} loading={loading}
+        <Step3DiagnosticWorkup
+          form={form} setField={setField} goToStep={goToStep}
+        />
+      )}
+
+      {/* ═══════════ STEP 4: PATIENT STATUS ═══════════ */}
+      {/* 4-block: Surgical, Non-Surgical, Post-Surgical, Palliative */}
+      {!protocol && wizardStep === 4 && (
+        <Step4PatientStatus
+          form={form} setField={setField} goToStep={goToStep}
+          handleSurgeryDate={handleSurgeryDate} handlePostOpDay={handlePostOpDay}
+        />
+      )}
+
+      {/* ═══════════ STEP 5: REHABILITATION ASSESSMENT & GOALS ═══════════ */}
+      {/* Problem List, STG, LTG, Prognosis, Precautions, E-collar/Crate/Sling */}
+      {!protocol && wizardStep === 5 && (
+        <Step4RehabGoals
+          form={form} setField={setField} goToStep={goToStep}
+        />
+      )}
+
+      {/* ═══════════ STEP 6: IN-HOSPITAL EQUIPMENT & MODALITIES ═══════════ */}
+      {/* Therapeutic Modalities, Functional Tools, Discharge Planning */}
+      {!protocol && wizardStep === 6 && (
+        <Step6Equipment
+          form={form} setField={setField} goToStep={goToStep}
+        />
+      )}
+
+      {/* ═══════════ STEP 7: HOME EXERCISE PROTOCOLS + GENERATE ═══════════ */}
+      {/* Home Equipment, Home Environment, Pre-Protocol Summary, GENERATE BUTTON */}
+      {!protocol && wizardStep === 7 && (
+        <Step7HomeProtocol
+          form={form} setField={setField} goToStep={goToStep}
+          generate={generate} allExercises={allExercises} loading={loading}
           complianceAgreed={complianceAgreed} setComplianceAgreed={setComplianceAgreed}
           complianceOpen={complianceOpen} setComplianceOpen={setComplianceOpen}
-          error={error} goToStep={goToStep}
+          error={error}
         />
       )}
 
