@@ -113,7 +113,8 @@
       "Bash(npx acorn:*)",
       "Bash(PORT=3097 timeout 15 node:*)",
       "Bash(sed:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "WebFetch(domain:docs.vmssoftware.com)"
     ],
     "additionalDirectories": [
       "C:\\k9 _rehab_pro_3d\\reference_pngs\\PLATFORM SEQU"
