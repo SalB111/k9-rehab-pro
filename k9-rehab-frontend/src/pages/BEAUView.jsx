@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import {
   FiActivity, FiAlertTriangle, FiBarChart2, FiBookOpen,
@@ -9,9 +9,9 @@ import C from "../constants/colors";
 import { API } from "../api/axios";
 import { useToast } from "../components/Toast";
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// BEAU AI VIEW â€” B.E.A.U. - Biomedical Evidence-based Analytical Unit
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────
+// BEAU AI VIEW — B.E.A.U. - Biomedical Evidence-based Analytical Unit
+// ─────────────────────────────────────────────
 function BEAUView({ authToken }) {
   const [msgs, setMsgs] = useState([]);
   const [input, setInput] = useState("");
@@ -31,7 +31,7 @@ function BEAUView({ authToken }) {
 
 // Load patients + AI status ONLY if authenticated
 useEffect(() => {
-  if (!authToken) return; // â›” Prevents all 4 API calls before login
+  if (!authToken) return; // ⛔ Prevents all 4 API calls before login
 
   axios
     .get(`${API}/patients`)
@@ -246,9 +246,9 @@ useEffect(() => {
           <img src="/Beau.png" alt="B.E.A.U." style={{ width: 38, height: 38, borderRadius: 10, objectFit: "cover", boxShadow: `0 0 12px rgba(14,165,233,0.3)` }} />
           <div>
             <div style={{ fontSize: 14, fontWeight: 700, color: C.text, letterSpacing: 0.5 }}>
-              B.E.A.U. <span style={{ color: C.teal, fontSize: 10, fontWeight: 600, background: `${C.teal}15`, padding: "2px 7px", borderRadius: 4, marginLeft: 6 }}>Biomedical Evidence-based Analytical Unit</span>
+              B.E.A.U. <span style={{ color: C.teal, fontSize: 10, fontWeight: 600, background: `${C.teal}15`, padding: "2px 7px", borderRadius: 4, marginLeft: 6 }}>Biomedical Evidence-Based Analytical Unit</span>
             </div>
-            <div style={{ fontSize: 10, color: C.textLight, marginTop: 1 }}>Evidence-Based Decision Support â€¢ ACVSMR</div>
+            <div style={{ fontSize: 10, color: C.textLight, marginTop: 1 }}>Evidence-Based Decision Support • ACVSMR</div>
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -299,7 +299,7 @@ useEffect(() => {
                   <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{pt.name}</span>
                   <span style={{ fontSize: 10, color: C.textLight }}>{pt.breed || ""}</span>
                 </div>
-                <div style={{ fontSize: 10, color: C.textLight, marginTop: 2 }}>{pt.species || "Canine"} â€¢ {pt.age || "?"} â€¢ {pt.weight || "?"}lbs</div>
+                <div style={{ fontSize: 10, color: C.textLight, marginTop: 2 }}>{pt.species || "Canine"} • {pt.age || "?"} • {pt.weight || "?"}lbs</div>
                 {(pt.diagnosis || pt.condition) && <div style={{ fontSize: 10, color: C.teal, marginTop: 2, fontWeight: 500 }}>{pt.diagnosis || pt.condition}</div>}
               </div>
             ))}
@@ -337,7 +337,7 @@ useEffect(() => {
               ))}
             </div>
             <div style={{ marginTop: 24, fontSize: 10, color: C.textLight, display: "flex", alignItems: "center", gap: 4 }}>
-              <FiShield size={10} /> CDSS â€” Does not replace licensed veterinary judgment
+              <FiShield size={10} /> CDSS — Does not replace licensed veterinary judgment
             </div>
           </div>
         )}
@@ -423,8 +423,8 @@ useEffect(() => {
           </button>
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, padding: "0 2px" }}>
-          <span style={{ fontSize: 10, color: C.textLight }}>K9 Rehab Proâ„¢ CDSS â€¢ Evidence-based rehabilitation support</span>
-          <span style={{ fontSize: 10, color: C.textLight }}>B.E.A.U.â„¢ â€¢ Millis & Levine â€¢ ACVSMR</span>
+          <span style={{ fontSize: 10, color: C.textLight }}>K9 Rehab Pro™ CDSS • Evidence-based rehabilitation support</span>
+          <span style={{ fontSize: 10, color: C.textLight }}>B.E.A.U.™ • Millis & Levine • ACVSMR</span>
         </div>
       </div>
 

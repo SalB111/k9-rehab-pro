@@ -1,25 +1,13 @@
-﻿import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import api from "../api/axios";
 import {
   FiFileText, FiCheckCircle, FiXCircle,
-  FiBookOpen, FiClipboard, FiActivity
+  FiActivity, FiArrowRight
 } from "react-icons/fi";
 import { TbDog } from "react-icons/tb";
 import C from "../constants/colors";
-import S from "../constants/styles";
-import { API } from "../api/axios";
 import ClinicalFooter from "../components/ClinicalFooter";
 
-// Neon flatline divider â€” shared across all pages
-const NeonLine = () => (
-  <div style={{ height: 3, width: "100%", overflow: "hidden", borderRadius: 2 }}>
-    <div style={{ width: "200%", height: "100%", background: "linear-gradient(90deg, transparent, #39FF7E, #0EA5E9, #39FF7E, transparent)", animation: "neonFlatline 3s linear infinite" }} />
-  </div>
-);
-
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// DASHBOARD VIEW
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export default function DashboardView({ setView }) {
   const [patients, setPatients] = useState([]);
   const [exercises, setExercises] = useState([]);
@@ -39,7 +27,6 @@ export default function DashboardView({ setView }) {
     });
   }, []);
 
-  // Condition distribution from patient records
   const conditionCounts = patients.reduce((acc, p) => {
     if (p.condition) acc[p.condition] = (acc[p.condition] || 0) + 1;
     return acc;
@@ -48,172 +35,179 @@ export default function DashboardView({ setView }) {
 
   if (loading) {
     return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "40vh", gap: 12 }}>
-        <div style={{ width: 32, height: 32, borderRadius: "50%", border: `3px solid ${C.border}`, borderTopColor: C.teal, animation: "spin 0.8s linear infinite" }} />
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-        <span style={{ fontSize: 13, fontWeight: 600, color: C.teal }}>Loading dashboard...</span>
+      <div className="flex items-center justify-center min-h-[40vh] gap-3">
+        <div className="w-8 h-8 rounded-full border-[3px] border-[var(--k9-border)] border-t-[var(--k9-teal)] animate-spin" />
+        <span className="text-sm font-semibold" style={{ color: C.teal }}>Loading dashboard...</span>
       </div>
     );
   }
 
   const PROTOCOLS = [
-    { name: "TPLO Post-Surgical", phases: 4, weeks: "16 wk", color: C.red },
-    { name: "IVDD Neuro Recovery", phases: 4, weeks: "12 wk", color: "#7C3AED" },
-    { name: "OA Multimodal", phases: 4, weeks: "16 wk", color: C.teal },
-    { name: "Geriatric Mobility", phases: 4, weeks: "16 wk", color: C.amber },
+    { name: "TPLO Post-Surgical", phases: 4, weeks: "16 wk", color: "#A32D2D", bg: "bg-red-50" },
+    { name: "IVDD Neuro Recovery", phases: 4, weeks: "12 wk", color: "#7C3AED", bg: "bg-purple-50" },
+    { name: "OA Multimodal", phases: 4, weeks: "16 wk", color: "#1D9E75", bg: "bg-emerald-50" },
+    { name: "Geriatric Mobility", phases: 4, weeks: "16 wk", color: "#BA7517", bg: "bg-amber-50" },
   ];
 
   const STATS = [
-    { label: "Active Patients", value: patients.length, img: "/2.png", color: C.teal },
+    { label: "Active Patients", value: patients.length, icon: TbDog, color: "#1D9E75" },
     { label: "Protocols Available", value: "4 Protocols", icon: FiFileText, color: "#7C3AED" },
-    { label: "Exercise Library", value: exercises.length, img: "/Beau.png", color: C.navy },
-    { label: "Unique Conditions", value: Object.keys(conditionCounts).length || "—", icon: TbDog, color: C.amber },
+    { label: "Exercise Library", value: exercises.length, icon: FiActivity, color: "#1A5F8A" },
+    { label: "Unique Conditions", value: Object.keys(conditionCounts).length || "\u2014", icon: FiCheckCircle, color: "#BA7517" },
   ];
 
   return (
-    <div>
-      {/* â”€â”€ KPI STAT CARDS â€” white card â”€â”€ */}
-      <div style={{ ...S.card, padding: 20 }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-          <div style={S.sectionHeader()}>
-            <FiActivity size={13} style={{ color: C.teal }} /> Clinical Overview
-          </div>
-          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-            <button style={{
-              display: "flex", alignItems: "center", gap: 6,
-              padding: "8px 20px", borderRadius: 8, cursor: "pointer",
-              background: "linear-gradient(135deg, #059669, #0EA5E9)", border: "none",
-              color: "#fff", fontSize: 11, fontWeight: 700,
-              boxShadow: "0 2px 8px rgba(14,165,233,0.3)",
-              transition: "all 0.2s",
-            }}
-            onClick={() => setView("home")}
-            onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 4px 16px rgba(14,165,233,0.4)"; }}
-            onMouseLeave={e => { e.currentTarget.style.boxShadow = "0 2px 8px rgba(14,165,233,0.3)"; }}>
-              <FiActivity size={13} /> Generate Protocol
-            </button>
-            <button style={{
-              display: "flex", alignItems: "center", gap: 6,
-              padding: "7px 16px", borderRadius: 8, cursor: "pointer",
-              background: C.bg, border: `1px solid ${C.border}`,
-              color: C.text, fontSize: 11, fontWeight: 700,
-              transition: "all 0.15s",
-            }}
-            onClick={() => setView("exercises")}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = C.teal; e.currentTarget.style.color = C.teal; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.text; }}>
-              <FiBookOpen size={13} /> Exercise Library
-            </button>
-            <button style={{
-              display: "flex", alignItems: "center", gap: 6,
-              padding: "7px 16px", borderRadius: 8, cursor: "pointer",
-              background: C.bg, border: `1px solid ${C.border}`,
-              color: C.text, fontSize: 11, fontWeight: 700,
-              transition: "all 0.15s",
-            }}
-            onClick={() => setView("sessions")}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = C.teal; e.currentTarget.style.color = C.teal; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.text; }}>
-              <FiClipboard size={13} /> SOAP Notes
-            </button>
-          </div>
-        </div>
-        <NeonLine />
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14, marginTop: 14 }}>
-          {STATS.map((stat, i) => (
-            <div key={i} style={{
-              padding: "16px 18px", borderRadius: 8,
-              background: C.bg, border: `1px solid ${C.border}`,
-              borderLeft: `4px solid ${stat.color}`,
-            }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                <div>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: C.textLight, textTransform: "uppercase", letterSpacing: "0.8px" }}>{stat.label}</div>
-                  <div style={{ fontSize: 26, fontWeight: 800, color: C.text, marginTop: 4 }}>{stat.value}</div>
-                </div>
-                <div style={{ width: stat.img ? 50 : 40, height: stat.img ? 50 : 40, borderRadius: 8, background: C.bg, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", border: `1px solid ${C.border}` }}>
-                  {stat.img
-                    ? <img src={stat.img} alt={stat.label} style={{ width: 50, height: 50, objectFit: "cover", borderRadius: 8 }} />
-                    : <stat.icon size={18} style={{ color: stat.color }} />
-                  }
-                </div>
-              </div>
-            </div>
-          ))}
+    <div className="p-6 space-y-5 max-w-[1400px] mx-auto">
+      {/* Page Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-bold" style={{ color: C.text }}>Clinical Overview</h1>
+          <p className="text-xs mt-0.5" style={{ color: C.textLight }}>
+            Real-time platform analytics and patient status
+          </p>
         </div>
       </div>
 
-      {/* â”€â”€ TWO-COLUMN LAYOUT â”€â”€ */}
-      <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 10 }}>
-
-        {/* LEFT: Recent Patients */}
-        <div style={{ ...S.card, padding: 0, overflow: "hidden" }}>
-          <div style={{ padding: "14px 20px" }}>
-            <div style={S.sectionHeader()}>
-              <TbDog size={14} style={{ color: C.teal }} /> Recent Patients
+      {/* KPI Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {STATS.map((stat, i) => (
+          <div
+            key={i}
+            className="rounded-xl bg-white border p-4 transition-shadow hover:shadow-md"
+            style={{ borderColor: C.border, borderLeft: `4px solid ${stat.color}` }}
+          >
+            <div className="flex justify-between items-start">
+              <div>
+                <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: C.textLight }}>
+                  {stat.label}
+                </div>
+                <div className="text-2xl font-extrabold mt-1" style={{ color: C.text }}>
+                  {stat.value}
+                </div>
+              </div>
+              <div
+                className="w-11 h-11 rounded-lg flex items-center justify-center border"
+                style={{ borderColor: C.border, background: C.bg }}
+              >
+                <stat.icon size={18} style={{ color: stat.color }} />
+              </div>
             </div>
           </div>
-          <NeonLine />
+        ))}
+      </div>
+
+      {/* Two-Column Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-5">
+        {/* Recent Patients */}
+        <div className="rounded-xl bg-white border overflow-hidden" style={{ borderColor: C.border }}>
+          <div className="px-5 py-3.5 flex items-center justify-between border-b" style={{ borderColor: C.border }}>
+            <div className="flex items-center gap-2 text-sm font-bold" style={{ color: C.text }}>
+              <TbDog size={16} style={{ color: C.teal }} /> Recent Patients
+            </div>
+            {patients.length > 0 && (
+              <button
+                onClick={() => setView("clients")}
+                className="flex items-center gap-1 text-xs font-semibold transition-colors hover:opacity-80"
+                style={{ color: C.teal }}
+              >
+                View All <FiArrowRight size={12} />
+              </button>
+            )}
+          </div>
+
           {patients.length === 0 ? (
-            <div style={{ padding: "48px 24px", textAlign: "center", color: C.textLight }}>
-              <TbDog size={32} style={{ marginBottom: 12, opacity: 0.3 }} />
-              <div style={{ fontSize: 13, fontWeight: 600 }}>No patients registered yet</div>
-              <div style={{ fontSize: 11, marginTop: 4 }}>Generate a protocol to register your first patient</div>
+            <div className="py-12 text-center" style={{ color: C.textLight }}>
+              <TbDog size={32} className="mx-auto mb-3 opacity-30" />
+              <div className="text-sm font-semibold">No patients registered yet</div>
+              <div className="text-xs mt-1">Generate a protocol to register your first patient</div>
             </div>
           ) : (
-            <div style={{ margin: 0 }}>
-              <table style={S.table}>
-                <thead>
-                  <tr>
-                    {["Patient", "Breed", "Condition", "Registered"].map(h =>
-                    <th key={h} style={S.th}>{h}</th>)}
-                  </tr>
-                </thead>
-                <tbody>
-                  {patients.slice(0, 8).map(p => (
-                    <tr key={p.id} style={{ transition: "background 0.1s" }}
-                      onMouseEnter={e => { e.currentTarget.style.background = C.bg; }}
-                      onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}>
-                      <td style={S.td}>
-                        <div style={{ fontWeight: 700, color: C.text, fontSize: 13 }}>{p.name}</div>
-                        <div style={{ fontSize: 10, color: C.textLight }}>Owner: {p.client_name || "—"}</div>
-                      </td>
-                      <td style={{ ...S.td, fontSize: 12 }}>{p.breed || "—"}</td>
-                      <td style={S.td}>
-                        {p.condition ? <span style={S.badge("blue")}>{p.condition}</span> : "—"}
-                      </td>
-                      <td style={{ ...S.td, fontSize: 11, color: C.textLight }}>
-                        {p.created_at ? new Date(p.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}
-                      </td>
-                    </tr>
+            <table className="w-full">
+              <thead>
+                <tr className="border-b" style={{ borderColor: C.border }}>
+                  {["Patient", "Breed", "Condition", "Registered"].map((h) => (
+                    <th
+                      key={h}
+                      className="px-5 py-2.5 text-left text-[10px] font-bold uppercase tracking-wider"
+                      style={{ color: C.textLight }}
+                    >
+                      {h}
+                    </th>
                   ))}
-                </tbody>
-              </table>
-            </div>
+                </tr>
+              </thead>
+              <tbody>
+                {patients.slice(0, 8).map((p) => (
+                  <tr
+                    key={p.id}
+                    className="border-b last:border-b-0 hover:bg-[var(--k9-bg)] transition-colors cursor-pointer"
+                    style={{ borderColor: C.borderLight }}
+                    onClick={() => {
+                      if (setView) setView("clients");
+                    }}
+                  >
+                    <td className="px-5 py-3">
+                      <div className="text-[13px] font-bold" style={{ color: C.text }}>{p.name}</div>
+                      <div className="text-[10px]" style={{ color: C.textLight }}>
+                        Owner: {p.client_name || "\u2014"}
+                      </div>
+                    </td>
+                    <td className="px-5 py-3 text-xs" style={{ color: C.textMid }}>{p.breed || "\u2014"}</td>
+                    <td className="px-5 py-3">
+                      {p.condition ? (
+                        <span
+                          className="inline-block px-2.5 py-1 rounded-full text-[10px] font-bold"
+                          style={{ background: `${C.teal}18`, color: C.teal }}
+                        >
+                          {p.condition}
+                        </span>
+                      ) : (
+                        "\u2014"
+                      )}
+                    </td>
+                    <td className="px-5 py-3 text-[11px]" style={{ color: C.textLight }}>
+                      {p.created_at
+                        ? new Date(p.created_at).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })
+                        : "\u2014"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           )}
         </div>
 
-        {/* RIGHT: Condition Distribution + Platform Status */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-
+        {/* Right Column */}
+        <div className="space-y-5">
           {/* Condition Distribution */}
-          <div style={S.card}>
-            <div style={{ marginBottom: 12 }}>
-              <div style={S.sectionHeader()}>
-                <FiActivity size={13} style={{ color: C.teal }} /> Condition Distribution
-              </div>
+          <div className="rounded-xl bg-white border p-5" style={{ borderColor: C.border }}>
+            <div className="flex items-center gap-2 text-sm font-bold mb-4" style={{ color: C.text }}>
+              <FiActivity size={14} style={{ color: C.teal }} /> Condition Distribution
             </div>
-            <NeonLine />
             {conditionEntries.length === 0 ? (
-              <div style={{ fontSize: 12, color: C.textLight, textAlign: "center", padding: "16px 0" }}>No patient data yet</div>
+              <div className="text-xs text-center py-4" style={{ color: C.textLight }}>
+                No patient data yet
+              </div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 12 }}>
+              <div className="space-y-2.5">
                 {conditionEntries.slice(0, 8).map(([cond, count]) => (
-                  <div key={cond} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ fontSize: 12, color: C.textMid, fontWeight: 600 }}>{cond}</span>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <div style={{ width: Math.max(20, (count / Math.max(...conditionEntries.map(e => e[1]))) * 80), height: 6, borderRadius: 3, background: C.teal }} />
-                      <span style={{ fontSize: 11, fontWeight: 700, color: C.text, minWidth: 18, textAlign: "right" }}>{count}</span>
+                  <div key={cond} className="flex justify-between items-center">
+                    <span className="text-xs font-semibold" style={{ color: C.textMid }}>{cond}</span>
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="h-1.5 rounded-full"
+                        style={{
+                          width: Math.max(20, (count / Math.max(...conditionEntries.map((e) => e[1]))) * 80),
+                          background: C.teal,
+                        }}
+                      />
+                      <span className="text-[11px] font-bold min-w-[18px] text-right" style={{ color: C.text }}>
+                        {count}
+                      </span>
                     </div>
                   </div>
                 ))}
@@ -222,23 +216,23 @@ export default function DashboardView({ setView }) {
           </div>
 
           {/* Platform Status */}
-          <div style={S.card}>
-            <div style={{ marginBottom: 12 }}>
-              <div style={S.sectionHeader()}>
-                <FiCheckCircle size={13} style={{ color: C.teal }} /> Platform Status
-              </div>
+          <div className="rounded-xl bg-white border p-5" style={{ borderColor: C.border }}>
+            <div className="flex items-center gap-2 text-sm font-bold mb-4" style={{ color: C.text }}>
+              <FiCheckCircle size={14} style={{ color: C.teal }} /> Platform Status
             </div>
-            <NeonLine />
-            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 12 }}>
+            <div className="space-y-3">
               {[
                 { label: "Backend API", ok: apiOk, detail: apiOk ? "Connected" : "Offline" },
                 { label: "Exercise Library", ok: exercises.length > 0, detail: `${exercises.length} active` },
                 { label: "Protocol Engine", ok: true, detail: "4 protocols" },
                 { label: "Phase System", ok: true, detail: "4 phases each" },
               ].map((item, i) => (
-                <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ fontSize: 12, color: C.textMid, fontWeight: 600 }}>{item.label}</span>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: item.ok ? C.green : C.red, display: "flex", alignItems: "center", gap: 4 }}>
+                <div key={i} className="flex justify-between items-center">
+                  <span className="text-xs font-semibold" style={{ color: C.textMid }}>{item.label}</span>
+                  <span
+                    className="text-[11px] font-bold flex items-center gap-1"
+                    style={{ color: item.ok ? C.green : C.red }}
+                  >
                     {item.ok ? <FiCheckCircle size={11} /> : <FiXCircle size={11} />} {item.detail}
                   </span>
                 </div>
@@ -248,39 +242,39 @@ export default function DashboardView({ setView }) {
         </div>
       </div>
 
-      {/* â”€â”€ PROTOCOL ENGINE â”€â”€ */}
-      <div style={{ ...S.card, padding: 20 }}>
-        <div style={S.sectionHeader()}>
-          <FiFileText size={13} style={{ color: C.teal }} /> ACVSMR-Aligned Protocol Engine — 4 Evidence-Based Pathways
+      {/* Protocol Engine */}
+      <div className="rounded-xl bg-white border p-5" style={{ borderColor: C.border }}>
+        <div className="flex items-center gap-2 text-sm font-bold mb-4" style={{ color: C.text }}>
+          <FiFileText size={14} style={{ color: C.teal }} />
+          ACVSMR-Aligned Protocol Engine — 4 Evidence-Based Pathways
         </div>
-        <div style={{ marginTop: 8, marginBottom: 14 }}>
-          <NeonLine />
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {PROTOCOLS.map((p, i) => (
-            <div key={i} style={{
-              padding: "14px 16px", borderRadius: 8, cursor: "pointer",
-              background: `${p.color}12`, border: `1.5px solid ${p.color}33`,
-              transition: "all 0.2s",
-            }}
-            onClick={() => setView("generator")}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = p.color + "88"; e.currentTarget.style.boxShadow = `0 0 12px ${p.color}25`; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = p.color + "33"; e.currentTarget.style.boxShadow = "none"; }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                <div style={{ width: 10, height: 10, borderRadius: "50%", background: p.color, boxShadow: `0 0 6px ${p.color}66` }} />
-                <span style={{ fontSize: 12, fontWeight: 700, color: C.text }}>{p.name}</span>
+            <button
+              key={i}
+              onClick={() => setView("generator")}
+              className="text-left p-4 rounded-lg border transition-all hover:shadow-md"
+              style={{
+                borderColor: p.color + "33",
+                background: p.color + "08",
+              }}
+            >
+              <div className="flex items-center gap-2 mb-1.5">
+                <div
+                  className="w-2.5 h-2.5 rounded-full"
+                  style={{ background: p.color, boxShadow: `0 0 6px ${p.color}66` }}
+                />
+                <span className="text-xs font-bold" style={{ color: C.text }}>{p.name}</span>
               </div>
-              <div style={{ fontSize: 10, color: C.textLight }}>
-                {p.phases} Phases · {p.weeks} · Gated Progression
+              <div className="text-[10px]" style={{ color: C.textLight }}>
+                {p.phases} Phases &middot; {p.weeks} &middot; Gated Progression
               </div>
-            </div>
+            </button>
           ))}
         </div>
       </div>
 
-      {/* â”€â”€ CLINICAL STANDARDS FOOTER â”€â”€ */}
       <ClinicalFooter variant="subtle" />
     </div>
   );
 }
-
