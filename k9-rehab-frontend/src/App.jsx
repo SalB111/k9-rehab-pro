@@ -18,7 +18,7 @@ const ExerciseVisualDemo = lazy(() => import("./components/ExerciseVisualDemo"))
 
 export default function App() {
   const [authToken, setAuthToken] = useState(localStorage.getItem("token"));
-  const [currentUser, setCurrentUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState({ username: "Clinician", role: "clinician", id: 1 });
   const [view, setView] = useState("dashboard");
   const [genKey, setGenKey] = useState(0);
   const [genInitialStep, setGenInitialStep] = useState(1);
@@ -57,14 +57,6 @@ export default function App() {
     alert("Contact your administrator to create an account.");
   }
 
-  // AUTO-LOGIN: Skip login gate for now — go straight to app
-  useEffect(() => {
-    if (!currentUser) {
-      setCurrentUser({ username: "Clinician", role: "clinician", id: 1 });
-    }
-  }, [currentUser]);
-
-  if (!currentUser) return null; // Brief flash guard while effect sets user
 
   // Shared props every view may need
   const navProps = {
