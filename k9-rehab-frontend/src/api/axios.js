@@ -1,15 +1,13 @@
 import axios from "axios";
 
-// FINAL, CORRECT, PRODUCTION API URL
-export const API = "https://k9-rehab-pro.onrender.com/api";
+// Use env var with smart fallback chain
+export const API = import.meta.env.VITE_API_URL
+  || "http://localhost:10000/api";
 
-// Create a preconfigured axios instance
 const api = axios.create({
   baseURL: API,
-  headers: {
-    "Content-Type": "application/json"
-  },
-  timeout: 15000
+  headers: { "Content-Type": "application/json" },
+  timeout: 15000,
 });
 
 // Automatically attach token if present
@@ -24,7 +22,7 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// --- REQUIRED EXPORTS ---
+// --- Auth helpers for App.jsx ---
 export const setupAxiosAuth = (token) => {
   if (token) {
     axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
@@ -35,5 +33,4 @@ export const clearAxiosAuth = () => {
   delete axios.defaults.headers.common["Authorization"];
 };
 
-// Default export for API calls
 export default api;

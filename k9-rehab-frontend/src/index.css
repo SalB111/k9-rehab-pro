@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* ─────────────────────────────────────────────
    K9 REHAB PRO — CSS CUSTOM PROPERTIES
    Three themes: Clinical Light | Clinical Dark | High Contrast
@@ -84,15 +88,31 @@
   --k9-purple-bg:    #1A0E2E;
 }
 
-body {
+html, body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: var(--k9-bg);
   color: var(--k9-text);
+}
+
+#root {
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
+}
+
+/* Kill any SVG that tries to fill the body */
+body > svg,
+body > img[src*="logo"] {
+  display: none !important;
 }
 
 code {

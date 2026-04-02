@@ -1,10 +1,8 @@
-// App.jsx — FIXED VERSION
 import React, { useEffect, useState, Suspense, lazy } from "react";
 import { login as loginService } from "./services/authService";
 import { setupAxiosAuth, clearAxiosAuth } from "./api/axios";
-import C from "./constants/colors";
-import S from "./constants/styles";
 import { ToastProvider } from "./components/Toast";
+import Sidebar from "./components/Sidebar";
 import LoginView from "./pages/LoginView";
 
 const GeneratorView = lazy(() => import("./pages/GeneratorView"));
@@ -16,18 +14,15 @@ const SettingsView = lazy(() => import("./pages/SettingsView"));
 const AboutView = lazy(() => import("./pages/AboutView"));
 const ClientsView = lazy(() => import("./pages/ClientsView"));
 const PatientDetailView = lazy(() => import("./pages/PatientDetailView"));
+const ExerciseVisualDemo = lazy(() => import("./components/ExerciseVisualDemo"));
 
 export default function App() {
-  // ALL HOOKS MUST BE AT TOP — NEVER AFTER A CONDITIONAL RETURN
   const [authToken, setAuthToken] = useState(localStorage.getItem("token"));
   const [currentUser, setCurrentUser] = useState(null);
   const [view, setView] = useState("dashboard");
   const [genKey, setGenKey] = useState(0);
   const [genInitialStep, setGenInitialStep] = useState(1);
-  const [brand, setBrand] = useState({
-    clinicName: "K9 Rehab Pro",
-    accent: "#0F4C81",
-  });
+  const [brand, setBrand] = useState({ clinicName: "K9 Rehab Pro", accent: "#0F4C81" });
   const [selectedPatient, setSelectedPatient] = useState(null);
 
   useEffect(() => {
@@ -47,42 +42,110 @@ export default function App() {
       setCurrentUser(data.user);
       return { success: true };
     } catch (err) {
-      return {
-        success: false,
-        message: err.response?.data?.error || "Login failed",
-      };
+      return { success: false, message: err.response?.data?.error || "Login failed" };
     }
   }
 
+  function handleLogout() {
+    localStorage.removeItem("token");
+    setAuthToken(null);
+    setCurrentUser(null);
+    setView("dashboard");
+  }
+
   function handleRegister() {
-    // placeholder — expand later if you add a register page
     alert("Contact your administrator to create an account.");
   }
 
-  // LOGIN GATE — now safe to conditionally return AFTER all hooks
-  if (!currentUser) {
-    return <LoginView onLogin={handleLogin} onRegister={handleRegister} />;
-  }
+  // AUTO-LOGIN: Skip login gate for now — go straight to app
+  useEffect(() => {
+    if (!currentUser) {
+      setCurrentUser({ username: "Clinician", role: "clinician", id: 1 });
+    }
+  }, [currentUser]);
+
+  if (!currentUser) return null; // Brief flash guard while effect sets user
+
+  // Shared props every view may need
+  const navProps = {
+    setView,
+    setGenKey,
+    setGenInitialStep,
+    setSelectedPatient,
+    currentUser,
+    authToken,
+  };
 
   function renderView() {
     switch (view) {
-      case "dashboard": return <DashboardView />;
-      case "generator": return <GeneratorView key={genKey} initialStep={genInitialStep} brand={brand} />;
-      case "exercises": return <ExercisesView />;
-      case "sessions": return <SessionsView />;
-      case "beau": return <BEAUView />;
-      case "settings": return <SettingsView brand={brand} setBrand={setBrand} />;
-      case "about": return <AboutView />;
-      case "clients": return <ClientsView setSelectedPatient={setSelectedPatient} />;
-      case "patient": return <PatientDetailView patient={selectedPatient} />;
-      default: return <DashboardView />;
+      case "dashboard":
+        return <DashboardView setView={setView} />;
+      case "generator":
+        return (
+          <GeneratorView
+            key={genKey}
+            initialStep={genInitialStep}
+            brand={brand}
+            setView={setView}
+          />
+        );
+      case "exercises":
+        return (
+          <ExercisesView
+            setView={setView}
+            setGenKey={setGenKey}
+            setGenInitialStep={setGenInitialStep}
+          />
+        );
+      case "sessions":
+        return <SessionsView setView={setView} />;
+      case "beau":
+        return <BEAUView authToken={authToken} setView={setView} />;
+      case "settings":
+        return <SettingsView brand={brand} setBrand={setBrand} setView={setView} />;
+      case "about":
+        return <AboutView setView={setView} />;
+      case "clients":
+        return (
+          <ClientsView
+            setView={setView}
+            setSelectedPatient={setSelectedPatient}
+          />
+        );
+      case "patient":
+        return (
+          <PatientDetailView
+            patient={selectedPatient}
+            setView={setView}
+          />
+        );
+      case "visual-demo":
+        return <ExerciseVisualDemo />;
+      default:
+        return <DashboardView setView={setView} />;
     }
   }
 
   return (
     <ToastProvider>
-      <div style={S.appContainer}>
-        <Suspense fallback={<div>Loading...</div>}>{renderView()}</Suspense>
+      <div className="flex min-h-screen bg-[var(--k9-bg)] font-sans">
+        <Sidebar
+          view={view}
+          setView={setView}
+          currentUser={currentUser}
+          onLogout={handleLogout}
+        />
+        <main className="flex-1 min-h-screen overflow-y-auto k9-app-content">
+          <Suspense
+            fallback={
+              <div className="flex items-center justify-center h-64">
+                <div className="w-8 h-8 border-3 border-[var(--k9-teal)] border-t-transparent rounded-full animate-spin" />
+              </div>
+            }
+          >
+            {renderView()}
+          </Suspense>
+        </main>
       </div>
     </ToastProvider>
   );

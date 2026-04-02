@@ -246,7 +246,7 @@ useEffect(() => {
           <img src="/Beau.png" alt="B.E.A.U." style={{ width: 38, height: 38, borderRadius: 10, objectFit: "cover", boxShadow: `0 0 12px rgba(14,165,233,0.3)` }} />
           <div>
             <div style={{ fontSize: 14, fontWeight: 700, color: C.text, letterSpacing: 0.5 }}>
-              B.E.A.U. <span style={{ color: C.teal, fontSize: 10, fontWeight: 600, background: `${C.teal}15`, padding: "2px 7px", borderRadius: 4, marginLeft: 6 }}>Biomedical Evidence-Based Assessment Utility</span>
+              B.E.A.U. <span style={{ color: C.teal, fontSize: 10, fontWeight: 600, background: `${C.teal}15`, padding: "2px 7px", borderRadius: 4, marginLeft: 6 }}>Biomedical Evidence-Based Analytical Unit</span>
             </div>
             <div style={{ fontSize: 10, color: C.textLight, marginTop: 1 }}>Evidence-Based Decision Support • ACVSMR</div>
           </div>

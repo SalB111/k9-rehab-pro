@@ -1,31 +1,18 @@
 import axios from "axios";
+import { API } from "../api/axios";
 
-// VITE uses import.meta.env — NOT process.env
-const API_URL = import.meta.env.VITE_API_URL;
-
-// REGISTER
 export async function register(username, password) {
-  return axios.post(`${API_URL}/auth/register`, {
-    username,
-    password,
-    role: "owner"
-  });
+  return axios.post(`${API}/auth/register`, { username, password, role: "owner" });
 }
 
-// LOGIN
 export async function login(username, password) {
-  return axios.post(`${API_URL}/auth/login`, {
-    username,
-    password
-  });
+  return axios.post(`${API}/auth/login`, { username, password });
 }
 
-// CHECK AUTH STATUS
 export async function checkAuth() {
-  return axios.get(`${API_URL}/auth/status`, { withCredentials: true });
+  return axios.get(`${API}/auth/status`, { withCredentials: true });
 }
 
-// LOGOUT
 export async function logout() {
-  return axios.post(`${API_URL}/auth/logout`, {}, { withCredentials: true });
+  return axios.post(`${API}/auth/logout`, {}, { withCredentials: true });
 }

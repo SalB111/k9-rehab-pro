@@ -1,8 +1,12 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 const db = require("./db-providers/sqlite-provider");
 
 const router = express.Router();
+
+const JWT_SECRET = process.env.JWT_SECRET || "k9-rehab-pro-dev-secret-change-in-production";
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "24h";
 
 // ---------------------------------------------------------------------------
 // REGISTER
@@ -42,8 +46,15 @@ router.post("/login", async (req, res) => {
     const valid = await bcrypt.compare(password, user.password_hash);
     if (!valid) return res.status(401).json({ error: "Invalid credentials" });
 
+    const token = jwt.sign(
+      { id: user.id, username: user.username, role: user.role },
+      JWT_SECRET,
+      { expiresIn: JWT_EXPIRES_IN }
+    );
+
     res.json({
       message: "Login successful",
+      token,
       user: { id: user.id, username: user.username, role: user.role }
     });
 

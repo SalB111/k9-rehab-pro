@@ -1,0 +1,100 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2026-04-02",
+  "source": "canine_rehab_protocols.docx — ACVSMR-aligned, Millis & Levine methodology",
+  "protocols": [
+    {
+      "id": "PROT-TPLO",
+      "name": "TPLO Post-Surgical Rehabilitation",
+      "description": "16-week gated rehabilitation protocol for tibial plateau leveling osteotomy recovery",
+      "targetConditions": ["TPLO", "CCL rupture", "cranial cruciate ligament", "stifle surgery"],
+      "species": "canine",
+      "totalWeeks": 16,
+      "phases": 4,
+      "allowedCategories": ["range_of_motion", "gait_retraining", "strengthening", "balance", "hydrotherapy", "manual_therapy"],
+      "exercises": [
+        { "name": "Controlled Leash Walk — TPLO Weeks 1 to 2", "code": "TPLO-01", "category": "gait_retraining", "phase": 1, "intensityLevel": "low", "durationSeconds": 300, "reps": null, "sets": null, "contraindicatedConditions": ["non-weight-bearing", "incision_dehiscence"] },
+        { "name": "Controlled Leash Walk — TPLO Weeks 3 to 4", "code": "TPLO-02", "category": "gait_retraining", "phase": 1, "intensityLevel": "low", "durationSeconds": 600, "reps": null, "sets": null, "contraindicatedConditions": ["incision_dehiscence"] },
+        { "name": "Three-Leg Stand Balance — TPLO Early Phase", "code": "TPLO-03", "category": "balance", "phase": 1, "intensityLevel": "low", "durationSeconds": 30, "reps": 5, "sets": 3, "contraindicatedConditions": ["severe_pain", "non-weight-bearing"] },
+        { "name": "Passive Range of Motion (All Joints)", "code": "PROM-01", "category": "range_of_motion", "phase": 1, "intensityLevel": "low", "durationSeconds": 180, "reps": 15, "sets": 2, "contraindicatedConditions": ["acute_fracture"] },
+        { "name": "Sit to Stand — TPLO Mid Phase", "code": "TPLO-04", "category": "strengthening", "phase": 2, "intensityLevel": "moderate", "durationSeconds": null, "reps": 10, "sets": 3, "contraindicatedConditions": ["severe_pain", "non-weight-bearing"] },
+        { "name": "UWTM Gait Training — TPLO Early to Mid Phase", "code": "TPLO-05", "category": "hydrotherapy", "phase": 2, "intensityLevel": "moderate", "durationSeconds": 600, "reps": null, "sets": null, "contraindicatedConditions": ["open_wound", "cardiac_disease_uncleared"] },
+        { "name": "Cavaletti Walking — TPLO Mid Phase", "code": "TPLO-06", "category": "gait_retraining", "phase": 2, "intensityLevel": "moderate", "durationSeconds": 300, "reps": null, "sets": 3, "contraindicatedConditions": ["severe_lameness"] },
+        { "name": "Balance Disc Work — TPLO Mid Phase", "code": "TPLO-07", "category": "balance", "phase": 3, "intensityLevel": "moderate", "durationSeconds": 60, "reps": null, "sets": 3, "contraindicatedConditions": ["neurologic_deficit"] },
+        { "name": "Therapeutic Swimming — TPLO Late Phase", "code": "TPLO-08", "category": "hydrotherapy", "phase": 3, "intensityLevel": "moderate", "durationSeconds": 900, "reps": null, "sets": null, "contraindicatedConditions": ["open_wound", "cardiac_disease_uncleared"] },
+        { "name": "Stair Climbing — TPLO Late Phase (Vet Clearance Required)", "code": "TPLO-09", "category": "strengthening", "phase": 4, "intensityLevel": "high", "durationSeconds": null, "reps": 10, "sets": 2, "contraindicatedConditions": ["chondrodystrophic_breed", "severe_pain"] },
+        { "name": "Return to Controlled Trot — TPLO Late Phase", "code": "TPLO-10", "category": "gait_retraining", "phase": 4, "intensityLevel": "high", "durationSeconds": 600, "reps": null, "sets": null, "contraindicatedConditions": ["lameness_grade_3_plus"] }
+      ]
+    },
+    {
+      "id": "PROT-IVDD",
+      "name": "IVDD Neurologic Recovery",
+      "description": "12-week gated neurologic rehabilitation protocol for intervertebral disc disease",
+      "targetConditions": ["IVDD", "intervertebral disc disease", "disc herniation", "myelopathy", "spinal cord injury"],
+      "species": "canine",
+      "totalWeeks": 12,
+      "phases": 4,
+      "allowedCategories": ["neurologic", "range_of_motion", "gait_retraining", "manual_therapy", "hydrotherapy"],
+      "exercises": [
+        { "name": "Supported Standing (Sling-Assisted)", "code": "IVDD-01", "category": "neurologic", "phase": 1, "intensityLevel": "low", "durationSeconds": 120, "reps": null, "sets": 4, "contraindicatedConditions": ["acute_spinal_instability"] },
+        { "name": "Sling-Assisted Walking", "code": "IVDD-02", "category": "gait_retraining", "phase": 1, "intensityLevel": "low", "durationSeconds": 180, "reps": null, "sets": 3, "contraindicatedConditions": ["acute_spinal_instability"] },
+        { "name": "Proprioceptive Placing (Manual Facilitation)", "code": "IVDD-03", "category": "neurologic", "phase": 1, "intensityLevel": "low", "durationSeconds": 120, "reps": 20, "sets": 2, "contraindicatedConditions": [] },
+        { "name": "Sensory Stimulation (Brushing and Toweling)", "code": "IVDD-04", "category": "neurologic", "phase": 1, "intensityLevel": "low", "durationSeconds": 180, "reps": null, "sets": 2, "contraindicatedConditions": [] },
+        { "name": "Theraband Gait Training (Neurologic)", "code": "IVDD-05", "category": "neurologic", "phase": 2, "intensityLevel": "moderate", "durationSeconds": 300, "reps": null, "sets": 3, "contraindicatedConditions": ["non-ambulatory"] },
+        { "name": "Cavaletti for Neurologic Patients", "code": "IVDD-06", "category": "gait_retraining", "phase": 2, "intensityLevel": "moderate", "durationSeconds": 300, "reps": null, "sets": 3, "contraindicatedConditions": ["non-ambulatory"] },
+        { "name": "UWTM Neurologic Gait Training", "code": "IVDD-07", "category": "hydrotherapy", "phase": 2, "intensityLevel": "moderate", "durationSeconds": 600, "reps": null, "sets": null, "contraindicatedConditions": ["open_wound", "non-ambulatory"] },
+        { "name": "Physioball Bouncing (Neurologic Activation)", "code": "IVDD-08", "category": "neurologic", "phase": 3, "intensityLevel": "moderate", "durationSeconds": 120, "reps": null, "sets": 3, "contraindicatedConditions": [] },
+        { "name": "Wobble Board Neurologic Stabilization", "code": "IVDD-09", "category": "neurologic", "phase": 3, "intensityLevel": "moderate", "durationSeconds": 60, "reps": null, "sets": 3, "contraindicatedConditions": ["severe_ataxia"] },
+        { "name": "Dancing Exercise (Rear Limb Neurologic)", "code": "IVDD-10", "category": "neurologic", "phase": 3, "intensityLevel": "moderate", "durationSeconds": 30, "reps": 10, "sets": 3, "contraindicatedConditions": ["non-ambulatory", "severe_pain"] },
+        { "name": "Wheelbarrowing (Front Limb Loading)", "code": "IVDD-11", "category": "neurologic", "phase": 4, "intensityLevel": "high", "durationSeconds": 30, "reps": 5, "sets": 3, "contraindicatedConditions": ["cervical_IVDD"] },
+        { "name": "Incline Board Neurologic Walking", "code": "IVDD-12", "category": "neurologic", "phase": 4, "intensityLevel": "high", "durationSeconds": 300, "reps": null, "sets": 2, "contraindicatedConditions": ["severe_ataxia"] }
+      ]
+    },
+    {
+      "id": "PROT-OA",
+      "name": "Osteoarthritis Multimodal Management",
+      "description": "16-week multimodal protocol for degenerative joint disease and chronic osteoarthritis",
+      "targetConditions": ["osteoarthritis", "OA", "DJD", "degenerative joint disease", "hip dysplasia", "elbow dysplasia"],
+      "species": "canine",
+      "totalWeeks": 16,
+      "phases": 4,
+      "allowedCategories": ["range_of_motion", "strengthening", "gait_retraining", "hydrotherapy", "manual_therapy", "weight_management"],
+      "exercises": [
+        { "name": "Passive Range of Motion (All Joints)", "code": "OA-01", "category": "range_of_motion", "phase": 1, "intensityLevel": "low", "durationSeconds": 180, "reps": 15, "sets": 2, "contraindicatedConditions": ["acute_fracture"] },
+        { "name": "Effleurage Massage", "code": "OA-02", "category": "manual_therapy", "phase": 1, "intensityLevel": "low", "durationSeconds": 300, "reps": null, "sets": null, "contraindicatedConditions": ["open_wound", "infection"] },
+        { "name": "Controlled Leash Walk (Flat Surface)", "code": "OA-03", "category": "gait_retraining", "phase": 1, "intensityLevel": "low", "durationSeconds": 600, "reps": null, "sets": null, "contraindicatedConditions": [] },
+        { "name": "Cookie Stretch Lateral (Left)", "code": "OA-04", "category": "range_of_motion", "phase": 1, "intensityLevel": "low", "durationSeconds": 30, "reps": 5, "sets": 3, "contraindicatedConditions": ["cervical_instability"] },
+        { "name": "Cookie Stretch Lateral (Right)", "code": "OA-05", "category": "range_of_motion", "phase": 1, "intensityLevel": "low", "durationSeconds": 30, "reps": 5, "sets": 3, "contraindicatedConditions": ["cervical_instability"] },
+        { "name": "Sit to Stand", "code": "OA-06", "category": "strengthening", "phase": 2, "intensityLevel": "moderate", "durationSeconds": null, "reps": 10, "sets": 3, "contraindicatedConditions": ["severe_pain"] },
+        { "name": "Cavaletti Walking (Gait)", "code": "OA-07", "category": "gait_retraining", "phase": 2, "intensityLevel": "moderate", "durationSeconds": 300, "reps": null, "sets": 3, "contraindicatedConditions": ["severe_lameness"] },
+        { "name": "UWTM — Standard Protocol", "code": "OA-08", "category": "hydrotherapy", "phase": 2, "intensityLevel": "moderate", "durationSeconds": 600, "reps": null, "sets": null, "contraindicatedConditions": ["open_wound", "cardiac_disease_uncleared"] },
+        { "name": "Balance Disc Standing (Four Limbs)", "code": "OA-09", "category": "balance", "phase": 3, "intensityLevel": "moderate", "durationSeconds": 60, "reps": null, "sets": 3, "contraindicatedConditions": [] },
+        { "name": "Hill Climbing (Strength)", "code": "OA-10", "category": "strengthening", "phase": 3, "intensityLevel": "moderate", "durationSeconds": 300, "reps": null, "sets": 2, "contraindicatedConditions": ["severe_pain"] },
+        { "name": "Structured Leash Walk Program (Weight Management)", "code": "OA-11", "category": "weight_management", "phase": 4, "intensityLevel": "moderate", "durationSeconds": 1200, "reps": null, "sets": null, "contraindicatedConditions": [] },
+        { "name": "Pool Swimming (Free)", "code": "OA-12", "category": "hydrotherapy", "phase": 4, "intensityLevel": "moderate", "durationSeconds": 900, "reps": null, "sets": null, "contraindicatedConditions": ["open_wound", "cardiac_disease_uncleared"] }
+      ]
+    },
+    {
+      "id": "PROT-GERI",
+      "name": "Geriatric Mobility Support",
+      "description": "16-week gentle protocol for age-related mobility decline, muscle preservation, and quality-of-life maintenance",
+      "targetConditions": ["geriatric", "sarcopenia", "age-related mobility decline", "senior mobility"],
+      "species": "canine",
+      "totalWeeks": 16,
+      "phases": 4,
+      "allowedCategories": ["range_of_motion", "gait_retraining", "manual_therapy", "geriatric", "balance"],
+      "exercises": [
+        { "name": "Gentle Controlled Walk (Geriatric)", "code": "GERI-01", "category": "geriatric", "phase": 1, "intensityLevel": "low", "durationSeconds": 300, "reps": null, "sets": null, "contraindicatedConditions": [] },
+        { "name": "Passive Range of Motion (Geriatric)", "code": "GERI-02", "category": "range_of_motion", "phase": 1, "intensityLevel": "low", "durationSeconds": 180, "reps": 10, "sets": 2, "contraindicatedConditions": [] },
+        { "name": "Gentle Effleurage Massage (Geriatric)", "code": "GERI-03", "category": "manual_therapy", "phase": 1, "intensityLevel": "low", "durationSeconds": 300, "reps": null, "sets": null, "contraindicatedConditions": ["open_wound"] },
+        { "name": "Modified Cookie Stretches (Geriatric)", "code": "GERI-04", "category": "range_of_motion", "phase": 2, "intensityLevel": "low", "durationSeconds": 60, "reps": 5, "sets": 3, "contraindicatedConditions": ["cervical_instability"] },
+        { "name": "Low Cavaletti Walking (Geriatric)", "code": "GERI-05", "category": "gait_retraining", "phase": 2, "intensityLevel": "low", "durationSeconds": 180, "reps": null, "sets": 3, "contraindicatedConditions": ["severe_ataxia"] },
+        { "name": "Supported Standing (Geriatric)", "code": "GERI-06", "category": "geriatric", "phase": 2, "intensityLevel": "low", "durationSeconds": 60, "reps": null, "sets": 4, "contraindicatedConditions": [] },
+        { "name": "Slow Sit to Stand (Geriatric)", "code": "GERI-07", "category": "geriatric", "phase": 3, "intensityLevel": "low", "durationSeconds": null, "reps": 5, "sets": 3, "contraindicatedConditions": ["severe_pain"] },
+        { "name": "Gentle Balance Disc (Geriatric)", "code": "GERI-08", "category": "balance", "phase": 3, "intensityLevel": "low", "durationSeconds": 30, "reps": null, "sets": 3, "contraindicatedConditions": ["severe_ataxia"] },
+        { "name": "Environmental Enrichment Walk (Geriatric)", "code": "GERI-09", "category": "geriatric", "phase": 3, "intensityLevel": "low", "durationSeconds": 600, "reps": null, "sets": null, "contraindicatedConditions": [] },
+        { "name": "Warm Water Therapy (Geriatric)", "code": "GERI-10", "category": "hydrotherapy", "phase": 4, "intensityLevel": "low", "durationSeconds": 600, "reps": null, "sets": null, "contraindicatedConditions": ["open_wound", "cardiac_disease_uncleared"] }
+      ]
+    }
+  ]
+}

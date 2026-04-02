@@ -8,7 +8,7 @@ const NAV = [
   { id: "clients",    label: "Patients",             icon: FiUsers,      desc: "Patient management" },
   { id: "exercises",  label: "Exercise Library",     icon: FiBookOpen,   desc: "260 evidence-based exercises" },
   { id: "sessions",   label: "SOAP Notes",           icon: FiClipboard,  desc: "SOAP notes & outcomes" },
-  { id: "vetai",      label: "B.E.A.U.",             icon: FiCpu,        desc: "Biomedical Evidence-Based Assessment Utility" },
+  { id: "beau",       label: "B.E.A.U.",             icon: FiCpu,        desc: "Biomedical Evidence-Based Analytical Unit" },
   { id: "settings",   label: "Settings",            icon: FiSettings,   desc: "Configuration" },
   { id: "about",      label: "About",               icon: FiHeart,      desc: "Platform & methodology" },
 ];
