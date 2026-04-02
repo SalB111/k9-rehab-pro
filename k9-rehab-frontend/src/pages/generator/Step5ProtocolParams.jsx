@@ -716,9 +716,9 @@ export default function Step5ProtocolParams({ form, setField, generate, allExerc
           }}
           onMouseEnter={e => e.currentTarget.style.boxShadow = "0 0 14px rgba(14,165,233,0.3)"}
           onMouseLeave={e => e.currentTarget.style.boxShadow = "0 0 8px rgba(14,165,233,0.15)"}
-          onClick={() => goToStep(4)}
+          onClick={() => goToStep(2)}
         >
-          &larr; Back to Rehab Goals
+          &larr; Back to Clinical Assessment
         </button>
         <div />
       </div>

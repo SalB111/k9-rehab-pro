@@ -1,12 +1,13 @@
 import {
   FiBookOpen, FiClipboard, FiSettings,
-  FiBarChart2, FiHeart, FiCpu, FiUsers,
+  FiBarChart2, FiHeart, FiCpu, FiUsers, FiFileText,
 } from "react-icons/fi";
 
 const NAV = [
   { id: "dashboard",  label: "Dashboard",           icon: FiBarChart2,  desc: "Clinical analytics" },
+  { id: "generator",  label: "Protocol Generator",  icon: FiFileText,   desc: "Intake → Assessment → Generate" },
   { id: "clients",    label: "Patients",             icon: FiUsers,      desc: "Patient management" },
-  { id: "exercises",  label: "Exercise Library",     icon: FiBookOpen,   desc: "260 evidence-based exercises" },
+  { id: "exercises",  label: "Exercise Library",     icon: FiBookOpen,   desc: "125 evidence-based exercises" },
   { id: "sessions",   label: "SOAP Notes",           icon: FiClipboard,  desc: "SOAP notes & outcomes" },
   { id: "beau",       label: "B.E.A.U.",             icon: FiCpu,        desc: "Biomedical Evidence-Based Analytical Unit" },
   { id: "settings",   label: "Settings",            icon: FiSettings,   desc: "Configuration" },

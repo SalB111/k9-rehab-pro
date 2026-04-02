@@ -14,6 +14,7 @@ import Step4RehabGoals from "./generator/Step4RehabGoals";
 import Step5ProtocolParams from "./generator/Step5ProtocolParams";
 import ProtocolResults from "./generator/ProtocolResults";
 import AddExerciseModal from "./generator/AddExerciseModal";
+import StepNavButtons from "./generator/StepNavButtons";
 
 export default function GeneratorView({ initialStep }) {
   const toast = useToast();
@@ -179,7 +180,7 @@ export default function GeneratorView({ initialStep }) {
       {/* Wizard progress bar — visible during intake steps */}
       {!protocol && <WizardProgress wizardStep={wizardStep} goToStep={goToStep} />}
 
-      {/* ═══════════ STEP 1: CLIENT & PATIENT INFO ═══════════ */}
+      {/* ═══════════ STEP 1: CLIENT & PATIENT INTAKE ═══════════ */}
       {!protocol && wizardStep === 1 && (
         <Step1ClientPatient
           form={form} setField={setField} goToStep={goToStep}
@@ -190,29 +191,25 @@ export default function GeneratorView({ initialStep }) {
       )}
 
       {/* ═══════════ STEP 2: CLINICAL ASSESSMENT ═══════════ */}
+      {/* Combines: Diagnostics + Treatment Plan + Rehab Goals */}
       {!protocol && wizardStep === 2 && (
-        <Step2ClinicalAssessment
-          form={form} setField={setField} goToStep={goToStep}
-        />
+        <>
+          <Step2ClinicalAssessment
+            form={form} setField={setField} goToStep={() => {}}
+          />
+          <Step3TreatmentPlan
+            form={form} setField={setField} goToStep={() => {}}
+            handleSurgeryDate={handleSurgeryDate} handlePostOpDay={handlePostOpDay}
+          />
+          <Step4RehabGoals
+            form={form} setField={setField} goToStep={() => {}}
+          />
+          <StepNavButtons onPrev={() => goToStep(1)} onNext={() => goToStep(3)} nextLabel="Next: Review & Generate" />
+        </>
       )}
 
-      {/* ═══════════ STEP 3: TREATMENT PLAN ═══════════ */}
+      {/* ═══════════ STEP 3: REVIEW & GENERATE PROTOCOL ═══════════ */}
       {!protocol && wizardStep === 3 && (
-        <Step3TreatmentPlan
-          form={form} setField={setField} goToStep={goToStep}
-          handleSurgeryDate={handleSurgeryDate} handlePostOpDay={handlePostOpDay}
-        />
-      )}
-
-      {/* ═══════════ STEP 4: REHAB GOALS ═══════════ */}
-      {!protocol && wizardStep === 4 && (
-        <Step4RehabGoals
-          form={form} setField={setField} goToStep={goToStep}
-        />
-      )}
-
-      {/* ═══════════ STEP 5: PROTOCOL PARAMETERS ═══════════ */}
-      {!protocol && wizardStep === 5 && (
         <Step5ProtocolParams
           form={form} setField={setField} generate={generate}
           allExercises={allExercises} loading={loading}

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import NAV from "../constants/navigation";
-import { FiZap, FiLogOut, FiChevronLeft, FiChevronRight } from "react-icons/fi";
+import { FiPlus, FiLogOut, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 
 export default function Sidebar({ view, setView, currentUser, onLogout }) {
   const [collapsed, setCollapsed] = useState(() => {
@@ -26,9 +26,8 @@ export default function Sidebar({ view, setView, currentUser, onLogout }) {
         className="flex items-center gap-3 px-4 py-5 cursor-pointer border-b border-white/10"
         onClick={() => setView("dashboard")}
       >
-        <div className="relative flex-shrink-0">
-          <img src="/logo512.png" alt="" className="w-8 h-8" />
-          <div className="absolute inset-0 w-8 h-8 rounded-full bg-[#1D9E75]/30 animate-pulse" />
+        <div className="relative flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-[#1D9E75] to-[#0EA5E9] flex items-center justify-center">
+          <span className="text-white font-black text-[11px]">K9</span>
         </div>
         {!collapsed && (
           <div className="overflow-hidden">
@@ -42,7 +41,7 @@ export default function Sidebar({ view, setView, currentUser, onLogout }) {
         )}
       </div>
 
-      {/* Generate Protocol CTA */}
+      {/* New Patient Intake — starts the clinical workflow */}
       <div className="px-3 mt-4 mb-2">
         <button
           onClick={() => setView("generator")}
@@ -54,8 +53,8 @@ export default function Sidebar({ view, setView, currentUser, onLogout }) {
             ${collapsed ? "px-2" : "px-4"}
           `}
         >
-          <FiZap className="w-4 h-4 flex-shrink-0" />
-          {!collapsed && <span>Generate Protocol</span>}
+          <FiPlus className="w-4 h-4 flex-shrink-0" />
+          {!collapsed && <span>New Patient Intake</span>}
         </button>
       </div>
 
@@ -68,7 +67,7 @@ export default function Sidebar({ view, setView, currentUser, onLogout }) {
             <button
               key={item.id}
               onClick={() => setView(item.id)}
-              title={collapsed ? item.label : undefined}
+              title={collapsed ? `${item.label} — ${item.desc}` : item.desc}
               className={`
                 w-full flex items-center gap-3 px-3 py-2.5 rounded-lg
                 text-left text-[13px] font-medium transition-all duration-150
@@ -93,7 +92,6 @@ export default function Sidebar({ view, setView, currentUser, onLogout }) {
 
       {/* Bottom Section */}
       <div className="mt-auto border-t border-white/10">
-        {/* User Info */}
         {currentUser && (
           <div className={`px-4 py-3 ${collapsed ? "text-center" : ""}`}>
             {!collapsed && (
@@ -121,7 +119,6 @@ export default function Sidebar({ view, setView, currentUser, onLogout }) {
           </div>
         )}
 
-        {/* Collapse Toggle */}
         <button
           onClick={toggle}
           className="w-full flex items-center justify-center py-2.5 text-[#7AAACF] hover:text-white transition-colors border-t border-white/5"
