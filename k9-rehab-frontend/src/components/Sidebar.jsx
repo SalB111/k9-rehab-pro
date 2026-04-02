@@ -54,7 +54,7 @@ export default function Sidebar({ view, setView, currentUser, onLogout }) {
           `}
         >
           <FiPlus className="w-4 h-4 flex-shrink-0" />
-          {!collapsed && <span>New Patient Intake</span>}
+          {!collapsed && <span>New Client/Patient Intake</span>}
         </button>
       </div>
 

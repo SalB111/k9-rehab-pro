@@ -9,15 +9,11 @@ import useIntakeForm from "./generator/useIntakeForm";
 import WizardProgress from "./generator/WizardProgress";
 import Step1ClientPatient from "./generator/Step1ClientPatient";
 import Step2ClinicalAssessment from "./generator/Step2ClinicalAssessment";
-import Step3DiagnosticWorkup from "./generator/Step3DiagnosticWorkup";
-import Step4PatientStatus from "./generator/Step4PatientStatus";
-import Step4RehabGoals from "./generator/Step4RehabGoals";       // now Step 5
-import Step6Equipment from "./generator/Step6Equipment";
-import Step7HomeProtocol from "./generator/Step7HomeProtocol";
-import Step5ProtocolParams from "./generator/Step5ProtocolParams"; // legacy — parts moved to Step7
+import Step3TreatmentPlan from "./generator/Step3TreatmentPlan";
+import Step4RehabGoals from "./generator/Step4RehabGoals";
+import Step5ProtocolParams from "./generator/Step5ProtocolParams";
 import ProtocolResults from "./generator/ProtocolResults";
 import AddExerciseModal from "./generator/AddExerciseModal";
-import StepNavButtons from "./generator/StepNavButtons";
 
 export default function GeneratorView({ initialStep }) {
   const toast = useToast();
@@ -177,13 +173,11 @@ export default function GeneratorView({ initialStep }) {
     );
   }
 
-  // ═══════════ MAIN RENDER — 7-STEP CLINICAL WORKFLOW ═══════════
+  // ═══════════ MAIN RENDER — 5-STEP WIZARD ═══════════
   return (
     <div>
-      {/* Wizard progress bar — visible during intake steps */}
       {!protocol && <WizardProgress wizardStep={wizardStep} goToStep={goToStep} />}
 
-      {/* ═══════════ STEP 1: CLIENT & PATIENT INTAKE ═══════════ */}
       {!protocol && wizardStep === 1 && (
         <Step1ClientPatient
           form={form} setField={setField} goToStep={goToStep}
@@ -193,60 +187,35 @@ export default function GeneratorView({ initialStep }) {
         />
       )}
 
-      {/* ═══════════ STEP 2: CLINICAL ASSESSMENT ═══════════ */}
-      {/* Gait, Body Condition, Objective Measurements, Manual Muscle, Validated Outcomes */}
       {!protocol && wizardStep === 2 && (
         <Step2ClinicalAssessment
           form={form} setField={setField} goToStep={goToStep}
         />
       )}
 
-      {/* ═══════════ STEP 3: DIAGNOSTIC WORKUP ═══════════ */}
-      {/* Imaging Studies, Lab Results, Functional & Special Tests */}
       {!protocol && wizardStep === 3 && (
-        <Step3DiagnosticWorkup
-          form={form} setField={setField} goToStep={goToStep}
-        />
-      )}
-
-      {/* ═══════════ STEP 4: PATIENT STATUS ═══════════ */}
-      {/* 4-block: Surgical, Non-Surgical, Post-Surgical, Palliative */}
-      {!protocol && wizardStep === 4 && (
-        <Step4PatientStatus
+        <Step3TreatmentPlan
           form={form} setField={setField} goToStep={goToStep}
           handleSurgeryDate={handleSurgeryDate} handlePostOpDay={handlePostOpDay}
         />
       )}
 
-      {/* ═══════════ STEP 5: REHABILITATION ASSESSMENT & GOALS ═══════════ */}
-      {/* Problem List, STG, LTG, Prognosis, Precautions, E-collar/Crate/Sling */}
-      {!protocol && wizardStep === 5 && (
+      {!protocol && wizardStep === 4 && (
         <Step4RehabGoals
           form={form} setField={setField} goToStep={goToStep}
         />
       )}
 
-      {/* ═══════════ STEP 6: IN-HOSPITAL EQUIPMENT & MODALITIES ═══════════ */}
-      {/* Therapeutic Modalities, Functional Tools, Discharge Planning */}
-      {!protocol && wizardStep === 6 && (
-        <Step6Equipment
-          form={form} setField={setField} goToStep={goToStep}
-        />
-      )}
-
-      {/* ═══════════ STEP 7: HOME EXERCISE PROTOCOLS + GENERATE ═══════════ */}
-      {/* Home Equipment, Home Environment, Pre-Protocol Summary, GENERATE BUTTON */}
-      {!protocol && wizardStep === 7 && (
-        <Step7HomeProtocol
-          form={form} setField={setField} goToStep={goToStep}
-          generate={generate} allExercises={allExercises} loading={loading}
+      {!protocol && wizardStep === 5 && (
+        <Step5ProtocolParams
+          form={form} setField={setField} generate={generate}
+          allExercises={allExercises} loading={loading}
           complianceAgreed={complianceAgreed} setComplianceAgreed={setComplianceAgreed}
           complianceOpen={complianceOpen} setComplianceOpen={setComplianceOpen}
-          error={error}
+          error={error} goToStep={goToStep}
         />
       )}
 
-      {/* ═══════════ GENERATED PROTOCOL RESULTS ═══════════ */}
       {protocol && (
         <ProtocolResults
           protocol={protocol} setProtocol={setProtocol}
@@ -257,7 +226,6 @@ export default function GeneratorView({ initialStep }) {
         />
       )}
 
-      {/* ═══════════ ADD EXERCISE MODAL ═══════════ */}
       {showAddModal && (
         <AddExerciseModal
           addingToWeek={addingToWeek} filteredEx={filteredEx}

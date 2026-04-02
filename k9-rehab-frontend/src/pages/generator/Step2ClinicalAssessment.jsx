@@ -793,9 +793,9 @@ export default function Step2ClinicalAssessment({ form, setField, goToStep }) {
       {/* Step 2 navigation */}
       <StepNavButtons
         onBack={() => goToStep(1)}
-        backLabel={<>&#8592; Back to Patient Intake</>}
+        backLabel={<>&#8592; Back to Patient Info</>}
         onNext={() => goToStep(3)}
-        nextLabel="Next: Diagnostic Workup"
+        nextLabel="Next: Treatment Plan"
       />
     </>
   );
