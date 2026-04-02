@@ -142,16 +142,6 @@ app.delete("/api/patients/:id", async (req, res) => {
 // EXERCISES
 // ---------------------------------------------------------------------------
 
-// Database-backed exercises
-app.get("/api/exercises", async (req, res) => {
-  try {
-    const exercises = await all("SELECT * FROM exercises_v2 ORDER BY name ASC");
-    res.json({ success: true, data: exercises });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
 // Full exercise library — curated 125 exercises with species separation
 const { ALL_EXERCISES } = require("./all-exercises");
 const CURATED_CODES = new Set(require("./curated-codes.json"));
@@ -170,6 +160,18 @@ const CURATED_EXERCISES = ALL_EXERCISES
       },
     };
   });
+
+// Protocol generator
+const { selectExercisesForWeek, getProtocolType, validateIntake } = require("./protocol-generator");
+
+// Exercise library — serves curated 125-exercise library
+app.get("/api/exercises", (req, res) => {
+  try {
+    res.json({ success: true, data: CURATED_EXERCISES, total: CURATED_EXERCISES.length });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
 
 console.log(`📚 Curated library: ${CURATED_EXERCISES.length} exercises (${CURATED_EXERCISES.filter(e=>e.code.startsWith('FELINE')).length} feline, ${CURATED_EXERCISES.filter(e=>!e.code.startsWith('FELINE')).length} canine)`);
 
@@ -211,6 +213,64 @@ app.get("/api/exercises/:id", async (req, res) => {
     if (!exercise) return res.status(404).json({ success: false, error: "Exercise not found" });
     res.json({ success: true, data: exercise });
   } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// PROTOCOL GENERATION
+// ---------------------------------------------------------------------------
+
+app.post("/api/generate-protocol", (req, res) => {
+  try {
+    const formData = req.body;
+
+    // Validate intake
+    const { errors, warnings } = validateIntake(formData);
+    if (errors && errors.length > 0) {
+      return res.status(400).json({ success: false, error: errors.join("; "), warnings });
+    }
+
+    // Generate week-by-week protocol
+    const totalWeeks = parseInt(formData.protocolLength, 10) || 8;
+    const weeks = [];
+
+    for (let w = 1; w <= totalWeeks; w++) {
+      const exercises = selectExercisesForWeek(w, totalWeeks, ALL_EXERCISES, formData);
+      weeks.push({
+        week: w,
+        exercises,
+        phaseInfo: exercises[0]?._phaseInfo || null,
+      });
+    }
+
+    // Protocol metadata
+    const protocolType = getProtocolType(
+      formData.diagnosis,
+      formData.affectedRegion,
+      formData._highPainOverride ? "palliative" : formData.treatmentApproach
+    );
+
+    res.json({
+      success: true,
+      data: {
+        protocolType,
+        totalWeeks,
+        frequency: formData.frequency || "2x/week",
+        weeks,
+        warnings: warnings || [],
+        patient: {
+          name: formData.patientName,
+          species: formData.species || "canine",
+          breed: formData.breed,
+          age: formData.age,
+          weight: formData.weight || formData.weightLbs,
+        },
+        generatedAt: new Date().toISOString(),
+      },
+    });
+  } catch (err) {
+    console.error("[Protocol Generation Error]", err);
     res.status(500).json({ success: false, error: err.message });
   }
 });
