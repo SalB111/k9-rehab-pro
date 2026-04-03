@@ -18,19 +18,17 @@ router.post("/chat", handleChat);
 // ─────────────────────────────────────────────────────────────────────────────
 router.get("/status", (req, res) => {
   const configured = !!process.env.ANTHROPIC_API_KEY;
-  res.json({
-    configured,
-    model: "claude-sonnet-4-20250514",
-    engines: {
-      clinical: true,
-      knowledge: false,  // Updated when Engine 1 initializes
-      evidence: false,   // Updated when Engine 2 initializes
-      diagram: false,    // Updated when Engine 3 initializes
-      narrative: false,  // Updated when Engine 4 initializes
-      presentation: false, // Updated when Engine 5 initializes
-      visual: false,     // Updated when Engine 6 initializes
-    },
-  });
+
+  // Dynamically check each engine's actual status
+  let engines = { clinical: true };
+  try { engines.knowledge = require("../engines/knowledge/knowledge-engine").isReady(); } catch { engines.knowledge = false; }
+  try { engines.evidence = require("../engines/evidence/evidence-engine").isReady(); } catch { engines.evidence = false; }
+  try { engines.diagram = require("../engines/diagram/diagram-engine").isReady(); } catch { engines.diagram = false; }
+  try { engines.narrative = require("../engines/narrative/narrative-engine").isReady(); } catch { engines.narrative = false; }
+  try { engines.presentation = require("../engines/presentation/presentation-engine").isReady(); } catch { engines.presentation = false; }
+  try { engines.visual = require("../engines/visual/visual-engine").isReady(); } catch { engines.visual = false; }
+
+  res.json({ configured, model: "claude-sonnet-4-20250514", engines });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
