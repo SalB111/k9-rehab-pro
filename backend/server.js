@@ -404,7 +404,21 @@ app.put("/api/clinics/:id", async (req, res) => {
 // ---------------------------------------------------------------------------
 
 const beauRouter = require("./beau/beau-router");
+const { registerEngineHook } = require("./beau/beau-chat-handler");
+const knowledgeEngine = require("./engines/knowledge/knowledge-engine");
 app.use("/api/beau", beauRouter);
+
+// Knowledge Engine search endpoint
+app.get("/api/beau/knowledge/search", (req, res) => {
+  const { q } = req.query;
+  if (!q) return res.status(400).json({ error: "Query parameter 'q' is required" });
+  const results = knowledgeEngine.search(q, 10);
+  res.json({ success: true, data: results.map(r => ({ ...r.chunk, score: r.score })), status: knowledgeEngine.getStatus() });
+});
+
+app.get("/api/beau/knowledge/status", (req, res) => {
+  res.json({ success: true, data: knowledgeEngine.getStatus() });
+});
 
 // ---------------------------------------------------------------------------
 // AGENT PIPELINE ROUTES
@@ -453,6 +467,12 @@ app.get("/api/pipeline/status", (req, res) => {
     await db.initialize();
     await db.createTables();
     await db.seedV2Library();
+
+    // Initialize Knowledge Engine (RAG — source document grounding)
+    await knowledgeEngine.initialize();
+    registerEngineHook("knowledge", async (query, patient) => {
+      return knowledgeEngine.getRelevantContext(query, patient);
+    });
 
     const existingAdmin = await db.findUserByUsername("admin");
     if (!existingAdmin) {
