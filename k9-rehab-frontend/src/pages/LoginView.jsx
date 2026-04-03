@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import K9Logo from "../components/K9Logo";
 
 export default function LoginView({ onLogin, onRegister }) {
   const [username, setUsername] = useState("");
@@ -36,40 +37,24 @@ export default function LoginView({ onLogin, onRegister }) {
         {/* Content */}
         <div className="relative z-10">
           {/* Logo */}
-          <div className="flex items-center gap-3 mb-16">
-            <div className="relative">
-              <img src="/logo512.png" alt="" className="w-10 h-10" />
-              <div className="absolute inset-0 w-10 h-10 rounded-full bg-[#1D9E75]/20 animate-pulse" />
-            </div>
-            <div>
-              <h1 className="font-logo text-lg font-black tracking-[3px] text-white">K9 REHAB PRO</h1>
-              <div className="h-[2px] w-full bg-gradient-to-r from-[#1D9E75] via-[#0EA5E9] to-transparent mt-1" />
+          {/* Logo */}
+          <div className="flex flex-col items-center mb-12">
+            <K9Logo size={140} glow={true} />
+            <div className="mt-6 text-center">
+              <h1 className="font-logo text-2xl font-black tracking-[4px] text-white">K9 REHAB PRO</h1>
+              <div className="h-[2px] w-48 mx-auto bg-gradient-to-r from-transparent via-[#1D9E75] to-transparent mt-2" />
             </div>
           </div>
 
           {/* Headline */}
-          <h2 className="text-4xl font-bold text-white leading-tight mb-4 font-sans">
+          <h2 className="text-3xl font-bold text-white leading-tight mb-4 font-sans text-center">
             Evidence-Based<br />
             <span className="text-[#1D9E75]">Rehabilitation Intelligence</span>
           </h2>
-          <p className="text-[#7AAACF] text-lg leading-relaxed max-w-md">
-            The clinical decision-support platform for veterinary rehabilitation professionals.
-            Canine & feline protocols powered by B.E.A.U.
+          <p className="text-[#7AAACF] text-base leading-relaxed max-w-md text-center mx-auto">
+            Clinical decision-support for veterinary rehabilitation professionals.
+            Canine &amp; feline protocols powered by B.E.A.U.
           </p>
-
-          {/* Stats */}
-          <div className="grid grid-cols-3 gap-6 mt-12">
-            {[
-              { value: "223", label: "Evidence-Based Exercises" },
-              { value: "18", label: "Clinical Categories" },
-              { value: "4", label: "Protocol Engines" },
-            ].map((stat) => (
-              <div key={stat.label} className="text-center">
-                <div className="text-3xl font-bold text-white font-brand">{stat.value}</div>
-                <div className="text-[11px] text-[#7AAACF] mt-1 tracking-wide uppercase">{stat.label}</div>
-              </div>
-            ))}
-          </div>
         </div>
 
         {/* Bottom — CDSS Notice */}
@@ -80,7 +65,7 @@ export default function LoginView({ onLogin, onRegister }) {
             or prescribe medication. All protocols require licensed veterinarian review.
           </p>
           <p className="text-[10px] text-[#7AAACF]/40 mt-2">
-            &copy; 2026 K9 Rehab Pro&trade; &middot; Salvatore Bonanno &middot; All rights reserved
+            &copy; 2025-2026 Salvatore Bonanno &middot; K9 Rehab Pro&trade; &middot; All rights reserved
           </p>
         </div>
       </div>
@@ -89,7 +74,7 @@ export default function LoginView({ onLogin, onRegister }) {
       <div className="flex-1 flex items-center justify-center p-8 bg-[#F4F8FD] lg:rounded-l-[40px] relative">
         {/* Mobile Logo */}
         <div className="absolute top-8 left-8 flex items-center gap-2 lg:hidden">
-          <img src="/logo512.png" alt="" className="w-7 h-7" />
+          <K9Logo size={32} glow={false} />
           <span className="font-logo text-sm font-black tracking-[2px] text-[#0C2340]">K9 REHAB PRO</span>
         </div>
 

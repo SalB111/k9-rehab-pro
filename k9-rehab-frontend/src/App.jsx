@@ -4,6 +4,7 @@ import { setupAxiosAuth, clearAxiosAuth } from "./api/axios";
 import { ToastProvider } from "./components/Toast";
 import Sidebar from "./components/Sidebar";
 import LoginView from "./pages/LoginView";
+import WelcomeSplash from "./pages/WelcomeSplash";
 
 const GeneratorView = lazy(() => import("./pages/GeneratorView"));
 const DashboardView = lazy(() => import("./pages/DashboardView"));
@@ -21,6 +22,7 @@ export default function App() {
   const [authToken, setAuthToken] = useState(localStorage.getItem("token"));
   const [currentUser, setCurrentUser] = useState({ username: "Clinician", role: "clinician", id: 1 });
   const [view, setView] = useState("clients");
+  const [showSplash, setShowSplash] = useState(!localStorage.getItem("token"));
   const [genKey, setGenKey] = useState(0);
   const [genInitialStep, setGenInitialStep] = useState(1);
   const [brand, setBrand] = useState({ clinicName: "K9 Rehab Pro", accent: "#0F4C81" });
@@ -119,6 +121,20 @@ export default function App() {
       default:
         return <ClientsView setView={setView} setSelectedPatient={setSelectedPatient} />;
     }
+  }
+
+  // Splash screen — cinematic intro before login
+  if (showSplash && !authToken) {
+    return <WelcomeSplash onEnter={() => setShowSplash(false)} />;
+  }
+
+  // Auth gate — show login page when not authenticated
+  if (!authToken) {
+    return (
+      <ToastProvider>
+        <LoginView onLogin={handleLogin} onRegister={handleRegister} />
+      </ToastProvider>
+    );
   }
 
   return (
