@@ -47,10 +47,10 @@ function AboutView() {
         <div style={{ ...S.card, border: `1px solid ${C.border}` }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
             <FiActivity size={16} style={{ color: C.green }} />
-            <h3 style={{ margin: 0, fontSize: 14, fontWeight: 900, color: C.text }}>Protocol Engine</h3>
+            <h3 style={{ margin: 0, fontSize: 14, fontWeight: 900, color: C.text }}>Clinical Intelligence</h3>
           </div>
           <p style={{ fontSize: 12, color: C.textMid, lineHeight: 1.7, margin: 0 }}>
-            4 ACVSMR-aligned protocols (TPLO, IVDD, OA, Geriatric) with 4 gated phases each. 260 exercises classified by intervention type, phase appropriateness, and evidence grade. Automated contraindication enforcement prevents unsafe exercise selection.
+            ACVSMR-aligned rehabilitation protocols with phase-gated progression. A comprehensive exercise library classified by intervention type, phase appropriateness, and evidence grade. Automated contraindication enforcement and safety screening powered by B.E.A.U. — the Biomedical Evidence-Based Analytical Unit.
           </p>
         </div>
 
@@ -79,6 +79,24 @@ function AboutView() {
               <div style={{ fontSize: 11, color: C.textMid, lineHeight: 1.5 }}>{desc}</div>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* Founder & Copyright */}
+      <div style={{ ...S.card, border: `1px solid ${C.border}`, borderTop: `3px solid ${C.navy}`, padding: "24px 28px" }}>
+        <h3 style={{ fontSize: 14, fontWeight: 900, color: C.text, marginBottom: 8 }}>About the Founder</h3>
+        <p style={{ fontSize: 12, color: C.textMid, lineHeight: 1.7, margin: "0 0 12px" }}>
+          K9 Rehab Pro was built by <strong style={{ color: C.text }}>Salvatore Bonanno</strong>, a Canine Rehabilitation Nurse (CCRN) and software developer with 30 years of veterinary nursing experience. Salvatore founded and ran the canine rehabilitation department at BluePearl Veterinary Partners (formerly Lauderdale Veterinary Specialists) in Fort Lauderdale, Florida from 2016-2024. Every protocol, phase gate, and clinical rule in this system came from real clinical work with real patients.
+        </p>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "end", paddingTop: 12, borderTop: `1px solid ${C.border}` }}>
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 900, color: C.navy }}>&copy; 2025-2026 Salvatore Bonanno</div>
+            <div style={{ fontSize: 10, color: C.textLight }}>All rights reserved. Unauthorized use, reproduction, or distribution is prohibited.</div>
+          </div>
+          <div style={{ textAlign: "right" }}>
+            <div style={{ fontSize: 10, color: C.textLight }}>K9 Rehab Pro&trade;</div>
+            <div style={{ fontSize: 10, color: C.textLight }}>Powered by B.E.A.U.</div>
+          </div>
         </div>
       </div>
 
