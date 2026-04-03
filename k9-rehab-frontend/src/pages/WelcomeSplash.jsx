@@ -42,12 +42,12 @@ export default function WelcomeSplash({ onEnter }) {
     const h = canvas.height = window.innerHeight;
 
     // Generate sparks
-    for (let i = 0; i < 60; i++) {
+    for (let i = 0; i < 80; i++) {
       sparksRef.current.push({
-        x: w / 2 + (Math.random() - 0.5) * 100,
-        y: h / 2 + (Math.random() - 0.5) * 100,
-        vx: (Math.random() - 0.5) * 4,
-        vy: (Math.random() - 0.5) * 4,
+        x: w / 2 + (Math.random() - 0.5) * 120,
+        y: h / 2 + (Math.random() - 0.5) * 120,
+        vx: (Math.random() - 0.5) * 5,
+        vy: (Math.random() - 0.5) * 5,
         size: Math.random() * 3 + 1,
         life: Math.random() * 60 + 30,
         maxLife: 90,
@@ -55,17 +55,59 @@ export default function WelcomeSplash({ onEnter }) {
       });
     }
 
+    // Electricity bolt generator
+    function drawBolt(ctx, x1, y1, x2, y2, color, width) {
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      const segments = 6 + Math.floor(Math.random() * 4);
+      for (let i = 1; i < segments; i++) {
+        const t = i / segments;
+        const mx = x1 + (x2 - x1) * t + (Math.random() - 0.5) * 30;
+        const my = y1 + (y2 - y1) * t + (Math.random() - 0.5) * 30;
+        ctx.lineTo(mx, my);
+      }
+      ctx.lineTo(x2, y2);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = width;
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 8;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+
     function animate() {
-      ctx.clearRect(0, 0, w, h);
+      // Fade trail instead of clear — keeps electricity visible
+      ctx.fillStyle = "rgba(4,6,8,0.15)";
+      ctx.fillRect(0, 0, w, h);
+
+      // Draw electricity bolts continuously
+      const cx = w / 2, cy = h / 2;
+      const boltCount = 1 + Math.floor(Math.random() * 2);
+      for (let b = 0; b < boltCount; b++) {
+        const angle = Math.random() * Math.PI * 2;
+        const dist = 50 + Math.random() * 120;
+        const x2 = cx + Math.cos(angle) * dist;
+        const y2 = cy + Math.sin(angle) * dist;
+        const color = Math.random() > 0.5 ? "rgba(14,165,233,0.5)" : "rgba(29,158,117,0.4)";
+        drawBolt(ctx, cx + (Math.random() - 0.5) * 50, cy + (Math.random() - 0.5) * 50, x2, y2, color, 0.8 + Math.random() * 0.8);
+        // Branch bolt
+        if (Math.random() > 0.4) {
+          const bx = x2 + (Math.random() - 0.5) * 70;
+          const by = y2 + (Math.random() - 0.5) * 70;
+          drawBolt(ctx, x2, y2, bx, by, color, 0.4);
+        }
+      }
+
+      // Sparks
       sparksRef.current.forEach(p => {
         p.x += p.vx;
         p.y += p.vy;
         p.life--;
         if (p.life <= 0) {
-          p.x = w / 2 + (Math.random() - 0.5) * 80;
-          p.y = h / 2 + (Math.random() - 0.5) * 80;
-          p.vx = (Math.random() - 0.5) * 5;
-          p.vy = (Math.random() - 0.5) * 5;
+          p.x = w / 2 + (Math.random() - 0.5) * 100;
+          p.y = h / 2 + (Math.random() - 0.5) * 100;
+          p.vx = (Math.random() - 0.5) * 6;
+          p.vy = (Math.random() - 0.5) * 6;
           p.life = p.maxLife;
         }
         const alpha = Math.max(0, p.life / p.maxLife);
@@ -90,14 +132,14 @@ export default function WelcomeSplash({ onEnter }) {
 
   // Typewriter text
   const textActive = phase === "text" || phase === "ready";
-  const tw1 = useTypewriter("WELCOME", 0, 180, textActive);
-  const tw3 = useTypewriter("ENTER", 2000, 200, textActive);
+  const tw1 = useTypewriter("WELCOME", 0, 120, textActive);
+  const tw3 = useTypewriter("ENTER", 1200, 150, textActive);
 
-  // Phase timing
+  // Phase timing — faster but still dramatic
   useEffect(() => {
-    const t1 = setTimeout(() => setPhase("hold"), 7000);   // ultra slow cinematic approach
-    const t2 = setTimeout(() => setPhase("text"), 9000);    // long pause to absorb the logo
-    const t3 = setTimeout(() => setPhase("ready"), 13000);  // all text revealed
+    const t1 = setTimeout(() => setPhase("hold"), 3000);   // cinematic approach
+    const t2 = setTimeout(() => setPhase("text"), 3800);    // brief pause then text
+    const t3 = setTimeout(() => setPhase("ready"), 6000);   // ready to enter
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
   }, []);
 
@@ -153,7 +195,7 @@ export default function WelcomeSplash({ onEnter }) {
               : "scale(1) rotateX(0deg) translateZ(0px)",
             opacity: phase === "zoom" ? 0.2 : 1,
             transition: phase === "zoom"
-              ? "transform 7s cubic-bezier(0.16, 1, 0.3, 1), opacity 5s ease"
+              ? "transform 3s cubic-bezier(0.16, 1, 0.3, 1), opacity 2.5s ease"
               : "transform 0.3s ease-out",
             filter: phase !== "zoom"
               ? "drop-shadow(0 0 30px rgba(14,165,233,0.5)) drop-shadow(0 0 60px rgba(29,158,117,0.3))"
