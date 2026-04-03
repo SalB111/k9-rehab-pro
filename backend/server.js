@@ -408,6 +408,7 @@ const { registerEngineHook } = require("./beau/beau-chat-handler");
 const knowledgeEngine = require("./engines/knowledge/knowledge-engine");
 const evidenceEngine = require("./engines/evidence/evidence-engine");
 const narrativeEngine = require("./engines/narrative/narrative-engine");
+const presentationEngine = require("./engines/presentation/presentation-engine");
 app.use("/api/beau", beauRouter);
 
 // Knowledge Engine search endpoint
@@ -458,6 +459,22 @@ app.get("/api/beau/narrative/templates", (req, res) => {
 
 app.get("/api/beau/narrative/status", (req, res) => {
   res.json({ success: true, data: narrativeEngine.getStatus() });
+});
+
+// Presentation Engine endpoints
+app.post("/api/beau/presentation/generate", async (req, res) => {
+  try {
+    const { prompt, patient } = req.body;
+    if (!prompt) return res.status(400).json({ error: "Prompt is required" });
+    const result = await presentationEngine.generatePresentation(prompt, patient);
+    res.json({ success: true, data: result });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/beau/presentation/status", (req, res) => {
+  res.json({ success: true, data: presentationEngine.getStatus() });
 });
 
 // ---------------------------------------------------------------------------
@@ -519,6 +536,9 @@ app.get("/api/pipeline/status", (req, res) => {
 
     // Initialize Narrative Engine with Knowledge + Evidence references
     narrativeEngine.initialize(knowledgeEngine, evidenceEngine);
+
+    // Initialize Presentation Engine
+    presentationEngine.initialize(knowledgeEngine);
 
     const existingAdmin = await db.findUserByUsername("admin");
     if (!existingAdmin) {

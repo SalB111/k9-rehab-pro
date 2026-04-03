@@ -11,6 +11,7 @@ import { useToast } from "../components/Toast";
 
 const DiagramRenderer = lazy(() => import("../components/beau/DiagramRenderer"));
 const NarrativePanel = lazy(() => import("../components/beau/NarrativePanel"));
+const PresentationView = lazy(() => import("../components/beau/presentation/PresentationView"));
 
 // ─────────────────────────────────────────────
 // BEAU AI VIEW — B.E.A.U. - Biomedical Evidence-based Analytical Unit
@@ -22,6 +23,7 @@ function BEAUView({ authToken }) {
   const [stream, setStream] = useState("");
   const [patient, setPatient] = useState(null);
   const [patients, setPatients] = useState([]);
+  const [presentationDeck, setPresentationDeck] = useState(null);
   const [showPatientPanel, setShowPatientPanel] = useState(false);
   const [aiStatus, setAiStatus] = useState(null);
   const [sessionId, setSessionId] = useState(null);
@@ -359,7 +361,7 @@ useEffect(() => {
               boxShadow: m.role === "user" ? `0 3px 12px ${C.navy}20` : "0 1px 4px rgba(0,0,0,0.04)",
             }}>
               {m.role === "assistant"
-                ? <MessageContent content={m.content} renderMd={renderMd} />
+                ? <MessageContent content={m.content} renderMd={renderMd} onPresentation={setPresentationDeck} />
                 : <span style={{ fontWeight: 500 }}>{m.content}</span>
               }
             </div>
@@ -437,6 +439,12 @@ useEffect(() => {
         @keyframes blink { 50%{opacity:0} }
       `}</style>
       </div>{/* /Main Chat Column */}
+      {/* Presentation modal */}
+      {presentationDeck && (
+        <Suspense fallback={null}>
+          <PresentationView deck={presentationDeck} onClose={() => setPresentationDeck(null)} />
+        </Suspense>
+      )}
     </div>
   );
 }
@@ -445,10 +453,9 @@ useEffect(() => {
  * Renders message content, splitting text and engine blocks (:::diagram, :::document).
  * Text parts render as HTML via renderMd, engine blocks render as React components.
  */
-function MessageContent({ content, renderMd }) {
+function MessageContent({ content, renderMd, onPresentation }) {
   if (!content) return null;
 
-  // Split content by :::type ... ::: markers (diagram, document, presentation, visual)
   const parts = [];
   const engineRegex = /:::(diagram|document|presentation|visual)\s*([\s\S]*?):::/g;
   let match;
@@ -456,26 +463,20 @@ function MessageContent({ content, renderMd }) {
 
   while ((match = engineRegex.exec(content)) !== null) {
     const textBefore = content.slice(lastIndex, match.index);
-    if (textBefore.trim()) {
-      parts.push({ type: "text", content: textBefore });
-    }
+    if (textBefore.trim()) parts.push({ type: "text", content: textBefore });
 
     const engineType = match[1];
     const jsonStr = match[2].trim();
     try {
-      const data = JSON.parse(jsonStr);
-      parts.push({ type: engineType, content: data });
+      parts.push({ type: engineType, content: JSON.parse(jsonStr) });
     } catch {
       parts.push({ type: "text", content: "```\n" + jsonStr + "\n```" });
     }
-
     lastIndex = match.index + match[0].length;
   }
 
   const textAfter = content.slice(lastIndex);
-  if (textAfter.trim()) {
-    parts.push({ type: "text", content: textAfter });
-  }
+  if (textAfter.trim()) parts.push({ type: "text", content: textAfter });
 
   if (parts.length === 0) {
     return <div dangerouslySetInnerHTML={{ __html: renderMd(content) }} />;
@@ -496,6 +497,27 @@ function MessageContent({ content, renderMd }) {
             <Suspense key={i} fallback={<div style={{ padding: 12, fontSize: 12, color: "#6a737d" }}>Loading document...</div>}>
               <NarrativePanel document={part.content} />
             </Suspense>
+          );
+        }
+        if (part.type === "presentation") {
+          const deck = part.content;
+          return (
+            <div key={i} style={{
+              margin: "12px 0", padding: "12px 16px", borderRadius: 10,
+              background: "linear-gradient(135deg, #0F4C8115, #1D9E7515)",
+              border: "1px solid var(--k9-teal)", display: "flex", alignItems: "center", justifyContent: "space-between",
+            }}>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "var(--k9-text)" }}>{deck.title || "Presentation"}</div>
+                <div style={{ fontSize: 11, color: "var(--k9-text-light)" }}>{deck.slides?.length || 0} slides</div>
+              </div>
+              <button onClick={() => onPresentation?.(deck)} style={{
+                padding: "6px 14px", borderRadius: 6, border: "none", cursor: "pointer",
+                background: "var(--k9-teal)", color: "#fff", fontSize: 12, fontWeight: 600,
+              }}>
+                View Presentation
+              </button>
+            </div>
           );
         }
         return <div key={i} dangerouslySetInnerHTML={{ __html: renderMd(part.content) }} />;
