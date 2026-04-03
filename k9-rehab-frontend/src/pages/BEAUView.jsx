@@ -39,7 +39,7 @@ useEffect(() => {
     .catch(() => toast("Failed to load patients"));
 
   axios
-    .get(`${API}/vet-ai/status`)
+    .get(`${API}/beau/status`)
     .then(r => setAiStatus(r.data))
     .catch(() => setAiStatus({ configured: false }));
 

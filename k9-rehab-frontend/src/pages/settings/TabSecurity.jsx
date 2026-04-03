@@ -79,7 +79,7 @@ export function TabSecurity({ security, setSecurity, flashSave, isOpen, toggleSe
           <ul style={{ margin: 0, paddingLeft: 16 }}>
             <li>Patient and client data is stored in your deployment database</li>
             <li>Authentication via JWT with bcrypt password hashing</li>
-            <li>VetAI queries are processed via Anthropic API — no patient-identifying data is included in AI requests</li>
+            <li>B.E.A.U. queries are processed via Anthropic API — no patient-identifying data is included in AI requests</li>
             <li>No data is sold to third parties or used for advertising</li>
             <li>All clinical protocols comply with ACVSMR and Millis & Levine standards</li>
           </ul>
