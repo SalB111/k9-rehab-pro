@@ -69,42 +69,6 @@ const SECTIONS = [
       { id: "beau-scope", label: "6.3 Scope Enforcement" },
     ],
   },
-  {
-    title: "Chapter 7. Audit & Defensibility",
-    items: [
-      { id: "audit-logging", label: "7.1 Audit Log Requirements" },
-      { id: "protocol-docs", label: "7.2 Protocol Documentation" },
-      { id: "litigation", label: "7.3 Litigation Defensibility" },
-      { id: "outcome-monitoring", label: "7.4 Outcome Monitoring" },
-    ],
-  },
-  {
-    title: "Chapter 8. Regulatory Framework",
-    items: [
-      { id: "classification", label: "8.1 CDSS Classification" },
-      { id: "regulatory-refs", label: "8.2 Regulatory References" },
-      { id: "compliance", label: "8.3 Compliance Requirements" },
-      { id: "adverse-events", label: "8.4 Adverse Event Reporting" },
-    ],
-  },
-  {
-    title: "Appendix A. API Reference",
-    items: [
-      { id: "api-auth", label: "A.1 Authentication" },
-      { id: "api-clinical", label: "A.2 Clinical Core" },
-      { id: "api-exercises", label: "A.3 Exercise Library" },
-      { id: "api-patients", label: "A.4 Patients" },
-      { id: "api-beau", label: "A.5 B.E.A.U." },
-    ],
-  },
-  {
-    title: "Appendix B. Implementation Tiers",
-    items: [
-      { id: "tier1", label: "B.1 Tier 1 — Clinical Use" },
-      { id: "tier2", label: "B.2 Tier 2 — Regulatory" },
-      { id: "tier3", label: "B.3 Tier 3 — Enterprise" },
-    ],
-  },
 ];
 
 /* ── Reusable sub-components ── */
@@ -251,7 +215,7 @@ export default function DocsView({ setView }) {
             <div className="w-7 h-7 rounded bg-[#0F4C81] flex items-center justify-center">
               <FiBook className="w-4 h-4 text-white" />
             </div>
-            <span className="font-bold text-sm text-[#0F4C81]">K9 Rehab Pro Documentation</span>
+            <span className="font-bold text-sm text-[#0F4C81]">K9 Rehab Pro Reference</span>
           </div>
         </div>
         <div className="py-2">
@@ -627,170 +591,27 @@ export default function DocsView({ setView }) {
           <H3 id="beau-scope" num="6.3">Scope Enforcement</H3>
           <P>B.E.A.U. enforces scope-of-practice boundaries at the AI layer. Out-of-scope queries (diagnosis requests, medication advice, prognosis predictions) are blocked with an explanation of why the query falls outside platform scope.</P>
 
+          {/* Footer with Copyright */}
           <HR />
-
-          {/* ═══════════════════ CH 7: AUDIT ═══════════════════ */}
-          <H2 id="audit-logging" num="Chapter 7.">Audit &amp; Defensibility</H2>
-          <H3 id="audit-logging" num="7.1">Audit Log Requirements</H3>
-          <UL>
-            <li>All POST, PUT, DELETE operations logged automatically</li>
-            <li>Red-flag triggers logged per patient per protocol</li>
-            <li>B.E.A.U. queries and responses logged with session ID</li>
-            <li>Protocol modifications tracked as diffs (original vs. approved)</li>
-            <li>Logs retained minimum <strong>7 years</strong></li>
-            <li>Audit log is <strong>immutable</strong> (append-only)</li>
-          </UL>
-
-          <H3 id="protocol-docs" num="7.2">Protocol Documentation Standard</H3>
-          <P>Every generated protocol retains:</P>
-          <UL>
-            <li>Generation metadata: timestamp, algorithm version, clinician ID, patient ID</li>
-            <li>Input snapshot: all intake parameters used for generation</li>
-            <li>Red flags evaluated: complete list of flags checked and their values</li>
-            <li>Contraindications checked: categories evaluated and pass/fail status</li>
-            <li>Evidence grades: per-exercise evidence level</li>
-            <li>Version control: if modified post-generation, both Original and Approved versions retained</li>
-          </UL>
-
-          <H3 id="litigation" num="7.3">Litigation Defensibility</H3>
-          <UL>
-            <li>Unsigned protocols carry watermark: <C>DRAFT &mdash; NOT APPROVED FOR CLINICAL USE</C></li>
-            <li>Signed protocols show: clinician name, credential type, approval timestamp</li>
-            <li>Decision rationale available per exercise: "Selected because: Phase 2 + TPLO indication + Grade B evidence + no contraindications"</li>
-          </UL>
-
-          <H3 id="outcome-monitoring" num="7.4">Outcome Monitoring</H3>
-          <UL>
-            <li>Reassessment prompts at 2-week and 4-week intervals</li>
-            <li>Validated measures: CBPI (Canine Brief Pain Inventory), lameness grading, goniometric ROM</li>
-            <li>Alert if regression: increased pain, decreased ROM, increased lameness grade</li>
-            <li>Stalled progress (no improvement after 4 weeks) triggers protocol review recommendation</li>
-          </UL>
-
-          <HR />
-
-          {/* ═══════════════════ CH 8: REGULATORY ═══════════════════ */}
-          <H2 id="classification" num="Chapter 8.">Regulatory Framework</H2>
-          <H3 id="classification" num="8.1">CDSS Classification</H3>
-          <P>K9 Rehab Pro is classified as a <strong>Clinical Decision-Support System (CDSS)</strong>. It does not claim FDA/USDA device classification or AVMA endorsement.</P>
-
-          <H3 id="regulatory-refs" num="8.2">Regulatory References</H3>
-          <UL>
-            <li><strong>AVMA Model Veterinary Practice Act</strong> &mdash; scope-of-practice definitions</li>
-            <li><strong>ACVSMR</strong> &mdash; certification and methodology standards</li>
-            <li><strong>State Veterinary Practice Acts</strong> &mdash; jurisdiction-specific requirements</li>
-            <li><strong>AAHA</strong> &mdash; practice standards reference</li>
-          </UL>
-
-          <H3 id="compliance" num="8.3">Compliance Requirements</H3>
-          <UL>
-            <li>All protocol output includes CDSS classification disclaimer</li>
-            <li>Terms of Service accepted before first protocol generation</li>
-            <li>Disclaimer refresh required every 90 days for active users</li>
-            <li>No protocol output valid without licensed veterinarian review and approval</li>
-          </UL>
-
-          <H3 id="adverse-events" num="8.4">Adverse Event Reporting</H3>
-          <UL>
-            <li>UI includes "Report Safety Concern" mechanism</li>
-            <li>Adverse events logged with: patient ID, protocol version, exercise code, event description, clinician ID, timestamp</li>
-            <li>Adverse event logs retained for minimum 7 years</li>
-          </UL>
-
-          <HR />
-
-          {/* ═══════════════════ APPENDIX A: API ═══════════════════ */}
-          <H2 id="api-auth" num="Appendix A.">API Reference</H2>
-          <H3 id="api-auth" num="A.1">Authentication</H3>
-          <T headers={["Method", "Endpoint", "Description"]}
-            rows={[
-              [<C>POST</C>, <C>/api/auth/register</C>, "Register new user"],
-              [<C>POST</C>, <C>/api/auth/login</C>, "Login, returns JWT"],
-              [<C>GET</C>, <C>/api/auth/me</C>, "Current user info (requires auth)"],
-              [<C>GET</C>, <C>/api/auth/status</C>, "Auth system status (public)"],
-            ]}
-          />
-
-          <H3 id="api-clinical" num="A.2">Clinical Core</H3>
-          <T headers={["Method", "Endpoint", "Description"]}
-            rows={[
-              [<C>GET</C>, <C>/api/health</C>, "Health check (public)"],
-              [<C>GET</C>, <C>/api/conditions</C>, "All supported conditions"],
-              [<C>GET</C>, <C>/api/conditions/grouped</C>, "Conditions by category"],
-              [<C>POST</C>, <C>/api/generate-protocol</C>, "Generate rehabilitation protocol"],
-            ]}
-          />
-
-          <H3 id="api-exercises" num="A.3">Exercise Library</H3>
-          <T headers={["Method", "Endpoint", "Description"]}
-            rows={[
-              [<C>GET</C>, <C>/api/exercises</C>, "All exercises with full details"],
-              [<C>GET</C>, <C>/api/exercises/search?q=</C>, "Search exercises by keyword"],
-              [<C>GET</C>, <C>/api/exercises/:code</C>, "Single exercise by code"],
-              [<C>GET</C>, <C>/api/exercises/by-phase/:phase</C>, "Filter by rehab phase"],
-              [<C>GET</C>, <C>/api/exercises/by-evidence-grade/:grade</C>, "Filter by evidence grade"],
-              [<C>GET</C>, <C>/api/taxonomy</C>, "Full taxonomy (interventions, phases, indications)"],
-            ]}
-          />
-
-          <H3 id="api-patients" num="A.4">Patients</H3>
-          <T headers={["Method", "Endpoint", "Description"]}
-            rows={[
-              [<C>GET</C>, <C>/api/patients</C>, "List all patients"],
-              [<C>POST</C>, <C>/api/patients</C>, "Create patient"],
-              [<C>DELETE</C>, <C>/api/patients/:id</C>, "Delete patient"],
-            ]}
-          />
-
-          <H3 id="api-beau" num="A.5">B.E.A.U. AI Engine</H3>
-          <T headers={["Method", "Endpoint", "Description"]}
-            rows={[
-              [<C>POST</C>, <C>/api/beau/chat</C>, "Streaming AI chat with patient context"],
-              [<C>GET</C>, <C>/api/beau/status</C>, "Check if B.E.A.U. is configured"],
-              [<C>GET</C>, <C>/api/beau/sessions</C>, "Load chat session history"],
-              [<C>POST</C>, <C>/api/beau/sessions</C>, "Save chat session"],
-              [<C>GET</C>, <C>/api/beau/intelligence</C>, "Aggregate case intelligence"],
-            ]}
-          />
-
-          <HR />
-
-          {/* ═══════════════════ APPENDIX B: TIERS ═══════════════════ */}
-          <H2 id="tier1" num="Appendix B.">Implementation Tiers</H2>
-          <H3 id="tier1" num="B.1">Tier 1 &mdash; Required Before Clinical Use</H3>
-          <UL>
-            <li>Credential verification at registration (DVM/CCRP/CCRT/student attestation)</li>
-            <li>Scope-of-practice enforcement in B.E.A.U.</li>
-            <li>B.E.A.U. exercise name cross-check against 223-exercise library</li>
-            <li>Terms of Service sign-off on first login</li>
-            <li>Evidence grade display on every exercise in protocol output</li>
-            <li>Red-flag audit logging per patient per protocol</li>
-          </UL>
-
-          <H3 id="tier2" num="B.2">Tier 2 &mdash; Required for Regulatory Defensibility</H3>
-          <UL>
-            <li>AVMA/state board compliance reference in UI</li>
-            <li>Protocol versioning (Original vs. Approved with diff tracking)</li>
-            <li>B.E.A.U. dosing extraction from source doc (not AI-generated)</li>
-            <li>Outcome tracking with reassessment prompts</li>
-            <li>Specialist escalation pathways for high-risk flags</li>
-            <li>Adverse event reporting mechanism</li>
-          </UL>
-
-          <H3 id="tier3" num="B.3">Tier 3 &mdash; Required for Enterprise/University Deployment</H3>
-          <UL>
-            <li>Role-based clinical access (DVM approve / technician execute / student view)</li>
-            <li>Semantic hallucination detection on B.E.A.U. responses</li>
-            <li>Confidence scoring per AI recommendation</li>
-            <li>Decision rationale per exercise selection</li>
-            <li>Multi-language support &amp; WCAG AA accessibility compliance</li>
-          </UL>
-
-          {/* Footer */}
-          <HR />
-          <div className="flex justify-between text-[13px] text-slate-400 pt-2">
-            <span>&copy; 2025 Salvatore Bonanno. All rights reserved.</span>
-            <span className="text-slate-300">K9 Rehab Pro&trade; | B.E.A.U. AI Engine</span>
+          <div className="border border-slate-200 rounded-lg p-5 mt-4 bg-slate-50/50">
+            <div className="text-[13px] font-semibold text-[#0F4C81] mb-2">Proprietary &amp; Confidential</div>
+            <div className="text-[11px] text-slate-500 leading-relaxed mb-3">
+              This platform, all clinical logic, exercise data, protocol rules, B.E.A.U. AI engine, and associated intellectual property are the proprietary property of Salvatore Bonanno. Unauthorized use, reproduction, distribution, reverse engineering, or modification is strictly prohibited.
+            </div>
+            <div className="text-[11px] text-slate-500 leading-relaxed mb-3">
+              K9 Rehab Pro is classified as a Clinical Decision-Support System (CDSS) for post-diagnostic rehabilitation planning. It does not diagnose, prescribe, or replace licensed veterinary judgment. All protocols require licensed veterinarian review and approval before clinical application.
+            </div>
+            <div className="flex justify-between items-end pt-2 border-t border-slate-200">
+              <div>
+                <div className="text-[12px] font-bold text-[#0F4C81]">&copy; 2025-2026 Salvatore Bonanno</div>
+                <div className="text-[10px] text-slate-400">Canine Rehabilitation Nurse (CCRN) | Software Developer | Founder</div>
+              </div>
+              <div className="text-right">
+                <div className="text-[10px] text-slate-400">K9 Rehab Pro&trade;</div>
+                <div className="text-[10px] text-slate-400">Powered by B.E.A.U. (Biomedical Evidence-Based Analytical Unit)</div>
+                <div className="text-[10px] text-slate-300">All Rights Reserved</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
