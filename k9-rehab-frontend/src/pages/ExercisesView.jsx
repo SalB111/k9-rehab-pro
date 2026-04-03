@@ -715,15 +715,15 @@ function ExercisesView({ setView, setGenKey, setGenInitialStep }) {
         const isCollapsed = collapsedCats[cat];
 
         return (
-          <div key={cat} ref={el => catRefs.current[cat] = el} style={{ ...S.card, padding: 0, overflow: "hidden", marginBottom: 12 }}>
-            {/* Category header */}
+          <div key={cat} ref={el => catRefs.current[cat] = el} style={{ ...S.card, padding: 0, overflow: "hidden", marginBottom: 16, border: `2px solid ${C.teal}40`, borderRadius: 12 }}>
+            {/* Category header — centered, bold */}
             <div
               onClick={() => toggleCat(cat)}
               style={{
-                display: "flex", alignItems: "center", justifyContent: "space-between",
-                padding: "14px 20px", cursor: "pointer",
+                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                padding: "16px 20px", cursor: "pointer", background: `${C.navy}08`,
               }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, justifyContent: "center" }}>
                 {meta.SvgIcon ? (
                   <span style={{ display: "inline-flex", background: C.bg, borderRadius: 6, padding: 3 }}>
                     <meta.SvgIcon size={28} />
@@ -731,24 +731,22 @@ function ExercisesView({ setView, setGenKey, setGenInitialStep }) {
                 ) : (
                   <span style={{ fontSize: 20 }}>{meta.icon}</span>
                 )}
-                <div>
-                  <span style={{ fontWeight: 800, fontSize: 14, color: C.text }}>{cat}</span>
-                  <span style={{ marginLeft: 8, fontSize: 12, color: C.textMid }}>
+                <div style={{ textAlign: "center" }}>
+                  <span style={{ fontWeight: 900, fontSize: 16, color: C.text, letterSpacing: 0.5 }}>{cat}</span>
+                  <span style={{ marginLeft: 8, fontSize: 12, color: C.textMid, fontWeight: 600 }}>
                     {exList.length} exercise{exList.length !== 1 ? "s" : ""}
                   </span>
                 </div>
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <div style={{ display: "flex", gap: 4 }}>
-                  {["Easy","Moderate","Advanced"].map(d => {
-                    const n = exList.filter(e => e.difficulty_level === d).length;
-                    if (!n) return null;
-                    return <span key={d} style={{ ...S.badge(d === "Easy" ? "green" : d === "Advanced" ? "orange" : "blue"),
-                      fontSize: 10 }}>{n} {d}</span>;
-                  })}
-                </div>
-                <span style={{ color: C.text, fontSize: 14, fontWeight: 700 }}>
-                  {isCollapsed ? "â–¼" : "â–²"}
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 6 }}>
+                {["Easy","Moderate","Advanced"].map(d => {
+                  const n = exList.filter(e => e.difficulty_level === d).length;
+                  if (!n) return null;
+                  return <span key={d} style={{ ...S.badge(d === "Easy" ? "green" : d === "Advanced" ? "orange" : "blue"),
+                    fontSize: 10 }}>{n} {d}</span>;
+                })}
+                <span style={{ color: C.textLight, fontSize: 12, fontWeight: 700, marginLeft: 8 }}>
+                  {isCollapsed ? "▼" : "▲"}
                 </span>
               </div>
             </div>
