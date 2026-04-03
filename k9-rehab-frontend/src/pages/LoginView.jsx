@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import K9Logo from "../components/K9Logo";
+// Rod of Asclepius logo at /rod-logo.png
 
 export default function LoginView({ onLogin, onRegister }) {
   const [username, setUsername] = useState("");
@@ -39,7 +39,7 @@ export default function LoginView({ onLogin, onRegister }) {
           {/* Logo */}
           {/* Logo */}
           <div className="flex flex-col items-center mb-12">
-            <K9Logo size={140} glow={true} />
+            <img src="/rod-logo.png" alt="K9 Rehab Pro" style={{ width: 160, height: "auto", filter: "brightness(1.2) drop-shadow(0 0 20px rgba(14,165,233,0.5))" }} />
             <div className="mt-6 text-center">
               <h1 className="font-logo text-2xl font-black tracking-[4px] text-white">K9 REHAB PRO</h1>
               <div className="h-[2px] w-48 mx-auto bg-gradient-to-r from-transparent via-[#1D9E75] to-transparent mt-2" />
@@ -74,7 +74,7 @@ export default function LoginView({ onLogin, onRegister }) {
       <div className="flex-1 flex items-center justify-center p-8 bg-[#F4F8FD] lg:rounded-l-[40px] relative">
         {/* Mobile Logo */}
         <div className="absolute top-8 left-8 flex items-center gap-2 lg:hidden">
-          <K9Logo size={32} glow={false} />
+          <img src="/rod-logo.png" alt="K9" style={{ width: 36, height: "auto", filter: "brightness(1.1)" }} />
           <span className="font-logo text-sm font-black tracking-[2px] text-[#0C2340]">K9 REHAB PRO</span>
         </div>
 

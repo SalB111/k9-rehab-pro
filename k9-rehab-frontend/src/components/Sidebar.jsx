@@ -26,9 +26,7 @@ export default function Sidebar({ view, setView, currentUser, onLogout }) {
         className="flex items-center gap-3 px-4 py-5 cursor-pointer border-b border-white/10"
         onClick={() => setView("dashboard")}
       >
-        <div className="relative flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-[#1D9E75] to-[#0EA5E9] flex items-center justify-center">
-          <span className="text-white font-black text-[11px]">K9</span>
-        </div>
+        <img src="/rod-logo.png" alt="K9" className="flex-shrink-0 w-10 h-10 object-contain" style={{ filter: "brightness(1.2) drop-shadow(0 0 6px rgba(14,165,233,0.4))" }} />
         {!collapsed && (
           <div className="overflow-hidden">
             <h1 className="font-logo text-[13px] font-black tracking-[2px] leading-none text-white whitespace-nowrap">
