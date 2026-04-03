@@ -406,6 +406,7 @@ app.put("/api/clinics/:id", async (req, res) => {
 const beauRouter = require("./beau/beau-router");
 const { registerEngineHook } = require("./beau/beau-chat-handler");
 const knowledgeEngine = require("./engines/knowledge/knowledge-engine");
+const evidenceEngine = require("./engines/evidence/evidence-engine");
 app.use("/api/beau", beauRouter);
 
 // Knowledge Engine search endpoint
@@ -418,6 +419,24 @@ app.get("/api/beau/knowledge/search", (req, res) => {
 
 app.get("/api/beau/knowledge/status", (req, res) => {
   res.json({ success: true, data: knowledgeEngine.getStatus() });
+});
+
+// Evidence Engine search endpoint
+app.post("/api/beau/evidence/search", async (req, res) => {
+  try {
+    const { query, maxResults } = req.body;
+    if (!query) return res.status(400).json({ error: "Query is required" });
+    const result = await evidenceEngine.searchEvidence(query, maxResults || 5);
+    // Feed results into Knowledge Engine
+    evidenceEngine.injectIntoKnowledge(result.articles, knowledgeEngine.addChunks);
+    res.json({ success: true, data: result.articles, context: result.context });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/beau/evidence/status", (req, res) => {
+  res.json({ success: true, data: evidenceEngine.getStatus() });
 });
 
 // ---------------------------------------------------------------------------
@@ -473,6 +492,9 @@ app.get("/api/pipeline/status", (req, res) => {
     registerEngineHook("knowledge", async (query, patient) => {
       return knowledgeEngine.getRelevantContext(query, patient);
     });
+
+    // Register Evidence Engine hook (PubMed — triggered by research keywords)
+    registerEngineHook("evidence", evidenceEngine.evidenceHook);
 
     const existingAdmin = await db.findUserByUsername("admin");
     if (!existingAdmin) {
