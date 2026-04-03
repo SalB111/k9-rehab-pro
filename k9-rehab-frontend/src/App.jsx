@@ -121,6 +121,15 @@ export default function App() {
     }
   }
 
+  // Auth gate — show login page when not authenticated
+  if (!authToken) {
+    return (
+      <ToastProvider>
+        <LoginView onLogin={handleLogin} onRegister={handleRegister} />
+      </ToastProvider>
+    );
+  }
+
   return (
     <ToastProvider>
       <div className="flex min-h-screen bg-[var(--k9-bg)] font-sans">
