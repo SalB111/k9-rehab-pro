@@ -95,9 +95,9 @@ export default function WelcomeSplash({ onEnter }) {
 
   // Phase timing
   useEffect(() => {
-    const t1 = setTimeout(() => setPhase("hold"), 5000);   // very slow cinematic approach
-    const t2 = setTimeout(() => setPhase("text"), 6500);    // long pause to absorb the logo
-    const t3 = setTimeout(() => setPhase("ready"), 10000);  // all text revealed
+    const t1 = setTimeout(() => setPhase("hold"), 7000);   // ultra slow cinematic approach
+    const t2 = setTimeout(() => setPhase("text"), 9000);    // long pause to absorb the logo
+    const t3 = setTimeout(() => setPhase("ready"), 13000);  // all text revealed
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
   }, []);
 
@@ -153,7 +153,7 @@ export default function WelcomeSplash({ onEnter }) {
               : "scale(1) rotateX(0deg) translateZ(0px)",
             opacity: phase === "zoom" ? 0.2 : 1,
             transition: phase === "zoom"
-              ? "transform 5s cubic-bezier(0.16, 1, 0.3, 1), opacity 4s ease"
+              ? "transform 7s cubic-bezier(0.16, 1, 0.3, 1), opacity 5s ease"
               : "transform 0.3s ease-out",
             filter: phase !== "zoom"
               ? "drop-shadow(0 0 30px rgba(14,165,233,0.5)) drop-shadow(0 0 60px rgba(29,158,117,0.3))"
