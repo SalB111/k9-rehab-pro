@@ -151,43 +151,40 @@ app.delete("/api/patients/:id", async (req, res) => {
 // EXERCISES
 // ---------------------------------------------------------------------------
 
-// Full exercise library — curated 125 exercises with species separation
+// Full exercise library — all 260 exercises with species tagging
 const { ALL_EXERCISES } = require("./all-exercises");
-const CURATED_CODES = new Set(require("./curated-codes.json"));
 
-// Build curated library with proper species tagging
-const CURATED_EXERCISES = ALL_EXERCISES
-  .filter(ex => CURATED_CODES.has(ex.code))
-  .map(ex => {
-    const isFeline = ex.code.startsWith("FELINE");
-    return {
-      ...ex,
-      category: isFeline ? "Feline Rehabilitation" : ex.category,
-      clinical_classification: {
-        ...ex.clinical_classification,
-        species: isFeline ? "FELINE" : "CANINE",
-      },
-    };
-  });
+// Apply species tagging to full library
+const TAGGED_EXERCISES = ALL_EXERCISES.map(ex => {
+  const isFeline = ex.code.startsWith("FELINE");
+  return {
+    ...ex,
+    category: isFeline ? "Feline Rehabilitation" : ex.category,
+    clinical_classification: {
+      ...ex.clinical_classification,
+      species: isFeline ? "FELINE" : "CANINE",
+    },
+  };
+});
 
 // Protocol generator
 const { selectExercisesForWeek, getProtocolType, validateIntake } = require("./protocol-generator");
 
-// Exercise library — serves curated 125-exercise library
+// Exercise library — serves full 260-exercise library (consistent with engines)
 app.get("/api/exercises", (req, res) => {
   try {
-    res.json({ success: true, data: CURATED_EXERCISES, total: CURATED_EXERCISES.length });
+    res.json({ success: true, data: TAGGED_EXERCISES, total: TAGGED_EXERCISES.length });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-console.log(`📚 Curated library: ${CURATED_EXERCISES.length} exercises (${CURATED_EXERCISES.filter(e=>e.code.startsWith('FELINE')).length} feline, ${CURATED_EXERCISES.filter(e=>!e.code.startsWith('FELINE')).length} canine)`);
+console.log(`📚 Exercise library: ${TAGGED_EXERCISES.length} exercises (${TAGGED_EXERCISES.filter(e=>e.code.startsWith('FELINE')).length} feline, ${TAGGED_EXERCISES.filter(e=>!e.code.startsWith('FELINE')).length} canine)`);
 
 app.get("/api/v2/exercises", (req, res) => {
   try {
     const { species, category, difficulty } = req.query;
-    let exercises = CURATED_EXERCISES;
+    let exercises = TAGGED_EXERCISES;
 
     // Species filter
     if (species) {

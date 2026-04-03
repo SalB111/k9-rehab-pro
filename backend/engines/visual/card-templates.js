@@ -1,6 +1,6 @@
 // ============================================================================
 // VISUAL ENGINE — Card Templates
-// 4 card types for exercise instructions, anatomy, timelines, progressions
+// 5 card types for exercise instructions, anatomy, timelines, progressions, storyboards
 // ============================================================================
 
 const CARD_TYPES = {
@@ -23,6 +23,11 @@ const CARD_TYPES = {
     required: ["title", "exercises"],
     optional: ["currentLevel", "condition"],
     description: "Progression path showing current to advanced exercises",
+  },
+  storyboard: {
+    required: ["code"],
+    optional: ["exerciseName"],
+    description: "Frame-by-frame clinical exercise storyboard with SVG overlays, breed model, handler cues, and safety notes",
   },
 };
 

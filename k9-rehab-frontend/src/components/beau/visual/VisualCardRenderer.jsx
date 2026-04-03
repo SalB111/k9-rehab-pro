@@ -4,12 +4,14 @@ const ExerciseInstructionCard = lazy(() => import("./cards/ExerciseInstructionCa
 const AnatomyDiagramCard = lazy(() => import("./cards/AnatomyDiagramCard"));
 const RecoveryTimelineCard = lazy(() => import("./cards/RecoveryTimelineCard"));
 const ExerciseProgressionCard = lazy(() => import("./cards/ExerciseProgressionCard"));
+const StoryboardCard = lazy(() => import("./cards/StoryboardCard"));
 
 const CARD_MAP = {
   exercise_instruction: ExerciseInstructionCard,
   anatomy_diagram: AnatomyDiagramCard,
   recovery_timeline: RecoveryTimelineCard,
   exercise_progression: ExerciseProgressionCard,
+  storyboard: StoryboardCard,
 };
 
 export default function VisualCardRenderer({ card }) {
