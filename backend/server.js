@@ -44,10 +44,10 @@ const authLimiter = rateLimit({
   message: { error: "Too many login attempts, please try again later" },
 });
 
-// Rate limiting — B.E.A.U. chat (20 req/15min per IP)
+// Rate limiting — B.E.A.U. chat (100 req/15min per IP)
 const beauLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 20,
+  max: 100,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: "Chat rate limit reached, please wait a moment" },

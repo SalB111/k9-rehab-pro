@@ -248,11 +248,11 @@ export const INITIAL_FORM = {
 };
 
 export const WIZARD_STEPS = [
-  { num: 1, label: "Client & Patient" },
-  { num: 2, label: "Clinical Assessment" },
-  { num: 3, label: "Treatment Plan" },
-  { num: 4, label: "Rehab Goals" },
-  { num: 5, label: "Protocol Parameters" },
+  { num: 1, label: "Patient & Owner" },
+  { num: 2, label: "Assessment" },
+  { num: 3, label: "Treatment" },
+  { num: 4, label: "Goals" },
+  { num: 5, label: "Generate" },
 ];
 
 export const NEURO_DIAGNOSES = [
