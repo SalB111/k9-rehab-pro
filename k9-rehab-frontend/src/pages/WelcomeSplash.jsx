@@ -90,17 +90,17 @@ export default function WelcomeSplash({ onEnter }) {
 
   // Typewriter text
   const textActive = phase === "text" || phase === "ready";
-  const tw1 = useTypewriter("WELCOME", 0, 80, textActive);
-  const tw2 = useTypewriter("K9 REHAB PRO", 600, 70, textActive);
-  const tw3 = useTypewriter("ENTER", 1600, 90, textActive);
-  const tw4 = useTypewriter("B.E.A.U.", 2200, 80, textActive);
-  const tw5 = useTypewriter("BIOMEDICAL EVIDENCE-BASED ANALYTICAL UNIT", 2800, 30, textActive);
+  const tw1 = useTypewriter("WELCOME", 0, 180, textActive);
+  const tw2 = useTypewriter("K9 REHAB PRO", 1800, 140, textActive);
+  const tw3 = useTypewriter("ENTER", 4200, 200, textActive);
+  const tw4 = useTypewriter("B.E.A.U.", 5800, 160, textActive);
+  const tw5 = useTypewriter("BIOMEDICAL EVIDENCE-BASED ANALYTICAL UNIT", 7400, 50, textActive);
 
   // Phase timing
   useEffect(() => {
-    const t1 = setTimeout(() => setPhase("hold"), 1800);   // zoom completes
-    const t2 = setTimeout(() => setPhase("text"), 2400);    // brief hold, then typewriter starts
-    const t3 = setTimeout(() => setPhase("ready"), 5500);   // all text typed out
+    const t1 = setTimeout(() => setPhase("hold"), 2200);   // zoom completes — slower approach
+    const t2 = setTimeout(() => setPhase("text"), 3000);    // brief hold, then typewriter starts
+    const t3 = setTimeout(() => setPhase("ready"), 10000);  // all text typed out
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
   }, []);
 
@@ -141,8 +141,8 @@ export default function WelcomeSplash({ onEnter }) {
           : "scale(1)",
         opacity: phase === "zoom" ? 0.3 : 1,
         transition: phase === "zoom"
-          ? "transform 1.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 1.8s ease"
-          : "transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease",
+          ? "transform 2.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 2.2s ease"
+          : "transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease",
         filter: phase === "hold" || phase === "text" || phase === "ready"
           ? "drop-shadow(0 0 40px rgba(29,158,117,0.5)) drop-shadow(0 0 80px rgba(14,165,233,0.3))"
           : "none",
