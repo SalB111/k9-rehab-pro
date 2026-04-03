@@ -120,6 +120,12 @@ All recommendations must be tailored to this patient's specific condition, stage
     parts.push(additionalContext);
   }
 
+  // Diagram engine instructions (Engine 3)
+  try {
+    const { getDiagramInstructions } = require("../engines/diagram/diagram-engine");
+    parts.push(getDiagramInstructions());
+  } catch {}
+
   // Exercise library reference (abbreviated — full list for validation)
   parts.push(EXERCISE_LIBRARY_HEADER + CURATED_EXERCISE_NAMES);
 

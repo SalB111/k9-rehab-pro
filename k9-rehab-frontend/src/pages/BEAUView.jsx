@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, lazy, Suspense } from "react";
 import axios from "axios";
 import {
   FiActivity, FiAlertTriangle, FiBarChart2, FiBookOpen,
@@ -8,6 +8,8 @@ import {
 import C from "../constants/colors";
 import { API } from "../api/axios";
 import { useToast } from "../components/Toast";
+
+const DiagramRenderer = lazy(() => import("../components/beau/DiagramRenderer"));
 
 // ─────────────────────────────────────────────
 // BEAU AI VIEW — B.E.A.U. - Biomedical Evidence-based Analytical Unit
@@ -356,7 +358,7 @@ useEffect(() => {
               boxShadow: m.role === "user" ? `0 3px 12px ${C.navy}20` : "0 1px 4px rgba(0,0,0,0.04)",
             }}>
               {m.role === "assistant"
-                ? <div dangerouslySetInnerHTML={{ __html: renderMd(m.content) }} />
+                ? <MessageContent content={m.content} renderMd={renderMd} />
                 : <span style={{ fontWeight: 500 }}>{m.content}</span>
               }
             </div>
@@ -367,7 +369,7 @@ useEffect(() => {
         {stream && (
           <div style={{ display: "flex", justifyContent: "flex-start", marginBottom: 14 }}>
             <div style={{ maxWidth: "88%", padding: "14px 18px", borderRadius: "16px 16px 16px 4px", background: aiC.aiBubble, border: `1px solid ${aiC.aiBorder}`, fontSize: 13, lineHeight: 1.65 }}>
-              <div dangerouslySetInnerHTML={{ __html: renderMd(stream) }} />
+              <MessageContent content={stream} renderMd={renderMd} />
               <span style={{ display: "inline-block", width: 5, height: 15, background: C.teal, marginLeft: 1, animation: "blink 1s step-end infinite", verticalAlign: "text-bottom", borderRadius: 1 }} />
             </div>
           </div>
@@ -434,6 +436,66 @@ useEffect(() => {
         @keyframes blink { 50%{opacity:0} }
       `}</style>
       </div>{/* /Main Chat Column */}
+    </div>
+  );
+}
+
+/**
+ * Renders message content, splitting text and :::diagram{...}::: blocks.
+ * Text parts render as HTML via renderMd, diagram blocks render as React components.
+ */
+function MessageContent({ content, renderMd }) {
+  if (!content) return null;
+
+  // Split content by :::diagram ... ::: markers
+  const parts = [];
+  let remaining = content;
+  const diagramRegex = /:::diagram\s*([\s\S]*?):::/g;
+  let match;
+  let lastIndex = 0;
+
+  while ((match = diagramRegex.exec(content)) !== null) {
+    // Text before the diagram
+    const textBefore = content.slice(lastIndex, match.index);
+    if (textBefore.trim()) {
+      parts.push({ type: "text", content: textBefore });
+    }
+
+    // Parse diagram JSON
+    const jsonStr = match[1].trim();
+    try {
+      const diagram = JSON.parse(jsonStr);
+      parts.push({ type: "diagram", content: diagram });
+    } catch {
+      // If JSON parse fails, render as code block
+      parts.push({ type: "text", content: "```\n" + jsonStr + "\n```" });
+    }
+
+    lastIndex = match.index + match[0].length;
+  }
+
+  // Remaining text after last diagram
+  const textAfter = content.slice(lastIndex);
+  if (textAfter.trim()) {
+    parts.push({ type: "text", content: textAfter });
+  }
+
+  // If no diagrams found, render as plain markdown
+  if (parts.length === 0) {
+    return <div dangerouslySetInnerHTML={{ __html: renderMd(content) }} />;
+  }
+
+  return (
+    <div>
+      {parts.map((part, i) =>
+        part.type === "diagram" ? (
+          <Suspense key={i} fallback={<div style={{ padding: 12, fontSize: 12, color: "#6a737d" }}>Loading diagram...</div>}>
+            <DiagramRenderer diagram={part.content} />
+          </Suspense>
+        ) : (
+          <div key={i} dangerouslySetInnerHTML={{ __html: renderMd(part.content) }} />
+        )
+      )}
     </div>
   );
 }
