@@ -6,6 +6,16 @@
 const { CARD_TYPES, validateCard } = require("./card-templates");
 const { ALL_EXERCISES } = require("../../all-exercises");
 
+// Storyboard library
+let STORYBOARD_LIBRARY = {};
+try {
+  const sb = require("../../storyboard-references");
+  STORYBOARD_LIBRARY = sb.STORYBOARD_LIBRARY || sb;
+  console.log(`[Visual Engine] Storyboard library loaded: ${Object.keys(STORYBOARD_LIBRARY).length} exercises`);
+} catch (err) {
+  console.warn("[Visual Engine] Storyboard library not available:", err.message);
+}
+
 // Exercise lookup for card generation
 const exerciseMap = {};
 ALL_EXERCISES.forEach(ex => { exerciseMap[ex.code] = ex; });
@@ -41,6 +51,64 @@ function generateCard(cardType, params) {
     };
   }
 
+  // Storyboard card — pull from STORYBOARD_LIBRARY
+  if (cardType === "storyboard" && params.code) {
+    const sb = STORYBOARD_LIBRARY[params.code];
+    const ex = exerciseMap[params.code];
+    if (!sb && !ex) return { valid: false, errors: [`No storyboard or exercise found for: ${params.code}`] };
+
+    if (sb) {
+      return {
+        valid: true,
+        card: {
+          type: "storyboard",
+          code: params.code,
+          exerciseName: sb.exercise_name || ex?.name || params.code,
+          breedModel: sb.breed_model || null,
+          clinicalPurpose: sb.clinical_purpose || null,
+          indications: sb.indications || [],
+          contraindications: sb.contraindications || [],
+          equipmentNeeded: sb.equipment_needed || [],
+          handlerSetup: sb.handler_setup || null,
+          movementBreakdown: sb.movement_breakdown || [],
+          frames: (sb.frames || []).map(f => ({
+            number: f.frame_number,
+            title: f.frame_title,
+            description: f.frame_description,
+            dogAction: f.dog_action,
+            handlerAction: f.handler_action,
+            clinicalCues: f.clinical_cues,
+            safetyNotes: f.safety_notes,
+            duration: f.duration_seconds,
+            svgIndicators: f.svg_indicators || [],
+          })),
+          clientScript: sb.client_friendly_script || null,
+          clinicianScript: sb.clinician_level_script || null,
+        },
+      };
+    }
+
+    // Fallback: generate basic storyboard from exercise data
+    return {
+      valid: true,
+      card: {
+        type: "storyboard",
+        code: params.code,
+        exerciseName: ex.name,
+        breedModel: null,
+        clinicalPurpose: ex.description || null,
+        indications: [],
+        contraindications: ex.contraindications ? [ex.contraindications] : [],
+        equipmentNeeded: (ex.equipment || []).map(e => ({ item: e, required: true })),
+        handlerSetup: ex.setup || null,
+        movementBreakdown: (ex.steps || []).map((s, i) => ({ step: i + 1, action: s })),
+        frames: [],
+        clientScript: null,
+        clinicianScript: null,
+      },
+    };
+  }
+
   // For other card types, validate and pass through
   const card = { type: cardType, ...params };
   const { valid, errors } = validateCard(card);
@@ -68,10 +136,17 @@ ${Object.entries(CARD_TYPES).map(([key, t]) => `- **${key}**: ${t.description}`)
 **recovery_timeline**: {"type":"recovery_timeline","title":"TPLO Recovery","totalWeeks":16,"currentPhase":2,"phases":[{"name":"Acute Protection","weeks":"0-2","color":"#0EA5E9"},{"name":"Early Mobilization","weeks":"2-6","color":"#1D9E75"},{"name":"Controlled Strengthening","weeks":"6-12","color":"#BA7517"},{"name":"Return to Function","weeks":"12-16+","color":"#8B5CF6"}]}
 **exercise_progression**: {"type":"exercise_progression","title":"Balance Progression","currentLevel":1,"exercises":[{"name":"Wobble Board Stand","code":"WOBBLE_BOARD","level":1},{"name":"Balance Pad Exercises","code":"BALANCE_PAD","level":2},{"name":"Physioball Exercises","code":"PHYSIO_BALL","level":3}]}
 
-Trigger phrases: "show me the exercise card", "exercise instructions for", "anatomy of", "show recovery timeline", "progression path"`;
+**storyboard**: Frame-by-frame clinical exercise demonstration with breed model, SVG overlays, handler cues, and safety notes. Use when the user asks for a storyboard, demonstration, or "show me how to do" an exercise.
+Example: :::visual
+{"type":"storyboard","code":"PROM_STIFLE"}
+:::
+
+Available storyboard exercises: ${Object.keys(STORYBOARD_LIBRARY).length} exercises have full storyboard data with frames, SVG indicators, breed models, and clinical scripts.
+
+Trigger phrases: "show me the exercise card", "exercise instructions for", "anatomy of", "show recovery timeline", "progression path", "storyboard for", "show me how to do", "demonstrate", "show me the storyboard"`;
 }
 
 function isReady() { return true; }
-function getStatus() { return { ready: true, cardTypes: Object.keys(CARD_TYPES), exercisesAvailable: Object.keys(exerciseMap).length }; }
+function getStatus() { return { ready: true, cardTypes: Object.keys(CARD_TYPES), exercisesAvailable: Object.keys(exerciseMap).length, storyboardsAvailable: Object.keys(STORYBOARD_LIBRARY).length }; }
 
 module.exports = { generateCard, getVisualInstructions, isReady, getStatus };
