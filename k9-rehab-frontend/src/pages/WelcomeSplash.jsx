@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import K9Logo from "../components/K9Logo";
+// Logo image at /beau-logo.jpg
 
 /**
  * Cinematic welcome splash — Rod of Asclepius zooms in with sparks,
@@ -91,16 +91,13 @@ export default function WelcomeSplash({ onEnter }) {
   // Typewriter text
   const textActive = phase === "text" || phase === "ready";
   const tw1 = useTypewriter("WELCOME", 0, 180, textActive);
-  const tw2 = useTypewriter("K9 REHAB PRO", 1800, 140, textActive);
-  const tw3 = useTypewriter("ENTER", 4200, 200, textActive);
-  const tw4 = useTypewriter("B.E.A.U.", 5800, 160, textActive);
-  const tw5 = useTypewriter("BIOMEDICAL EVIDENCE-BASED ANALYTICAL UNIT", 7400, 50, textActive);
+  const tw3 = useTypewriter("ENTER", 2000, 200, textActive);
 
   // Phase timing
   useEffect(() => {
-    const t1 = setTimeout(() => setPhase("hold"), 2200);   // zoom completes — slower approach
-    const t2 = setTimeout(() => setPhase("text"), 3000);    // brief hold, then typewriter starts
-    const t3 = setTimeout(() => setPhase("ready"), 10000);  // all text typed out
+    const t1 = setTimeout(() => setPhase("hold"), 3500);   // slow cinematic approach
+    const t2 = setTimeout(() => setPhase("text"), 4500);    // pause to absorb the logo, then text
+    const t3 = setTimeout(() => setPhase("ready"), 8000);   // all text typed out
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
   }, []);
 
@@ -108,7 +105,7 @@ export default function WelcomeSplash({ onEnter }) {
     <div
       style={{
         position: "fixed", inset: 0, zIndex: 99999,
-        background: "#0A0F1A",
+        background: "#040608",
         display: "flex", flexDirection: "column",
         alignItems: "center", justifyContent: "center",
         overflow: "hidden", cursor: phase === "ready" ? "pointer" : "default",
@@ -128,107 +125,104 @@ export default function WelcomeSplash({ onEnter }) {
       {/* Background radial glow */}
       <div style={{
         position: "absolute", inset: 0, zIndex: 0,
-        background: "radial-gradient(ellipse at center, #0F4C8120 0%, #0A0F1A 70%)",
+        background: "radial-gradient(ellipse at center, #0A1628 0%, #060B14 50%, #030508 100%)",
       }} />
 
-      {/* Logo — zooms from distant to full */}
+      {/* Logo — zooms from distant with 3D perspective */}
       <div style={{
         zIndex: 2,
-        transform: phase === "zoom"
-          ? "scale(0.05)"
-          : phase === "hold"
-          ? "scale(1)"
-          : "scale(1)",
-        opacity: phase === "zoom" ? 0.3 : 1,
-        transition: phase === "zoom"
-          ? "transform 2.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 2.2s ease"
-          : "transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease",
-        filter: phase === "hold" || phase === "text" || phase === "ready"
-          ? "drop-shadow(0 0 40px rgba(29,158,117,0.5)) drop-shadow(0 0 80px rgba(14,165,233,0.3))"
-          : "none",
+        perspective: "1200px",
+        transformStyle: "preserve-3d",
       }}>
-        <K9Logo size={220} glow={false} />
+        <div style={{
+          transform: phase === "zoom"
+            ? "scale(0.05) rotateX(15deg) translateZ(-200px)"
+            : phase === "hold"
+            ? "scale(1) rotateX(0deg) translateZ(0px)"
+            : "scale(1) rotateX(0deg) translateZ(0px)",
+          opacity: phase === "zoom" ? 0.3 : 1,
+          transition: phase === "zoom"
+            ? "transform 3.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 3s ease"
+            : "transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease",
+          filter: phase === "hold" || phase === "text" || phase === "ready"
+            ? "drop-shadow(0 0 40px rgba(14,165,233,0.6)) drop-shadow(0 0 80px rgba(29,158,117,0.4)) drop-shadow(0 0 120px rgba(14,165,233,0.2))"
+            : "drop-shadow(0 0 20px rgba(14,165,233,0.3))",
+          transformStyle: "preserve-3d",
+        }}>
+          <img
+            src="/beau-logo.jpg"
+            alt="K9 Rehab Pro — B.E.A.U."
+            onMouseMove={e => {
+              if (phase !== "ready" && phase !== "text") return;
+              const rect = e.currentTarget.getBoundingClientRect();
+              const x = (e.clientX - rect.left) / rect.width - 0.5;
+              const y = (e.clientY - rect.top) / rect.height - 0.5;
+              e.currentTarget.style.transform = `rotateY(${x * 12}deg) rotateX(${-y * 12}deg) translateZ(20px)`;
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.transform = "rotateY(0deg) rotateX(0deg) translateZ(0px)";
+            }}
+            style={{
+              width: 380,
+              height: "auto",
+              objectFit: "contain",
+              transition: "transform 0.15s ease-out",
+              transformStyle: "preserve-3d",
+              mixBlendMode: "screen",
+            }}
+          />
+        </div>
       </div>
 
       {/* Typewriter text reveals */}
-      <div style={{ zIndex: 2, textAlign: "center", marginTop: 32, minHeight: 200 }}>
+      <div style={{ zIndex: 2, textAlign: "center", marginTop: 24 }}>
         {/* WELCOME */}
         <div style={{
-          fontSize: 16, letterSpacing: 12, fontWeight: 300, color: "#7AAACF",
+          fontSize: 18, letterSpacing: 14, fontWeight: 300, color: "#7AAACF",
           fontFamily: "'Courier New', monospace",
-          minHeight: 24,
+          minHeight: 28,
           opacity: textActive ? 1 : 0,
           transition: "opacity 0.3s ease",
+          textShadow: "0 0 20px rgba(122,170,207,0.3)",
         }}>
           {tw1.displayed}
-          {textActive && !tw1.done && <span style={{ animation: "blink 0.6s step-end infinite", color: "#1D9E75" }}>|</span>}
-        </div>
-
-        {/* K9 REHAB PRO */}
-        <div style={{
-          fontSize: 42, fontWeight: 900, letterSpacing: 6,
-          color: "#fff",
-          fontFamily: "'Exo 2', 'Orbitron', system-ui, sans-serif",
-          marginTop: 8, minHeight: 54,
-          textShadow: "0 0 30px rgba(29,158,117,0.4), 0 0 60px rgba(14,165,233,0.2)",
-          opacity: tw1.done ? 1 : 0,
-          transition: "opacity 0.3s ease",
-        }}>
-          {tw2.displayed}
-          {tw1.done && !tw2.done && <span style={{ animation: "blink 0.6s step-end infinite", color: "#1D9E75" }}>|</span>}
+          {textActive && !tw1.done && <span style={{ animation: "blink 0.6s step-end infinite", color: "#0EA5E9" }}>|</span>}
         </div>
 
         {/* ENTER */}
         <div
           onClick={tw3.done ? onEnter : undefined}
           style={{
-            fontSize: 18, fontWeight: 700, letterSpacing: 8,
-            color: "#1D9E75",
+            fontSize: 20, fontWeight: 700, letterSpacing: 10,
+            color: "#0EA5E9",
             fontFamily: "'Courier New', monospace",
-            marginTop: 24, minHeight: 48,
+            marginTop: 20, minHeight: 52,
             cursor: tw3.done ? "pointer" : "default",
-            textShadow: tw3.done ? "0 0 20px rgba(29,158,117,0.6)" : "none",
-            padding: "12px 40px",
-            border: tw3.done ? "1px solid rgba(29,158,117,0.3)" : "1px solid transparent",
+            textShadow: tw3.done ? "0 0 20px rgba(14,165,233,0.6), 0 0 40px rgba(29,158,117,0.3)" : "none",
+            padding: "14px 48px",
+            border: tw3.done ? "1px solid rgba(14,165,233,0.3)" : "1px solid transparent",
             borderRadius: 8,
-            background: tw3.done ? "rgba(29,158,117,0.08)" : "transparent",
+            background: tw3.done ? "rgba(14,165,233,0.06)" : "transparent",
             transition: "border 0.3s, background 0.3s",
-            opacity: tw2.done ? 1 : 0,
+            opacity: tw1.done ? 1 : 0,
           }}
           onMouseEnter={e => {
             if (tw3.done) {
-              e.target.style.background = "rgba(29,158,117,0.15)";
-              e.target.style.borderColor = "rgba(29,158,117,0.6)";
+              e.target.style.background = "rgba(14,165,233,0.12)";
+              e.target.style.borderColor = "rgba(14,165,233,0.6)";
+              e.target.style.textShadow = "0 0 30px rgba(14,165,233,0.8), 0 0 60px rgba(29,158,117,0.4)";
             }
           }}
           onMouseLeave={e => {
             if (tw3.done) {
-              e.target.style.background = "rgba(29,158,117,0.08)";
-              e.target.style.borderColor = "rgba(29,158,117,0.3)";
+              e.target.style.background = "rgba(14,165,233,0.06)";
+              e.target.style.borderColor = "rgba(14,165,233,0.3)";
+              e.target.style.textShadow = "0 0 20px rgba(14,165,233,0.6), 0 0 40px rgba(29,158,117,0.3)";
             }
           }}
         >
           {tw3.displayed}
-          {tw2.done && !tw3.done && <span style={{ animation: "blink 0.6s step-end infinite" }}>|</span>}
-        </div>
-
-        {/* B.E.A.U. subtitle */}
-        <div style={{ marginTop: 20, minHeight: 40, opacity: tw3.done ? 1 : 0, transition: "opacity 0.3s" }}>
-          <div style={{
-            fontSize: 12, fontWeight: 700, letterSpacing: 4, color: "#0EA5E9",
-            fontFamily: "'Courier New', monospace",
-          }}>
-            {tw4.displayed}
-            {tw3.done && !tw4.done && <span style={{ animation: "blink 0.6s step-end infinite" }}>|</span>}
-          </div>
-          <div style={{
-            fontSize: 9, letterSpacing: 2, color: "#7AAACF60",
-            fontFamily: "'Courier New', monospace",
-            marginTop: 4, minHeight: 14,
-          }}>
-            {tw5.displayed}
-            {tw4.done && !tw5.done && <span style={{ animation: "blink 0.6s step-end infinite", color: "#7AAACF" }}>|</span>}
-          </div>
+          {tw1.done && !tw3.done && <span style={{ animation: "blink 0.6s step-end infinite" }}>|</span>}
         </div>
       </div>
 
