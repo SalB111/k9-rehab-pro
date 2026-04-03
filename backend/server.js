@@ -409,6 +409,7 @@ const knowledgeEngine = require("./engines/knowledge/knowledge-engine");
 const evidenceEngine = require("./engines/evidence/evidence-engine");
 const narrativeEngine = require("./engines/narrative/narrative-engine");
 const presentationEngine = require("./engines/presentation/presentation-engine");
+const visualEngine = require("./engines/visual/visual-engine");
 app.use("/api/beau", beauRouter);
 
 // Knowledge Engine search endpoint
@@ -475,6 +476,23 @@ app.post("/api/beau/presentation/generate", async (req, res) => {
 
 app.get("/api/beau/presentation/status", (req, res) => {
   res.json({ success: true, data: presentationEngine.getStatus() });
+});
+
+// Visual Engine endpoints
+app.post("/api/beau/visual/generate", (req, res) => {
+  try {
+    const { type, ...params } = req.body;
+    if (!type) return res.status(400).json({ error: "Card type is required" });
+    const result = visualEngine.generateCard(type, params);
+    if (!result.valid) return res.status(400).json({ error: result.errors.join("; ") });
+    res.json({ success: true, data: result.card });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/beau/visual/status", (req, res) => {
+  res.json({ success: true, data: visualEngine.getStatus() });
 });
 
 // ---------------------------------------------------------------------------

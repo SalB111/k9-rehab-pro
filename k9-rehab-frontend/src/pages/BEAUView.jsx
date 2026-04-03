@@ -12,6 +12,7 @@ import { useToast } from "../components/Toast";
 const DiagramRenderer = lazy(() => import("../components/beau/DiagramRenderer"));
 const NarrativePanel = lazy(() => import("../components/beau/NarrativePanel"));
 const PresentationView = lazy(() => import("../components/beau/presentation/PresentationView"));
+const VisualCardRenderer = lazy(() => import("../components/beau/visual/VisualCardRenderer"));
 
 // ─────────────────────────────────────────────
 // BEAU AI VIEW — B.E.A.U. - Biomedical Evidence-based Analytical Unit
@@ -518,6 +519,13 @@ function MessageContent({ content, renderMd, onPresentation }) {
                 View Presentation
               </button>
             </div>
+          );
+        }
+        if (part.type === "visual") {
+          return (
+            <Suspense key={i} fallback={<div style={{ padding: 12, fontSize: 12, color: "#6a737d" }}>Loading visual...</div>}>
+              <VisualCardRenderer card={part.content} />
+            </Suspense>
           );
         }
         return <div key={i} dangerouslySetInnerHTML={{ __html: renderMd(part.content) }} />;
