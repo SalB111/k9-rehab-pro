@@ -55,8 +55,10 @@ const FELINE_CONDITIONS = [
   "Post-amputation adaptation", "Other",
 ];
 
+import WelcomeSplash from "./WelcomeSplash";
+
 function App() {
-  const [view, setView] = useState("welcome"); // welcome → intake → chat
+  const [view, setView] = useState("splash"); // splash → intake → chat
   const [pet, setPet] = useState({ name: "", species: "canine", breed: "", age: "", weight: "", condition: "", details: "", equipment: [] });
   const [msgs, setMsgs] = useState([]);
   const [input, setInput] = useState("");
@@ -184,41 +186,10 @@ CRITICAL RULES FOR THIS CONVERSATION:
   function esc(s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
 
   // ═══════════════════════════════════════════════════════
-  // WELCOME SCREEN
+  // CINEMATIC SPLASH
   // ═══════════════════════════════════════════════════════
-  if (view === "welcome") {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-navy via-navy-mid to-navy flex items-center justify-center p-6">
-        <div className="max-w-lg w-full text-center">
-          <div className="text-5xl mb-4">🐾</div>
-          <h1 className="text-3xl font-black text-white tracking-wide mb-2">B.E.A.U. AI Home</h1>
-          <div className="h-0.5 w-32 mx-auto bg-gradient-to-r from-transparent via-teal to-transparent mb-4" />
-          <p className="text-text-light text-base mb-8 leading-relaxed">
-            Safe, evidence-based home exercises for your dog or cat's recovery — using items you already have at home.
-          </p>
-
-          <button
-            onClick={() => setView("intake")}
-            className="px-8 py-3 bg-gradient-to-r from-teal to-blue text-white font-bold rounded-xl text-base
-              hover:shadow-lg hover:shadow-teal/30 transition-all duration-200"
-          >
-            Get Started
-          </button>
-
-          <div className="mt-8 p-4 bg-white/5 rounded-xl border border-white/10">
-            <p className="text-xs text-text-light/60 leading-relaxed">
-              <strong className="text-amber">Important:</strong> B.E.A.U. AI Home is not a substitute for veterinary care.
-              Always consult your veterinarian before starting any exercise program. If your dog is in pain or
-              recently had surgery, contact your vet first.
-            </p>
-          </div>
-
-          <p className="text-[10px] text-text-light/30 mt-6">
-            &copy; 2025-2026 Salvatore Bonanno &middot; K9 Rehab Pro&trade; &middot; Powered by B.E.A.U.
-          </p>
-        </div>
-      </div>
-    );
+  if (view === "splash") {
+    return <WelcomeSplash onEnter={() => setView("intake")} />;
   }
 
   // ═══════════════════════════════════════════════════════
@@ -341,7 +312,7 @@ CRITICAL RULES FOR THIS CONVERSATION:
 
             {/* Actions */}
             <div className="flex gap-3">
-              <button onClick={() => setView("welcome")}
+              <button onClick={() => setView("intake")}
                 className="px-5 py-2.5 rounded-lg border border-border text-sm text-text-light hover:bg-bg transition-all">
                 Back
               </button>
