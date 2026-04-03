@@ -88,6 +88,7 @@ async function createTables() {
     CREATE TABLE IF NOT EXISTS patients (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
+      species TEXT NOT NULL DEFAULT 'canine',
       breed TEXT NOT NULL,
       age REAL NOT NULL,
       weight REAL NOT NULL,
@@ -307,6 +308,12 @@ async function createTables() {
       FOREIGN KEY (tier_id) REFERENCES tiers(id)
     )
   `);
+
+  // Migration: add species column to existing patients table
+  try {
+    await run("ALTER TABLE patients ADD COLUMN species TEXT NOT NULL DEFAULT 'canine'");
+    console.log("📦 Migration: added species column to patients");
+  } catch { /* column already exists */ }
 
   console.log("📦 All tables created (V2 only)");
 }

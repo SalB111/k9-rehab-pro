@@ -5,7 +5,6 @@ import {
 
 const NAV = [
   { id: "dashboard",  label: "Dashboard",           icon: FiBarChart2,  desc: "Clinical analytics" },
-  { id: "generator",  label: "Protocol Generator",  icon: FiFileText,   desc: "Intake → Assessment → Generate" },
   { id: "clients",    label: "Patients",             icon: FiUsers,      desc: "Patient management" },
   { id: "exercises",  label: "Exercise Library",     icon: FiBookOpen,   desc: "125 evidence-based exercises" },
   { id: "sessions",   label: "SOAP Notes",           icon: FiClipboard,  desc: "SOAP notes & outcomes" },

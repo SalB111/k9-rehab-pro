@@ -8,6 +8,7 @@ import C from "../constants/colors";
 import S from "../constants/styles";
 import { API } from "../api/axios";
 import { useToast } from "../components/Toast";
+import { BREEDS, FELINE_BREEDS } from "./generator/constants";
 
 // ─────────────────────────────────────────────
 // CLIENTS VIEW
@@ -15,7 +16,7 @@ import { useToast } from "../components/Toast";
 function ClientsView({ setView, setSelectedPatient }) {
   const [clients, setClients] = useState([]);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ name: "", breed: "", age: "", weight: "", sex: "Male", condition: "", client_name: "", client_email: "", client_phone: "" });
+  const [form, setForm] = useState({ name: "", species: "canine", breed: "", age: "", weight: "", sex: "Male", condition: "", client_name: "", client_email: "", client_phone: "" });
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [deleting, setDeleting] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -29,7 +30,7 @@ function ClientsView({ setView, setSelectedPatient }) {
     e.preventDefault();
     await axios.post(`${API}/patients`, { ...form, age: +form.age, weight: +form.weight });
     setShowForm(false);
-    setForm({ name: "", breed: "", age: "", weight: "", sex: "Male", condition: "", client_name: "", client_email: "", client_phone: "" });
+    setForm({ name: "", species: "canine", breed: "", age: "", weight: "", sex: "Male", condition: "", client_name: "", client_email: "", client_phone: "" });
     axios.get(`${API}/patients`).then(r => setClients(r.data?.data || r.data || []));
   };
 
@@ -132,6 +133,23 @@ Register Patient
             </div>
           </div>
           <form onSubmit={submit}>
+            {/* Species Toggle */}
+            <div style={{ marginBottom: 14, display: "flex", alignItems: "center", gap: 10 }}>
+              <label style={{ ...S.label, marginBottom: 0 }}>Species *</label>
+              <div style={{ display: "flex", gap: 0, borderRadius: 8, overflow: "hidden", border: `1px solid ${C.border}` }}>
+                {["canine", "feline"].map(sp => (
+                  <button key={sp} type="button" onClick={() => setForm({ ...form, species: sp, breed: "" })} style={{
+                    padding: "7px 18px", border: "none", cursor: "pointer",
+                    background: form.species === sp ? C.teal : "transparent",
+                    color: form.species === sp ? "#fff" : C.textLight,
+                    fontSize: 12, fontWeight: 600, textTransform: "capitalize",
+                    transition: "all 0.15s",
+                  }}>
+                    {sp === "canine" ? "🐕 Canine" : "🐈 Feline"}
+                  </button>
+                ))}
+              </div>
+            </div>
             <div style={S.grid(3)}>
               <div>
                 <label style={S.label}>Patient Name *</label>
@@ -139,7 +157,12 @@ Register Patient
               </div>
               <div>
                 <label style={S.label}>Breed *</label>
-                <input style={S.input} value={form.breed} onChange={e => setForm({ ...form, breed: e.target.value })} required placeholder="e.g. Labrador Retriever" />
+                <select style={{ ...S.select, width: "100%" }} value={form.breed} onChange={e => setForm({ ...form, breed: e.target.value })} required>
+                  <option value="">Select breed...</option>
+                  {(form.species === "feline" ? FELINE_BREEDS : BREEDS).map(b => (
+                    <option key={b} value={b}>{b}</option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label style={S.label}>Primary Condition *</label>
