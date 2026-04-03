@@ -162,47 +162,8 @@ export default function WelcomeSplash({ onEnter }) {
             textAlign: "center",
           }}
         >
-          {/* Rod + holographic animals + title composed together */}
+          {/* Rod + title composed together */}
           <div style={{ position: "relative", display: "inline-block" }}>
-
-            {/* Holographic dog — left side */}
-            <div style={{
-              position: "absolute", left: -90, top: "50%", transform: "translateY(-50%)",
-              fontSize: 64, opacity: textActive ? 0.7 : 0,
-              transition: "opacity 1s ease 0.3s",
-              filter: "drop-shadow(0 0 15px rgba(14,165,233,0.6)) drop-shadow(0 0 30px rgba(14,165,233,0.3))",
-              animation: textActive ? "holoFloat 3s ease-in-out infinite" : "none",
-            }}>
-              <svg width="70" height="70" viewBox="0 0 80 80" fill="none">
-                <text x="10" y="55" fontSize="50" fill="url(#holoGrad)" opacity="0.8">🐕</text>
-                <defs>
-                  <linearGradient id="holoGrad" x1="0" y1="0" x2="80" y2="80">
-                    <stop offset="0%" stopColor="#0EA5E9" />
-                    <stop offset="100%" stopColor="#1D9E75" />
-                  </linearGradient>
-                </defs>
-              </svg>
-            </div>
-
-            {/* Holographic cat — right side */}
-            <div style={{
-              position: "absolute", right: -90, top: "50%", transform: "translateY(-50%)",
-              fontSize: 64, opacity: textActive ? 0.7 : 0,
-              transition: "opacity 1s ease 0.5s",
-              filter: "drop-shadow(0 0 15px rgba(29,158,117,0.6)) drop-shadow(0 0 30px rgba(29,158,117,0.3))",
-              animation: textActive ? "holoFloat 3s ease-in-out infinite 0.5s" : "none",
-            }}>
-              <svg width="70" height="70" viewBox="0 0 80 80" fill="none">
-                <text x="10" y="55" fontSize="50" fill="url(#holoGrad2)" opacity="0.8">🐈</text>
-                <defs>
-                  <linearGradient id="holoGrad2" x1="0" y1="0" x2="80" y2="80">
-                    <stop offset="0%" stopColor="#1D9E75" />
-                    <stop offset="100%" stopColor="#0EA5E9" />
-                  </linearGradient>
-                </defs>
-              </svg>
-            </div>
-
             {/* Rod of Asclepius image — centered above REHAB */}
             <img
               src="/rod-logo.png"
