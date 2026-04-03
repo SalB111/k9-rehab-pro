@@ -94,7 +94,7 @@ const SECTIONS = [
       { id: "api-clinical", label: "A.2 Clinical Core" },
       { id: "api-exercises", label: "A.3 Exercise Library" },
       { id: "api-patients", label: "A.4 Patients" },
-      { id: "api-vetai", label: "A.5 VetAI" },
+      { id: "api-beau", label: "A.5 B.E.A.U." },
     ],
   },
   {
@@ -742,11 +742,14 @@ export default function DocsView({ setView }) {
             ]}
           />
 
-          <H3 id="api-vetai" num="A.5">VetAI (B.E.A.U.)</H3>
+          <H3 id="api-beau" num="A.5">B.E.A.U. AI Engine</H3>
           <T headers={["Method", "Endpoint", "Description"]}
             rows={[
-              [<C>POST</C>, <C>/api/vet-ai/chat</C>, "Streaming AI chat with patient context"],
-              [<C>GET</C>, <C>/api/vet-ai/status</C>, "Check if VetAI is configured"],
+              [<C>POST</C>, <C>/api/beau/chat</C>, "Streaming AI chat with patient context"],
+              [<C>GET</C>, <C>/api/beau/status</C>, "Check if B.E.A.U. is configured"],
+              [<C>GET</C>, <C>/api/beau/sessions</C>, "Load chat session history"],
+              [<C>POST</C>, <C>/api/beau/sessions</C>, "Save chat session"],
+              [<C>GET</C>, <C>/api/beau/intelligence</C>, "Aggregate case intelligence"],
             ]}
           />
 
@@ -757,8 +760,8 @@ export default function DocsView({ setView }) {
           <H3 id="tier1" num="B.1">Tier 1 &mdash; Required Before Clinical Use</H3>
           <UL>
             <li>Credential verification at registration (DVM/CCRP/CCRT/student attestation)</li>
-            <li>Scope-of-practice enforcement in VetAI</li>
-            <li>VetAI exercise name cross-check against 223-exercise library</li>
+            <li>Scope-of-practice enforcement in B.E.A.U.</li>
+            <li>B.E.A.U. exercise name cross-check against 223-exercise library</li>
             <li>Terms of Service sign-off on first login</li>
             <li>Evidence grade display on every exercise in protocol output</li>
             <li>Red-flag audit logging per patient per protocol</li>
@@ -768,7 +771,7 @@ export default function DocsView({ setView }) {
           <UL>
             <li>AVMA/state board compliance reference in UI</li>
             <li>Protocol versioning (Original vs. Approved with diff tracking)</li>
-            <li>VetAI dosing extraction from source doc (not AI-generated)</li>
+            <li>B.E.A.U. dosing extraction from source doc (not AI-generated)</li>
             <li>Outcome tracking with reassessment prompts</li>
             <li>Specialist escalation pathways for high-risk flags</li>
             <li>Adverse event reporting mechanism</li>
@@ -777,7 +780,7 @@ export default function DocsView({ setView }) {
           <H3 id="tier3" num="B.3">Tier 3 &mdash; Required for Enterprise/University Deployment</H3>
           <UL>
             <li>Role-based clinical access (DVM approve / technician execute / student view)</li>
-            <li>Semantic hallucination detection on VetAI responses</li>
+            <li>Semantic hallucination detection on B.E.A.U. responses</li>
             <li>Confidence scoring per AI recommendation</li>
             <li>Decision rationale per exercise selection</li>
             <li>Multi-language support &amp; WCAG AA accessibility compliance</li>

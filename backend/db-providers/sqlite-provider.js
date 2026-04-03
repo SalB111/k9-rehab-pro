@@ -238,6 +238,19 @@ async function createTables() {
     )
   `);
 
+  // B.E.A.U. Chat Sessions
+  await run(`
+    CREATE TABLE IF NOT EXISTS beau_sessions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL DEFAULT 'New conversation',
+      messages TEXT NOT NULL,
+      patient_id INTEGER,
+      patient_name TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
   // V2 Exercise Library Tables
   await run(`
     CREATE TABLE IF NOT EXISTS domains (

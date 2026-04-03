@@ -35,6 +35,15 @@ app.use(express.json());
 // HEALTH CHECK
 // ---------------------------------------------------------------------------
 
+// Redirect non-prefixed routes to /api/* (handles VITE_API_URL without /api suffix)
+app.use((req, res, next) => {
+  if (!req.path.startsWith("/api") && !req.path.startsWith("/assets") && req.path !== "/") {
+    const apiPath = `/api${req.path}`;
+    req.url = apiPath;
+  }
+  next();
+});
+
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", message: "K9 Rehab Pro backend running" });
 });
@@ -391,6 +400,102 @@ app.put("/api/clinics/:id", async (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
+// B.E.A.U. AI ENGINE
+// ---------------------------------------------------------------------------
+
+const beauRouter = require("./beau/beau-router");
+const { registerEngineHook } = require("./beau/beau-chat-handler");
+const knowledgeEngine = require("./engines/knowledge/knowledge-engine");
+const evidenceEngine = require("./engines/evidence/evidence-engine");
+const narrativeEngine = require("./engines/narrative/narrative-engine");
+const presentationEngine = require("./engines/presentation/presentation-engine");
+const visualEngine = require("./engines/visual/visual-engine");
+app.use("/api/beau", beauRouter);
+
+// Knowledge Engine search endpoint
+app.get("/api/beau/knowledge/search", (req, res) => {
+  const { q } = req.query;
+  if (!q) return res.status(400).json({ error: "Query parameter 'q' is required" });
+  const results = knowledgeEngine.search(q, 10);
+  res.json({ success: true, data: results.map(r => ({ ...r.chunk, score: r.score })), status: knowledgeEngine.getStatus() });
+});
+
+app.get("/api/beau/knowledge/status", (req, res) => {
+  res.json({ success: true, data: knowledgeEngine.getStatus() });
+});
+
+// Evidence Engine search endpoint
+app.post("/api/beau/evidence/search", async (req, res) => {
+  try {
+    const { query, maxResults } = req.body;
+    if (!query) return res.status(400).json({ error: "Query is required" });
+    const result = await evidenceEngine.searchEvidence(query, maxResults || 5);
+    // Feed results into Knowledge Engine
+    evidenceEngine.injectIntoKnowledge(result.articles, knowledgeEngine.addChunks);
+    res.json({ success: true, data: result.articles, context: result.context });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/beau/evidence/status", (req, res) => {
+  res.json({ success: true, data: evidenceEngine.getStatus() });
+});
+
+// Narrative Engine endpoints
+app.post("/api/beau/narrative/generate", async (req, res) => {
+  try {
+    const { type, patient, instructions } = req.body;
+    if (!type) return res.status(400).json({ error: "Document type is required" });
+    const result = await narrativeEngine.generateDocument(type, patient, instructions);
+    res.json({ success: true, data: result });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/beau/narrative/templates", (req, res) => {
+  res.json({ success: true, data: narrativeEngine.getTemplateList() });
+});
+
+app.get("/api/beau/narrative/status", (req, res) => {
+  res.json({ success: true, data: narrativeEngine.getStatus() });
+});
+
+// Presentation Engine endpoints
+app.post("/api/beau/presentation/generate", async (req, res) => {
+  try {
+    const { prompt, patient } = req.body;
+    if (!prompt) return res.status(400).json({ error: "Prompt is required" });
+    const result = await presentationEngine.generatePresentation(prompt, patient);
+    res.json({ success: true, data: result });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/beau/presentation/status", (req, res) => {
+  res.json({ success: true, data: presentationEngine.getStatus() });
+});
+
+// Visual Engine endpoints
+app.post("/api/beau/visual/generate", (req, res) => {
+  try {
+    const { type, ...params } = req.body;
+    if (!type) return res.status(400).json({ error: "Card type is required" });
+    const result = visualEngine.generateCard(type, params);
+    if (!result.valid) return res.status(400).json({ error: result.errors.join("; ") });
+    res.json({ success: true, data: result.card });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/beau/visual/status", (req, res) => {
+  res.json({ success: true, data: visualEngine.getStatus() });
+});
+
+// ---------------------------------------------------------------------------
 // AGENT PIPELINE ROUTES
 // ---------------------------------------------------------------------------
 
@@ -437,6 +542,21 @@ app.get("/api/pipeline/status", (req, res) => {
     await db.initialize();
     await db.createTables();
     await db.seedV2Library();
+
+    // Initialize Knowledge Engine (RAG — source document grounding)
+    await knowledgeEngine.initialize();
+    registerEngineHook("knowledge", async (query, patient) => {
+      return knowledgeEngine.getRelevantContext(query, patient);
+    });
+
+    // Register Evidence Engine hook (PubMed — triggered by research keywords)
+    registerEngineHook("evidence", evidenceEngine.evidenceHook);
+
+    // Initialize Narrative Engine with Knowledge + Evidence references
+    narrativeEngine.initialize(knowledgeEngine, evidenceEngine);
+
+    // Initialize Presentation Engine
+    presentationEngine.initialize(knowledgeEngine);
 
     const existingAdmin = await db.findUserByUsername("admin");
     if (!existingAdmin) {

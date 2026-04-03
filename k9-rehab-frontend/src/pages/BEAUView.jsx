@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, lazy, Suspense } from "react";
 import axios from "axios";
 import {
   FiActivity, FiAlertTriangle, FiBarChart2, FiBookOpen,
@@ -8,6 +8,11 @@ import {
 import C from "../constants/colors";
 import { API } from "../api/axios";
 import { useToast } from "../components/Toast";
+
+const DiagramRenderer = lazy(() => import("../components/beau/DiagramRenderer"));
+const NarrativePanel = lazy(() => import("../components/beau/NarrativePanel"));
+const PresentationView = lazy(() => import("../components/beau/presentation/PresentationView"));
+const VisualCardRenderer = lazy(() => import("../components/beau/visual/VisualCardRenderer"));
 
 // ─────────────────────────────────────────────
 // BEAU AI VIEW — B.E.A.U. - Biomedical Evidence-based Analytical Unit
@@ -19,6 +24,7 @@ function BEAUView({ authToken }) {
   const [stream, setStream] = useState("");
   const [patient, setPatient] = useState(null);
   const [patients, setPatients] = useState([]);
+  const [presentationDeck, setPresentationDeck] = useState(null);
   const [showPatientPanel, setShowPatientPanel] = useState(false);
   const [aiStatus, setAiStatus] = useState(null);
   const [sessionId, setSessionId] = useState(null);
@@ -39,7 +45,7 @@ useEffect(() => {
     .catch(() => toast("Failed to load patients"));
 
   axios
-    .get(`${API}/vet-ai/status`)
+    .get(`${API}/beau/status`)
     .then(r => setAiStatus(r.data))
     .catch(() => setAiStatus({ configured: false }));
 
@@ -356,7 +362,7 @@ useEffect(() => {
               boxShadow: m.role === "user" ? `0 3px 12px ${C.navy}20` : "0 1px 4px rgba(0,0,0,0.04)",
             }}>
               {m.role === "assistant"
-                ? <div dangerouslySetInnerHTML={{ __html: renderMd(m.content) }} />
+                ? <MessageContent content={m.content} renderMd={renderMd} onPresentation={setPresentationDeck} />
                 : <span style={{ fontWeight: 500 }}>{m.content}</span>
               }
             </div>
@@ -367,7 +373,7 @@ useEffect(() => {
         {stream && (
           <div style={{ display: "flex", justifyContent: "flex-start", marginBottom: 14 }}>
             <div style={{ maxWidth: "88%", padding: "14px 18px", borderRadius: "16px 16px 16px 4px", background: aiC.aiBubble, border: `1px solid ${aiC.aiBorder}`, fontSize: 13, lineHeight: 1.65 }}>
-              <div dangerouslySetInnerHTML={{ __html: renderMd(stream) }} />
+              <MessageContent content={stream} renderMd={renderMd} />
               <span style={{ display: "inline-block", width: 5, height: 15, background: C.teal, marginLeft: 1, animation: "blink 1s step-end infinite", verticalAlign: "text-bottom", borderRadius: 1 }} />
             </div>
           </div>
@@ -434,6 +440,96 @@ useEffect(() => {
         @keyframes blink { 50%{opacity:0} }
       `}</style>
       </div>{/* /Main Chat Column */}
+      {/* Presentation modal */}
+      {presentationDeck && (
+        <Suspense fallback={null}>
+          <PresentationView deck={presentationDeck} onClose={() => setPresentationDeck(null)} />
+        </Suspense>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Renders message content, splitting text and engine blocks (:::diagram, :::document).
+ * Text parts render as HTML via renderMd, engine blocks render as React components.
+ */
+function MessageContent({ content, renderMd, onPresentation }) {
+  if (!content) return null;
+
+  const parts = [];
+  const engineRegex = /:::(diagram|document|presentation|visual)\s*([\s\S]*?):::/g;
+  let match;
+  let lastIndex = 0;
+
+  while ((match = engineRegex.exec(content)) !== null) {
+    const textBefore = content.slice(lastIndex, match.index);
+    if (textBefore.trim()) parts.push({ type: "text", content: textBefore });
+
+    const engineType = match[1];
+    const jsonStr = match[2].trim();
+    try {
+      parts.push({ type: engineType, content: JSON.parse(jsonStr) });
+    } catch {
+      parts.push({ type: "text", content: "```\n" + jsonStr + "\n```" });
+    }
+    lastIndex = match.index + match[0].length;
+  }
+
+  const textAfter = content.slice(lastIndex);
+  if (textAfter.trim()) parts.push({ type: "text", content: textAfter });
+
+  if (parts.length === 0) {
+    return <div dangerouslySetInnerHTML={{ __html: renderMd(content) }} />;
+  }
+
+  return (
+    <div>
+      {parts.map((part, i) => {
+        if (part.type === "diagram") {
+          return (
+            <Suspense key={i} fallback={<div style={{ padding: 12, fontSize: 12, color: "#6a737d" }}>Loading diagram...</div>}>
+              <DiagramRenderer diagram={part.content} />
+            </Suspense>
+          );
+        }
+        if (part.type === "document") {
+          return (
+            <Suspense key={i} fallback={<div style={{ padding: 12, fontSize: 12, color: "#6a737d" }}>Loading document...</div>}>
+              <NarrativePanel document={part.content} />
+            </Suspense>
+          );
+        }
+        if (part.type === "presentation") {
+          const deck = part.content;
+          return (
+            <div key={i} style={{
+              margin: "12px 0", padding: "12px 16px", borderRadius: 10,
+              background: "linear-gradient(135deg, #0F4C8115, #1D9E7515)",
+              border: "1px solid var(--k9-teal)", display: "flex", alignItems: "center", justifyContent: "space-between",
+            }}>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "var(--k9-text)" }}>{deck.title || "Presentation"}</div>
+                <div style={{ fontSize: 11, color: "var(--k9-text-light)" }}>{deck.slides?.length || 0} slides</div>
+              </div>
+              <button onClick={() => onPresentation?.(deck)} style={{
+                padding: "6px 14px", borderRadius: 6, border: "none", cursor: "pointer",
+                background: "var(--k9-teal)", color: "#fff", fontSize: 12, fontWeight: 600,
+              }}>
+                View Presentation
+              </button>
+            </div>
+          );
+        }
+        if (part.type === "visual") {
+          return (
+            <Suspense key={i} fallback={<div style={{ padding: 12, fontSize: 12, color: "#6a737d" }}>Loading visual...</div>}>
+              <VisualCardRenderer card={part.content} />
+            </Suspense>
+          );
+        }
+        return <div key={i} dangerouslySetInnerHTML={{ __html: renderMd(part.content) }} />;
+      })}
     </div>
   );
 }
