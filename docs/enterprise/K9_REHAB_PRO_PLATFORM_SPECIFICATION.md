@@ -61,7 +61,7 @@ K9 Rehab Pro is a veterinary rehabilitation intelligence platform classified as 
 | Safety Gate Layers | 5 | Contraindications, WB status, incision, activity, clinical grading |
 | Frontend Views | 8 | Dashboard, Clients, Generator, Exercises, Sessions, Settings, About, Welcome |
 | Database Tables | 16 | Patients, protocols, exercises, sessions, audit, auth |
-| API Endpoints | 40+ | Auth, clinical, exercises, patients, VetAI, storyboards, audit |
+| API Endpoints | 40+ | Auth, clinical, exercises, patients, B.E.A.U., storyboards, audit |
 | Auth Roles | 2 | Clinician, Admin (JWT-based) |
 
 ## 3. Clinical Framework
@@ -369,12 +369,12 @@ The protocol engine has undergone two formal audit rounds against the source-of-
 │   React 19 Frontend     │     │   External Services       │
 │   (CRA, Port 3001)      │────▶│                          │
 │                          │     │  Anthropic Claude API    │
-│  8 Views / 5-Step Wizard │     │  (VetAI streaming chat)  │
+│  8 Views / 5-Step Wizard │     │  (B.E.A.U. streaming chat)  │
 │  CSS-in-JS Styling       │     │                          │
 │  Axios HTTP Client       │     │  Hugging Face SDXL       │
 └──────────┬──────────────┘     │  (storyboard images)     │
            │ HTTP/JSON                                      │
-           │ SSE (VetAI)        │  Dog.CEO API              │
+           │ SSE (B.E.A.U.)        │  Dog.CEO API              │
            ▼                    │  (breed photo fallback)   │
 ┌──────────────────────────┐    └──────────────────────────┘
 │   Express.js Backend     │
@@ -412,7 +412,7 @@ The protocol engine has undergone two formal audit rounds against the source-of-
 | **Security** | Helmet | Security headers middleware |
 | **Rate Limiting** | express-rate-limit | 100 req/15min general, 5 req/15min auth |
 | **CORS** | cors | Restricted to `CORS_ORIGIN` (default: localhost:3001) |
-| **AI Integration** | Anthropic SDK | claude-sonnet-4-20250514 for VetAI |
+| **AI Integration** | Anthropic SDK | claude-sonnet-4-20250514 for B.E.A.U. |
 | **Image Generation** | Hugging Face Inference | SDXL model, cached to disk |
 | **Breed Photos** | Dog.CEO API | 19 breeds mapped, fallback for storyboard images |
 | **Document Parsing** | Mammoth | .docx source-of-truth ingestion |
@@ -506,11 +506,11 @@ The core clinical engine. Accepts a structured intake form and produces a week-b
 - `POST /api/auth/register`
 - `GET /api/auth/status`
 
-## 13. VetAI Clinical Assistant
+## 13. B.E.A.U. Clinical Assistant
 
 ### 13.1 Architecture
 
-The VetAI system is an AI-powered clinical decision support chat interface that operates alongside (not replacing) the deterministic protocol generator.
+The B.E.A.U. system is an AI-powered clinical decision support chat interface that operates alongside (not replacing) the deterministic protocol generator.
 
 - **Model:** claude-sonnet-4-20250514 (Anthropic)
 - **Max tokens:** 4,096
@@ -528,7 +528,7 @@ The VetAI system is an AI-powered clinical decision support chat interface that 
 
 ### 13.3 Mandatory Response Structure
 
-Every VetAI response follows this 7-section format:
+Every B.E.A.U. response follows this 7-section format:
 
 1. Case Classification
 2. Risk Flag Analysis
@@ -651,7 +651,7 @@ Each storyboard includes:
 | Audit Logging | **Active** | All POST/PUT/DELETE logged with timestamp, action, user, IP, status |
 | Audit Export | **Active** | CSV export for board investigations |
 | Data Sharing | **None** | All data remains local — zero external transmission |
-| AI Data Policy | **Active** | No user data used for AI training; VetAI source-of-truth is injected per-request (stateless) |
+| AI Data Policy | **Active** | No user data used for AI training; B.E.A.U. source-of-truth is injected per-request (stateless) |
 | Backups | Planned | Automated encrypted backup with configurable schedule |
 
 ## 17. Data Privacy Architecture
@@ -663,7 +663,7 @@ Each storyboard includes:
 - No data is sold to or shared with third parties
 - No data is used for advertising, analytics, or model training
 - All clinical logic runs locally via deterministic algorithms
-- VetAI chat sends only the current conversation + source-of-truth to Claude API (no patient data stored by Anthropic)
+- B.E.A.U. chat sends only the current conversation + source-of-truth to Claude API (no patient data stored by Anthropic)
 
 **Data flow:**
 
@@ -673,7 +673,7 @@ Each storyboard includes:
     [Local Only]          [Audit Log Table]
          │                       │
   No external APIs        CSV Export for
-  (except VetAI chat)     Board Investigations
+  (except B.E.A.U. chat)     Board Investigations
 ```
 
 ## 18. Compliance Alignment
@@ -902,11 +902,11 @@ docker-compose.yml
 | GET | `/api/v1/programs/conditions` | Required | Available conditions |
 | GET | `/api/v1/programs/conditions/:condition/phases` | Required | Phases for condition |
 
-### VetAI Clinical Assistant
+### B.E.A.U. Clinical Assistant
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
-| POST | `/api/vet-ai/chat` | Required | Streaming AI chat (SSE) |
-| GET | `/api/vet-ai/status` | Required | VetAI configuration status |
+| POST | `/api/beau/chat` | Required | Streaming AI chat (SSE) |
+| GET | `/api/beau/status` | Required | B.E.A.U. configuration status |
 
 ### Audit Log
 | Method | Endpoint | Auth | Description |
@@ -923,7 +923,7 @@ docker-compose.yml
 | `JWT_SECRET` | Yes | — | Secret for JWT signing |
 | `JWT_EXPIRES_IN` | No | `24h` | Token expiry duration |
 | `CORS_ORIGIN` | No | `http://localhost:3001` | Allowed frontend origin |
-| `ANTHROPIC_API_KEY` | Yes* | — | Required for VetAI (* optional if VetAI not used) |
+| `ANTHROPIC_API_KEY` | Yes* | — | Required for B.E.A.U. (* optional if B.E.A.U. not used) |
 | `HF_TOKEN` | No | — | Hugging Face API token for storyboard images (falls back to Dog.CEO) |
 | `PORT` | No | `3000` | Server port |
 

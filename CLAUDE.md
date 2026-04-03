@@ -3,7 +3,7 @@
 ## Ownership & Intellectual Property
 
 **Product:** K9 Rehab Pro™
-**AI Engine:** B.E.A.U. (Biomedical Evidence-Based Assessment Utility)
+**AI Engine:** B.E.A.U. (Biomedical Evidence-Based Analytical Unit)
 **Owner / Author:** Salvatore Bonanno
 **Role:** Canine Rehabilitation Nurse (CCRN) | Software Developer | Founder
 **Copyright:** © 2025 Salvatore Bonanno. All rights reserved.
@@ -52,14 +52,14 @@ This platform is a **Clinical Decision-Support System (CDSS)** for **post-diagno
 
 ## Anti-Hallucination Rules
 
-These rules are **non-negotiable** and apply to all code generation, VetAI output, and protocol logic:
+These rules are **non-negotiable** and apply to all code generation, B.E.A.U. output, and protocol logic:
 
-1. **Exercise Library Lock**: Every exercise referenced in protocol output or VetAI responses MUST match an exercise code in the 223-exercise library. Any unmatched exercise name = blocked output + clinician alert. No exceptions.
-2. **Dosing from Source Only**: Sets, reps, duration, frequency, and intensity parameters MUST be extracted from the source-of-truth document. VetAI must NOT generate novel dosing. If the source doc doesn't specify dosing for an exercise, output "Dosing: Per clinician assessment" — never fabricate numbers.
+1. **Exercise Library Lock**: Every exercise referenced in protocol output or B.E.A.U. responses MUST match an exercise code in the 223-exercise library. Any unmatched exercise name = blocked output + clinician alert. No exceptions.
+2. **Dosing from Source Only**: Sets, reps, duration, frequency, and intensity parameters MUST be extracted from the source-of-truth document. B.E.A.U. must NOT generate novel dosing. If the source doc doesn't specify dosing for an exercise, output "Dosing: Per clinician assessment" — never fabricate numbers.
 3. **No Invented Clinical Data**: Exercise descriptions, contraindications, indications, evidence grades, and phase assignments must trace to source documents. If a value cannot be sourced, it must be flagged as `[UNVERIFIED]` and excluded from clinical output.
-4. **VetAI Post-Generation Verification**: Every VetAI response that references exercises must be cross-checked against the exercise database before delivery to the clinician. Novel exercise names trigger a block.
-5. **Confidence Transparency**: When VetAI synthesizes recommendations (vs. quoting source material directly), the output must indicate this distinction. Never present AI synthesis as sourced fact.
-6. **No Speculative Prognosis**: VetAI must never predict outcomes, timelines to recovery, or success rates unless directly quoting published literature with citation.
+4. **B.E.A.U. Post-Generation Verification**: Every B.E.A.U. response that references exercises must be cross-checked against the exercise database before delivery to the clinician. Novel exercise names trigger a block.
+5. **Confidence Transparency**: When B.E.A.U. synthesizes recommendations (vs. quoting source material directly), the output must indicate this distinction. Never present AI synthesis as sourced fact.
+6. **No Speculative Prognosis**: B.E.A.U. must never predict outcomes, timelines to recovery, or success rates unless directly quoting published literature with citation.
 
 ## Evidence Gating Policy
 
@@ -138,7 +138,7 @@ Every generated protocol must retain:
 ### Audit Log Requirements
 - All POST, PUT, DELETE operations logged automatically (existing)
 - Red-flag triggers logged per patient (required addition)
-- VetAI queries and responses logged with session ID
+- B.E.A.U. queries and responses logged with session ID
 - Protocol modifications tracked as diffs (original vs. approved)
 - Logs retained minimum 7 years
 - Audit log must be immutable once written (append-only, no delete except admin purge with separate audit entry)
@@ -174,8 +174,8 @@ Features and safety measures are prioritized into implementation tiers:
 
 ### TIER 1 — Required before clinical use
 - [ ] Credential verification at registration (DVM/CCRP/CCRT/student attestation)
-- [ ] Scope-of-practice enforcement in VetAI (block out-of-scope queries)
-- [ ] VetAI exercise name cross-check against 223-exercise library
+- [ ] Scope-of-practice enforcement in B.E.A.U. (block out-of-scope queries)
+- [ ] B.E.A.U. exercise name cross-check against 223-exercise library
 - [ ] Terms of Service sign-off on first login
 - [ ] Evidence grade display on every exercise in protocol output
 - [ ] Red-flag audit logging per patient per protocol
@@ -183,14 +183,14 @@ Features and safety measures are prioritized into implementation tiers:
 ### TIER 2 — Required for regulatory defensibility
 - [ ] AVMA/state board compliance reference in UI
 - [ ] Protocol versioning (Original vs. Approved with diff tracking)
-- [ ] VetAI dosing extraction from source doc (not AI-generated)
+- [ ] B.E.A.U. dosing extraction from source doc (not AI-generated)
 - [ ] Outcome tracking with reassessment prompts
 - [ ] Specialist escalation pathways for high-risk flags
 - [ ] Adverse event reporting mechanism in UI
 
 ### TIER 3 — Required for enterprise/university deployment
 - [ ] Role-based clinical access (DVM approve / technician execute / student view)
-- [ ] Semantic hallucination detection on VetAI responses
+- [ ] Semantic hallucination detection on B.E.A.U. responses
 - [ ] Confidence scoring per AI recommendation
 - [ ] Decision rationale per exercise selection
 - [ ] Informed consent template for CDSS-assisted rehabilitation
@@ -205,7 +205,7 @@ Features and safety measures are prioritized into implementation tiers:
 - **Frontend (legacy/WIP)**: `frontend/` (React 19 + Vite + TypeScript), `frontend_new/` (React 18 + Vite)
 - **Authentication**: JWT (jsonwebtoken + bcryptjs) with role-based access control (`backend/auth.js`)
 - **Security**: Helmet, CORS (origin: localhost:3001), express-rate-limit
-- **AI Integration**: Anthropic SDK (`@anthropic-ai/sdk`) for VetAI clinical assistant
+- **AI Integration**: Anthropic SDK (`@anthropic-ai/sdk`) for B.E.A.U. clinical assistant
 - **Image Generation**: Hugging Face Inference API (SDXL) for storyboard exercise images
 - **Breed Photos Fallback**: Dog.CEO API for breed-specific photos (19 breeds mapped)
 - **Document parsing**: Mammoth (for .docx source-of-truth ingestion)
@@ -218,7 +218,7 @@ Features and safety measures are prioritized into implementation tiers:
 ```
 k9-rehab-pro/
 ├── backend/                    # Express API server (port 3000)
-│   ├── server.js               # Main server — routes, middleware, VetAI endpoint
+│   ├── server.js               # Main server — routes, middleware, B.E.A.U. endpoint
 │   ├── database.js             # SQLite schema & data operations
 │   ├── auth.js                 # JWT auth, bcrypt, role-based middleware
 │   ├── protocol-generator.js   # ACVSMR-aligned 4-protocol × 4-phase system
@@ -233,7 +233,7 @@ k9-rehab-pro/
 │   ├── storyboard-images/       # Cached AI-generated exercise images (HF SDXL)
 │   └── package.json
 ├── k9-rehab-frontend/          # Active frontend (React 19 + Vite, port 3001)
-│   ├── src/App.jsx             # Main app — all views including VetAI
+│   ├── src/App.jsx             # Main app — all views including B.E.A.U.
 │   ├── src/K9Icons.jsx         # Icon system v2
 │   ├── src/index.jsx           # Entry point
 │   ├── src/components/ui/      # shadcn/ui components
@@ -332,9 +332,9 @@ cd k9-rehab-frontend && npm install && npm start
 - `GET /api/v1/programs/conditions` — Available conditions
 - `GET /api/v1/programs/conditions/:condition/phases` — Phases for condition
 
-### VetAI Clinical Assistant
-- `POST /api/vet-ai/chat` — Streaming AI chat with patient context (Anthropic SDK)
-- `GET /api/vet-ai/status` — Check if VetAI is configured
+### B.E.A.U. Clinical Assistant
+- `POST /api/beau/chat` — Streaming AI chat with patient context (Anthropic SDK)
+- `GET /api/beau/status` — Check if B.E.A.U. is configured
 
 ### Audit Log
 - `GET /api/audit-log` — View audit log
@@ -372,7 +372,7 @@ Auto-initializes with seed data on first run.
 - Protocol generation: ACVSMR-aligned 4-condition × 4-phase system with gated progression
 - Phase progression: Acute Protection → Early Mobilization → Controlled Strengthening → Return to Function
 - Frontend (`k9-rehab-frontend`): Single-page app with view state management in `App.js`
-- VetAI: Streaming chat using Anthropic Claude API with clinical system prompt and patient context injection
+- B.E.A.U.: Streaming chat using Anthropic Claude API with clinical system prompt and patient context injection
 - Auth: JWT with role-based access (clinician, admin). Public routes: health, login, register, auth status
 - Security: Helmet headers, CORS restricted to localhost:3001, rate limiting (100 req/15min general, 5 req/15min auth)
 - CORS origin configurable via `CORS_ORIGIN` env var
@@ -398,6 +398,6 @@ Backend requires `.env` with:
 - `JWT_SECRET` — Secret for JWT signing (generate with `node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"`)
 - `JWT_EXPIRES_IN` — Token expiry (default: 24h)
 - `CORS_ORIGIN` — Allowed frontend origin (default: http://localhost:3001)
-- `ANTHROPIC_API_KEY` — Required for VetAI clinical assistant
+- `ANTHROPIC_API_KEY` — Required for B.E.A.U. clinical assistant
 - `HF_TOKEN` — Hugging Face API token for AI storyboard images (optional, falls back to Dog.CEO breed photos)
 - `PORT` — Server port (default: 3000)

@@ -611,7 +611,7 @@ export default function DocsView({ setView }) {
           {/* ═══════════════════ CH 6: B.E.A.U. ═══════════════════ */}
           <H2 id="beau-overview" num="Chapter 6.">B.E.A.U. AI Engine</H2>
           <H3 id="beau-overview" num="6.1">Overview</H3>
-          <P><strong>B.E.A.U.</strong> (Biomedical Evidence-Based Assessment Utility) is the AI clinical assistant powered by Anthropic Claude. It provides streaming conversational support with patient context injection for real-time clinical guidance.</P>
+          <P><strong>B.E.A.U.</strong> (Biomedical Evidence-Based Analytical Unit) is the AI clinical assistant powered by Anthropic Claude. It provides streaming conversational support with patient context injection for real-time clinical guidance.</P>
 
           <H3 id="anti-hallucination" num="6.2">Anti-Hallucination Rules</H3>
           <P>These rules are <strong>non-negotiable</strong> and apply to all AI output:</P>

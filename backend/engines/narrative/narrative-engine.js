@@ -65,7 +65,7 @@ async function generateDocument(templateType, patient, additionalInstructions = 
 - Notes: ${patient.notes || patient.special_instructions || "None"}` : "";
 
   // Build the generation prompt
-  const systemPrompt = `You are B.E.A.U. — the Biomedical Evidence-Based Assessment Utility — generating a ${template.name} for K9 Rehab Pro.
+  const systemPrompt = `You are B.E.A.U. — the Biomedical Evidence-Based Analytical Unit — generating a ${template.name} for K9 Rehab Pro.
 
 You must follow these rules:
 - No hallucinated exercises. Only reference exercises from the K9 Rehab Pro library.

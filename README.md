@@ -23,7 +23,7 @@ K9 Rehab Pro generates evidence-based, phase-gated rehabilitation protocols in m
 - **Safety Gating** — Weight-bearing status, incision status, e-collar, crate rest, pain level (>=8 blocks generation), MMT, IVDD grade, OA KL grade, red-flag detection and escalation
 - **Exercise Library** — 260 exercises with evidence grades (129 A / 74 B / 20 C), contraindications, dosing parameters, intervention types, and clinical tags
 - **Evidence System** — 524 exercise-to-reference mappings across 49 clinical references. Every exercise displays its evidence grade to the clinician.
-- **VetAI Clinical Assistant** — Streaming AI chat with patient context injection, 4-block clinical prompt architecture, scope-of-practice enforcement (Anthropic Claude)
+- **B.E.A.U. Clinical Assistant** — Streaming AI chat with patient context injection, 4-block clinical prompt architecture, scope-of-practice enforcement (Anthropic Claude)
 - **3D Anatomy Viewer** — Interactive Three.js canine/feline model with exercise-reactive muscle highlighting, clinical atlas tooltips (origin, insertion, action, nerve), and 260 exercise-to-muscle mappings
 - **Patient Management** — Intake, progress assessments, audit logging, protocol versioning
 - **Storyboard System** — Breed-specific exercise storyboards with 19 breeds mapped, AI-generated images (HF SDXL), and Dog.CEO fallback photos
@@ -52,7 +52,7 @@ Create `backend/.env`:
 
 ```env
 JWT_SECRET=<generate-a-64-byte-hex-secret>
-ANTHROPIC_API_KEY=<required-for-vetai>
+ANTHROPIC_API_KEY=<required-for-beau>
 HF_TOKEN=<optional-for-storyboard-images>
 ```
 
@@ -73,7 +73,7 @@ This repo includes a `render.yaml` blueprint for one-click deployment:
 |-------|-------|
 | Backend | Express.js 4.x, SQLite3, JWT auth (bcrypt), Helmet, CORS, rate-limiting |
 | Frontend | React 19, Vite 6.x, Tailwind CSS 3.4, Radix UI, shadcn/ui, lucide-react |
-| AI | Anthropic SDK (VetAI chat), Hugging Face SDXL (storyboard images) |
+| AI | Anthropic SDK (B.E.A.U. chat), Hugging Face SDXL (storyboard images) |
 | 3D | Three.js (anatomy viewer with clinical atlas) |
 | Testing | Vitest, React Testing Library, jsdom |
 
@@ -84,7 +84,7 @@ This repo includes a `render.yaml` blueprint for one-click deployment:
 ```
 k9-rehab-pro/
   backend/                 Express API, SQLite, protocol engine, exercise DB
-    server.js              Main server — routes, middleware, VetAI endpoint
+    server.js              Main server — routes, middleware, B.E.A.U. endpoint
     protocol-generator.js  ACVSMR-aligned 4-protocol x 4-phase system
     protocol-rules.js      Phase-condition mappings and safety gates
     all-exercises.js       Master exercise export (260, deduped + enhanced)
@@ -93,7 +93,7 @@ k9-rehab-pro/
     evidence-references.js Clinical evidence citations (49 references)
     auth.js                JWT auth, bcrypt, role-based middleware
   k9-rehab-frontend/       Active React frontend (Vite + Tailwind)
-    src/pages/             View components (Generator, Exercises, VetAI, etc.)
+    src/pages/             View components (Generator, Exercises, B.E.A.U., etc.)
     src/components/        Shared components (AnatomyViewer3D, TopNav, etc.)
     src/constants/         Colors, styles, navigation (CSS variable driven)
   CanineRehabProtocols/    Clinical source-of-truth document
@@ -121,7 +121,7 @@ All protocols, exercises, phase definitions, and progression criteria originate 
 
 - Every exercise referenced in protocol output must match an exercise code in the 260-exercise library
 - Novel exercise names trigger an automatic block
-- VetAI responses are cross-checked against the exercise database before delivery
+- B.E.A.U. responses are cross-checked against the exercise database before delivery
 - Dosing parameters extracted from source documentation only — never AI-generated
 
 ---
@@ -142,6 +142,6 @@ Proprietary. All rights reserved.
 
 © 2025-2026 Salvatore Bonanno
 
-K9 Rehab Pro™ | Powered by B.E.A.U. (Biomedical Evidence-Based Assessment Utility)
+K9 Rehab Pro™ | Powered by B.E.A.U. (Biomedical Evidence-Based Analytical Unit)
 
 Clinical content based on evidence-based veterinary rehabilitation standards (Millis & Levine).
