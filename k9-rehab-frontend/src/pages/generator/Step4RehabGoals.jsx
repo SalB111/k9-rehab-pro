@@ -1,241 +1,161 @@
 import React from "react";
-import { FiAward } from "react-icons/fi";
+import { FiAward, FiTarget, FiFlag, FiActivity, FiAlertTriangle, FiCheckCircle, FiClipboard } from "react-icons/fi";
 import C from "../../constants/colors";
 import S from "../../constants/styles";
 import SectionHead from "./SectionHead";
 import StepNavButtons from "./StepNavButtons";
 
+// Reusable checkbox group with column layout
+function CheckGroup({ items, selected, onChange, columns = 2 }) {
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: `repeat(${columns}, 1fr)`, gap: 8 }}>
+      {items.map(item => {
+        const checked = (selected || []).includes(item);
+        return (
+          <label key={item} style={{
+            display: "flex", alignItems: "center", gap: 8, cursor: "pointer",
+            padding: "10px 14px", borderRadius: 8, fontSize: 12, fontWeight: 500, color: C.text,
+            background: checked ? `${C.teal}12` : C.surface,
+            border: checked ? `2px solid ${C.teal}` : `1px solid ${C.border}`,
+            transition: "all 0.15s",
+          }}>
+            <input type="checkbox" checked={checked}
+              onChange={e => {
+                const arr = [...(selected || [])];
+                if (e.target.checked) arr.push(item); else arr.splice(arr.indexOf(item), 1);
+                onChange(arr);
+              }}
+              style={{ accentColor: C.teal, width: 15, height: 15, cursor: "pointer", flexShrink: 0 }} />
+            {item}
+          </label>
+        );
+      })}
+    </div>
+  );
+}
+
+// Section wrapper with colored left border
+function Section({ title, subtitle, icon: Icon, color, children }) {
+  return (
+    <div style={{
+      background: C.surface, borderRadius: 12, padding: "20px 24px", marginBottom: 16,
+      border: `1px solid ${C.border}`, borderLeft: `4px solid ${color}`,
+      boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+        <Icon size={18} style={{ color, flexShrink: 0 }} />
+        <div style={{ fontSize: 15, fontWeight: 800, color: C.text, letterSpacing: 0.3 }}>{title}</div>
+      </div>
+      {subtitle && <div style={{ fontSize: 11, color: C.textLight, marginBottom: 14, paddingLeft: 28 }}>{subtitle}</div>}
+      <div style={{ paddingLeft: 0 }}>{children}</div>
+    </div>
+  );
+}
+
 export default function Step4RehabGoals({ form, setField, goToStep }) {
   return (
     <>
-      {/* -- Section Header + Problem List -- */}
-      <div style={{ background: C.navy, border: `1px solid ${C.navy}`, borderRadius: 10, padding: "16px 20px", marginBottom: 10, color: "#fff" }}>
+      {/* Page header */}
+      <div style={{ marginBottom: 20 }}>
         <SectionHead icon={FiAward} title="Rehabilitation Goals & Prognosis" />
-        <div style={{ fontSize: 11, fontWeight: 700, color: C.teal, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10, marginTop: 14 }}>
-          Problem List
-        </div>
-        <div style={{ fontSize: 10, color: C.textLight, marginBottom: 10 }}>
-          Identify all functional deficits and impairments (select all that apply)
-        </div>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          {["Decreased ROM", "Muscle atrophy", "Pain", "Abnormal gait pattern",
+      </div>
+
+      {/* Problem List */}
+      <Section title="Problem List" subtitle="Identify all functional deficits and impairments" icon={FiClipboard} color="#A32D2D">
+        <CheckGroup columns={2}
+          items={["Decreased ROM", "Muscle atrophy", "Pain", "Abnormal gait pattern",
             "Edema / swelling", "Joint stiffness", "Muscle weakness", "Reduced weight bearing",
             "Proprioceptive deficit", "Neurological deficit", "Post-surgical inflammation",
             "Decreased endurance", "Balance / coordination deficit", "Soft tissue restriction",
-            "Compensatory movement pattern", "Decreased functional mobility"].map(item => (
-            <label key={item} style={{
-              display: "flex", alignItems: "center", gap: 6, cursor: "pointer",
-              padding: "6px 10px", borderRadius: 6, fontSize: 11, fontWeight: 600, color: C.text,
-              background: (form.problems || []).includes(item) ? "rgba(14,165,233,0.15)" : C.bg,
-              border: (form.problems || []).includes(item) ? `1.5px solid ${C.teal}` : `1.5px solid ${C.border}`,
-              transition: "all 0.2s",
-            }}>
-              <input type="checkbox" checked={(form.problems || []).includes(item)}
-                onChange={e => {
-                  const arr = [...(form.problems || [])];
-                  if (e.target.checked) arr.push(item); else arr.splice(arr.indexOf(item), 1);
-                  setField("problems", arr);
-                }}
-                style={{ accentColor: C.teal, width: 13, height: 13, cursor: "pointer" }} />
-              {item}
-            </label>
-          ))}
-        </div>
-      </div>
+            "Compensatory movement pattern", "Decreased functional mobility"]}
+          selected={form.problems}
+          onChange={v => setField("problems", v)}
+        />
+      </Section>
 
-      {/* -- Short-Term Goals -- */}
-      <div style={{ background: C.navy, border: `1px solid ${C.navy}`, borderRadius: 10, padding: "16px 20px", marginBottom: 10, color: "#fff" }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: C.teal, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10 }}>
-          Short-Term Goals (STG) — 2-4 Weeks
-        </div>
-        <div style={{ fontSize: 10, color: C.textLight, marginBottom: 10 }}>
-          Measurable objectives for the first rehabilitation phase (select all that apply)
-        </div>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          {["Reduce pain to \u22643/10", "Progress weight bearing", "Increase ROM 15\u00B0+",
+      {/* Short-Term Goals */}
+      <Section title="Short-Term Goals (STG) — 2-4 Weeks" subtitle="Measurable objectives for the first rehabilitation phase" icon={FiTarget} color="#0EA5E9">
+        <CheckGroup columns={2}
+          items={["Reduce pain to \u22643/10", "Progress weight bearing", "Increase ROM 15\u00B0+",
             "Reduce swelling/edema", "Begin controlled leash walks", "Improve proprioception",
             "Initiate muscle activation", "Protect surgical repair", "Establish HEP routine",
-            "Restore basic mobility", "Normalize gait at walk", "Owner education complete"].map(item => (
-            <label key={item} style={{
-              display: "flex", alignItems: "center", gap: 6, cursor: "pointer",
-              padding: "6px 10px", borderRadius: 6, fontSize: 11, fontWeight: 600, color: C.text,
-              background: (form.stGoals || []).includes(item) ? "rgba(14,165,233,0.15)" : C.bg,
-              border: (form.stGoals || []).includes(item) ? `1.5px solid ${C.teal}` : `1.5px solid ${C.border}`,
-              transition: "all 0.2s",
-            }}>
-              <input type="checkbox" checked={(form.stGoals || []).includes(item)}
-                onChange={e => {
-                  const arr = [...(form.stGoals || [])];
-                  if (e.target.checked) arr.push(item); else arr.splice(arr.indexOf(item), 1);
-                  setField("stGoals", arr);
-                }}
-                style={{ accentColor: C.teal, width: 13, height: 13, cursor: "pointer" }} />
-              {item}
-            </label>
-          ))}
-        </div>
-      </div>
+            "Restore basic mobility", "Normalize gait at walk", "Owner education complete"]}
+          selected={form.stGoals}
+          onChange={v => setField("stGoals", v)}
+        />
+      </Section>
 
-      {/* -- Long-Term Goals -- */}
-      <div style={{ background: C.navy, border: `1px solid ${C.navy}`, borderRadius: 10, padding: "16px 20px", marginBottom: 10, color: "#fff" }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: C.teal, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10 }}>
-          Long-Term Goals (LTG) — 8-16 Weeks
-        </div>
-        <div style={{ fontSize: 10, color: C.textLight, marginBottom: 10 }}>
-          Functional outcomes expected at discharge (select all that apply)
-        </div>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          {["Full weight bearing", "Normal gait pattern", "ROM within 10\u00B0 of contralateral",
+      {/* Long-Term Goals */}
+      <Section title="Long-Term Goals (LTG) — 8-16 Weeks" subtitle="Functional outcomes expected at discharge" icon={FiFlag} color="#1D9E75">
+        <CheckGroup columns={2}
+          items={["Full weight bearing", "Normal gait pattern", "ROM within 10\u00B0 of contralateral",
             "Muscle symmetry \u22641cm difference", "Return to off-leash activity",
             "Return to sport/work function", "Independent stair navigation",
             "Pain-free with activity", "Owner independent with HEP",
-            "Maintain/improve body condition", "Sustained comfort & QoL"].map(item => (
-            <label key={item} style={{
-              display: "flex", alignItems: "center", gap: 6, cursor: "pointer",
-              padding: "6px 10px", borderRadius: 6, fontSize: 11, fontWeight: 600, color: C.text,
-              background: (form.ltGoals || []).includes(item) ? "rgba(14,165,233,0.15)" : C.bg,
-              border: (form.ltGoals || []).includes(item) ? `1.5px solid ${C.teal}` : `1.5px solid ${C.border}`,
-              transition: "all 0.2s",
-            }}>
-              <input type="checkbox" checked={(form.ltGoals || []).includes(item)}
-                onChange={e => {
-                  const arr = [...(form.ltGoals || [])];
-                  if (e.target.checked) arr.push(item); else arr.splice(arr.indexOf(item), 1);
-                  setField("ltGoals", arr);
-                }}
-                style={{ accentColor: C.teal, width: 13, height: 13, cursor: "pointer" }} />
-              {item}
-            </label>
-          ))}
-        </div>
-      </div>
+            "Maintain/improve body condition", "Sustained comfort & QoL"]}
+          selected={form.ltGoals}
+          onChange={v => setField("ltGoals", v)}
+        />
+      </Section>
 
-      {/* -- Outcome Measures & Prognosis -- side by side -- */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
-        <div style={{ background: C.navy, border: `1px solid ${C.navy}`, borderRadius: 10, padding: "16px 20px", color: "#fff" }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: C.teal, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10 }}>
-            Functional Outcome Measures
-          </div>
-          <div style={{ fontSize: 10, color: C.textLight, marginBottom: 10 }}>
-            Validated instruments for tracking progress (select all that apply)
-          </div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {["CBPI (Canine Brief Pain Inventory)", "HCPI (Helsinki Chronic Pain Index)",
+      {/* Outcome Measures & Prognosis — side by side */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
+        <Section title="Functional Outcome Measures" subtitle="Validated instruments for tracking progress" icon={FiActivity} color="#8B5CF6">
+          <CheckGroup columns={1}
+            items={["CBPI (Canine Brief Pain Inventory)", "HCPI (Helsinki Chronic Pain Index)",
               "LOAD (Liverpool OA in Dogs)", "CSU Acute Pain Scale",
               "Goniometry (ROM)", "Thigh circumference", "Video gait analysis",
               "Force plate analysis", "Stance analyzer", "Timed functional tests",
-              "Owner questionnaire (QoL)"].map(item => (
-              <label key={item} style={{
-                display: "flex", alignItems: "center", gap: 6, cursor: "pointer",
-                padding: "6px 10px", borderRadius: 6, fontSize: 11, fontWeight: 600, color: C.text,
-                background: (form.outcomeMeasures || []).includes(item) ? "rgba(14,165,233,0.15)" : C.bg,
-                border: (form.outcomeMeasures || []).includes(item) ? `1.5px solid ${C.teal}` : `1.5px solid ${C.border}`,
-                transition: "all 0.2s",
-              }}>
-                <input type="checkbox" checked={(form.outcomeMeasures || []).includes(item)}
-                  onChange={e => {
-                    const arr = [...(form.outcomeMeasures || [])];
-                    if (e.target.checked) arr.push(item); else arr.splice(arr.indexOf(item), 1);
-                    setField("outcomeMeasures", arr);
-                  }}
-                  style={{ accentColor: C.teal, width: 13, height: 13, cursor: "pointer" }} />
-                {item}
-              </label>
-            ))}
-          </div>
-        </div>
-        <div style={{ background: C.navy, border: `1px solid ${C.navy}`, borderRadius: 10, padding: "16px 20px", color: "#fff" }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: C.teal, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10 }}>
-            Prognosis
-          </div>
-          <div style={{ fontSize: 10, color: C.textLight, marginBottom: 10 }}>
-            Expected recovery outcome based on clinical findings
-          </div>
-          <select style={{ ...S.select, width: "100%", border: `1.5px solid ${C.border}`, marginBottom: 12 }}
+              "Owner questionnaire (QoL)"]}
+            selected={form.outcomeMeasures}
+            onChange={v => setField("outcomeMeasures", v)}
+          />
+        </Section>
+
+        <Section title="Prognosis" subtitle="Expected recovery outcome based on clinical findings" icon={FiAward} color="#BA7517">
+          <select style={{ ...S.select, width: "100%", padding: "10px 12px", fontSize: 13, borderRadius: 8, border: `1.5px solid ${C.border}`, marginBottom: 16 }}
             value={form.prognosisRating} onChange={e => setField("prognosisRating", e.target.value)}>
-            <option value="">--- Select ---</option>
-            <option value="Excellent">Excellent — Full return to prior function expected</option>
-            <option value="Good">Good — Significant improvement expected, minor residual deficits</option>
-            <option value="Fair">Fair — Moderate improvement expected, functional limitations likely</option>
-            <option value="Guarded">Guarded — Uncertain outcome, dependent on response to therapy</option>
-            <option value="Poor">Poor — Limited improvement expected, focus on comfort/QoL</option>
+            <option value="">--- Select Prognosis ---</option>
+            <option value="Excellent">Excellent — Full return to prior function</option>
+            <option value="Good">Good — Significant improvement, minor deficits</option>
+            <option value="Fair">Fair — Moderate improvement, limitations likely</option>
+            <option value="Guarded">Guarded — Uncertain, depends on therapy response</option>
+            <option value="Poor">Poor — Limited improvement, comfort/QoL focus</option>
           </select>
-          <label style={S.label}>Estimated Timeline to Discharge</label>
-          <input style={{ ...S.input, border: `1.5px solid ${C.border}` }}
+          <label style={{ ...S.label, fontSize: 12, fontWeight: 600, marginBottom: 6 }}>Estimated Timeline to Discharge</label>
+          <input style={{ ...S.input, padding: "10px 12px", fontSize: 13, borderRadius: 8, border: `1.5px solid ${C.border}` }}
             value={form.estimatedTimeline} onChange={e => setField("estimatedTimeline", e.target.value)}
             placeholder="e.g. 12-16 weeks with good compliance" />
-        </div>
+        </Section>
       </div>
 
-      {/* -- Discharge Criteria & Precautions -- side by side -- */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
-        <div style={{ background: C.navy, border: `1px solid ${C.navy}`, borderRadius: 10, padding: "16px 20px", color: "#fff" }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: C.teal, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10 }}>
-            Discharge Criteria
-          </div>
-          <div style={{ fontSize: 10, color: C.textLight, marginBottom: 10 }}>
-            Objective benchmarks for protocol completion (select all that apply)
-          </div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {["Pain-free at rest and activity", "Full ROM or within 10\u00B0 contralateral",
+      {/* Discharge Criteria & Precautions — side by side */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
+        <Section title="Discharge Criteria" subtitle="Objective benchmarks for protocol completion" icon={FiCheckCircle} color="#1D9E75">
+          <CheckGroup columns={1}
+            items={["Pain-free at rest and activity", "Full ROM or within 10\u00B0 contralateral",
               "Symmetrical muscle mass", "Normal gait at walk & trot",
               "Independent stair use", "Owner competent with HEP",
               "Functional activity tolerance", "Stable on all validated measures",
-              "No exercise-induced lameness", "Vet clearance obtained"].map(item => (
-              <label key={item} style={{
-                display: "flex", alignItems: "center", gap: 6, cursor: "pointer",
-                padding: "6px 10px", borderRadius: 6, fontSize: 11, fontWeight: 600, color: C.text,
-                background: (form.dischargeCriteria || []).includes(item) ? "rgba(14,165,233,0.15)" : C.bg,
-                border: (form.dischargeCriteria || []).includes(item) ? `1.5px solid ${C.teal}` : `1.5px solid ${C.border}`,
-                transition: "all 0.2s",
-              }}>
-                <input type="checkbox" checked={(form.dischargeCriteria || []).includes(item)}
-                  onChange={e => {
-                    const arr = [...(form.dischargeCriteria || [])];
-                    if (e.target.checked) arr.push(item); else arr.splice(arr.indexOf(item), 1);
-                    setField("dischargeCriteria", arr);
-                  }}
-                  style={{ accentColor: C.teal, width: 13, height: 13, cursor: "pointer" }} />
-                {item}
-              </label>
-            ))}
-          </div>
-        </div>
-        <div style={{ background: C.navy, border: `1px solid ${C.navy}`, borderRadius: 10, padding: "16px 20px", color: "#fff" }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: C.teal, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10 }}>
-            Precautions & Contraindications
-          </div>
-          <div style={{ fontSize: 10, color: C.textLight, marginBottom: 10 }}>
-            Activity restrictions and safety considerations (select all that apply)
-          </div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {["No off-leash activity", "No jumping", "No stairs unsupervised",
+              "No exercise-induced lameness", "Vet clearance obtained"]}
+            selected={form.dischargeCriteria}
+            onChange={v => setField("dischargeCriteria", v)}
+          />
+        </Section>
+
+        <Section title="Precautions & Contraindications" subtitle="Activity restrictions and safety considerations" icon={FiAlertTriangle} color="#A32D2D">
+          <CheckGroup columns={1}
+            items={["No off-leash activity", "No jumping", "No stairs unsupervised",
               "No rough play / wrestling", "Leash walks only", "Monitor incision",
               "Stop if acute pain increase", "No slippery surfaces",
               "No swimming until cleared", "Weight restriction in effect",
-              "Muzzle for manual therapy", "Sedation may be required"].map(item => (
-              <label key={item} style={{
-                display: "flex", alignItems: "center", gap: 6, cursor: "pointer",
-                padding: "6px 10px", borderRadius: 6, fontSize: 11, fontWeight: 600, color: C.text,
-                background: (form.precautions || []).includes(item) ? "rgba(14,165,233,0.15)" : C.bg,
-                border: (form.precautions || []).includes(item) ? `1.5px solid ${C.teal}` : `1.5px solid ${C.border}`,
-                transition: "all 0.2s",
-              }}>
-                <input type="checkbox" checked={(form.precautions || []).includes(item)}
-                  onChange={e => {
-                    const arr = [...(form.precautions || [])];
-                    if (e.target.checked) arr.push(item); else arr.splice(arr.indexOf(item), 1);
-                    setField("precautions", arr);
-                  }}
-                  style={{ accentColor: C.teal, width: 13, height: 13, cursor: "pointer" }} />
-                {item}
-              </label>
-            ))}
-          </div>
-        </div>
+              "Muzzle for manual therapy", "Sedation may be required"]}
+            selected={form.precautions}
+            onChange={v => setField("precautions", v)}
+          />
+        </Section>
       </div>
 
-      {/* Step 4 navigation */}
       <StepNavButtons
         onBack={() => goToStep(3)}
         backLabel={"← Back to Treatment Plan"}
