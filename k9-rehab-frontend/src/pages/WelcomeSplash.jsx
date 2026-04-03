@@ -95,9 +95,9 @@ export default function WelcomeSplash({ onEnter }) {
 
   // Phase timing
   useEffect(() => {
-    const t1 = setTimeout(() => setPhase("hold"), 3500);   // slow cinematic approach
-    const t2 = setTimeout(() => setPhase("text"), 4500);    // pause to absorb the logo, then text
-    const t3 = setTimeout(() => setPhase("ready"), 8000);   // all text typed out
+    const t1 = setTimeout(() => setPhase("hold"), 5000);   // very slow cinematic approach
+    const t2 = setTimeout(() => setPhase("text"), 6500);    // long pause to absorb the logo
+    const t3 = setTimeout(() => setPhase("ready"), 10000);  // all text revealed
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
   }, []);
 
@@ -153,7 +153,7 @@ export default function WelcomeSplash({ onEnter }) {
               : "scale(1) rotateX(0deg) translateZ(0px)",
             opacity: phase === "zoom" ? 0.2 : 1,
             transition: phase === "zoom"
-              ? "transform 3.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 3s ease"
+              ? "transform 5s cubic-bezier(0.16, 1, 0.3, 1), opacity 4s ease"
               : "transform 0.3s ease-out",
             filter: phase !== "zoom"
               ? "drop-shadow(0 0 30px rgba(14,165,233,0.5)) drop-shadow(0 0 60px rgba(29,158,117,0.3))"
@@ -162,24 +162,68 @@ export default function WelcomeSplash({ onEnter }) {
             textAlign: "center",
           }}
         >
-          {/* Rod of Asclepius image */}
-          <img
-            src="/rod-logo.png"
-            alt="Rod of Asclepius"
-            style={{
-              width: 200,
-              height: "auto",
-              objectFit: "contain",
-              filter: "brightness(1.2) contrast(1.1) drop-shadow(0 0 20px rgba(14,165,233,0.6)) drop-shadow(0 0 40px rgba(29,158,117,0.3))",
-            }}
-          />
+          {/* Rod + holographic animals + title composed together */}
+          <div style={{ position: "relative", display: "inline-block" }}>
 
-          {/* K9-REHAB-PRO text */}
+            {/* Holographic dog — left side */}
+            <div style={{
+              position: "absolute", left: -90, top: "50%", transform: "translateY(-50%)",
+              fontSize: 64, opacity: textActive ? 0.7 : 0,
+              transition: "opacity 1s ease 0.3s",
+              filter: "drop-shadow(0 0 15px rgba(14,165,233,0.6)) drop-shadow(0 0 30px rgba(14,165,233,0.3))",
+              animation: textActive ? "holoFloat 3s ease-in-out infinite" : "none",
+            }}>
+              <svg width="70" height="70" viewBox="0 0 80 80" fill="none">
+                <text x="10" y="55" fontSize="50" fill="url(#holoGrad)" opacity="0.8">🐕</text>
+                <defs>
+                  <linearGradient id="holoGrad" x1="0" y1="0" x2="80" y2="80">
+                    <stop offset="0%" stopColor="#0EA5E9" />
+                    <stop offset="100%" stopColor="#1D9E75" />
+                  </linearGradient>
+                </defs>
+              </svg>
+            </div>
+
+            {/* Holographic cat — right side */}
+            <div style={{
+              position: "absolute", right: -90, top: "50%", transform: "translateY(-50%)",
+              fontSize: 64, opacity: textActive ? 0.7 : 0,
+              transition: "opacity 1s ease 0.5s",
+              filter: "drop-shadow(0 0 15px rgba(29,158,117,0.6)) drop-shadow(0 0 30px rgba(29,158,117,0.3))",
+              animation: textActive ? "holoFloat 3s ease-in-out infinite 0.5s" : "none",
+            }}>
+              <svg width="70" height="70" viewBox="0 0 80 80" fill="none">
+                <text x="10" y="55" fontSize="50" fill="url(#holoGrad2)" opacity="0.8">🐈</text>
+                <defs>
+                  <linearGradient id="holoGrad2" x1="0" y1="0" x2="80" y2="80">
+                    <stop offset="0%" stopColor="#1D9E75" />
+                    <stop offset="100%" stopColor="#0EA5E9" />
+                  </linearGradient>
+                </defs>
+              </svg>
+            </div>
+
+            {/* Rod of Asclepius image — centered above REHAB */}
+            <img
+              src="/rod-logo.png"
+              alt="Rod of Asclepius"
+              style={{
+                width: 180,
+                height: "auto",
+                objectFit: "contain",
+                display: "block",
+                margin: "0 auto",
+                filter: "brightness(1.2) contrast(1.1) drop-shadow(0 0 20px rgba(14,165,233,0.6)) drop-shadow(0 0 40px rgba(29,158,117,0.3))",
+              }}
+            />
+          </div>
+
+          {/* K9-REHAB-PRO text — rod sits centered above */}
           <div style={{
             fontSize: 36, fontWeight: 900, letterSpacing: 4,
             color: "#fff",
             fontFamily: "'Exo 2', 'Orbitron', system-ui, sans-serif",
-            marginTop: 16,
+            marginTop: -4,
             textShadow: "0 0 20px rgba(14,165,233,0.6), 0 0 40px rgba(29,158,117,0.3), 0 2px 4px rgba(0,0,0,0.8)",
             opacity: textActive ? 1 : 0,
             transform: textActive ? "translateY(0)" : "translateY(15px)",
@@ -280,6 +324,10 @@ export default function WelcomeSplash({ onEnter }) {
         }
         @keyframes blink {
           50% { opacity: 0; }
+        }
+        @keyframes holoFloat {
+          0%, 100% { transform: translateY(-50%) translateX(0px); opacity: 0.7; }
+          50% { transform: translateY(-50%) translateX(3px); opacity: 0.9; }
         }
       `}</style>
     </div>
