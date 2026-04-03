@@ -20,7 +20,7 @@ const DocsView = lazy(() => import("./pages/DocsView"));
 export default function App() {
   const [authToken, setAuthToken] = useState(localStorage.getItem("token"));
   const [currentUser, setCurrentUser] = useState({ username: "Clinician", role: "clinician", id: 1 });
-  const [view, setView] = useState("dashboard");
+  const [view, setView] = useState("clients");
   const [genKey, setGenKey] = useState(0);
   const [genInitialStep, setGenInitialStep] = useState(1);
   const [brand, setBrand] = useState({ clinicName: "K9 Rehab Pro", accent: "#0F4C81" });
@@ -51,7 +51,7 @@ export default function App() {
     localStorage.removeItem("token");
     setAuthToken(null);
     setCurrentUser(null);
-    setView("dashboard");
+    setView("clients");
   }
 
   function handleRegister() {
@@ -117,7 +117,7 @@ export default function App() {
       case "visual-demo":
         return <ExerciseVisualDemo />;
       default:
-        return <DashboardView setView={setView} />;
+        return <ClientsView setView={setView} setSelectedPatient={setSelectedPatient} />;
     }
   }
 
