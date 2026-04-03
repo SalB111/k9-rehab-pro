@@ -17,7 +17,7 @@ const VisualCardRenderer = lazy(() => import("../components/beau/visual/VisualCa
 // ─────────────────────────────────────────────
 // BEAU AI VIEW — B.E.A.U. - Biomedical Evidence-based Analytical Unit
 // ─────────────────────────────────────────────
-function BEAUView({ authToken }) {
+function BEAUView({ authToken, setView }) {
   const [msgs, setMsgs] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -273,15 +273,15 @@ useEffect(() => {
               <span style={{ fontSize: 10, fontWeight: 600, color: C.green }}>{intelligence.total_cases} Cases</span>
             </div>
           )}
-          <a href="/wibbi-landing.html" target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 5, background: `${C.teal}10`, border: `1px solid ${C.teal}30`, borderRadius: 8, color: C.teal, padding: "6px 12px", cursor: "pointer", fontSize: 11, fontWeight: 600, textDecoration: "none" }} title="K9 Rehab Pro Platform Page">
+          <button onClick={() => setView?.("about")} style={{ display: "flex", alignItems: "center", gap: 5, background: `${C.teal}10`, border: `1px solid ${C.teal}30`, borderRadius: 8, color: C.teal, padding: "6px 12px", cursor: "pointer", fontSize: 11, fontWeight: 600 }} title="K9 Rehab Pro Platform">
             <FiBookOpen size={11} /> Platform
-          </a>
-          <a href="/petvet-landing.html" target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 5, background: `${C.teal}10`, border: `1px solid ${C.teal}30`, borderRadius: 8, color: C.teal, padding: "6px 12px", cursor: "pointer", fontSize: 11, fontWeight: 600, textDecoration: "none" }} title="B.E.A.U. AI Specialist Page">
-            <FiActivity size={11} /> AI Specialist
-          </a>
-          <a href="/beau-landing.html" target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 5, background: `${C.teal}12`, border: `1px solid ${C.teal}40`, borderRadius: 8, color: C.teal, padding: "6px 12px", cursor: "pointer", fontSize: 11, fontWeight: 600, textDecoration: "none" }} title="B.E.A.U. Clinical Authority Page">
+          </button>
+          <button onClick={() => setView?.("docs")} style={{ display: "flex", alignItems: "center", gap: 5, background: `${C.teal}10`, border: `1px solid ${C.teal}30`, borderRadius: 8, color: C.teal, padding: "6px 12px", cursor: "pointer", fontSize: 11, fontWeight: 600 }} title="B.E.A.U. Documentation">
+            <FiActivity size={11} /> Documentation
+          </button>
+          <button onClick={() => setView?.("about")} style={{ display: "flex", alignItems: "center", gap: 5, background: `${C.teal}12`, border: `1px solid ${C.teal}40`, borderRadius: 8, color: C.teal, padding: "6px 12px", cursor: "pointer", fontSize: 11, fontWeight: 600 }} title="About B.E.A.U.">
             <FiShield size={11} /> About B.E.A.U.
-          </a>
+          </button>
           <button onClick={() => setSidebarOpen(o => !o)} style={{ background: sidebarOpen ? `${C.teal}15` : `${C.navy}08`, border: `1px solid ${C.border}`, borderRadius: 8, color: sidebarOpen ? C.teal : C.text, padding: "6px 10px", cursor: "pointer", fontSize: 11, fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>
             <FiClock size={11} /> {sidebarOpen ? "Hide" : "History"}
           </button>
