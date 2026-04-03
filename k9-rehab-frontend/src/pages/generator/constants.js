@@ -97,8 +97,16 @@ export const CONDITIONS = {
     { value: "Post-Amputation",      label: "Post-Amputation Rehab" },
     { value: "Immune-Mediated Polyarthritis", label: "Immune-Mediated Polyarthritis" },
     { value: "Fibrotic Myopathy",    label: "Fibrotic Myopathy" },
-    { value: "Conditioning",         label: "Fitness / Conditioning Program" },
     { value: "Palliative",           label: "Palliative / Comfort Care" },
+  ],
+  "Normal Assessment / Strengthening": [
+    { value: "Conditioning",           label: "Fitness / Conditioning Program" },
+    { value: "Sport Conditioning",     label: "Sport / Working Dog Conditioning" },
+    { value: "Preventive Rehab",       label: "Preventive Rehabilitation (No Current Pathology)" },
+    { value: "Post-Clearance Strength",label: "Post-Veterinary Clearance — Strengthening" },
+    { value: "Puppy Development",      label: "Puppy / Juvenile Development Program" },
+    { value: "Pre-Surgical Prehab",    label: "Pre-Surgical Prehabilitation" },
+    { value: "Maintenance Program",    label: "Maintenance / Wellness Program" },
   ],
 };
 
@@ -139,6 +147,18 @@ export const FELINE_DIAGNOSES = {
   "Feline Cardiac / Vascular": [
     { value: "FELINE_FATE_RECOVERY",    label: "Post-FATE Recovery (Saddle Thrombus — Cardiac Cleared)" },
     { value: "FELINE_HCM_SUBCLINICAL",  label: "Feline HCM — Subclinical (Stage A / B1, Cardiac Cleared)" },
+  ],
+  "Feline Geriatric / Other": [
+    { value: "FELINE_GERIATRIC",        label: "Feline Geriatric Mobility / Sarcopenia" },
+    { value: "FELINE_POST_AMPUTATION",  label: "Feline Post-Amputation Adaptation" },
+    { value: "FELINE_OBESITY",          label: "Feline Obesity / Weight Management" },
+    { value: "FELINE_PALLIATIVE",       label: "Feline Palliative / Comfort Care" },
+  ],
+  "Feline Normal Assessment / Strengthening": [
+    { value: "FELINE_CONDITIONING",     label: "Feline Fitness / Conditioning Program" },
+    { value: "FELINE_PREVENTIVE",       label: "Feline Preventive Rehabilitation (No Current Pathology)" },
+    { value: "FELINE_POST_CLEARANCE",   label: "Feline Post-Clearance — Strengthening" },
+    { value: "FELINE_MAINTENANCE",      label: "Feline Maintenance / Wellness Program" },
   ],
 };
 
