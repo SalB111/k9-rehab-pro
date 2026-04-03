@@ -80,20 +80,20 @@ app.get("/api/patients/:id", async (req, res) => {
 app.post("/api/patients", async (req, res) => {
   try {
     const {
-      name, breed, age, weight, sex, condition, affected_region,
+      name, species, breed, age, weight, sex, condition, affected_region,
       surgery_date, lameness_grade, body_condition_score, pain_level,
       mobility_level, current_medications, medical_history,
       special_instructions, client_name, client_email, client_phone, referring_vet
     } = req.body;
     const result = await run(
       `INSERT INTO patients (
-        name, breed, age, weight, sex, condition, affected_region,
+        name, species, breed, age, weight, sex, condition, affected_region,
         surgery_date, lameness_grade, body_condition_score, pain_level,
         mobility_level, current_medications, medical_history,
         special_instructions, client_name, client_email, client_phone, referring_vet
-      ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+      ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
       [
-        name, breed, age, weight, sex, condition, affected_region,
+        name, species || "canine", breed, age, weight, sex, condition, affected_region,
         surgery_date, lameness_grade || 0, body_condition_score || 5,
         pain_level || 5, mobility_level || "Moderate", current_medications,
         medical_history, special_instructions, client_name,
@@ -110,21 +110,21 @@ app.post("/api/patients", async (req, res) => {
 app.put("/api/patients/:id", async (req, res) => {
   try {
     const {
-      name, breed, age, weight, sex, condition, affected_region,
+      name, species, breed, age, weight, sex, condition, affected_region,
       surgery_date, lameness_grade, body_condition_score, pain_level,
       mobility_level, current_medications, medical_history,
       special_instructions, client_name, client_email, client_phone, referring_vet
     } = req.body;
     await run(
       `UPDATE patients SET
-        name=?, breed=?, age=?, weight=?, sex=?, condition=?,
+        name=?, species=?, breed=?, age=?, weight=?, sex=?, condition=?,
         affected_region=?, surgery_date=?, lameness_grade=?,
         body_condition_score=?, pain_level=?, mobility_level=?,
         current_medications=?, medical_history=?, special_instructions=?,
         client_name=?, client_email=?, client_phone=?, referring_vet=?
       WHERE id=?`,
       [
-        name, breed, age, weight, sex, condition, affected_region,
+        name, species || "canine", breed, age, weight, sex, condition, affected_region,
         surgery_date, lameness_grade, body_condition_score, pain_level,
         mobility_level, current_medications, medical_history,
         special_instructions, client_name, client_email, client_phone,
