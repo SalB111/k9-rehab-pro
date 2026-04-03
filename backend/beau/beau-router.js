@@ -1,6 +1,6 @@
 // ============================================================================
 // B.E.A.U. ROUTER — /api/beau/*
-// Biomedical Evidence-Based Assessment Utility — API Endpoints
+// Biomedical Evidence-Based Analytical Unit — API Endpoints
 // ============================================================================
 
 const express = require("express");

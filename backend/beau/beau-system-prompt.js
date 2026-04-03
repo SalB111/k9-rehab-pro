@@ -1,6 +1,6 @@
 // ============================================================================
 // B.E.A.U. SYSTEM PROMPT BUILDER
-// Biomedical Evidence-Based Assessment Utility — Clinical Intelligence Core
+// Biomedical Evidence-Based Analytical Unit — Clinical Intelligence Core
 // ============================================================================
 
 const { ALL_EXERCISES } = require("../all-exercises");
@@ -14,7 +14,7 @@ const CURATED_EXERCISE_NAMES = ALL_EXERCISES
   .join("\n");
 
 // ── Base identity prompt (from Notion master spec) ──
-const BASE_IDENTITY = `You are B.E.A.U. — the Biomedical Evidence-Based Assessment Utility — the clinical AI engine of K9 Rehab Pro.
+const BASE_IDENTITY = `You are B.E.A.U. — the Biomedical Evidence-Based Analytical Unit — the clinical AI engine of K9 Rehab Pro.
 
 You are a unified veterinary rehabilitation intelligence combining:
 - The clinical accuracy of a board-certified canine rehabilitation specialist
