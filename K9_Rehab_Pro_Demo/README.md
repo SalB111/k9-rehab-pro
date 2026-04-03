@@ -10,7 +10,7 @@ K9 Rehab Pro is an ACVSMR-aligned veterinary rehabilitation intelligence platfor
 - **RAM**: 8 GB minimum
 - **Disk Space**: 200 MB
 - **Browser**: Chrome, Edge, or Firefox (latest version)
-- **Network**: No internet connection required for core functionality. VetAI clinical assistant requires an active internet connection and valid API key.
+- **Network**: No internet connection required for core functionality. B.E.A.U. clinical assistant requires an active internet connection and valid API key.
 
 ---
 
@@ -39,7 +39,7 @@ To stop the application, close the console window.
 
 ## Configuration
 
-To enable the VetAI clinical assistant, edit the `.env` file and add your Anthropic API key:
+To enable the B.E.A.U. clinical assistant, edit the `.env` file and add your Anthropic API key:
 
 ```
 ANTHROPIC_API_KEY=your-key-here
