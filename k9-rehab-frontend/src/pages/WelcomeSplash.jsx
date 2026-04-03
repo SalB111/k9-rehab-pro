@@ -42,12 +42,12 @@ export default function WelcomeSplash({ onEnter }) {
     const h = canvas.height = window.innerHeight;
 
     // Generate sparks
-    for (let i = 0; i < 60; i++) {
+    for (let i = 0; i < 80; i++) {
       sparksRef.current.push({
-        x: w / 2 + (Math.random() - 0.5) * 100,
-        y: h / 2 + (Math.random() - 0.5) * 100,
-        vx: (Math.random() - 0.5) * 4,
-        vy: (Math.random() - 0.5) * 4,
+        x: w / 2 + (Math.random() - 0.5) * 120,
+        y: h / 2 + (Math.random() - 0.5) * 120,
+        vx: (Math.random() - 0.5) * 5,
+        vy: (Math.random() - 0.5) * 5,
         size: Math.random() * 3 + 1,
         life: Math.random() * 60 + 30,
         maxLife: 90,
@@ -55,17 +55,59 @@ export default function WelcomeSplash({ onEnter }) {
       });
     }
 
+    // Electricity bolt generator
+    function drawBolt(ctx, x1, y1, x2, y2, color, width) {
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      const segments = 6 + Math.floor(Math.random() * 4);
+      for (let i = 1; i < segments; i++) {
+        const t = i / segments;
+        const mx = x1 + (x2 - x1) * t + (Math.random() - 0.5) * 30;
+        const my = y1 + (y2 - y1) * t + (Math.random() - 0.5) * 30;
+        ctx.lineTo(mx, my);
+      }
+      ctx.lineTo(x2, y2);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = width;
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 8;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+
     function animate() {
-      ctx.clearRect(0, 0, w, h);
+      // Fade trail instead of clear — keeps electricity visible
+      ctx.fillStyle = "rgba(4,6,8,0.15)";
+      ctx.fillRect(0, 0, w, h);
+
+      // Draw electricity bolts continuously
+      const cx = w / 2, cy = h / 2;
+      const boltCount = 1 + Math.floor(Math.random() * 2);
+      for (let b = 0; b < boltCount; b++) {
+        const angle = Math.random() * Math.PI * 2;
+        const dist = 50 + Math.random() * 120;
+        const x2 = cx + Math.cos(angle) * dist;
+        const y2 = cy + Math.sin(angle) * dist;
+        const color = Math.random() > 0.5 ? "rgba(14,165,233,0.5)" : "rgba(29,158,117,0.4)";
+        drawBolt(ctx, cx + (Math.random() - 0.5) * 50, cy + (Math.random() - 0.5) * 50, x2, y2, color, 0.8 + Math.random() * 0.8);
+        // Branch bolt
+        if (Math.random() > 0.4) {
+          const bx = x2 + (Math.random() - 0.5) * 70;
+          const by = y2 + (Math.random() - 0.5) * 70;
+          drawBolt(ctx, x2, y2, bx, by, color, 0.4);
+        }
+      }
+
+      // Sparks
       sparksRef.current.forEach(p => {
         p.x += p.vx;
         p.y += p.vy;
         p.life--;
         if (p.life <= 0) {
-          p.x = w / 2 + (Math.random() - 0.5) * 80;
-          p.y = h / 2 + (Math.random() - 0.5) * 80;
-          p.vx = (Math.random() - 0.5) * 5;
-          p.vy = (Math.random() - 0.5) * 5;
+          p.x = w / 2 + (Math.random() - 0.5) * 100;
+          p.y = h / 2 + (Math.random() - 0.5) * 100;
+          p.vx = (Math.random() - 0.5) * 6;
+          p.vy = (Math.random() - 0.5) * 6;
           p.life = p.maxLife;
         }
         const alpha = Math.max(0, p.life / p.maxLife);
@@ -90,14 +132,14 @@ export default function WelcomeSplash({ onEnter }) {
 
   // Typewriter text
   const textActive = phase === "text" || phase === "ready";
-  const tw1 = useTypewriter("WELCOME", 0, 180, textActive);
-  const tw3 = useTypewriter("ENTER", 2000, 200, textActive);
+  const tw1 = useTypewriter("WELCOME", 0, 120, textActive);
+  const tw3 = useTypewriter("ENTER", 1200, 150, textActive);
 
-  // Phase timing
+  // Phase timing — faster but still dramatic
   useEffect(() => {
-    const t1 = setTimeout(() => setPhase("hold"), 3500);   // slow cinematic approach
-    const t2 = setTimeout(() => setPhase("text"), 4500);    // pause to absorb the logo, then text
-    const t3 = setTimeout(() => setPhase("ready"), 8000);   // all text typed out
+    const t1 = setTimeout(() => setPhase("hold"), 3000);   // cinematic approach
+    const t2 = setTimeout(() => setPhase("text"), 3800);    // brief pause then text
+    const t3 = setTimeout(() => setPhase("ready"), 6000);   // ready to enter
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
   }, []);
 
@@ -128,101 +170,143 @@ export default function WelcomeSplash({ onEnter }) {
         background: "radial-gradient(ellipse at center, #0A1628 0%, #060B14 50%, #030508 100%)",
       }} />
 
-      {/* Logo — zooms from distant with 3D perspective */}
+      {/* Composite logo — Rod image + layered text + effects */}
       <div style={{
         zIndex: 2,
         perspective: "1200px",
         transformStyle: "preserve-3d",
       }}>
-        <div style={{
-          transform: phase === "zoom"
-            ? "scale(0.05) rotateX(15deg) translateZ(-200px)"
-            : phase === "hold"
-            ? "scale(1) rotateX(0deg) translateZ(0px)"
-            : "scale(1) rotateX(0deg) translateZ(0px)",
-          opacity: phase === "zoom" ? 0.3 : 1,
-          transition: phase === "zoom"
-            ? "transform 3.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 3s ease"
-            : "transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease",
-          filter: phase === "hold" || phase === "text" || phase === "ready"
-            ? "drop-shadow(0 0 40px rgba(14,165,233,0.6)) drop-shadow(0 0 80px rgba(29,158,117,0.4)) drop-shadow(0 0 120px rgba(14,165,233,0.2))"
-            : "drop-shadow(0 0 20px rgba(14,165,233,0.3))",
-          transformStyle: "preserve-3d",
-        }}>
-          <img
-            src="/beau-logo.jpg"
-            alt="K9 Rehab Pro — B.E.A.U."
-            onMouseMove={e => {
-              if (phase !== "ready" && phase !== "text") return;
-              const rect = e.currentTarget.getBoundingClientRect();
-              const x = (e.clientX - rect.left) / rect.width - 0.5;
-              const y = (e.clientY - rect.top) / rect.height - 0.5;
-              e.currentTarget.style.transform = `rotateY(${x * 12}deg) rotateX(${-y * 12}deg) translateZ(20px)`;
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.transform = "rotateY(0deg) rotateX(0deg) translateZ(0px)";
-            }}
-            style={{
-              width: 380,
-              height: "auto",
-              objectFit: "contain",
-              transition: "transform 0.15s ease-out",
-              transformStyle: "preserve-3d",
-              mixBlendMode: "screen",
-            }}
-          />
-        </div>
-      </div>
-
-      {/* Typewriter text reveals */}
-      <div style={{ zIndex: 2, textAlign: "center", marginTop: 24 }}>
-        {/* WELCOME */}
-        <div style={{
-          fontSize: 18, letterSpacing: 14, fontWeight: 300, color: "#7AAACF",
-          fontFamily: "'Courier New', monospace",
-          minHeight: 28,
-          opacity: textActive ? 1 : 0,
-          transition: "opacity 0.3s ease",
-          textShadow: "0 0 20px rgba(122,170,207,0.3)",
-        }}>
-          {tw1.displayed}
-          {textActive && !tw1.done && <span style={{ animation: "blink 0.6s step-end infinite", color: "#0EA5E9" }}>|</span>}
-        </div>
-
-        {/* ENTER */}
         <div
-          onClick={tw3.done ? onEnter : undefined}
-          style={{
-            fontSize: 20, fontWeight: 700, letterSpacing: 10,
-            color: "#0EA5E9",
-            fontFamily: "'Courier New', monospace",
-            marginTop: 20, minHeight: 52,
-            cursor: tw3.done ? "pointer" : "default",
-            textShadow: tw3.done ? "0 0 20px rgba(14,165,233,0.6), 0 0 40px rgba(29,158,117,0.3)" : "none",
-            padding: "14px 48px",
-            border: tw3.done ? "1px solid rgba(14,165,233,0.3)" : "1px solid transparent",
-            borderRadius: 8,
-            background: tw3.done ? "rgba(14,165,233,0.06)" : "transparent",
-            transition: "border 0.3s, background 0.3s",
-            opacity: tw1.done ? 1 : 0,
-          }}
-          onMouseEnter={e => {
-            if (tw3.done) {
-              e.target.style.background = "rgba(14,165,233,0.12)";
-              e.target.style.borderColor = "rgba(14,165,233,0.6)";
-              e.target.style.textShadow = "0 0 30px rgba(14,165,233,0.8), 0 0 60px rgba(29,158,117,0.4)";
-            }
+          onMouseMove={e => {
+            if (phase !== "ready" && phase !== "text") return;
+            const rect = e.currentTarget.getBoundingClientRect();
+            const x = (e.clientX - rect.left) / rect.width - 0.5;
+            const y = (e.clientY - rect.top) / rect.height - 0.5;
+            e.currentTarget.style.transform = `scale(1) rotateY(${x * 10}deg) rotateX(${-y * 10}deg) translateZ(20px)`;
           }}
           onMouseLeave={e => {
-            if (tw3.done) {
-              e.target.style.background = "rgba(14,165,233,0.06)";
-              e.target.style.borderColor = "rgba(14,165,233,0.3)";
-              e.target.style.textShadow = "0 0 20px rgba(14,165,233,0.6), 0 0 40px rgba(29,158,117,0.3)";
+            if (phase === "ready" || phase === "text") {
+              e.currentTarget.style.transform = "scale(1) rotateY(0deg) rotateX(0deg) translateZ(0px)";
             }
           }}
+          style={{
+            transform: phase === "zoom"
+              ? "scale(0.05) rotateX(15deg) translateZ(-200px)"
+              : "scale(1) rotateX(0deg) translateZ(0px)",
+            opacity: phase === "zoom" ? 0.2 : 1,
+            transition: phase === "zoom"
+              ? "transform 3s cubic-bezier(0.16, 1, 0.3, 1), opacity 2.5s ease"
+              : "transform 0.3s ease-out",
+            filter: phase !== "zoom"
+              ? "drop-shadow(0 0 30px rgba(14,165,233,0.5)) drop-shadow(0 0 60px rgba(29,158,117,0.3))"
+              : "none",
+            transformStyle: "preserve-3d",
+            textAlign: "center",
+          }}
         >
-          {tw3.displayed}
-          {tw1.done && !tw3.done && <span style={{ animation: "blink 0.6s step-end infinite" }}>|</span>}
+          {/* Rod + title composed together */}
+          <div style={{ position: "relative", display: "inline-block" }}>
+            {/* Rod of Asclepius image — centered above REHAB */}
+            <img
+              src="/rod-logo.png"
+              alt="Rod of Asclepius"
+              style={{
+                width: 180,
+                height: "auto",
+                objectFit: "contain",
+                display: "block",
+                margin: "0 auto",
+                filter: "brightness(1.2) contrast(1.1) drop-shadow(0 0 20px rgba(14,165,233,0.6)) drop-shadow(0 0 40px rgba(29,158,117,0.3))",
+              }}
+            />
+          </div>
+
+          {/* K9-REHAB-PRO text — rod sits centered above */}
+          <div style={{
+            fontSize: 36, fontWeight: 900, letterSpacing: 4,
+            color: "#fff",
+            fontFamily: "'Exo 2', 'Orbitron', system-ui, sans-serif",
+            marginTop: -4,
+            textShadow: "0 0 20px rgba(14,165,233,0.6), 0 0 40px rgba(29,158,117,0.3), 0 2px 4px rgba(0,0,0,0.8)",
+            opacity: textActive ? 1 : 0,
+            transform: textActive ? "translateY(0)" : "translateY(15px)",
+            transition: "opacity 0.8s ease, transform 0.8s ease",
+          }}>
+            K9-REHAB-PRO
+          </div>
+
+          {/* Glowing divider line */}
+          <div style={{
+            width: 200, height: 2, margin: "12px auto",
+            background: "linear-gradient(90deg, transparent, #0EA5E9, #1D9E75, #0EA5E9, transparent)",
+            opacity: textActive ? 0.8 : 0,
+            transition: "opacity 0.8s ease 0.3s",
+            boxShadow: "0 0 10px rgba(14,165,233,0.5)",
+          }} />
+
+          {/* B.E.A.U. text */}
+          <div style={{
+            fontSize: 28, fontWeight: 900, letterSpacing: 6,
+            color: "#0EA5E9",
+            fontFamily: "'Exo 2', 'Orbitron', system-ui, sans-serif",
+            textShadow: "0 0 20px rgba(14,165,233,0.8), 0 0 40px rgba(14,165,233,0.4)",
+            opacity: textActive ? 1 : 0,
+            transform: textActive ? "translateY(0)" : "translateY(15px)",
+            transition: "opacity 0.8s ease 0.4s, transform 0.8s ease 0.4s",
+          }}>
+            B.E.A.U.
+          </div>
+
+          {/* Acronym subtitle */}
+          <div style={{
+            fontSize: 9, letterSpacing: 3, color: "#7AAACF",
+            fontFamily: "'Courier New', monospace",
+            textTransform: "uppercase",
+            marginTop: 6,
+            textShadow: "0 0 10px rgba(122,170,207,0.3)",
+            opacity: textActive ? 0.7 : 0,
+            transition: "opacity 0.8s ease 0.6s",
+          }}>
+            AI Biomedical Evidence-Based Analytical Unit
+          </div>
+
+          {/* ENTER button */}
+          <div
+            onClick={phase === "ready" ? onEnter : undefined}
+            style={{
+              fontSize: 16, fontWeight: 700, letterSpacing: 10,
+              color: "#1D9E75",
+              fontFamily: "'Courier New', monospace",
+              marginTop: 28,
+              cursor: phase === "ready" ? "pointer" : "default",
+              textShadow: phase === "ready" ? "0 0 15px rgba(29,158,117,0.6)" : "none",
+              padding: "12px 44px",
+              border: phase === "ready" ? "1px solid rgba(29,158,117,0.4)" : "1px solid transparent",
+              borderRadius: 6,
+              background: phase === "ready" ? "rgba(29,158,117,0.08)" : "transparent",
+              transition: "all 0.4s ease",
+              opacity: phase === "ready" ? 1 : 0,
+              display: "inline-block",
+            }}
+            onMouseEnter={e => {
+              if (phase === "ready") {
+                e.target.style.background = "rgba(29,158,117,0.15)";
+                e.target.style.borderColor = "rgba(29,158,117,0.7)";
+                e.target.style.textShadow = "0 0 25px rgba(29,158,117,0.8)";
+                e.target.style.transform = "scale(1.05)";
+              }
+            }}
+            onMouseLeave={e => {
+              if (phase === "ready") {
+                e.target.style.background = "rgba(29,158,117,0.08)";
+                e.target.style.borderColor = "rgba(29,158,117,0.4)";
+                e.target.style.textShadow = "0 0 15px rgba(29,158,117,0.6)";
+                e.target.style.transform = "scale(1)";
+              }
+            }}
+          >
+            {phase === "ready" ? "ENTER" : ""}
+          </div>
         </div>
       </div>
 
@@ -243,6 +327,10 @@ export default function WelcomeSplash({ onEnter }) {
         }
         @keyframes blink {
           50% { opacity: 0; }
+        }
+        @keyframes holoFloat {
+          0%, 100% { transform: translateY(-50%) translateX(0px); opacity: 0.7; }
+          50% { transform: translateY(-50%) translateX(3px); opacity: 0.9; }
         }
       `}</style>
     </div>
