@@ -105,7 +105,7 @@ export default function WelcomeSplash({ onEnter }) {
     <div
       style={{
         position: "fixed", inset: 0, zIndex: 99999,
-        background: "#0A0F1A",
+        background: "#040608",
         display: "flex", flexDirection: "column",
         alignItems: "center", justifyContent: "center",
         overflow: "hidden", cursor: phase === "ready" ? "pointer" : "default",
@@ -125,35 +125,53 @@ export default function WelcomeSplash({ onEnter }) {
       {/* Background radial glow */}
       <div style={{
         position: "absolute", inset: 0, zIndex: 0,
-        background: "radial-gradient(ellipse at center, #0F4C8120 0%, #0A0F1A 70%)",
+        background: "radial-gradient(ellipse at center, #0A1628 0%, #060B14 50%, #030508 100%)",
       }} />
 
-      {/* Logo — zooms from distant to full */}
+      {/* Logo — zooms from distant with 3D perspective */}
       <div style={{
         zIndex: 2,
-        transform: phase === "zoom"
-          ? "scale(0.05)"
-          : phase === "hold"
-          ? "scale(1)"
-          : "scale(1)",
-        opacity: phase === "zoom" ? 0.3 : 1,
-        transition: phase === "zoom"
-          ? "transform 2.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 2.2s ease"
-          : "transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease",
-        filter: phase === "hold" || phase === "text" || phase === "ready"
-          ? "drop-shadow(0 0 40px rgba(14,165,233,0.6)) drop-shadow(0 0 80px rgba(29,158,117,0.4)) drop-shadow(0 0 120px rgba(14,165,233,0.2))"
-          : "drop-shadow(0 0 20px rgba(14,165,233,0.3))",
+        perspective: "1200px",
+        transformStyle: "preserve-3d",
       }}>
-        <img
-          src="/beau-logo.jpg"
-          alt="K9 Rehab Pro — B.E.A.U."
-          style={{
-            width: 320,
-            height: "auto",
-            borderRadius: 8,
-            objectFit: "contain",
-          }}
-        />
+        <div style={{
+          transform: phase === "zoom"
+            ? "scale(0.05) rotateX(15deg) translateZ(-200px)"
+            : phase === "hold"
+            ? "scale(1) rotateX(0deg) translateZ(0px)"
+            : "scale(1) rotateX(0deg) translateZ(0px)",
+          opacity: phase === "zoom" ? 0.3 : 1,
+          transition: phase === "zoom"
+            ? "transform 2.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 2.2s ease"
+            : "transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease",
+          filter: phase === "hold" || phase === "text" || phase === "ready"
+            ? "drop-shadow(0 0 40px rgba(14,165,233,0.6)) drop-shadow(0 0 80px rgba(29,158,117,0.4)) drop-shadow(0 0 120px rgba(14,165,233,0.2))"
+            : "drop-shadow(0 0 20px rgba(14,165,233,0.3))",
+          transformStyle: "preserve-3d",
+        }}>
+          <img
+            src="/beau-logo.jpg"
+            alt="K9 Rehab Pro — B.E.A.U."
+            onMouseMove={e => {
+              if (phase !== "ready" && phase !== "text") return;
+              const rect = e.currentTarget.getBoundingClientRect();
+              const x = (e.clientX - rect.left) / rect.width - 0.5;
+              const y = (e.clientY - rect.top) / rect.height - 0.5;
+              e.currentTarget.style.transform = `rotateY(${x * 12}deg) rotateX(${-y * 12}deg) translateZ(20px)`;
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.transform = "rotateY(0deg) rotateX(0deg) translateZ(0px)";
+            }}
+            style={{
+              width: 380,
+              height: "auto",
+              objectFit: "contain",
+              transition: "transform 0.15s ease-out",
+              transformStyle: "preserve-3d",
+              mixBlendMode: "screen",
+            }}
+          />
+        </div>
       </div>
 
       {/* Typewriter text reveals */}
