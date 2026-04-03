@@ -4,6 +4,8 @@
 
 const express = require("express");
 const cors = require("cors");
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
 const bcrypt = require("bcryptjs");
 const path = require("path");
 
@@ -13,6 +15,43 @@ const authRoutes = require("./auth-routes");
 
 const app = express();
 const PORT = process.env.PORT || 10000;
+
+// ---------------------------------------------------------------------------
+// SECURITY MIDDLEWARE
+// ---------------------------------------------------------------------------
+
+// Helmet — security headers (XSS, clickjacking, MIME sniffing protection)
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  contentSecurityPolicy: false, // Disabled for SPA compatibility
+}));
+
+// Rate limiting — general API (100 req/15min per IP)
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many requests, please try again later" },
+});
+
+// Rate limiting — auth endpoints (10 req/15min per IP)
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many login attempts, please try again later" },
+});
+
+// Rate limiting — B.E.A.U. chat (20 req/15min per IP)
+const beauLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Chat rate limit reached, please wait a moment" },
+});
 
 // ---------------------------------------------------------------------------
 // MIDDLEWARE
@@ -34,6 +73,7 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
+app.use("/api", generalLimiter);
 
 // ---------------------------------------------------------------------------
 // HEALTH CHECK
@@ -56,7 +96,7 @@ app.get("/api/health", (req, res) => {
 // AUTH ROUTES
 // ---------------------------------------------------------------------------
 
-app.use("/api/auth", authRoutes);
+app.use("/api/auth", authLimiter, authRoutes);
 
 // ---------------------------------------------------------------------------
 // PATIENTS
@@ -411,7 +451,7 @@ const evidenceEngine = require("./engines/evidence/evidence-engine");
 const narrativeEngine = require("./engines/narrative/narrative-engine");
 const presentationEngine = require("./engines/presentation/presentation-engine");
 const visualEngine = require("./engines/visual/visual-engine");
-app.use("/api/beau", beauRouter);
+app.use("/api/beau", beauLimiter, beauRouter);
 
 // Knowledge Engine search endpoint
 app.get("/api/beau/knowledge/search", (req, res) => {
