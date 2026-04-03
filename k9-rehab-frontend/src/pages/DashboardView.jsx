@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import api from "../api/axios";
 import {
-  FiFileText, FiCheckCircle, FiXCircle,
+  FiCheckCircle, FiXCircle,
   FiActivity, FiArrowRight
 } from "react-icons/fi";
 import { TbDog } from "react-icons/tb";
@@ -42,16 +42,8 @@ export default function DashboardView({ setView }) {
     );
   }
 
-  const PROTOCOLS = [
-    { name: "TPLO Post-Surgical", phases: 4, weeks: "16 wk", color: "#A32D2D", bg: "bg-red-50" },
-    { name: "IVDD Neuro Recovery", phases: 4, weeks: "12 wk", color: "#7C3AED", bg: "bg-purple-50" },
-    { name: "OA Multimodal", phases: 4, weeks: "16 wk", color: "#1D9E75", bg: "bg-emerald-50" },
-    { name: "Geriatric Mobility", phases: 4, weeks: "16 wk", color: "#BA7517", bg: "bg-amber-50" },
-  ];
-
   const STATS = [
     { label: "Active Patients", value: patients.length, icon: TbDog, color: "#1D9E75" },
-    { label: "Protocols Available", value: "4 Protocols", icon: FiFileText, color: "#7C3AED" },
     { label: "Exercise Library", value: exercises.length, icon: FiActivity, color: "#1A5F8A" },
     { label: "Unique Conditions", value: Object.keys(conditionCounts).length || "\u2014", icon: FiCheckCircle, color: "#BA7517" },
   ];
@@ -239,38 +231,6 @@ export default function DashboardView({ setView }) {
               ))}
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Protocol Engine */}
-      <div className="rounded-xl bg-white border p-5" style={{ borderColor: C.border }}>
-        <div className="flex items-center gap-2 text-sm font-bold mb-4" style={{ color: C.text }}>
-          <FiFileText size={14} style={{ color: C.teal }} />
-          ACVSMR-Aligned Protocol Engine — 4 Evidence-Based Pathways
-        </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          {PROTOCOLS.map((p, i) => (
-            <button
-              key={i}
-              onClick={() => setView("generator")}
-              className="text-left p-4 rounded-lg border transition-all hover:shadow-md"
-              style={{
-                borderColor: p.color + "33",
-                background: p.color + "08",
-              }}
-            >
-              <div className="flex items-center gap-2 mb-1.5">
-                <div
-                  className="w-2.5 h-2.5 rounded-full"
-                  style={{ background: p.color, boxShadow: `0 0 6px ${p.color}66` }}
-                />
-                <span className="text-xs font-bold" style={{ color: C.text }}>{p.name}</span>
-              </div>
-              <div className="text-[10px]" style={{ color: C.textLight }}>
-                {p.phases} Phases &middot; {p.weeks} &middot; Gated Progression
-              </div>
-            </button>
-          ))}
         </div>
       </div>
 
