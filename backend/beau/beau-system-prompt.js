@@ -126,6 +126,12 @@ All recommendations must be tailored to this patient's specific condition, stage
     parts.push(getDiagramInstructions());
   } catch {}
 
+  // Narrative engine instructions (Engine 4)
+  try {
+    const { getNarrativeInstructions } = require("../engines/narrative/narrative-engine");
+    parts.push(getNarrativeInstructions());
+  } catch {}
+
   // Exercise library reference (abbreviated — full list for validation)
   parts.push(EXERCISE_LIBRARY_HEADER + CURATED_EXERCISE_NAMES);
 

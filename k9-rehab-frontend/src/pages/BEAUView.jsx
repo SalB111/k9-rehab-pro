@@ -10,6 +10,7 @@ import { API } from "../api/axios";
 import { useToast } from "../components/Toast";
 
 const DiagramRenderer = lazy(() => import("../components/beau/DiagramRenderer"));
+const NarrativePanel = lazy(() => import("../components/beau/NarrativePanel"));
 
 // ─────────────────────────────────────────────
 // BEAU AI VIEW — B.E.A.U. - Biomedical Evidence-based Analytical Unit
@@ -441,61 +442,64 @@ useEffect(() => {
 }
 
 /**
- * Renders message content, splitting text and :::diagram{...}::: blocks.
- * Text parts render as HTML via renderMd, diagram blocks render as React components.
+ * Renders message content, splitting text and engine blocks (:::diagram, :::document).
+ * Text parts render as HTML via renderMd, engine blocks render as React components.
  */
 function MessageContent({ content, renderMd }) {
   if (!content) return null;
 
-  // Split content by :::diagram ... ::: markers
+  // Split content by :::type ... ::: markers (diagram, document, presentation, visual)
   const parts = [];
-  let remaining = content;
-  const diagramRegex = /:::diagram\s*([\s\S]*?):::/g;
+  const engineRegex = /:::(diagram|document|presentation|visual)\s*([\s\S]*?):::/g;
   let match;
   let lastIndex = 0;
 
-  while ((match = diagramRegex.exec(content)) !== null) {
-    // Text before the diagram
+  while ((match = engineRegex.exec(content)) !== null) {
     const textBefore = content.slice(lastIndex, match.index);
     if (textBefore.trim()) {
       parts.push({ type: "text", content: textBefore });
     }
 
-    // Parse diagram JSON
-    const jsonStr = match[1].trim();
+    const engineType = match[1];
+    const jsonStr = match[2].trim();
     try {
-      const diagram = JSON.parse(jsonStr);
-      parts.push({ type: "diagram", content: diagram });
+      const data = JSON.parse(jsonStr);
+      parts.push({ type: engineType, content: data });
     } catch {
-      // If JSON parse fails, render as code block
       parts.push({ type: "text", content: "```\n" + jsonStr + "\n```" });
     }
 
     lastIndex = match.index + match[0].length;
   }
 
-  // Remaining text after last diagram
   const textAfter = content.slice(lastIndex);
   if (textAfter.trim()) {
     parts.push({ type: "text", content: textAfter });
   }
 
-  // If no diagrams found, render as plain markdown
   if (parts.length === 0) {
     return <div dangerouslySetInnerHTML={{ __html: renderMd(content) }} />;
   }
 
   return (
     <div>
-      {parts.map((part, i) =>
-        part.type === "diagram" ? (
-          <Suspense key={i} fallback={<div style={{ padding: 12, fontSize: 12, color: "#6a737d" }}>Loading diagram...</div>}>
-            <DiagramRenderer diagram={part.content} />
-          </Suspense>
-        ) : (
-          <div key={i} dangerouslySetInnerHTML={{ __html: renderMd(part.content) }} />
-        )
-      )}
+      {parts.map((part, i) => {
+        if (part.type === "diagram") {
+          return (
+            <Suspense key={i} fallback={<div style={{ padding: 12, fontSize: 12, color: "#6a737d" }}>Loading diagram...</div>}>
+              <DiagramRenderer diagram={part.content} />
+            </Suspense>
+          );
+        }
+        if (part.type === "document") {
+          return (
+            <Suspense key={i} fallback={<div style={{ padding: 12, fontSize: 12, color: "#6a737d" }}>Loading document...</div>}>
+              <NarrativePanel document={part.content} />
+            </Suspense>
+          );
+        }
+        return <div key={i} dangerouslySetInnerHTML={{ __html: renderMd(part.content) }} />;
+      })}
     </div>
   );
 }

@@ -407,6 +407,7 @@ const beauRouter = require("./beau/beau-router");
 const { registerEngineHook } = require("./beau/beau-chat-handler");
 const knowledgeEngine = require("./engines/knowledge/knowledge-engine");
 const evidenceEngine = require("./engines/evidence/evidence-engine");
+const narrativeEngine = require("./engines/narrative/narrative-engine");
 app.use("/api/beau", beauRouter);
 
 // Knowledge Engine search endpoint
@@ -437,6 +438,26 @@ app.post("/api/beau/evidence/search", async (req, res) => {
 
 app.get("/api/beau/evidence/status", (req, res) => {
   res.json({ success: true, data: evidenceEngine.getStatus() });
+});
+
+// Narrative Engine endpoints
+app.post("/api/beau/narrative/generate", async (req, res) => {
+  try {
+    const { type, patient, instructions } = req.body;
+    if (!type) return res.status(400).json({ error: "Document type is required" });
+    const result = await narrativeEngine.generateDocument(type, patient, instructions);
+    res.json({ success: true, data: result });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/beau/narrative/templates", (req, res) => {
+  res.json({ success: true, data: narrativeEngine.getTemplateList() });
+});
+
+app.get("/api/beau/narrative/status", (req, res) => {
+  res.json({ success: true, data: narrativeEngine.getStatus() });
 });
 
 // ---------------------------------------------------------------------------
@@ -495,6 +516,9 @@ app.get("/api/pipeline/status", (req, res) => {
 
     // Register Evidence Engine hook (PubMed — triggered by research keywords)
     registerEngineHook("evidence", evidenceEngine.evidenceHook);
+
+    // Initialize Narrative Engine with Knowledge + Evidence references
+    narrativeEngine.initialize(knowledgeEngine, evidenceEngine);
 
     const existingAdmin = await db.findUserByUsername("admin");
     if (!existingAdmin) {
