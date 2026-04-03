@@ -26,28 +26,28 @@ app.use(helmet({
   contentSecurityPolicy: false, // Disabled for SPA compatibility
 }));
 
-// Rate limiting — general API (500 req/15min per IP)
+// Rate limiting — general API (1000 req/15min per IP — maxed for production)
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 500,
+  max: 1000,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: "Too many requests, please try again later" },
 });
 
-// Rate limiting — auth endpoints (10 req/15min per IP)
+// Rate limiting — auth endpoints (100 req/15min per IP — generous for demos)
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
+  max: 100,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: "Too many login attempts, please try again later" },
 });
 
-// Rate limiting — B.E.A.U. chat (500 req/15min per IP — high for LEAP demos)
+// Rate limiting — B.E.A.U. chat (1000 req/15min per IP — maxed for LEAP)
 const beauLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 500,
+  max: 1000,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: "Chat rate limit reached, please wait a moment" },
