@@ -232,7 +232,7 @@ CRITICAL RULES FOR THIS CONVERSATION:
           <div className="flex items-center gap-3 mb-6">
             <span className="text-3xl">🐾</span>
             <div>
-              <h1 className="text-xl font-bold text-navy">Tell us about your dog</h1>
+              <h1 className="text-xl font-bold text-navy">Tell us about your {pet.species === "feline" ? "cat" : "dog"}</h1>
               <p className="text-sm text-text-light">This helps B.E.A.U. recommend safe exercises</p>
             </div>
           </div>
