@@ -1,6 +1,31 @@
 import { useState, useRef, useEffect } from "react";
 
-const API = "https://k9-rehab-pro-production.up.railway.app/api";
+const API = import.meta.env.VITE_API_URL || "https://k9-rehab-pro-production.up.railway.app/api";
+
+// ── Breed lists ──
+const CANINE_BREEDS = [
+  "Akita","Australian Cattle Dog","Australian Shepherd","Basset Hound","Beagle",
+  "Belgian Malinois","Bernese Mountain Dog","Bichon Frise","Bloodhound","Border Collie",
+  "Boston Terrier","Boxer","Brittany","Bulldog","Cane Corso",
+  "Cavalier King Charles Spaniel","Chesapeake Bay Retriever","Chihuahua","Cocker Spaniel","Collie",
+  "Dachshund","Doberman Pinscher","English Springer Spaniel","French Bulldog",
+  "German Shepherd","German Shorthaired Pointer","Golden Retriever","Great Dane","Greyhound",
+  "Havanese","Irish Setter","Jack Russell Terrier","Labrador Retriever","Maltese",
+  "Mastiff","Miniature American Shepherd","Miniature Schnauzer","Newfoundland",
+  "Pembroke Welsh Corgi","Pit Bull Terrier","Pomeranian","Poodle (Miniature)","Poodle (Standard)",
+  "Rhodesian Ridgeback","Rottweiler","Saint Bernard","Shetland Sheepdog","Shih Tzu",
+  "Siberian Husky","Staffordshire Bull Terrier","Vizsla","Weimaraner",
+  "West Highland White Terrier","Yorkshire Terrier","Mixed Breed / Other",
+];
+
+const FELINE_BREEDS = [
+  "Abyssinian","American Shorthair","Bengal","Birman","British Shorthair","Burmese",
+  "Chartreux","Devon Rex","Egyptian Mau","Himalayan","Maine Coon","Manx",
+  "Norwegian Forest Cat","Ocicat","Persian","Ragdoll","Russian Blue","Scottish Fold",
+  "Siamese","Siberian","Sphynx","Tonkinese","Turkish Angora","Turkish Van",
+  "Domestic Shorthair (DSH)","Domestic Longhair (DLH)","Domestic Medium Hair (DMH)",
+  "Mixed Breed / Other",
+];
 
 // ── Household equipment options ──
 const HOME_EQUIPMENT = [
@@ -243,8 +268,13 @@ CRITICAL RULES FOR THIS CONVERSATION:
               </div>
               <div>
                 <label className="block text-xs font-bold text-navy/70 uppercase tracking-wider mb-1">Breed</label>
-                <input className="w-full px-3 py-2.5 rounded-lg border border-border bg-bg text-sm focus:outline-none focus:ring-2 focus:ring-teal/30 focus:border-teal"
-                  value={pet.breed} onChange={e => setPet({ ...pet, breed: e.target.value })} placeholder="e.g. Golden Retriever" />
+                <select className="w-full px-3 py-2.5 rounded-lg border border-border bg-bg text-sm focus:outline-none focus:ring-2 focus:ring-teal/30 focus:border-teal"
+                  value={pet.breed} onChange={e => setPet({ ...pet, breed: e.target.value })}>
+                  <option value="">Select breed...</option>
+                  {(pet.species === "feline" ? FELINE_BREEDS : CANINE_BREEDS).map(b => (
+                    <option key={b} value={b}>{b}</option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="block text-xs font-bold text-navy/70 uppercase tracking-wider mb-1">Age (years)</label>
