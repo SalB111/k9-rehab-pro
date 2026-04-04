@@ -22,7 +22,7 @@ export default function ClinicalFooter({ variant = "card" }) {
       }}>
         <span>K9 Rehab Pro™ · Clinical Decision-Support System · ACVSMR-Aligned Methodology</span>
         <span style={{ color: "rgba(255,255,255,0.4)" }}>
-          260 Exercises · 4 Protocols × 4 Phases · Millis & Levine
+          Evidence-Based Exercise Library · ACVSMR-Aligned Protocols · Millis & Levine
         </span>
       </div>
     );

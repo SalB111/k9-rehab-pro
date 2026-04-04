@@ -5,7 +5,10 @@ const db = require("./db-providers/sqlite-provider");
 
 const router = express.Router();
 
-const JWT_SECRET = process.env.JWT_SECRET || "k9-rehab-pro-dev-secret-change-in-production";
+if (!process.env.JWT_SECRET) {
+  console.error("CRITICAL: JWT_SECRET environment variable is not set. Authentication will fail.");
+}
+const JWT_SECRET = process.env.JWT_SECRET || require("crypto").randomBytes(64).toString("hex");
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "24h";
 
 // ---------------------------------------------------------------------------
