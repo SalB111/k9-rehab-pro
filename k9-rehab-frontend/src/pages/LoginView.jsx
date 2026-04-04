@@ -6,12 +6,15 @@ export default function LoginView({ onLogin, onRegister }) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [mode, setMode] = useState("login"); // "login" or "register"
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
+    if (!username.trim() || !password.trim()) { setError("Username and password required"); return; }
+    if (mode === "register" && password.length < 6) { setError("Password must be at least 6 characters"); return; }
     setLoading(true);
-    const res = await onLogin(username, password);
+    const res = mode === "register" ? await onRegister(username, password) : await onLogin(username, password);
     if (!res.success) {
       setError(res.message);
       setLoading(false);
@@ -79,8 +82,8 @@ export default function LoginView({ onLogin, onRegister }) {
         </div>
 
         <div className="w-full max-w-sm">
-          <h2 className="text-2xl font-bold text-[#0C2340] mb-1">Welcome back</h2>
-          <p className="text-sm text-[#7AAACF] mb-8">Sign in to your clinical workspace</p>
+          <h2 className="text-2xl font-bold text-[#0C2340] mb-1">{mode === "register" ? "Create Account" : "Welcome back"}</h2>
+          <p className="text-sm text-[#7AAACF] mb-8">{mode === "register" ? "Register for clinical access" : "Sign in to your clinical workspace"}</p>
 
           {error && (
             <div className="mb-4 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
@@ -144,19 +147,27 @@ export default function LoginView({ onLogin, onRegister }) {
                   Authenticating...
                 </span>
               ) : (
-                "Sign In"
+                mode === "register" ? "Create Account" : "Sign In"
               )}
             </button>
           </form>
 
           <div className="mt-6 text-center">
-            <span className="text-sm text-[#7AAACF]">Need an account? </span>
-            <button
-              onClick={onRegister}
-              className="text-sm font-semibold text-[#1D9E75] hover:text-[#0F6E56] transition-colors"
-            >
-              Contact Administrator
-            </button>
+            {mode === "login" ? (
+              <>
+                <span className="text-sm text-[#7AAACF]">Need an account? </span>
+                <button onClick={() => { setMode("register"); setError(""); }} className="text-sm font-semibold text-[#1D9E75] hover:text-[#0F6E56] transition-colors">
+                  Create Account
+                </button>
+              </>
+            ) : (
+              <>
+                <span className="text-sm text-[#7AAACF]">Already have an account? </span>
+                <button onClick={() => { setMode("login"); setError(""); }} className="text-sm font-semibold text-[#0EA5E9] hover:text-[#0B8ACB] transition-colors">
+                  Sign In
+                </button>
+              </>
+            )}
           </div>
 
           {/* B.E.A.U. badge */}

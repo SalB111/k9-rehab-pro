@@ -22,7 +22,7 @@ export default function App() {
   const [authToken, setAuthToken] = useState(localStorage.getItem("token"));
   const [currentUser, setCurrentUser] = useState({ username: "Clinician", role: "clinician", id: 1 });
   const [view, setView] = useState("clients");
-  const [showSplash, setShowSplash] = useState(!localStorage.getItem("token"));
+  const [showSplash, setShowSplash] = useState(true); // Always show splash on app load
   const [genKey, setGenKey] = useState(0);
   const [genInitialStep, setGenInitialStep] = useState(1);
   const [brand, setBrand] = useState({ clinicName: "K9 Rehab Pro", accent: "#0F4C81" });
@@ -56,8 +56,15 @@ export default function App() {
     setView("clients");
   }
 
-  function handleRegister() {
-    alert("Contact your administrator to create an account.");
+  async function handleRegister(username, password) {
+    try {
+      const { register } = await import("./services/authService");
+      await register(username, password);
+      // Auto-login after registration
+      return await handleLogin(username, password);
+    } catch (err) {
+      return { success: false, message: err.response?.data?.error || "Registration failed" };
+    }
   }
 
 
@@ -123,8 +130,8 @@ export default function App() {
     }
   }
 
-  // Splash screen — cinematic intro before login
-  if (showSplash && !authToken) {
+  // Splash screen — always plays on app load, then transitions
+  if (showSplash) {
     return <WelcomeSplash onEnter={() => setShowSplash(false)} />;
   }
 
