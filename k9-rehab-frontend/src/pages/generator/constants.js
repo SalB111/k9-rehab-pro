@@ -116,7 +116,8 @@ export const REGIONS = [
   "Left Elbow", "Right Elbow", "Left Shoulder", "Right Shoulder",
   "Left Carpus", "Right Carpus", "Left Tarsus/Hock", "Right Tarsus/Hock",
   "Cervical Spine", "Thoracolumbar Spine", "Lumbosacral Spine",
-  "Multiple Joints", "Generalized"
+  "Multiple Joints", "Generalized",
+  "No Affected Area — General Conditioning"
 ];
 
 export const FELINE_BREEDS = [
@@ -252,7 +253,8 @@ export const WIZARD_STEPS = [
   { num: 2, label: "Assessment" },
   { num: 3, label: "Treatment" },
   { num: 4, label: "Goals" },
-  { num: 5, label: "Generate" },
+  { num: 5, label: "Protocol" },
+  { num: 6, label: "Review & Generate" },
 ];
 
 export const NEURO_DIAGNOSES = [

@@ -1,9 +1,9 @@
 import React from "react";
-import { FiCalendar, FiAlertTriangle, FiCheckCircle, FiActivity, FiHome, FiSettings, FiShield } from "react-icons/fi";
+import { FiCalendar, FiActivity, FiHome, FiSettings } from "react-icons/fi";
 import C from "../../constants/colors";
 import S from "../../constants/styles";
 import SectionHead from "./SectionHead";
-import { CONDITIONS, FELINE_DIAGNOSES } from "./constants";
+import StepNavButtons from "./StepNavButtons";
 
 // ── Reusable Section wrapper ──
 function Section({ title, subtitle, icon: Icon, color, children, badge }) {
@@ -48,29 +48,7 @@ function CheckGroup({ items, form, setField, columns = 3 }) {
   );
 }
 
-export default function Step5ProtocolParams({ form, setField, generate, allExercises, complianceAgreed, setComplianceAgreed, complianceOpen, setComplianceOpen, error, goToStep, loading }) {
-
-  // Count exercises matching condition
-  const totalExercises = allExercises.length;
-  const diagLabel = (() => {
-    for (const [, items] of Object.entries(CONDITIONS)) {
-      const found = items.find(c => c.value === form.diagnosis);
-      if (found) return found.label;
-    }
-    for (const [, items] of Object.entries(FELINE_DIAGNOSES)) {
-      const found = items.find(c => c.value === form.diagnosis);
-      if (found) return found.label;
-    }
-    return form.diagnosis || "Not selected";
-  })();
-
-  // Missing fields check
-  const missing = [];
-  if (!form.patientName?.trim()) missing.push("Patient Name");
-  if (!form.diagnosis) missing.push("Diagnosis");
-  if (!form.affectedRegion) missing.push("Affected Region");
-  if (!form.treatmentApproach) missing.push("Treatment Approach");
-
+export default function Step5ProtocolParams({ form, setField, goToStep }) {
   return (
     <>
       <div style={{ marginBottom: 20 }}>
@@ -185,119 +163,13 @@ export default function Step5ProtocolParams({ form, setField, generate, allExerc
           placeholder="e.g. Fearful of water — avoid aquatic initially. Aggressive with handling — needs muzzle for manual therapy." />
       </Section>
 
-      {/* ═══ 5. PRE-PROTOCOL SUMMARY (compact) ═══ */}
-      <Section title="Pre-Protocol Summary" subtitle="Review before generating" icon={FiCheckCircle} color="#1D9E75">
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 14 }}>
-          <div style={{ padding: "10px 14px", borderRadius: 8, background: C.bg, border: `1px solid ${C.border}` }}>
-            <div style={{ fontSize: 10, color: C.textLight, fontWeight: 600, textTransform: "uppercase" }}>Patient</div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: C.text, marginTop: 2 }}>{form.patientName || "—"}</div>
-            <div style={{ fontSize: 11, color: C.textLight }}>{form.species || "Canine"} · {form.breed || "—"} · {form.age ? `${form.age} yr` : "—"}</div>
-          </div>
-          <div style={{ padding: "10px 14px", borderRadius: 8, background: C.bg, border: `1px solid ${C.border}` }}>
-            <div style={{ fontSize: 10, color: C.textLight, fontWeight: 600, textTransform: "uppercase" }}>Diagnosis</div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginTop: 2 }}>{diagLabel}</div>
-            <div style={{ fontSize: 11, color: C.textLight }}>{form.affectedRegion || "—"}</div>
-          </div>
-          <div style={{ padding: "10px 14px", borderRadius: 8, background: C.bg, border: `1px solid ${C.border}` }}>
-            <div style={{ fontSize: 10, color: C.textLight, fontWeight: 600, textTransform: "uppercase" }}>Protocol</div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: C.text, marginTop: 2 }}>{form.protocolLength || "8"} weeks · {form.sessionFrequency || "2"}x/week</div>
-            <div style={{ fontSize: 11, color: C.textLight }}>{form.treatmentApproach ? form.treatmentApproach.charAt(0).toUpperCase() + form.treatmentApproach.slice(1) : "—"} · {form.homeExerciseProgram ? "HEP Included" : "No HEP"}</div>
-          </div>
-        </div>
-
-        {/* Exercise count */}
-        <div style={{ fontSize: 12, color: C.textLight, marginBottom: 10 }}>
-          Exercise Library: <strong style={{ color: C.teal }}>{totalExercises}</strong> exercises available
-        </div>
-
-        {/* Missing fields warning */}
-        {missing.length > 0 && (
-          <div style={{ padding: "10px 14px", borderRadius: 8, background: `${C.amber}08`, border: `1px solid ${C.amber}30`, display: "flex", alignItems: "center", gap: 8 }}>
-            <FiAlertTriangle size={14} style={{ color: C.amber, flexShrink: 0 }} />
-            <span style={{ fontSize: 12, color: C.amber, fontWeight: 600 }}>Missing: {missing.join(", ")}</span>
-          </div>
-        )}
-      </Section>
-
-      {/* ═══ 6. COMPLIANCE NOTICE ═══ */}
-      <div style={{ background: C.surface, borderRadius: 12, padding: "16px 24px", marginBottom: 16, border: `1px solid ${C.border}` }}>
-        <label style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer" }}>
-          <input type="checkbox" checked={complianceAgreed} onChange={e => setComplianceAgreed(e.target.checked)}
-            style={{ accentColor: C.teal, width: 18, height: 18, cursor: "pointer", marginTop: 2, flexShrink: 0 }} />
-          <div>
-            <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>
-              I acknowledge the{" "}
-              <span onClick={e => { e.preventDefault(); setComplianceOpen(o => !o); }}
-                style={{ color: C.teal, textDecoration: "underline", cursor: "pointer" }}>
-                K9 Rehab Pro — Compliance & Data Protection Notice
-              </span>
-            </span>
-            <div style={{ fontSize: 10, color: C.textLight, marginTop: 4 }}>
-              Clinical Decision-Support System (CDSS). Does not establish VCPR. All protocols require licensed veterinarian review.
-            </div>
-          </div>
-        </label>
-        {complianceOpen && (
-          <div style={{ marginTop: 12, padding: "14px 16px", background: C.bg, borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 11, color: C.text, lineHeight: 1.7, maxHeight: 200, overflowY: "auto" }}>
-            <p><strong>1. CDSS Classification:</strong> K9 Rehab Pro is a Clinical Decision-Support System. It does not diagnose, prescribe, or replace veterinary judgment.</p>
-            <p><strong>2. Veterinary Oversight:</strong> All generated protocols must be reviewed and approved by a licensed veterinarian before clinical application.</p>
-            <p><strong>3. Data Privacy:</strong> Patient data is stored within your deployment. B.E.A.U. AI queries are processed via Anthropic API — no patient-identifying data is shared. No data is sold or used for advertising.</p>
-            <p><strong>4. Evidence Standards:</strong> Protocols follow Millis & Levine, ACVSMR, and peer-reviewed veterinary literature. Every exercise is evidence-based and safety-screened.</p>
-            <p style={{ marginTop: 8, fontStyle: "italic", color: C.textLight }}>&copy; 2025-2026 Salvatore Bonanno. All rights reserved.</p>
-          </div>
-        )}
-      </div>
-
-      {/* ═══ 7. GENERATE BUTTON ═══ */}
-      <div style={{ display: "flex", justifyContent: "center", padding: "12px 0 8px" }}>
-        <button
-          style={{
-            display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 10,
-            padding: "18px 56px", borderRadius: 12, border: `2px solid ${C.green}`,
-            fontSize: 16, fontWeight: 800, letterSpacing: "0.5px", cursor: complianceAgreed && missing.length === 0 ? "pointer" : "not-allowed",
-            background: complianceAgreed && missing.length === 0
-              ? `linear-gradient(135deg, ${C.green} 0%, #34D399 100%)`
-              : C.border,
-            color: complianceAgreed && missing.length === 0 ? "#fff" : C.textLight,
-            boxShadow: complianceAgreed && missing.length === 0
-              ? "0 0 20px rgba(16,185,129,0.5), 0 0 40px rgba(16,185,129,0.3), 0 0 60px rgba(16,185,129,0.15)"
-              : "none",
-            transition: "all 0.3s ease",
-            opacity: complianceAgreed && missing.length === 0 ? 1 : 0.5,
-          }}
-          onMouseEnter={e => {
-            if (complianceAgreed && missing.length === 0) {
-              e.currentTarget.style.boxShadow = "0 0 30px rgba(16,185,129,0.7), 0 0 60px rgba(16,185,129,0.4), 0 0 90px rgba(16,185,129,0.2)";
-              e.currentTarget.style.transform = "translateY(-2px)";
-            }
-          }}
-          onMouseLeave={e => {
-            if (complianceAgreed && missing.length === 0) {
-              e.currentTarget.style.boxShadow = "0 0 20px rgba(16,185,129,0.5), 0 0 40px rgba(16,185,129,0.3), 0 0 60px rgba(16,185,129,0.15)";
-              e.currentTarget.style.transform = "translateY(0)";
-            }
-          }}
-          onClick={generate}
-          disabled={loading || !complianceAgreed || missing.length > 0}
-        >
-          <FiActivity size={18} />
-          {loading ? "Generating Protocol..." : "Generate Exercise Protocol"}
-        </button>
-      </div>
-
-      {/* Back button */}
-      <div style={{ display: "flex", justifyContent: "flex-start", padding: "8px 0" }}>
-        <button style={S.btn("ghost")} onClick={() => goToStep(4)}>
-          ← Back to Rehab Goals
-        </button>
-      </div>
-
-      {/* Error */}
-      {error && (
-        <div style={{ background: `${C.red}08`, border: `2px solid ${C.red}40`, borderRadius: 8, padding: "12px 16px", display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
-          <FiAlertTriangle size={16} style={{ color: C.red }} /> <span style={{ fontSize: 13, fontWeight: 600, color: C.red }}>{error}</span>
-        </div>
-      )}
+      {/* Navigation */}
+      <StepNavButtons
+        onBack={() => goToStep(4)}
+        backLabel="← Back to Rehab Goals"
+        onNext={() => goToStep(6)}
+        nextLabel="Next: Review & Generate →"
+      />
     </>
   );
 }
