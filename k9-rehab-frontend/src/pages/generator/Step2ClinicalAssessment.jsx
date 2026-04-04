@@ -115,7 +115,7 @@ export default function Step2ClinicalAssessment({ form, setField, goToStep }) {
               <optgroup label="Hind Limb">{REGIONS.filter(r => r.includes("Stifle") || r.includes("Hip") || r.includes("Tarsus")).map(r => <option key={r}>{r}</option>)}</optgroup>
               <optgroup label="Forelimb">{REGIONS.filter(r => r.includes("Elbow") || r.includes("Shoulder") || r.includes("Carpus")).map(r => <option key={r}>{r}</option>)}</optgroup>
               <optgroup label="Spine">{REGIONS.filter(r => r.includes("Spine")).map(r => <option key={r}>{r}</option>)}</optgroup>
-              <optgroup label="Other">{REGIONS.filter(r => r === "Multiple Joints" || r === "Generalized").map(r => <option key={r}>{r}</option>)}</optgroup>
+              <optgroup label="Other">{REGIONS.filter(r => r === "Multiple Joints" || r === "Generalized" || r.includes("No Affected")).map(r => <option key={r}>{r}</option>)}</optgroup>
             </select>
           </div>
         </div>

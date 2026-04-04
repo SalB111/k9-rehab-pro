@@ -12,6 +12,7 @@ import Step2ClinicalAssessment from "./generator/Step2ClinicalAssessment";
 import Step3TreatmentPlan from "./generator/Step3TreatmentPlan";
 import Step4RehabGoals from "./generator/Step4RehabGoals";
 import Step5ProtocolParams from "./generator/Step5ProtocolParams";
+import Step6PreProtocolSummary from "./generator/Step6PreProtocolSummary";
 import ProtocolResults from "./generator/ProtocolResults";
 import AddExerciseModal from "./generator/AddExerciseModal";
 
@@ -208,11 +209,16 @@ export default function GeneratorView({ initialStep }) {
 
       {!protocol && wizardStep === 5 && (
         <Step5ProtocolParams
-          form={form} setField={setField} generate={generate}
-          allExercises={allExercises} loading={loading}
+          form={form} setField={setField} goToStep={goToStep}
+        />
+      )}
+
+      {!protocol && wizardStep === 6 && (
+        <Step6PreProtocolSummary
+          form={form} allExercises={allExercises}
           complianceAgreed={complianceAgreed} setComplianceAgreed={setComplianceAgreed}
           complianceOpen={complianceOpen} setComplianceOpen={setComplianceOpen}
-          error={error} goToStep={goToStep}
+          generate={generate} error={error} goToStep={goToStep} loading={loading}
         />
       )}
 
