@@ -4,7 +4,7 @@
 
 Built on ACVSMR diplomate methodology and Millis & Levine textbook standards by a canine rehabilitation nurse with 30+ years of clinical experience.
 
-**4 Conditions | 16 Phases | 52 Protocol Exercises | 260 Exercise Library | 524 Evidence Mappings | Full Modality Integration**
+**ACVSMR-Aligned Protocols | Phase-Gated Progression | Comprehensive Exercise Library | Evidence-Based | Full Modality Integration**
 
 ---
 

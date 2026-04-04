@@ -216,8 +216,8 @@ export default function DashboardView({ setView }) {
               {[
                 { label: "Backend API", ok: apiOk, detail: apiOk ? "Connected" : "Offline" },
                 { label: "Exercise Library", ok: exercises.length > 0, detail: `${exercises.length} active` },
-                { label: "Protocol Engine", ok: true, detail: "4 protocols" },
-                { label: "Phase System", ok: true, detail: "4 phases each" },
+                { label: "Protocol Engine", ok: true, detail: "Active" },
+                { label: "Phase System", ok: true, detail: "Gated progression" },
               ].map((item, i) => (
                 <div key={i} className="flex justify-between items-center">
                   <span className="text-xs font-semibold" style={{ color: C.textMid }}>{item.label}</span>

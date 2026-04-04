@@ -76,7 +76,7 @@ export function TabDataManagement({ isOpen, toggleSection }) {
             background: "rgba(245,158,11,0.1)", border: `1px solid rgba(245,158,11,0.3)`,
           }}>
             <div style={{ fontSize: 10, fontWeight: 700, color: C.amber, textTransform: "uppercase", letterSpacing: "0.5px" }}>Protocol Engine</div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: C.amber, marginTop: 4 }}>4 Protocols x 4 Phases</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: C.amber, marginTop: 4 }}>ACVSMR-Aligned · Gated Progression</div>
           </div>
         </div>
       </SettingsSection>
