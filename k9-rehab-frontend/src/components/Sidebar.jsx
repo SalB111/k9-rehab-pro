@@ -104,15 +104,19 @@ export default function Sidebar({ view, setView, currentUser, onLogout }) {
             )}
             <button
               onClick={onLogout}
-              title="Sign out"
+              title="Save session & return to login — another clinician can sign in"
               className={`
-                flex items-center gap-2 text-[11px] text-[#7AAACF]
-                hover:text-red-400 transition-colors mt-1.5
-                ${collapsed ? "mx-auto" : ""}
+                flex items-center gap-2 text-[11px] font-semibold
+                px-3 py-2 rounded-lg w-full
+                bg-gradient-to-r from-[#0EA5E9]/10 to-[#1D9E75]/10
+                border border-[#0EA5E9]/20
+                text-[#0EA5E9] hover:text-white hover:from-[#0EA5E9]/20 hover:to-[#1D9E75]/20
+                transition-all duration-200 mt-2
+                ${collapsed ? "justify-center px-2" : ""}
               `}
             >
               <FiLogOut className="w-3.5 h-3.5" />
-              {!collapsed && <span>Sign Out</span>}
+              {!collapsed && <span>Save & Exit</span>}
             </button>
           </div>
         )}
