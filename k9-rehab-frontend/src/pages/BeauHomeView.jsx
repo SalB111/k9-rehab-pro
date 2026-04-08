@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 
 // ─── Constants ──────────────────────────────────────────────────────────────
-const API_URL = "/api/chat-home";
+const API_URL = `${import.meta.env.VITE_API_URL}/chat-home`;
 
 const SIDEBAR_TABS = [
   { key: "plan", label: "Plan", icon: "📋" },
