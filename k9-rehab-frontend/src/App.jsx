@@ -17,6 +17,7 @@ const ClientsView = lazy(() => import("./pages/ClientsView"));
 const PatientDetailView = lazy(() => import("./pages/PatientDetailView"));
 const ExerciseVisualDemo = lazy(() => import("./components/ExerciseVisualDemo"));
 const DocsView = lazy(() => import("./pages/DocsView"));
+import BeauHomeView from './pages/BeauHomeView';
 
 export default function App() {
   const [authToken, setAuthToken] = useState(localStorage.getItem("token"));
@@ -103,6 +104,8 @@ export default function App() {
         return <SessionsView setView={setView} />;
       case "beau":
         return <BEAUView authToken={authToken} setView={setView} />;
+      case "beau-home":
+        return <BeauHomeView setView={setView} />;
       case "settings":
         return <SettingsView brand={brand} setBrand={setBrand} setView={setView} />;
       case "about":
