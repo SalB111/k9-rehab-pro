@@ -22,8 +22,14 @@ import BeauHomeView from './pages/BeauHomeView';
 export default function App() {
   const [authToken, setAuthToken] = useState(localStorage.getItem("token"));
   const [currentUser, setCurrentUser] = useState({ username: "Clinician", role: "clinician", id: 1 });
-  const [view, setView] = useState("clients");
-  const [showSplash, setShowSplash] = useState(true); // Always show splash on app load
+  // Default to beau-home if URL has ?home or hostname contains beauaihome
+  const isBeauHome = () => {
+    const params = new URLSearchParams(window.location.search);
+    const host = window.location.hostname.toLowerCase();
+    return params.has("home") || host.includes("beauaihome");
+  };
+  const [view, setView] = useState(() => isBeauHome() ? "beau-home" : "clients");
+  const [showSplash, setShowSplash] = useState(() => !isBeauHome()); // Skip splash for beau-home
   const [genKey, setGenKey] = useState(0);
   const [genInitialStep, setGenInitialStep] = useState(1);
   const [brand, setBrand] = useState({ clinicName: "K9 Rehab Pro", accent: "#0F4C81" });
@@ -131,6 +137,15 @@ export default function App() {
       default:
         return <ClientsView setView={setView} setSelectedPatient={setSelectedPatient} />;
     }
+  }
+
+  // B.E.A.U. Home — public, bypasses splash and auth entirely
+  if (view === "beau-home") {
+    return (
+      <ToastProvider>
+        <BeauHomeView setView={setView} />
+      </ToastProvider>
+    );
   }
 
   // Splash screen — always plays on app load, then transitions
