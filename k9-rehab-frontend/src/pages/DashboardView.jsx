@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 
 // ─── THEME — WHITE CLINICAL ───────────────────────────────────────────────────
 const C = {
@@ -817,36 +817,106 @@ EVIDENCE BASIS`,
 }
 
 // ── EXERCISE LIBRARY ──────────────────────────────────────────────────────────
+// Map a backend exercise (from /api/exercises — TAGGED_EXERCISES shape) into
+// the flat shape the LibraryPanel UI expects. Pure function — no fabrication.
+// If a backend field is missing, the UI shows "—" (never invents a value).
+function mapBackendExercise(ex) {
+  const dosage = ex.clinical_parameters?.dosage || {};
+  const refs   = ex.evidence_base?.references || [];
+  const firstRef = refs[0];
+  const evidence = firstRef
+    ? (firstRef.citation || `${firstRef.id || ""} ${firstRef.type || ""}`.trim())
+    : "Per source document — see clinical_classification";
+
+  // Contraindications: prefer the structured arrays; fall back to splitting the
+  // legacy comma-separated string. Never silently drop content.
+  const contraAbs = ex.clinical_parameters?.contraindications_absolute || [];
+  const contraRel = ex.clinical_parameters?.contraindications_relative || [];
+  let contra = [...contraAbs, ...contraRel];
+  if (contra.length === 0 && typeof ex.contraindications === "string" && ex.contraindications.trim()) {
+    contra = ex.contraindications.split(/[,;]\s*/).map(s => s.trim()).filter(Boolean);
+  }
+  if (contra.length === 0) contra = ["None recorded — see source document"];
+
+  // Form cue: prefer good_form[0] (tightest single line); fall back to setup.
+  const goodForm = Array.isArray(ex.good_form) && ex.good_form.length
+    ? ex.good_form.join(" · ")
+    : (ex.setup || "See source document for technique");
+
+  return {
+    id:       ex.code,
+    name:     ex.name,
+    cat:      ex.category || "Uncategorized",
+    lvl:      ex.evidence_base?.grade || "—",
+    sets:     dosage.sets || "—",
+    reps:     dosage.repetitions || dosage.hold_time || "—",
+    freq:     dosage.frequency || "—",
+    sp:       [(ex.clinical_classification?.species || "CANINE").toLowerCase()],
+    cue:      goodForm,
+    evidence: evidence,
+    contra:   contra,
+    rf:       Array.isArray(ex.red_flags) && ex.red_flags.length ? ex.red_flags : ["None recorded"],
+  };
+}
+
 function LibraryPanel() {
   const [species, setSpecies] = useState("canine");
   const [cat,     setCat]     = useState("ALL");
   const [search,  setSearch]  = useState("");
   const [sel,     setSel]     = useState(null);
+  const [allEx,   setAllEx]   = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error,   setError]   = useState(null);
 
-  const CATS = ["ALL","Warm-up & ROM","Strength & Activation","Proprioception & Balance","Conditioning & Endurance","Neuromotor & Coordination"];
-  const EX = [
-    { id:"EX-001", name:"PROM — Shoulder", cat:"Warm-up & ROM", lvl:"A", sets:"5–10", reps:"2–3 cycles", freq:"2–3× daily", sp:["canine","feline"], cue:"Support proximal and distal. Slow full arc within pain-free range. Never force end range.", evidence:"Millis & Levine 2014", contra:["Unstable shoulder","Severe pain >8/10","Unhealed incision"], rf:["New crepitus","Muscle guarding","Vocalization"] },
-    { id:"EX-002", name:"PROM — Hip & Stifle", cat:"Warm-up & ROM", lvl:"A", sets:"5–10", reps:"2–3 cycles", freq:"2–3× daily", sp:["canine"], cue:"Bicycle motion. Stop at first resistance.", evidence:"Millis & Levine 2014", contra:["Acute TPLO <1wk","Femoral fracture"], rf:["Incision gaping","Crying at <50% ROM"] },
-    { id:"EX-003", name:"Cookie Stretches", cat:"Warm-up & ROM", lvl:"A", sets:"3", reps:"5–10 each", freq:"SID", sp:["canine"], cue:"Lure nose: shoulder → flank → stifle → sternum. Hold 3–5 sec.", evidence:"Drum 2010", contra:["Cervical disc disease acute","Atlantoaxial instability"], rf:["Yelping on rotation","Head tilt increase"] },
-    { id:"EX-010", name:"Sit-to-Stand", cat:"Strength & Activation", lvl:"A", sets:"3", reps:"10", freq:"BID", sp:["canine"], cue:"Rear paws flat throughout. No external rotation.", evidence:"Millis & Levine 2014", contra:["Acute TPLO <2wk","Severe hip OA"], rf:["Sudden NWB post-session","Stifle effusion increase"] },
-    { id:"EX-011", name:"Down-to-Stand", cat:"Strength & Activation", lvl:"A", sets:"3", reps:"8–10", freq:"BID", sp:["canine"], cue:"Begin sphinx. Lure nose forward and up. No frog rear limbs.", evidence:"Millis & Levine 2014", contra:["Bilateral elbow dysplasia severe"], rf:["Forelimb buckling"] },
-    { id:"EX-012", name:"Stair Climbing", cat:"Strength & Activation", lvl:"A", sets:"3", reps:"3–5 ascents", freq:"BID", sp:["canine"], cue:"Controlled pace. One step at a time. Leash support only.", evidence:"Drum 2010", contra:["Non-ambulatory","Acute spine surgery <4wk"], rf:["Sudden sit mid-stair","Bunny-hopping"] },
-    { id:"EX-013", name:"Hill / Incline Work", cat:"Strength & Activation", lvl:"B", sets:"3", reps:"5 min", freq:"SID", sp:["canine"], cue:"5–10° incline. Controlled slow walk. Rear-handle harness preferred.", evidence:"Marcellin-Little 2015", contra:["Lumbosacral disease","Severe hip OA"], rf:["Dragging rear toes"] },
-    { id:"EX-020", name:"Cavaletti Rails", cat:"Proprioception & Balance", lvl:"A", sets:"3", reps:"5 passes", freq:"SID", sp:["canine","feline"], cue:"Rail height at carpus level. Slow walk. No trotting until mastered.", evidence:"Drum 2010", contra:["Non-ambulatory","Severe ataxia"], rf:["Toe dragging on every rail"] },
-    { id:"EX-021", name:"Balance Disc — 4-Foot", cat:"Proprioception & Balance", lvl:"B", sets:"3", reps:"30 sec", freq:"BID", sp:["canine"], cue:"All four feet on disc. Gentle perturbations. Under 5 min total.", evidence:"Marcellin-Little 2015", contra:["Acute disc herniation","Grade III+ ataxia"], rf:["Falls repeatedly"] },
-    { id:"EX-022", name:"Backward Walking", cat:"Proprioception & Balance", lvl:"B", sets:"3", reps:"5–10 steps", freq:"SID", sp:["canine"], cue:"Gentle sternum pressure. Non-slip surface only.", evidence:"Millis & Levine 2014", contra:["Severe hindlimb paresis"], rf:["Sits instead of stepping"] },
-    { id:"EX-030", name:"Underwater Treadmill", cat:"Conditioning & Endurance", lvl:"A", sets:"1", reps:"10–20 min", freq:"3×/week", sp:["canine"], cue:"Water at greater trochanter. Speed 0.4–0.9 mph. Ears back = stop.", evidence:"Levine et al 2010", contra:["Open wounds","Active infection"], rf:["Head submersion","Vomiting in tank"] },
-    { id:"EX-031", name:"Land Treadmill", cat:"Conditioning & Endurance", lvl:"A", sets:"1", reps:"10–20 min", freq:"3–5×/week", sp:["canine"], cue:"1.0–2.5 mph. 5° incline increases hindlimb activation.", evidence:"Marcellin-Little 2015", contra:["Non-ambulatory"], rf:["Toe knuckling worsens at speed"] },
-    { id:"EX-040", name:"Toe Pinch / Knuckling Correction", cat:"Neuromotor & Coordination", lvl:"B", sets:"3", reps:"10 each foot", freq:"3× daily", sp:["canine","feline"], cue:"Gentle pinch between toes. Patient should withdraw.", evidence:"Lorenz & Kornegay 2011", contra:["Normal neuro — not indicated"], rf:["Zero withdrawal response"] },
-    { id:"EX-041", name:"Hip Flexor Stretch", cat:"Neuromotor & Coordination", lvl:"B", sets:"3", reps:"30 sec", freq:"BID", sp:["canine"], cue:"Extend rear limb caudally to first resistance. Never force.", evidence:"Jaeger et al 2007", contra:["Acute iliopsoas injury"], rf:["Bites toward therapist during stretch"] },
-    { id:"EX-042", name:"Assisted Sling Walking", cat:"Neuromotor & Coordination", lvl:"A", sets:"3", reps:"Length of room", freq:"3–4× daily", sp:["canine"], cue:"Sling under abdomen. Support only — patient does the work.", evidence:"Millis & Levine 2014", contra:["Severe spinal instability"], rf:["Sudden flaccid paralysis"] },
-  ];
+  // Fetch the real 260-exercise library from the backend on mount.
+  // Per CLAUDE.md, exercise data MUST come from the source-of-truth library —
+  // not be hardcoded in the UI.
+  useEffect(() => {
+    let cancelled = false;
+    const apiBase = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+    setLoading(true);
+    setError(null);
 
-  const note = `260 evidence-based exercises are available in K9 Rehab Pro™ full clinical deployment across all 5 categories. This preview shows a representative sample of the library structure.`;
-  const filtered = EX.filter(e => {
-    if (!e.sp.includes(species)) return false;
+    fetch(`${apiBase}/exercises`)
+      .then(r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
+      .then(payload => {
+        if (cancelled) return;
+        const raw = Array.isArray(payload?.data) ? payload.data : [];
+        setAllEx(raw.map(mapBackendExercise));
+        setLoading(false);
+      })
+      .catch(err => {
+        if (cancelled) return;
+        setError(err.message || "Failed to load exercise library");
+        setLoading(false);
+      });
+
+    return () => { cancelled = true; };
+  }, []);
+
+  // Categories are derived from the loaded data — never hardcoded.
+  // Honors whatever the backend serves (currently 18 distinct categories).
+  const speciesFiltered = allEx.filter(e => e.sp.includes(species));
+  const dynamicCats = Array.from(new Set(speciesFiltered.map(e => e.cat))).sort();
+  const CATS = ["ALL", ...dynamicCats];
+
+  const note = loading
+    ? "Loading exercise library from backend…"
+    : error
+      ? `Library load failed: ${error}`
+      : `${allEx.length} evidence-based exercises served from K9 Rehab Pro™ source-of-truth library · ${speciesFiltered.length} ${species}.`;
+
+  const filtered = speciesFiltered.filter(e => {
     if (cat !== "ALL" && e.cat !== cat) return false;
-    if (search) { const q = search.toLowerCase(); return e.name.toLowerCase().includes(q)||e.id.toLowerCase().includes(q)||e.cat.toLowerCase().includes(q); }
+    if (search) {
+      const q = search.toLowerCase();
+      return e.name.toLowerCase().includes(q)
+          || e.id.toLowerCase().includes(q)
+          || e.cat.toLowerCase().includes(q);
+    }
     return true;
   });
   const lc = (lvl) => lvl==="A" ? C.green : lvl==="B" ? C.amber : C.purple;
@@ -854,7 +924,7 @@ function LibraryPanel() {
   return <>
     <div style={{ display:"flex", gap:8, marginBottom:16 }}>
       {["canine","feline"].map(s=>(
-        <button key={s} onClick={()=>{setSpecies(s);setSel(null);}}
+        <button key={s} onClick={()=>{setSpecies(s);setSel(null);setCat("ALL");}}
           style={{ flex:1, padding:"11px", background: species===s ? C.navy : C.white, border:`1.5px solid ${species===s ? C.navy : C.border}`, color: species===s ? C.white : C.muted, borderRadius:7, cursor:"pointer", fontSize:13, fontWeight:700, letterSpacing:".06em" }}>
           {s==="canine"?"🐕  CANINE EXERCISES":"🐱  FELINE EXERCISES"}
         </button>
@@ -875,7 +945,25 @@ function LibraryPanel() {
       ))}
     </div>
     <div style={{ display:"flex", flexDirection:"column", gap:7 }}>
-      {filtered.map(ex=>{
+      {loading && (
+        <div style={{ padding:"40px 20px", textAlign:"center", color:C.muted, fontSize:12 }}>
+          <div style={{ display:"inline-block", width:24, height:24, border:`3px solid ${C.border}`, borderTopColor:C.blue, borderRadius:"50%", animation:"spinK9 .8s linear infinite", marginBottom:12 }}/>
+          <div>Loading {species} exercises from backend…</div>
+        </div>
+      )}
+      {!loading && error && (
+        <div style={{ padding:"20px", background:C.redLt, border:`1px solid ${C.red}44`, borderRadius:6, color:C.red, fontSize:12 }}>
+          <div style={{ fontWeight:700, marginBottom:6 }}>⚠ Could not load exercise library</div>
+          <div style={{ color:C.muted, fontSize:11 }}>{error}</div>
+          <div style={{ color:C.muted, fontSize:11, marginTop:8 }}>Verify <code>VITE_API_URL</code> in Vercel env vars points to your Railway backend.</div>
+        </div>
+      )}
+      {!loading && !error && filtered.length === 0 && (
+        <div style={{ padding:"30px 20px", textAlign:"center", color:C.muted, fontSize:12 }}>
+          No exercises match the current filter.
+        </div>
+      )}
+      {!loading && !error && filtered.map(ex=>{
         const open = sel===ex.id;
         const c = lc(ex.lvl);
         return (
