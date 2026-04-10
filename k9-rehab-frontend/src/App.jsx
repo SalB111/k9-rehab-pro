@@ -21,7 +21,7 @@ const DocsView = lazy(() => import("./pages/DocsView"));
 export default function App() {
   const [authToken, setAuthToken] = useState(localStorage.getItem("token"));
   const [currentUser, setCurrentUser] = useState({ username: "Clinician", role: "clinician", id: 1 });
-  const [view, setView] = useState("clients");
+  const [view, setView] = useState("dashboard");
   const [showSplash, setShowSplash] = useState(true); // Always show splash on app load
   const [genKey, setGenKey] = useState(0);
   const [genInitialStep, setGenInitialStep] = useState(1);
@@ -81,7 +81,7 @@ export default function App() {
   function renderView() {
     switch (view) {
       case "dashboard":
-        return <DashboardView setView={setView} />;
+        return <DashboardView setView={setView} currentUser={currentUser} onLogout={handleLogout} />;
       case "generator":
         return (
           <GeneratorView
@@ -140,6 +140,23 @@ export default function App() {
     return (
       <ToastProvider>
         <LoginView onLogin={handleLogin} onRegister={handleRegister} />
+      </ToastProvider>
+    );
+  }
+
+  // New v2 DashboardView has its own full-height sidebar — render standalone.
+  if (view === "dashboard") {
+    return (
+      <ToastProvider>
+        <Suspense
+          fallback={
+            <div className="flex items-center justify-center h-screen">
+              <div className="w-8 h-8 border-3 border-[var(--k9-teal)] border-t-transparent rounded-full animate-spin" />
+            </div>
+          }
+        >
+          {renderView()}
+        </Suspense>
       </ToastProvider>
     );
   }
