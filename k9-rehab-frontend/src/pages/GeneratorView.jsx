@@ -6,6 +6,7 @@ import { useToast } from "../components/Toast";
 
 // ── Decomposed sub-components ──
 import useIntakeForm from "./generator/useIntakeForm";
+import { DEMO_PATIENT } from "./generator/constants";
 import WizardProgress from "./generator/WizardProgress";
 import Step1ClientPatient from "./generator/Step1ClientPatient";
 import Step2ClinicalAssessment from "./generator/Step2ClinicalAssessment";
@@ -86,14 +87,32 @@ export default function GeneratorView({ initialStep }) {
     }, 50);
   };
 
+  // ── Load demo patient for live demos ──
+  const loadDemoPatient = () => {
+    Object.entries(DEMO_PATIENT).forEach(([k, v]) => setField(k, v));
+    setComplianceAgreed(true);
+    setWizardStep(6);
+    toast("✅ Demo patient loaded — ready to generate!", "success");
+  };
+
   // ── Generate protocol ──
   const generate = async () => {
     if (loading) return; // Debounce — prevent double-submit
-    if (!form.patientName.trim()) { setError("Patient Name is required"); return; }
-    if (!form.diagnosis) { setError("Diagnosis is required — select from the dropdown"); return; }
-    if (!form.affectedRegion) { setError("Affected Region is required — select from the dropdown"); return; }
-    if (!form.treatmentApproach) { setError("Treatment Approach is required — select Surgical, Conservative, or Palliative"); return; }
-    if (!complianceAgreed) { setError("Please acknowledge the Compliance & Data Protection Notice"); return; }
+
+    // Validation with toast feedback
+    const missing = [];
+    if (!form.patientName.trim()) missing.push("Patient Name");
+    if (!form.diagnosis) missing.push("Diagnosis");
+    if (!form.affectedRegion) missing.push("Affected Region");
+    if (!form.treatmentApproach) missing.push("Treatment Approach");
+    if (!complianceAgreed) missing.push("Compliance Acknowledgment");
+
+    if (missing.length > 0) {
+      const msg = `Missing required: ${missing.join(", ")}`;
+      setError(msg);
+      toast(`⚠️ ${msg}`, "error", 6000);
+      return;
+    }
 
     setLoading(true); setError(null); setProtocol(null);
 
@@ -118,7 +137,9 @@ export default function GeneratorView({ initialStep }) {
       setProtocol(resp?.data || resp);
       clearSavedForm();
     } catch (e) {
-      setError(e.response?.data?.error || "Failed to generate protocol");
+      const msg = e.response?.data?.error || "Failed to generate protocol — check your connection";
+      setError(msg);
+      toast(`❌ ${msg}`, "error", 8000);
     } finally { setLoading(false); }
   };
 
@@ -177,6 +198,26 @@ export default function GeneratorView({ initialStep }) {
   // ═══════════ MAIN RENDER — 5-STEP WIZARD ═══════════
   return (
     <div>
+      {!protocol && (
+        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8, padding: "0 4px" }}>
+          <button
+            onClick={loadDemoPatient}
+            style={{
+              background: "linear-gradient(135deg, #059669, #0EA5E9)",
+              color: "#fff", border: "none", borderRadius: 8,
+              padding: "8px 18px", fontSize: 13, fontWeight: 700,
+              cursor: "pointer", letterSpacing: "0.03em",
+              boxShadow: "0 2px 8px rgba(5,150,105,0.3)",
+              transition: "transform 0.15s, box-shadow 0.15s",
+            }}
+            onMouseEnter={e => { e.target.style.transform = "scale(1.04)"; e.target.style.boxShadow = "0 4px 14px rgba(5,150,105,0.45)"; }}
+            onMouseLeave={e => { e.target.style.transform = "scale(1)"; e.target.style.boxShadow = "0 2px 8px rgba(5,150,105,0.3)"; }}
+            title="Pre-fill a complete demo patient for presentations"
+          >
+            🐾 Demo Mode
+          </button>
+        </div>
+      )}
       {!protocol && <WizardProgress wizardStep={wizardStep} goToStep={goToStep} />}
 
       {!protocol && wizardStep === 1 && (

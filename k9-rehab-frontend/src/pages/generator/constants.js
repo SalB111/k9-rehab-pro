@@ -335,6 +335,38 @@ export const DIAGNOSTIC_SECTIONS = [
   },
 ];
 
+// ── DEMO PATIENT — one-click pre-fill for live demos ──
+export const DEMO_PATIENT = {
+  species: "Canine",
+  patientName: "Max", breed: "Golden Retriever", age: "6", dob: "2020-04-01",
+  weightKg: "31.8", weightLbs: "70.0", sex: "Male Neutered",
+  diagnosis: "TPLO", affectedRegion: "Left Stifle",
+  lamenessGrade: "3", bodyConditionScore: "5",
+  painLevel: "4", mobilityLevel: "Moderate",
+  currentMedications: "Carprofen 75mg BID, Gabapentin 100mg TID", medsLastGiven: "",
+  medicalHistory: "Otherwise healthy. Annual bloodwork WNL.",
+  specialInstructions: "", protocolLength: "8",
+  clientLastName: "Johnson", clientFirstName: "Sarah", clientEmail: "sarah.johnson@email.com", clientPhone: "(954) 555-0142", clientPhone2: "",
+  referringVet: "Dr. Emily Chen, DVM, DACVS", referringClinicPhone: "(954) 555-0200", referringClinicEmail: "",
+  nearbyHospital: "BluePearl Pet Hospital",
+  treatmentApproach: "Surgical",
+  surgeryType: "TPLO",
+  surgeryDate: new Date(Date.now() - 14 * 86400000).toISOString().split("T")[0],
+  surgeonName: "Dr. Emily Chen, DVM, DACVS",
+  surgicalFacility: "BluePearl Pet Hospital",
+  anesthesiaRisk: "ASA II",
+  postOpDay: "14",
+  weightBearingStatus: "Toe-touching",
+  incisionStatus: "Clean/Dry/Intact",
+  temperament: "Cooperative",
+  circumferenceAffected: "38", circumferenceContralateral: "42", circumferenceSite: "15cm proximal to patella",
+  romFlexion: "45", romExtension: "155", romJoint: "Stifle",
+  romFlexionContralateral: "40", romExtensionContralateral: "165",
+  jointEffusion: "1", muscleCondition: "Mild atrophy",
+  rehabGoals: ["Restore full ROM", "Rebuild muscle mass", "Return to normal activity"],
+  sessionFrequency: "2", homeExerciseProgram: true, ownerCompliance: "Motivated",
+};
+
 export const PHASE_COLORS = ["#DC2626", "#D97706", "#0EA5E9", "#059669"];
 
 export const CLINIC_ONLY_CODES = new Set([
