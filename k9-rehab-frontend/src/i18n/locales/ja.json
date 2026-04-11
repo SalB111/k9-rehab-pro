@@ -1,8 +1,6 @@
 {
-  "_machine_translation_note": "TODO: professional review — machine-quality draft. Do NOT ship to paying customers without credentialed Japanese veterinary translator review.",
-  "languageSelector": {
-    "label": "言語"
-  },
+  "_machine_translation_note": "TODO: professional review — machine-quality draft. Safety strings (safety.*) INTENTIONALLY ABSENT — fall back to English with visible EN badge per product owner decision 2026-04-11.",
+  "languageSelector": { "label": "言語" },
   "dashboard": {
     "title": "臨床ダッシュボード",
     "subtitle": "任意のブロックを選択 · すべてのフィールドは独立 · 順序は任意",
@@ -46,5 +44,32 @@
     "close": "閉じる",
     "saveAndClose": "保存して閉じる",
     "engineSubtitle": "K9 Rehab Pro™ · B.E.A.U.™ エンジン"
+  },
+  "common": {
+    "loading": "読み込み中…",
+    "select": "選択…",
+    "canine": "犬",
+    "feline": "猫",
+    "both": "両方",
+    "yes": "はい",
+    "no": "いいえ"
+  },
+  "form": {
+    "species": "種",
+    "breed": "犬種",
+    "age": "年齢",
+    "weight": "体重",
+    "primaryCondition": "主な症状",
+    "rehabPhase": "リハビリ段階",
+    "patientInputs": "患者情報",
+    "selectCondition": "症状を選択…",
+    "selectPhase": "段階を選択…",
+    "selectBreed": "犬種を選択…",
+    "bcsLabel": "BCS (1–9)"
+  },
+  "diet": {
+    "blockTitle": "療法食決定支援",
+    "featureGateTitle": "B.E.A.U. 栄養決定支援",
+    "marsPortfolioFooter": "Mars Petcare 療法食カタログ"
   }
 }
