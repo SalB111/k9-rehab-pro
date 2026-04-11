@@ -601,7 +601,7 @@ app.get("/api/pipeline/status", (req, res) => {
 
     const existingAdmin = await db.findUserByUsername("admin");
     if (!existingAdmin) {
-      const passwordHash = await bcrypt.hash("Rehab2026!", 10);
+      const passwordHash = await bcrypt.hash(process.env.ADMIN_PASSWORD, 10);
       await db.createUser("admin", passwordHash, "admin");
       console.log("âœ… Default admin user created");
     } else {

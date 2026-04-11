@@ -49,3 +49,14 @@ build-application-pdf.py
 *.bio.pdf
 source_of_truth_temp.txt
 # Frontend build output committed for reliable deploys
+
+# Additional env files
+.env.production
+.env.development
+.env.production.local
+.env.development.local
+.env.*.local
+
+# Sensitive documents
+*.docx
+*.doc
