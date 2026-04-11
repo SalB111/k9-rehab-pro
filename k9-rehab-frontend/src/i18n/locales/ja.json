@@ -70,6 +70,32 @@
   "diet": {
     "blockTitle": "療法食決定支援",
     "featureGateTitle": "B.E.A.U. 栄養決定支援",
-    "marsPortfolioFooter": "Mars Petcare 療法食カタログ"
+    "marsPortfolioFooter": "Mars Petcare 療法食カタログ",
+    "categories": {
+      "gi":         "消化器系サポート",
+      "renal":      "腎サポート・泌尿器健康",
+      "derm":       "皮膚科・食物過敏症",
+      "weight":     "体重管理・代謝サポート",
+      "mobility":   "運動性・関節サポート",
+      "recovery":   "回復・集中治療・高エネルギーサポート",
+      "pediatric":  "小児科・成長・繁殖",
+      "dental":     "歯の健康",
+      "behavioral": "行動・認知サポート",
+      "specialty":  "専門・ニッチ臨床カテゴリー"
+    },
+    "conditions": {
+      "none":       "— 症状を選択 —",
+      "gi":         "消化器系",
+      "renal":      "腎臓・泌尿器",
+      "derm":       "皮膚科・食物アレルギー",
+      "weight":     "体重・代謝",
+      "mobility":   "運動性・関節・OA",
+      "recovery":   "回復・術後",
+      "pediatric":  "小児科・成長・繁殖",
+      "dental":     "歯科",
+      "behavioral": "行動・認知",
+      "specialty":  "専門(肝臓・心臓・アレルギー)",
+      "other":      "その他・複数"
+    }
   }
 }

@@ -70,6 +70,32 @@
   "diet": {
     "blockTitle": "Therapeutische Ernährungsentscheidungshilfe",
     "featureGateTitle": "B.E.A.U. Ernährungsentscheidungshilfe",
-    "marsPortfolioFooter": "Mars Petcare Therapie-Katalog"
+    "marsPortfolioFooter": "Mars Petcare Therapie-Katalog",
+    "categories": {
+      "gi":         "Gastrointestinal & Verdauungsunterstützung",
+      "renal":      "Nierenunterstützung & Harngesundheit",
+      "derm":       "Dermatologie & Futtermittelunverträglichkeiten",
+      "weight":     "Gewichtsmanagement & Stoffwechselunterstützung",
+      "mobility":   "Mobilität & Gelenkunterstützung",
+      "recovery":   "Erholung, Intensivpflege & Hochenergie-Unterstützung",
+      "pediatric":  "Pädiatrie, Wachstum & Reproduktion",
+      "dental":     "Zahngesundheit",
+      "behavioral": "Verhaltens- & Kognitive Unterstützung",
+      "specialty":  "Spezial- & Nischenklinische Kategorien"
+    },
+    "conditions": {
+      "none":       "— Zustand auswählen —",
+      "gi":         "GI / Verdauung",
+      "renal":      "Niere / Harnwege",
+      "derm":       "Dermatologie / Futterallergie",
+      "weight":     "Gewicht / Stoffwechsel",
+      "mobility":   "Mobilität / Gelenk / OA",
+      "recovery":   "Erholung / Postoperativ",
+      "pediatric":  "Pädiatrie / Wachstum / Reproduktion",
+      "dental":     "Zahn",
+      "behavioral": "Verhalten / Kognitiv",
+      "specialty":  "Spezial (Leber / Herz / Allergie)",
+      "other":      "Andere / Mehrere"
+    }
   }
 }

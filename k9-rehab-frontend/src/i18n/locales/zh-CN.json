@@ -70,6 +70,32 @@
   "diet": {
     "blockTitle": "治疗性饮食决策支持",
     "featureGateTitle": "B.E.A.U. 营养决策支持",
-    "marsPortfolioFooter": "Mars Petcare 治疗性产品目录"
+    "marsPortfolioFooter": "Mars Petcare 治疗性产品目录",
+    "categories": {
+      "gi":         "胃肠道与消化支持",
+      "renal":      "肾脏支持与泌尿健康",
+      "derm":       "皮肤病与食物敏感",
+      "weight":     "体重管理与代谢支持",
+      "mobility":   "活动能力与关节支持",
+      "recovery":   "恢复、重症监护与高能量支持",
+      "pediatric":  "儿科、生长与繁殖",
+      "dental":     "口腔健康",
+      "behavioral": "行为与认知支持",
+      "specialty":  "专科与小众临床类别"
+    },
+    "conditions": {
+      "none":       "— 选择状况 —",
+      "gi":         "胃肠道 / 消化",
+      "renal":      "肾脏 / 泌尿",
+      "derm":       "皮肤病 / 食物过敏",
+      "weight":     "体重 / 代谢",
+      "mobility":   "活动能力 / 关节 / OA",
+      "recovery":   "恢复 / 术后",
+      "pediatric":  "儿科 / 生长 / 繁殖",
+      "dental":     "口腔",
+      "behavioral": "行为 / 认知",
+      "specialty":  "专科(肝脏 / 心脏 / 过敏)",
+      "other":      "其他 / 多种"
+    }
   }
 }

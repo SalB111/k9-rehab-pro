@@ -70,6 +70,32 @@
   "diet": {
     "blockTitle": "Therapeutische Voedingsbeslissings-ondersteuning",
     "featureGateTitle": "B.E.A.U. Voedingsbeslissings-ondersteuning",
-    "marsPortfolioFooter": "Mars Petcare Therapeutische Catalogus"
+    "marsPortfolioFooter": "Mars Petcare Therapeutische Catalogus",
+    "categories": {
+      "gi":         "Gastro-intestinaal & Verterings-ondersteuning",
+      "renal":      "Nierondersteuning & Urinegezondheid",
+      "derm":       "Dermatologie & Voedselgevoeligheden",
+      "weight":     "Gewichtsbeheer & Metabole Ondersteuning",
+      "mobility":   "Mobiliteit & Gewrichtsondersteuning",
+      "recovery":   "Herstel, Intensieve Zorg & Hoge Energie Ondersteuning",
+      "pediatric":  "Pediatrisch, Groei & Voortplanting",
+      "dental":     "Gebitsgezondheid",
+      "behavioral": "Gedrags- & Cognitieve Ondersteuning",
+      "specialty":  "Specialiteit & Niche Klinische Categorieën"
+    },
+    "conditions": {
+      "none":       "— Aandoening selecteren —",
+      "gi":         "GI / Verteerbaar",
+      "renal":      "Nier / Urinewegen",
+      "derm":       "Dermatologie / Voedselallergie",
+      "weight":     "Gewicht / Metabool",
+      "mobility":   "Mobiliteit / Gewricht / OA",
+      "recovery":   "Herstel / Postoperatief",
+      "pediatric":  "Pediatrisch / Groei / Voortplanting",
+      "dental":     "Tandheelkunde",
+      "behavioral": "Gedrag / Cognitief",
+      "specialty":  "Specialiteit (Lever / Hart / Allergie)",
+      "other":      "Andere / Meerdere"
+    }
   }
 }
