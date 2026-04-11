@@ -1,0 +1,49 @@
+{
+  "languageSelector": {
+    "label": "Language"
+  },
+  "dashboard": {
+    "title": "Clinical Dashboard",
+    "subtitle": "Select any block · All fields independent · No required order",
+    "beauReady": "B.E.A.U. Ready",
+    "footerIntelligence": "B.E.A.U.™ Clinical Protocol Intelligence",
+    "footerCopyright": "© 2026 The Doggy Style Gym LLC · K9 Rehab Pro™"
+  },
+  "sidebar": {
+    "systemOnline": "System Online",
+    "signedInAs": "Signed in as",
+    "activePatient": "Active patient",
+    "backToClients": "Back to Clients",
+    "save": "Save",
+    "saved": "Saved",
+    "signOut": "Sign Out",
+    "exit": "Exit",
+    "credAdmin": "Administrator",
+    "credClinician": "CVN, Canine Rehabilitation Nurse"
+  },
+  "nav": {
+    "how": "How to Use K9 Rehab Pro",
+    "ask": "Ask B.E.A.U.",
+    "about": "About",
+    "disclaimer": "Disclaimer",
+    "hipaa": "Veterinary HIPAA"
+  },
+  "tiles": {
+    "client":       { "label": "Client & Patient",        "desc": "Demographics · Contact · Insurance" },
+    "diagnostics":  { "label": "Diagnostics",              "desc": "Imaging · Laboratory Work" },
+    "assessment":   { "label": "Assessment",               "desc": "Diagnosis · Pain · Gait · Neuro" },
+    "metrics":      { "label": "B.E.A.U. Metrics",         "desc": "BCS · Goniometry · Muscle · Postural" },
+    "diet":         { "label": "Diet Decision Support",    "desc": "Mars Petcare therapeutic portfolio" },
+    "equipment":    { "label": "Clinic Equipment",         "desc": "Available rehabilitation tools" },
+    "home":         { "label": "Home Exercise Program",    "desc": "Environment · HEP · Owner profile" },
+    "goals":        { "label": "Goals",                    "desc": "Short-term · Long-term · Progress" },
+    "conditioning": { "label": "Conditioning",             "desc": "Fitness · Performance · Maintenance" },
+    "protocol":     { "label": "Protocol Summary",         "desc": "Generate · Export · Email · QR" },
+    "library":      { "label": "Exercise Library",         "desc": "260 exercises · Canine · Feline" }
+  },
+  "modal": {
+    "close": "Close",
+    "saveAndClose": "Save & Close",
+    "engineSubtitle": "K9 Rehab Pro™ · B.E.A.U.™ Engine"
+  }
+}

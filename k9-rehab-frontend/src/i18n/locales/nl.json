@@ -1,0 +1,50 @@
+{
+  "_machine_translation_note": "TODO: professional review — machine-quality draft. Do NOT ship to paying customers without credentialed Dutch veterinary translator review.",
+  "languageSelector": {
+    "label": "Taal"
+  },
+  "dashboard": {
+    "title": "Klinisch Dashboard",
+    "subtitle": "Selecteer een willekeurig blok · Alle velden onafhankelijk · Geen verplichte volgorde",
+    "beauReady": "B.E.A.U. Gereed",
+    "footerIntelligence": "B.E.A.U.™ Klinische Protocol Intelligentie",
+    "footerCopyright": "© 2026 The Doggy Style Gym LLC · K9 Rehab Pro™"
+  },
+  "sidebar": {
+    "systemOnline": "Systeem Online",
+    "signedInAs": "Aangemeld als",
+    "activePatient": "Actieve patiënt",
+    "backToClients": "Terug naar Klanten",
+    "save": "Opslaan",
+    "saved": "Opgeslagen",
+    "signOut": "Afmelden",
+    "exit": "Afsluiten",
+    "credAdmin": "Beheerder",
+    "credClinician": "CVN, Verpleegkundige Hondenrevalidatie"
+  },
+  "nav": {
+    "how": "K9 Rehab Pro gebruiken",
+    "ask": "Vraag B.E.A.U.",
+    "about": "Over",
+    "disclaimer": "Disclaimer",
+    "hipaa": "Veterinaire HIPAA"
+  },
+  "tiles": {
+    "client":       { "label": "Klant & Patiënt",            "desc": "Demografie · Contact · Verzekering" },
+    "diagnostics":  { "label": "Diagnostiek",                 "desc": "Beeldvorming · Laboratoriumwerk" },
+    "assessment":   { "label": "Beoordeling",                 "desc": "Diagnose · Pijn · Gang · Neuro" },
+    "metrics":      { "label": "B.E.A.U. Metrieken",          "desc": "BCS · Goniometrie · Spier · Postuur" },
+    "diet":         { "label": "Voedingsbeslissings-onder steuning", "desc": "Mars Petcare therapeutisch portfolio" },
+    "equipment":    { "label": "Klinische Apparatuur",        "desc": "Beschikbare revalidatiemiddelen" },
+    "home":         { "label": "Thuisoefenprogramma",         "desc": "Omgeving · HEP · Eigenaarsprofiel" },
+    "goals":        { "label": "Doelen",                      "desc": "Korte termijn · Lange termijn · Voortgang" },
+    "conditioning": { "label": "Conditionering",              "desc": "Fitness · Prestaties · Onderhoud" },
+    "protocol":     { "label": "Protocol Overzicht",          "desc": "Genereren · Exporteren · E-mail · QR" },
+    "library":      { "label": "Oefenbibliotheek",            "desc": "260 oefeningen · Hond · Kat" }
+  },
+  "modal": {
+    "close": "Sluiten",
+    "saveAndClose": "Opslaan en Sluiten",
+    "engineSubtitle": "K9 Rehab Pro™ · B.E.A.U.™ Engine"
+  }
+}

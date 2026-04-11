@@ -1,0 +1,50 @@
+{
+  "_machine_translation_note": "TODO: professional review — machine-quality draft. Do NOT ship to paying customers without credentialed Brazilian Portuguese veterinary translator review.",
+  "languageSelector": {
+    "label": "Idioma"
+  },
+  "dashboard": {
+    "title": "Painel Clínico",
+    "subtitle": "Selecione qualquer bloco · Todos os campos são independentes · Sem ordem obrigatória",
+    "beauReady": "B.E.A.U. Pronto",
+    "footerIntelligence": "B.E.A.U.™ Inteligência de Protocolo Clínico",
+    "footerCopyright": "© 2026 The Doggy Style Gym LLC · K9 Rehab Pro™"
+  },
+  "sidebar": {
+    "systemOnline": "Sistema Online",
+    "signedInAs": "Conectado como",
+    "activePatient": "Paciente ativo",
+    "backToClients": "Voltar aos Clientes",
+    "save": "Salvar",
+    "saved": "Salvo",
+    "signOut": "Sair",
+    "exit": "Sair",
+    "credAdmin": "Administrador",
+    "credClinician": "CVN, Enfermeiro de Reabilitação Canina"
+  },
+  "nav": {
+    "how": "Como usar o K9 Rehab Pro",
+    "ask": "Perguntar ao B.E.A.U.",
+    "about": "Sobre",
+    "disclaimer": "Aviso Legal",
+    "hipaa": "HIPAA Veterinária"
+  },
+  "tiles": {
+    "client":       { "label": "Cliente e Paciente",             "desc": "Dados demográficos · Contato · Seguro" },
+    "diagnostics":  { "label": "Diagnósticos",                    "desc": "Imagem · Trabalho Laboratorial" },
+    "assessment":   { "label": "Avaliação",                       "desc": "Diagnóstico · Dor · Marcha · Neuro" },
+    "metrics":      { "label": "Métricas B.E.A.U.",               "desc": "BCS · Goniometria · Músculo · Postural" },
+    "diet":         { "label": "Suporte à Decisão Alimentar",     "desc": "Portfólio terapêutico Mars Petcare" },
+    "equipment":    { "label": "Equipamento Clínico",             "desc": "Ferramentas de reabilitação disponíveis" },
+    "home":         { "label": "Programa de Exercícios em Casa",  "desc": "Ambiente · HEP · Perfil do dono" },
+    "goals":        { "label": "Objetivos",                       "desc": "Curto prazo · Longo prazo · Progresso" },
+    "conditioning": { "label": "Condicionamento",                 "desc": "Fitness · Desempenho · Manutenção" },
+    "protocol":     { "label": "Resumo do Protocolo",             "desc": "Gerar · Exportar · Email · QR" },
+    "library":      { "label": "Biblioteca de Exercícios",        "desc": "260 exercícios · Canino · Felino" }
+  },
+  "modal": {
+    "close": "Fechar",
+    "saveAndClose": "Salvar e Fechar",
+    "engineSubtitle": "K9 Rehab Pro™ · Motor B.E.A.U.™"
+  }
+}

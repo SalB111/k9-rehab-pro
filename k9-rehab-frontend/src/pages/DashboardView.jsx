@@ -1,4 +1,9 @@
 import { useState, useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
+import i18n, { SUPPORTED_LOCALES } from "../i18n";
+
+// Ensure i18n is initialized (side effect — the import above runs the init)
+void i18n;
 
 // ─── THEME — WHITE CLINICAL ───────────────────────────────────────────────────
 const C = {
@@ -121,6 +126,7 @@ function CbItem({ label, checked, onToggle, children }) {
 
 // ─── MODAL ────────────────────────────────────────────────────────────────────
 function Modal({ title, color, colorLt, icon, onClose, children }) {
+  const { t } = useTranslation();
   return (
     <div style={{ position:"fixed", inset:0, zIndex:200, background:"rgba(26,39,68,.55)", display:"flex", alignItems:"center", justifyContent:"center", padding:20, animation:"fadeIn .18s ease" }}
       onClick={e=>{ if(e.target===e.currentTarget) onClose(); }}>
@@ -132,7 +138,7 @@ function Modal({ title, color, colorLt, icon, onClose, children }) {
           </div>
           <div style={{ flex:1 }}>
             <div style={{ fontSize:15, fontWeight:700, color:C.navy }}>{title}</div>
-            <div style={{ fontSize:9, color:C.muted, letterSpacing:".13em", textTransform:"uppercase" }}>K9 REHAB PRO™ · B.E.A.U.™ ENGINE</div>
+            <div style={{ fontSize:9, color:C.muted, letterSpacing:".13em", textTransform:"uppercase" }}>{t("modal.engineSubtitle")}</div>
           </div>
           <button onClick={onClose} style={{ background:"none", border:`1px solid ${C.border}`, color:C.muted, fontSize:16, cursor:"pointer", padding:"4px 10px", borderRadius:5 }}>✕</button>
         </div>
@@ -140,10 +146,93 @@ function Modal({ title, color, colorLt, icon, onClose, children }) {
         <div style={{ flex:1, overflowY:"auto", padding:22 }}>{children}</div>
         {/* Footer */}
         <div style={{ padding:"13px 22px", borderTop:`1px solid ${C.border}`, display:"flex", justifyContent:"flex-end", gap:10, flexShrink:0, background:C.bg, borderRadius:"0 0 10px 10px" }}>
-          <button onClick={onClose} style={{ padding:"9px 22px", background:C.white, border:`1px solid ${C.border}`, color:C.muted, borderRadius:5, cursor:"pointer", fontSize:12, fontWeight:600 }}>CLOSE</button>
-          <button style={{ padding:"9px 22px", background:color, border:"none", color:C.white, borderRadius:5, cursor:"pointer", fontSize:12, fontWeight:700, letterSpacing:".06em" }}>SAVE & CLOSE</button>
+          <button onClick={onClose} style={{ padding:"9px 22px", background:C.white, border:`1px solid ${C.border}`, color:C.muted, borderRadius:5, cursor:"pointer", fontSize:12, fontWeight:600, textTransform:"uppercase" }}>{t("modal.close")}</button>
+          <button style={{ padding:"9px 22px", background:color, border:"none", color:C.white, borderRadius:5, cursor:"pointer", fontSize:12, fontWeight:700, letterSpacing:".06em", textTransform:"uppercase" }}>{t("modal.saveAndClose")}</button>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ─── LANGUAGE SELECTOR ────────────────────────────────────────────────────────
+// Dropdown for switching UI locale. 10 languages with flag emoji + native
+// language name. Click outside to close. Persists via localStorage (key
+// `k9rp_lang`) through the i18next LanguageDetector caches config.
+//
+// Scope note: this only changes the UI chrome. Clinical content, AI output,
+// exercise library entries, protocol generation, and the Mars Petcare diet
+// catalog remain in English across all locales (CLAUDE.md safety rule).
+function LanguageSelector() {
+  const { t, i18n: i18nInstance } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const onDoc = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, []);
+
+  const current = SUPPORTED_LOCALES.find(l => l.code === i18nInstance.language)
+               || SUPPORTED_LOCALES.find(l => i18nInstance.language?.startsWith(l.code))
+               || SUPPORTED_LOCALES[0];
+
+  const pick = (code) => {
+    i18nInstance.changeLanguage(code);
+    try { localStorage.setItem("k9rp_lang", code); } catch { /* noop */ }
+    setOpen(false);
+  };
+
+  return (
+    <div ref={ref} style={{ position: "relative" }}>
+      <button
+        onClick={() => setOpen(v => !v)}
+        aria-label={t("languageSelector.label")}
+        title={t("languageSelector.label")}
+        style={{
+          display: "flex", alignItems: "center", gap: 6,
+          padding: "6px 12px", background: C.white, border: `1px solid ${C.border}`,
+          borderRadius: 5, cursor: "pointer", fontSize: 12, color: C.muted,
+          fontWeight: 600, letterSpacing: ".02em", fontFamily: "inherit",
+        }}>
+        <span style={{ fontSize: 14, lineHeight: 1 }}>{current.flag}</span>
+        <span>{current.name}</span>
+        <span style={{ fontSize: 10, opacity: .6, marginLeft: 2 }}>▾</span>
+      </button>
+      {open && (
+        <div style={{
+          position: "absolute", right: 0, top: "calc(100% + 5px)", zIndex: 300,
+          background: C.white, border: `1px solid ${C.border}`, borderRadius: 6,
+          boxShadow: "0 8px 28px rgba(26,39,68,.15)", minWidth: 180,
+          padding: 4, animation: "fadeIn .12s ease",
+        }}>
+          <div style={{
+            fontSize: 9, fontWeight: 700, color: C.muted, letterSpacing: ".1em",
+            textTransform: "uppercase", padding: "7px 10px 4px 10px",
+          }}>
+            {t("languageSelector.label")}
+          </div>
+          {SUPPORTED_LOCALES.map(l => {
+            const active = l.code === current.code;
+            return (
+              <div key={l.code} onClick={() => pick(l.code)}
+                style={{
+                  display: "flex", alignItems: "center", gap: 9,
+                  padding: "8px 10px", cursor: "pointer", borderRadius: 4,
+                  background: active ? C.blueLt : "transparent",
+                  color: active ? C.blue : C.text,
+                  fontSize: 12, fontWeight: active ? 700 : 500,
+                }}
+                onMouseEnter={e => { if (!active) e.currentTarget.style.background = C.bg; }}
+                onMouseLeave={e => { if (!active) e.currentTarget.style.background = "transparent"; }}>
+                <span style={{ fontSize: 14, lineHeight: 1, flexShrink: 0 }}>{l.flag}</span>
+                <span style={{ flex: 1 }}>{l.name}</span>
+                {active && <span style={{ fontSize: 11, color: C.blue }}>✓</span>}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -1531,38 +1620,42 @@ function HipaaPanel() {
 // ══════════════════════════════════════════════════════════════════════════════
 // MAIN DASHBOARD
 // ══════════════════════════════════════════════════════════════════════════════
+// Tile and nav definitions — IDs, icons, colors are stable per tile; labels
+// and descriptions are resolved via t(`tiles.<id>.label`) / t(`nav.<id>`)
+// at render time so the UI re-renders when the user changes locale.
 const BLOCKS = [
-  { id:"client",      label:"Client & Patient",     icon:"👤", color:C.blue,   colorLt:C.blueLt,   desc:"Demographics · Contact · Insurance" },
-  { id:"diagnostics", label:"Diagnostics",           icon:"🩻", color:C.purple, colorLt:C.purpleLt, desc:"Imaging · Laboratory Work" },
-  { id:"assessment",  label:"Assessment",            icon:"📋", color:C.amber,  colorLt:C.amberLt,  desc:"Diagnosis · Pain · Gait · Neuro" },
-  { id:"metrics",     label:"B.E.A.U. Metrics",      icon:"📐", color:C.green,  colorLt:C.greenLt,  desc:"BCS · Goniometry · Muscle · Postural" },
-  { id:"diet",        label:"Diet Decision Support", icon:"🥣", color:C.green,  colorLt:C.greenLt,  desc:"Mars Petcare therapeutic portfolio" },
-  { id:"equipment",   label:"Clinic Equipment",      icon:"🏥", color:C.teal,   colorLt:C.tealLt,   desc:"Available rehabilitation tools" },
-  { id:"home",        label:"Home Exercise Program", icon:"🏠", color:C.blue,   colorLt:C.blueLt,   desc:"Environment · HEP · Owner profile" },
-  { id:"goals",       label:"Goals",                 icon:"🎯", color:"#BE185D",colorLt:"#FDF2F8",  desc:"Short-term · Long-term · Progress" },
-  { id:"conditioning",label:"Conditioning",          icon:"💪", color:"#0D9488",colorLt:"#F0FDFB",  desc:"Fitness · Performance · Maintenance" },
-  { id:"protocol",    label:"Protocol Summary",      icon:"⚡", color:C.green,  colorLt:C.greenLt,  desc:"Generate · Export · Email · QR" },
-  { id:"library",     label:"Exercise Library",      icon:"📚", color:C.navy,   colorLt:C.blueLt,   desc:"260 exercises · Canine · Feline" },
+  { id:"client",       icon:"👤", color:C.blue,    colorLt:C.blueLt   },
+  { id:"diagnostics",  icon:"🩻", color:C.purple,  colorLt:C.purpleLt },
+  { id:"assessment",   icon:"📋", color:C.amber,   colorLt:C.amberLt  },
+  { id:"metrics",      icon:"📐", color:C.green,   colorLt:C.greenLt  },
+  { id:"diet",         icon:"🥣", color:C.green,   colorLt:C.greenLt  },
+  { id:"equipment",    icon:"🏥", color:C.teal,    colorLt:C.tealLt   },
+  { id:"home",         icon:"🏠", color:C.blue,    colorLt:C.blueLt   },
+  { id:"goals",        icon:"🎯", color:"#BE185D", colorLt:"#FDF2F8"  },
+  { id:"conditioning", icon:"💪", color:"#0D9488", colorLt:"#F0FDFB"  },
+  { id:"protocol",     icon:"⚡", color:C.green,   colorLt:C.greenLt  },
+  { id:"library",      icon:"📚", color:C.navy,    colorLt:C.blueLt   },
 ];
 
 const SIDEBAR_NAV = [
-  { id:"how",        icon:"❓", label:"How to Use K9 Rehab Pro" },
-  { id:"ask",        icon:"⬡",  label:"Ask B.E.A.U." },
-  { id:"about",      icon:"ℹ️", label:"About" },
-  { id:"disclaimer", icon:"⚠️", label:"Disclaimer" },
-  { id:"hipaa",      icon:"🔒", label:"Veterinary HIPAA" },
+  { id:"how",        icon:"❓" },
+  { id:"ask",        icon:"⬡"  },
+  { id:"about",      icon:"ℹ️" },
+  { id:"disclaimer", icon:"⚠️" },
+  { id:"hipaa",      icon:"🔒" },
 ];
 
 const BLOCK_COMPS   = { client:ClientPanel, diagnostics:DiagnosticsPanel, assessment:AssessmentPanel, metrics:MetricsPanel, diet:DietPanel, equipment:EquipmentPanel, home:HomePanel, goals:GoalsPanel, conditioning:ConditioningPanel, protocol:ProtocolPanel, library:LibraryPanel };
 const SIDEBAR_COMPS = { how:HowToUse, ask:AskBeau, about:AboutPanel, disclaimer:DisclaimerPanel, hipaa:HipaaPanel };
 
 export default function DashboardView({ setView, currentUser, onLogout }) {
+  const { t } = useTranslation();
   const [openBlock,   setOpenBlock]   = useState(null);
   const [openSidebar, setOpenSidebar] = useState(null);
   const [saved,       setSaved]       = useState(false);
 
   const displayName = currentUser?.username || currentUser?.name || "Clinician";
-  const credLabel   = currentUser?.role === "admin" ? "Administrator" : "CVN, Canine Rehabilitation Nurse";
+  const credLabel   = currentUser?.role === "admin" ? t("sidebar.credAdmin") : t("sidebar.credClinician");
   const initials    = displayName.split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase() || "SB";
   const patient     = "Max — German Shepherd · TPLO Post-Op";
 
@@ -1590,12 +1683,12 @@ export default function DashboardView({ setView, currentUser, onLogout }) {
           <div style={{ fontSize:9, color:"rgba(255,255,255,.45)", letterSpacing:".16em", marginTop:2 }}>K9 REHAB PRO™</div>
           <div style={{ display:"flex", alignItems:"center", gap:6, marginTop:10 }}>
             <div style={{ width:7, height:7, borderRadius:"50%", background:C.green, boxShadow:`0 0 8px ${C.green}`, animation:"pulseK9 1.6s ease-in-out infinite" }}/>
-            <span style={{ fontSize:9, color:C.green, fontWeight:600 }}>SYSTEM ONLINE</span>
+            <span style={{ fontSize:9, color:C.green, fontWeight:600, textTransform:"uppercase" }}>{t("sidebar.systemOnline")}</span>
           </div>
         </div>
 
         <div style={{ padding:"12px 14px", borderBottom:"1px solid rgba(255,255,255,.08)", background:"rgba(255,255,255,.05)" }}>
-          <div style={{ fontSize:8, color:"rgba(255,255,255,.35)", letterSpacing:".12em", marginBottom:6 }}>SIGNED IN AS</div>
+          <div style={{ fontSize:8, color:"rgba(255,255,255,.35)", letterSpacing:".12em", marginBottom:6, textTransform:"uppercase" }}>{t("sidebar.signedInAs")}</div>
           <div style={{ display:"flex", alignItems:"center", gap:10 }}>
             <div style={{ width:32, height:32, borderRadius:"50%", background:C.green, display:"flex", alignItems:"center", justifyContent:"center", fontSize:13, fontWeight:700, color:C.white, flexShrink:0 }}>{initials}</div>
             <div>
@@ -1606,7 +1699,7 @@ export default function DashboardView({ setView, currentUser, onLogout }) {
         </div>
 
         <div style={{ padding:"10px 14px", borderBottom:"1px solid rgba(255,255,255,.08)", background:"rgba(0,196,106,.08)" }}>
-          <div style={{ fontSize:8, color:"rgba(255,255,255,.35)", letterSpacing:".12em", marginBottom:3 }}>ACTIVE PATIENT</div>
+          <div style={{ fontSize:8, color:"rgba(255,255,255,.35)", letterSpacing:".12em", marginBottom:3, textTransform:"uppercase" }}>{t("sidebar.activePatient")}</div>
           <div style={{ fontSize:11, fontWeight:600, color:C.white, lineHeight:1.4 }}>{patient}</div>
         </div>
 
@@ -1616,24 +1709,24 @@ export default function DashboardView({ setView, currentUser, onLogout }) {
               onClick={()=>setOpenSidebar(item.id)}
               style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 10px", marginBottom:2 }}>
               <span style={{ fontSize:16, width:22, textAlign:"center", flexShrink:0 }}>{item.icon}</span>
-              <span style={{ fontSize:11, color:"rgba(255,255,255,.7)", fontWeight:500 }}>{item.label}</span>
+              <span style={{ fontSize:11, color:"rgba(255,255,255,.7)", fontWeight:500 }}>{t(`nav.${item.id}`)}</span>
             </div>
           ))}
           {typeof setView === "function" && (
             <div className="sb-btn" onClick={()=>setView("clients")} style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 10px", marginTop:10, borderTop:"1px solid rgba(255,255,255,.08)", paddingTop:14 }}>
               <span style={{ fontSize:16, width:22, textAlign:"center", flexShrink:0 }}>←</span>
-              <span style={{ fontSize:11, color:"rgba(255,255,255,.7)", fontWeight:500 }}>Back to Clients</span>
+              <span style={{ fontSize:11, color:"rgba(255,255,255,.7)", fontWeight:500 }}>{t("sidebar.backToClients")}</span>
             </div>
           )}
         </div>
 
         <div style={{ padding:"12px 10px", borderTop:"1px solid rgba(255,255,255,.08)" }}>
           <button onClick={handleSave}
-            style={{ width:"100%", padding:"10px", background: saved ? C.green : "rgba(0,196,106,.18)", border:`1px solid ${C.green}`, color:C.white, borderRadius:6, cursor:"pointer", fontSize:11, fontWeight:700, letterSpacing:".1em", marginBottom:8, transition:"all .2s" }}>
-            {saved ? "✓  SAVED" : "SAVE"}
+            style={{ width:"100%", padding:"10px", background: saved ? C.green : "rgba(0,196,106,.18)", border:`1px solid ${C.green}`, color:C.white, borderRadius:6, cursor:"pointer", fontSize:11, fontWeight:700, letterSpacing:".1em", marginBottom:8, transition:"all .2s", textTransform:"uppercase" }}>
+            {saved ? `✓  ${t("sidebar.saved")}` : t("sidebar.save")}
           </button>
-          <button onClick={handleExit} style={{ width:"100%", padding:"10px", background:"rgba(192,57,43,.15)", border:"1px solid rgba(192,57,43,.5)", color:"#EF9A9A", borderRadius:6, cursor:"pointer", fontSize:11, fontWeight:700, letterSpacing:".1em" }}>
-            {typeof onLogout === "function" ? "SIGN OUT" : "EXIT"}
+          <button onClick={handleExit} style={{ width:"100%", padding:"10px", background:"rgba(192,57,43,.15)", border:"1px solid rgba(192,57,43,.5)", color:"#EF9A9A", borderRadius:6, cursor:"pointer", fontSize:11, fontWeight:700, letterSpacing:".1em", textTransform:"uppercase" }}>
+            {typeof onLogout === "function" ? t("sidebar.signOut") : t("sidebar.exit")}
           </button>
         </div>
       </div>
@@ -1642,12 +1735,13 @@ export default function DashboardView({ setView, currentUser, onLogout }) {
       <div style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden" }}>
         <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"13px 24px", background:C.white, borderBottom:`1px solid ${C.border}`, flexShrink:0, boxShadow:"0 1px 6px rgba(26,39,68,.07)" }}>
           <div>
-            <div style={{ fontSize:17, fontWeight:700, color:C.navy }}>Clinical Dashboard</div>
-            <div style={{ fontSize:10, color:C.muted, letterSpacing:".08em", marginTop:1 }}>SELECT ANY BLOCK · ALL FIELDS INDEPENDENT · NO REQUIRED ORDER</div>
+            <div style={{ fontSize:17, fontWeight:700, color:C.navy }}>{t("dashboard.title")}</div>
+            <div style={{ fontSize:10, color:C.muted, letterSpacing:".08em", marginTop:1, textTransform:"uppercase" }}>{t("dashboard.subtitle")}</div>
           </div>
-          <div style={{ display:"flex", alignItems:"center", gap:16 }}>
-            <div style={{ padding:"6px 14px", background:C.greenLt, border:`1px solid ${C.green}44`, borderRadius:5, fontSize:11, color:C.green, fontWeight:700 }}>
-              🟢 B.E.A.U. READY
+          <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+            <LanguageSelector/>
+            <div style={{ padding:"6px 14px", background:C.greenLt, border:`1px solid ${C.green}44`, borderRadius:5, fontSize:11, color:C.green, fontWeight:700, textTransform:"uppercase" }}>
+              🟢 {t("dashboard.beauReady")}
             </div>
           </div>
         </div>
@@ -1662,28 +1756,28 @@ export default function DashboardView({ setView, currentUser, onLogout }) {
                 <div style={{ width:44, height:44, borderRadius:10, background:b.colorLt, border:`1px solid ${b.color}33`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:22, marginBottom:14, boxShadow:`0 2px 8px ${b.color}22` }}>
                   {b.icon}
                 </div>
-                <div style={{ fontSize:14, fontWeight:700, color:C.navy, marginBottom:5 }}>{b.label}</div>
-                <div style={{ fontSize:11, color:C.muted, lineHeight:1.55 }}>{b.desc}</div>
+                <div style={{ fontSize:14, fontWeight:700, color:C.navy, marginBottom:5 }}>{t(`tiles.${b.id}.label`)}</div>
+                <div style={{ fontSize:11, color:C.muted, lineHeight:1.55 }}>{t(`tiles.${b.id}.desc`)}</div>
                 <div style={{ position:"absolute", bottom:16, right:16, fontSize:16, color:b.color, opacity:.35 }}>→</div>
               </div>
             ))}
           </div>
 
           <div style={{ marginTop:20, padding:"10px 4px", display:"flex", justifyContent:"space-between", borderTop:`1px solid ${C.border}` }}>
-            <span style={{ fontSize:9, color:C.gray, letterSpacing:".1em" }}>B.E.A.U.™ CLINICAL PROTOCOL INTELLIGENCE</span>
-            <span style={{ fontSize:9, color:C.gray, letterSpacing:".1em" }}>© 2026 THE DOGGY STYLE GYM LLC · K9 REHAB PRO™</span>
+            <span style={{ fontSize:9, color:C.gray, letterSpacing:".1em", textTransform:"uppercase" }}>{t("dashboard.footerIntelligence")}</span>
+            <span style={{ fontSize:9, color:C.gray, letterSpacing:".1em" }}>{t("dashboard.footerCopyright")}</span>
           </div>
         </div>
       </div>
 
       {block && BlockComp && (
-        <Modal title={block.label} color={block.color} colorLt={block.colorLt} icon={block.icon} onClose={()=>setOpenBlock(null)}>
+        <Modal title={t(`tiles.${block.id}.label`)} color={block.color} colorLt={block.colorLt} icon={block.icon} onClose={()=>setOpenBlock(null)}>
           <BlockComp patientName="Max"/>
         </Modal>
       )}
 
       {sideBlock && SideComp && (
-        <Modal title={sideBlock.label} color={C.blue} colorLt={C.blueLt} icon={sideBlock.icon} onClose={()=>setOpenSidebar(null)}>
+        <Modal title={t(`nav.${sideBlock.id}`)} color={C.blue} colorLt={C.blueLt} icon={sideBlock.icon} onClose={()=>setOpenSidebar(null)}>
           <SideComp/>
         </Modal>
       )}
