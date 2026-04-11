@@ -864,15 +864,158 @@ function ProductCard({ product, expanded, onToggle }) {
           borderTop: `1px solid ${C.green}33`, animation: "fadeIn .15s ease",
         }}>
           {!hasNutritional && (
-            <div style={{
-              padding: "12px 14px", background: C.white, border: `1px solid ${C.border}`,
-              borderRadius: 5, fontSize: 11, color: C.muted, lineHeight: 1.6,
-            }}>
-              <b style={{ color: C.navy }}>Nutritional data not yet verified for this product line.</b>
-              <br/>
-              Consult product insert for complete guaranteed analysis, key nutrients,
-              caloric content, and indications.
-            </div>
+            <>
+              {/* Variant note — deference line */}
+              <div style={{
+                padding: "7px 11px", background: C.white, border: `1px dashed ${C.border}`,
+                borderRadius: 4, fontSize: 10, color: C.muted, fontStyle: "italic",
+                marginBottom: 12, lineHeight: 1.5,
+              }}>
+                Nutritional data for this product line has not yet been transcribed from
+                the manufacturer's source-of-truth. Consult product insert for verified values.
+              </div>
+
+              {/* Two-column GA + Key Nutrients skeleton — same structure as verified state */}
+              <div style={{
+                display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12,
+              }}>
+                {/* Guaranteed Analysis skeleton */}
+                <div style={{
+                  background: C.white, border: `1px solid ${C.border}`,
+                  borderRadius: 5, padding: "10px 12px",
+                }}>
+                  <div style={{
+                    fontSize: 9, fontWeight: 700, color: C.green, letterSpacing: ".08em",
+                    textTransform: "uppercase", marginBottom: 7,
+                  }}>
+                    Guaranteed Analysis
+                  </div>
+                  {["Crude Protein", "Crude Fat", "Crude Fiber", "Moisture"].map(k => (
+                    <div key={k} style={{
+                      display: "flex", justifyContent: "space-between",
+                      fontSize: 11, color: C.text, padding: "3px 0",
+                      borderBottom: `1px dashed ${C.border}`,
+                    }}>
+                      <span style={{ color: C.muted }}>{k}</span>
+                      <span style={{ fontSize: 9, color: C.gray, fontStyle: "italic" }}>Per product insert</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Key Nutrients skeleton */}
+                <div style={{
+                  background: C.white, border: `1px solid ${C.border}`,
+                  borderRadius: 5, padding: "10px 12px",
+                }}>
+                  <div style={{
+                    fontSize: 9, fontWeight: 700, color: C.green, letterSpacing: ".08em",
+                    textTransform: "uppercase", marginBottom: 7,
+                  }}>
+                    Key Therapeutic Nutrients
+                  </div>
+                  <div style={{
+                    fontSize: 10, color: C.muted, fontStyle: "italic", lineHeight: 1.6,
+                    padding: "4px 0",
+                  }}>
+                    Consult product insert for complete key nutrient profile
+                    (vitamins, omega fatty acids, glucosamine, antioxidants, etc.).
+                  </div>
+                </div>
+              </div>
+
+              {/* Caloric content skeleton */}
+              <div style={{
+                background: C.white, border: `1px solid ${C.border}`, borderRadius: 5,
+                padding: "8px 12px", marginBottom: 12,
+              }}>
+                <div style={{
+                  fontSize: 9, fontWeight: 700, color: C.green, letterSpacing: ".08em",
+                  textTransform: "uppercase", marginBottom: 4,
+                }}>
+                  Caloric Content
+                </div>
+                <div style={{ fontSize: 10, color: C.muted, fontStyle: "italic" }}>
+                  Consult product insert for kcal ME/kg and kcal per cup.
+                </div>
+              </div>
+
+              {/* Clinical Rationale — uses the catalog's existing purpose line
+                  (which is real source-of-truth data, not fabricated) */}
+              {product.purpose && (
+                <div style={{
+                  background: C.greenLt, border: `1.5px solid ${C.green}44`,
+                  borderLeft: `4px solid ${C.green}`, borderRadius: 5,
+                  padding: "10px 13px", marginBottom: 12,
+                }}>
+                  <div style={{
+                    fontSize: 9, fontWeight: 700, color: C.green, letterSpacing: ".1em",
+                    textTransform: "uppercase", marginBottom: 5,
+                  }}>
+                    Category Positioning
+                  </div>
+                  <div style={{ fontSize: 11, color: C.text, lineHeight: 1.65, fontStyle: "italic" }}>
+                    {product.purpose}
+                  </div>
+                  <div style={{
+                    fontSize: 9, color: C.muted, marginTop: 6, fontStyle: "italic", lineHeight: 1.5,
+                  }}>
+                    Clinical rationale and outcomes data pending transcription from manufacturer
+                    product literature. Consult product insert for complete clinical positioning.
+                  </div>
+                </div>
+              )}
+
+              {/* BCS scale — neutral state, no range highlighted */}
+              <div style={{
+                background: C.white, border: `1px solid ${C.border}`, borderRadius: 5,
+                padding: "10px 12px", marginBottom: 12,
+              }}>
+                <div style={{
+                  fontSize: 9, fontWeight: 700, color: C.muted, letterSpacing: ".08em",
+                  textTransform: "uppercase", marginBottom: 5,
+                }}>
+                  Manufacturer-positioned BCS range
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                  {[1,2,3,4,5,6,7,8,9].map(n => (
+                    <div key={n} style={{
+                      width: 22, height: 22, borderRadius: "50%",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      background: C.bg, color: C.muted,
+                      border: `1.5px solid ${C.border}`,
+                      fontSize: 10, fontWeight: 700, opacity: 0.5,
+                    }}>{n}</div>
+                  ))}
+                  <span style={{
+                    marginLeft: 8, fontSize: 10, color: C.muted, fontStyle: "italic",
+                  }}>Range not specified — consult product insert</span>
+                </div>
+                <div style={{
+                  fontSize: 9, color: C.muted, fontStyle: "italic", marginTop: 6, lineHeight: 1.5,
+                }}>
+                  Clinician judgment required — BCS alone is not a sufficient indication criterion.
+                </div>
+              </div>
+
+              {/* Indications — deference skeleton */}
+              <div style={{ marginBottom: 12 }}>
+                <div style={{
+                  fontSize: 9, fontWeight: 700, color: C.green, letterSpacing: ".08em",
+                  textTransform: "uppercase", marginBottom: 6,
+                }}>
+                  Indications
+                </div>
+                <div style={{
+                  fontSize: 10, color: C.muted, fontStyle: "italic", lineHeight: 1.6,
+                  padding: "7px 11px", background: C.white, border: `1px dashed ${C.border}`,
+                  borderRadius: 4,
+                }}>
+                  Specific indications, contraindications, and patient selection criteria
+                  are defined in the manufacturer's product insert. Review with attending
+                  veterinarian before dispensing.
+                </div>
+              </div>
+            </>
           )}
 
           {hasNutritional && (
