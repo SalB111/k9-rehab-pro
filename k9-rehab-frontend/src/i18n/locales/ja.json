@@ -1,0 +1,50 @@
+{
+  "_machine_translation_note": "TODO: professional review — machine-quality draft. Do NOT ship to paying customers without credentialed Japanese veterinary translator review.",
+  "languageSelector": {
+    "label": "言語"
+  },
+  "dashboard": {
+    "title": "臨床ダッシュボード",
+    "subtitle": "任意のブロックを選択 · すべてのフィールドは独立 · 順序は任意",
+    "beauReady": "B.E.A.U. 準備完了",
+    "footerIntelligence": "B.E.A.U.™ 臨床プロトコルインテリジェンス",
+    "footerCopyright": "© 2026 The Doggy Style Gym LLC · K9 Rehab Pro™"
+  },
+  "sidebar": {
+    "systemOnline": "システムオンライン",
+    "signedInAs": "サインイン中",
+    "activePatient": "アクティブな患者",
+    "backToClients": "クライアント一覧に戻る",
+    "save": "保存",
+    "saved": "保存済み",
+    "signOut": "サインアウト",
+    "exit": "終了",
+    "credAdmin": "管理者",
+    "credClinician": "CVN、犬リハビリテーション看護師"
+  },
+  "nav": {
+    "how": "K9 Rehab Pro の使い方",
+    "ask": "B.E.A.U. に質問",
+    "about": "概要",
+    "disclaimer": "免責事項",
+    "hipaa": "獣医 HIPAA"
+  },
+  "tiles": {
+    "client":       { "label": "クライアントと患者",      "desc": "人口統計 · 連絡先 · 保険" },
+    "diagnostics":  { "label": "診断",                   "desc": "画像診断 · 検査" },
+    "assessment":   { "label": "評価",                   "desc": "診断 · 痛み · 歩行 · 神経" },
+    "metrics":      { "label": "B.E.A.U. メトリクス",    "desc": "BCS · ゴニオメトリ · 筋肉 · 姿勢" },
+    "diet":         { "label": "食事決定支援",            "desc": "Mars Petcare 療法食ポートフォリオ" },
+    "equipment":    { "label": "クリニック機器",          "desc": "利用可能なリハビリツール" },
+    "home":         { "label": "家庭用運動プログラム",    "desc": "環境 · HEP · 飼い主プロフィール" },
+    "goals":        { "label": "目標",                   "desc": "短期 · 長期 · 進捗" },
+    "conditioning": { "label": "コンディショニング",      "desc": "フィットネス · パフォーマンス · メンテナンス" },
+    "protocol":     { "label": "プロトコル概要",          "desc": "生成 · エクスポート · メール · QR" },
+    "library":      { "label": "運動ライブラリ",          "desc": "260 運動 · 犬 · 猫" }
+  },
+  "modal": {
+    "close": "閉じる",
+    "saveAndClose": "保存して閉じる",
+    "engineSubtitle": "K9 Rehab Pro™ · B.E.A.U.™ エンジン"
+  }
+}

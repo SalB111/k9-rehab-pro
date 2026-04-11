@@ -1,0 +1,50 @@
+{
+  "_machine_translation_note": "TODO: professional review — machine-quality draft. Do NOT ship to paying customers without credentialed Korean veterinary translator review.",
+  "languageSelector": {
+    "label": "언어"
+  },
+  "dashboard": {
+    "title": "임상 대시보드",
+    "subtitle": "아무 블록이나 선택 · 모든 필드 독립 · 순서 무관",
+    "beauReady": "B.E.A.U. 준비 완료",
+    "footerIntelligence": "B.E.A.U.™ 임상 프로토콜 인텔리전스",
+    "footerCopyright": "© 2026 The Doggy Style Gym LLC · K9 Rehab Pro™"
+  },
+  "sidebar": {
+    "systemOnline": "시스템 온라인",
+    "signedInAs": "로그인 계정",
+    "activePatient": "활성 환자",
+    "backToClients": "고객 목록으로",
+    "save": "저장",
+    "saved": "저장됨",
+    "signOut": "로그아웃",
+    "exit": "종료",
+    "credAdmin": "관리자",
+    "credClinician": "CVN, 반려견 재활 간호사"
+  },
+  "nav": {
+    "how": "K9 Rehab Pro 사용법",
+    "ask": "B.E.A.U.에게 질문",
+    "about": "정보",
+    "disclaimer": "면책조항",
+    "hipaa": "수의 HIPAA"
+  },
+  "tiles": {
+    "client":       { "label": "고객 및 환자",         "desc": "인구통계 · 연락처 · 보험" },
+    "diagnostics":  { "label": "진단",                 "desc": "영상 · 실험실 검사" },
+    "assessment":   { "label": "평가",                 "desc": "진단 · 통증 · 보행 · 신경" },
+    "metrics":      { "label": "B.E.A.U. 지표",        "desc": "BCS · 관절각도 · 근육 · 자세" },
+    "diet":         { "label": "식이 결정 지원",        "desc": "Mars Petcare 치료식 포트폴리오" },
+    "equipment":    { "label": "클리닉 장비",          "desc": "사용 가능한 재활 도구" },
+    "home":         { "label": "가정 운동 프로그램",    "desc": "환경 · HEP · 보호자 프로필" },
+    "goals":        { "label": "목표",                 "desc": "단기 · 장기 · 진행" },
+    "conditioning": { "label": "컨디셔닝",             "desc": "피트니스 · 퍼포먼스 · 유지" },
+    "protocol":     { "label": "프로토콜 요약",         "desc": "생성 · 내보내기 · 이메일 · QR" },
+    "library":      { "label": "운동 라이브러리",       "desc": "260 운동 · 개 · 고양이" }
+  },
+  "modal": {
+    "close": "닫기",
+    "saveAndClose": "저장 후 닫기",
+    "engineSubtitle": "K9 Rehab Pro™ · B.E.A.U.™ 엔진"
+  }
+}

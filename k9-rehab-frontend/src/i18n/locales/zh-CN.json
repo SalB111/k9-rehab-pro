@@ -1,0 +1,50 @@
+{
+  "_machine_translation_note": "TODO: professional review — machine-quality draft. Do NOT ship to paying customers without credentialed Simplified Chinese veterinary translator review.",
+  "languageSelector": {
+    "label": "语言"
+  },
+  "dashboard": {
+    "title": "临床仪表板",
+    "subtitle": "选择任意模块 · 所有字段独立 · 无需特定顺序",
+    "beauReady": "B.E.A.U. 就绪",
+    "footerIntelligence": "B.E.A.U.™ 临床方案智能",
+    "footerCopyright": "© 2026 The Doggy Style Gym LLC · K9 Rehab Pro™"
+  },
+  "sidebar": {
+    "systemOnline": "系统在线",
+    "signedInAs": "已登录",
+    "activePatient": "当前患者",
+    "backToClients": "返回客户列表",
+    "save": "保存",
+    "saved": "已保存",
+    "signOut": "退出登录",
+    "exit": "退出",
+    "credAdmin": "管理员",
+    "credClinician": "CVN,犬类康复护士"
+  },
+  "nav": {
+    "how": "如何使用 K9 Rehab Pro",
+    "ask": "向 B.E.A.U. 提问",
+    "about": "关于",
+    "disclaimer": "免责声明",
+    "hipaa": "兽医 HIPAA"
+  },
+  "tiles": {
+    "client":       { "label": "客户与患者",        "desc": "人口统计 · 联系方式 · 保险" },
+    "diagnostics":  { "label": "诊断",              "desc": "影像 · 实验室检查" },
+    "assessment":   { "label": "评估",              "desc": "诊断 · 疼痛 · 步态 · 神经" },
+    "metrics":      { "label": "B.E.A.U. 指标",     "desc": "BCS · 关节测量 · 肌肉 · 姿势" },
+    "diet":         { "label": "饮食决策支持",       "desc": "Mars Petcare 治疗性产品组合" },
+    "equipment":    { "label": "诊所设备",          "desc": "可用的康复工具" },
+    "home":         { "label": "居家运动计划",       "desc": "环境 · HEP · 主人资料" },
+    "goals":        { "label": "目标",              "desc": "短期 · 长期 · 进展" },
+    "conditioning": { "label": "体能训练",          "desc": "健身 · 表现 · 维持" },
+    "protocol":     { "label": "方案摘要",          "desc": "生成 · 导出 · 电子邮件 · QR" },
+    "library":      { "label": "运动库",            "desc": "260 项运动 · 犬 · 猫" }
+  },
+  "modal": {
+    "close": "关闭",
+    "saveAndClose": "保存并关闭",
+    "engineSubtitle": "K9 Rehab Pro™ · B.E.A.U.™ 引擎"
+  }
+}
