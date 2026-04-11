@@ -1,8 +1,6 @@
 {
-  "_machine_translation_note": "TODO: professional review — machine-quality draft. Do NOT ship to paying customers without credentialed Italian veterinary translator review.",
-  "languageSelector": {
-    "label": "Lingua"
-  },
+  "_machine_translation_note": "TODO: professional review — machine-quality draft. Safety strings (safety.*) INTENTIONALLY ABSENT — fall back to English with visible EN badge per product owner decision 2026-04-11.",
+  "languageSelector": { "label": "Lingua" },
   "dashboard": {
     "title": "Dashboard Clinica",
     "subtitle": "Seleziona qualsiasi blocco · Tutti i campi sono indipendenti · Nessun ordine richiesto",
@@ -46,5 +44,32 @@
     "close": "Chiudi",
     "saveAndClose": "Salva e Chiudi",
     "engineSubtitle": "K9 Rehab Pro™ · Motore B.E.A.U.™"
+  },
+  "common": {
+    "loading": "Caricamento…",
+    "select": "Seleziona…",
+    "canine": "Canino",
+    "feline": "Felino",
+    "both": "Entrambi",
+    "yes": "Sì",
+    "no": "No"
+  },
+  "form": {
+    "species": "Specie",
+    "breed": "Razza",
+    "age": "Età",
+    "weight": "Peso",
+    "primaryCondition": "Condizione Primaria",
+    "rehabPhase": "Fase Riabilitativa",
+    "patientInputs": "Dati del Paziente",
+    "selectCondition": "Seleziona condizione…",
+    "selectPhase": "Seleziona fase…",
+    "selectBreed": "Seleziona razza…",
+    "bcsLabel": "BCS (1–9)"
+  },
+  "diet": {
+    "blockTitle": "Supporto Decisionale per Dieta Terapeutica",
+    "featureGateTitle": "Supporto Decisionale Nutrizionale B.E.A.U.",
+    "marsPortfolioFooter": "Catalogo Terapeutico Mars Petcare"
   }
 }

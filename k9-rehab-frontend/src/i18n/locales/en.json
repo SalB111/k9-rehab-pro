@@ -45,5 +45,92 @@
     "close": "Close",
     "saveAndClose": "Save & Close",
     "engineSubtitle": "K9 Rehab Pro™ · B.E.A.U.™ Engine"
+  },
+  "common": {
+    "loading": "Loading…",
+    "select": "Select…",
+    "canine": "Canine",
+    "feline": "Feline",
+    "both": "Both",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "form": {
+    "species": "Species",
+    "breed": "Breed",
+    "age": "Age",
+    "weight": "Weight",
+    "primaryCondition": "Primary Condition",
+    "rehabPhase": "Rehab Phase",
+    "patientInputs": "Patient Inputs",
+    "selectCondition": "Select condition…",
+    "selectPhase": "Select phase…",
+    "selectBreed": "Select breed…",
+    "bcsLabel": "BCS (1–9)"
+  },
+  "diet": {
+    "blockTitle": "Therapeutic Diet Decision Support",
+    "featureGateTitle": "B.E.A.U. Nutritional Decision Support",
+    "categoryCount": "{{count}} categories · {{brands}} brands · {{products}} product lines",
+    "marsPortfolioFooter": "Mars Petcare Therapeutic Catalog",
+    "guaranteedAnalysis": "Guaranteed Analysis",
+    "keyNutrients": "Key Therapeutic Nutrients",
+    "caloricContent": "Caloric Content",
+    "clinicalRationale": "Clinical Rationale",
+    "categoryPositioning": "Category Positioning",
+    "indications": "Indications",
+    "bcsScaleLabel": "Manufacturer-positioned BCS range",
+    "perProductInsert": "Per product insert",
+    "rangeNotSpecified": "Range not specified — consult product insert",
+    "bcsCaveat": "Clinician judgment required — BCS alone is not a sufficient indication criterion.",
+    "pendingTranscription": "Nutritional data for this product line has not yet been transcribed from the manufacturer's source-of-truth. Consult product insert for verified values.",
+    "conditionMatch": "Condition Match",
+    "bcsIndicated": "BCS Indicated",
+    "productLines": "product lines",
+    "productLine": "product line"
+  },
+  "library": {
+    "searchPlaceholder": "Search exercises by name or ID…",
+    "sets": "Sets",
+    "reps": "Reps",
+    "freq": "Freq",
+    "contraindications": "Contraindications",
+    "formCue": "Form Cue",
+    "evidenceBasis": "Evidence Basis",
+    "loadFailed": "Library load failed",
+    "apiHint": "Verify VITE_API_URL in Vercel env vars points to your Railway backend.",
+    "noMatch": "No exercises match the current filter.",
+    "loadingFrom": "Loading {{species}} exercises from backend…"
+  },
+  "protocol": {
+    "generate": "Generate Complete Protocol",
+    "generating": "Generating B.E.A.U. protocol…",
+    "output": "Protocol Output — B.E.A.U. Generated",
+    "copy": "Copy",
+    "copied": "Copied",
+    "emailClient": "Email Client",
+    "print": "Print",
+    "qrCode": "QR Code",
+    "connectionError": "Connection error: {{message}}",
+    "conditioningHeading": "B.E.A.U. Conditioning Plan",
+    "generateConditioning": "Generate Progressive Conditioning Exercises",
+    "generatingConditioning": "Generating conditioning plan…"
+  },
+  "beau": {
+    "askTitle": "Ask B.E.A.U.",
+    "askPlaceholder": "e.g. What exercises are contraindicated for a TPLO patient at week 3? What is the evidence basis for cavaletti rails?",
+    "askButton": "Ask B.E.A.U.",
+    "thinking": "B.E.A.U. is thinking…",
+    "response": "B.E.A.U. Response"
+  },
+  "safety": {
+    "_note": "Safety-critical strings are ENGLISH-LOCKED across all locales per product owner decision 2026-04-11. No machine translation. SafetyText component renders these with a visible EN badge when the user is in a non-English locale. Human-reviewed translations will replace these incrementally.",
+    "vetReviewOnly": "For licensed veterinarian review — consult product insert for contraindications, adverse reactions, and species-specific formulation.",
+    "stopCallVet": "STOP IMMEDIATELY AND CALL YOUR VET IF:",
+    "notSubstitute": "This does not replace veterinary care.",
+    "dietScopeBanner": "B.E.A.U. surfaces therapeutic product lines from the Mars Petcare portfolio for clinician review. It does not diagnose, prescribe, or auto-select therapeutic diets. All product decisions require licensed veterinarian judgment. Equivalent therapeutic diets from other veterinary formularies may be substituted per clinic policy and clinician judgment.",
+    "dietScopeHeader": "Therapeutic Diet Decision Support · Licensed Veterinarian Review Only",
+    "equivalentDiets": "Equivalent therapeutic diets from Hill's Prescription Diet, Purina Pro Plan Veterinary Diets, and Blue Buffalo Natural Veterinary Diet may be substituted per clinician judgment.",
+    "neverAutoSelect": "B.E.A.U. presents clinician-reviewable options; B.E.A.U. never auto-selects or prescribes. Brand surfacing is logged to support Mars Petcare integration analytics."
   }
 }

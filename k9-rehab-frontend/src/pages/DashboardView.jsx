@@ -237,6 +237,45 @@ function LanguageSelector() {
   );
 }
 
+// ─── SAFETY TEXT ──────────────────────────────────────────────────────────────
+// Renders English safety-critical strings with a visible EN badge when the
+// user is in a non-English locale. Per product owner decision 2026-04-11,
+// safety warnings, red-flag alerts, scope-of-practice banners, and clinical
+// disclaimers are NEVER machine-translated. They stay in English across all
+// locales until human-reviewed translations are provided.
+//
+// Usage:
+//   <SafetyText k="safety.dietScopeBanner"/>
+//   <SafetyText k="safety.vetReviewOnly" as="span"/>
+//
+// The `k` prop is the i18next key in the safety namespace. The component
+// always reads from the English bundle (via the explicit `lng: "en"` option
+// on the t() call) — never from the current locale — so a missing
+// translation can never silently corrupt a safety string.
+function SafetyText({ k, as = "span", style, className, showBadge = true }) {
+  const { i18n: i18nInst, t } = useTranslation();
+  const text = t(k, { lng: "en", defaultValue: "" });
+  const isNonEnglish = !(i18nInst.language || "en").toLowerCase().startsWith("en");
+  const Tag = as;
+  return (
+    <Tag className={className} style={style}>
+      {text}
+      {isNonEnglish && showBadge && (
+        <span
+          title="This safety-critical text is displayed in English across all locales until human-reviewed translations are provided. Do not machine-translate."
+          style={{
+            display: "inline-block", marginLeft: 6, padding: "1px 5px",
+            fontSize: 8, fontWeight: 700, letterSpacing: ".08em",
+            color: C.white, background: C.red, borderRadius: 3,
+            verticalAlign: "middle", lineHeight: 1.4,
+          }}>
+          EN
+        </span>
+      )}
+    </Tag>
+  );
+}
+
 // ══════════════════════════════════════════════════════════════════════════════
 // BLOCK PANELS
 // ══════════════════════════════════════════════════════════════════════════════
@@ -848,13 +887,13 @@ function ProductCard({ product, expanded, onToggle }) {
         <div style={{ fontSize: 11, color: C.text, lineHeight: 1.55, marginBottom: 6 }}>
           {purposeText}
         </div>
-        <div style={{
-          fontSize: 9, color: C.muted, fontStyle: "italic", lineHeight: 1.5,
-          paddingTop: 6, borderTop: `1px dashed ${C.border}`,
-        }}>
-          For licensed veterinarian review — consult product insert for contraindications,
-          adverse reactions, and species-specific formulation.
-        </div>
+        <SafetyText
+          k="safety.vetReviewOnly"
+          as="div"
+          style={{
+            fontSize: 9, color: C.muted, fontStyle: "italic", lineHeight: 1.5,
+            paddingTop: 6, borderTop: `1px dashed ${C.border}`,
+          }}/>
       </div>
 
       {/* Expanded detail panel */}
@@ -1152,16 +1191,15 @@ function ProductCard({ product, expanded, onToggle }) {
             </>
           )}
 
-          {/* Per-card equivalent diets note — always shown when expanded */}
-          <div style={{
-            background: C.white, border: `1px solid ${C.border}`, borderRadius: 5,
-            padding: "10px 13px", fontSize: 10, color: C.muted, lineHeight: 1.65,
-            fontStyle: "italic",
-          }}>
-            <b style={{ color: C.navy, fontStyle: "normal" }}>Equivalent therapeutic diets</b> from
-            Hill's Prescription Diet, Purina Pro Plan Veterinary Diets, and Blue Buffalo
-            Natural Veterinary Diet may be substituted per clinician judgment.
-          </div>
+          {/* Per-card equivalent diets note — SafetyText enforces English + EN badge */}
+          <SafetyText
+            k="safety.equivalentDiets"
+            as="div"
+            style={{
+              background: C.white, border: `1px solid ${C.border}`, borderRadius: 5,
+              padding: "10px 13px", fontSize: 10, color: C.muted, lineHeight: 1.65,
+              fontStyle: "italic",
+            }}/>
         </div>
       )}
     </div>
@@ -1169,6 +1207,7 @@ function ProductCard({ product, expanded, onToggle }) {
 }
 
 function DietCatalogEngine() {
+  const { t } = useTranslation();
   const [species,   setSpecies]   = useState("canine");
   const [bcs,       setBcs]       = useState("");
   const [condition, setCondition] = useState("");
@@ -1213,10 +1252,10 @@ function DietCatalogEngine() {
         <div style={{
           fontSize: 10, fontWeight: 700, color: C.green, letterSpacing: ".08em",
           textTransform: "uppercase", marginBottom: 10,
-        }}>Patient Inputs</div>
+        }}>{t("form.patientInputs")}</div>
         <Row cols={2}>
           <div>
-            <Lbl>Species</Lbl>
+            <Lbl>{t("form.species")}</Lbl>
             <div style={{ display: "flex", gap: 6 }}>
               {["canine", "feline"].map(s => (
                 <button key={s} onClick={() => setSpecies(s)}
@@ -1225,34 +1264,37 @@ function DietCatalogEngine() {
                     border: `1.5px solid ${species === s ? C.green : C.border}`,
                     color: species === s ? C.white : C.muted, borderRadius: 5,
                     cursor: "pointer", fontSize: 11, fontWeight: 700, letterSpacing: ".06em",
+                    textTransform: "uppercase",
                   }}>
-                  {s === "canine" ? "🐕  CANINE" : "🐱  FELINE"}
+                  {s === "canine" ? `🐕  ${t("common.canine")}` : `🐱  ${t("common.feline")}`}
                 </button>
               ))}
             </div>
           </div>
           <div>
-            <Lbl range="4–5">BCS (1–9)</Lbl>
+            <Lbl range="4–5">{t("form.bcsLabel")}</Lbl>
             <input type="number" min="1" max="9" value={bcs}
               onChange={e => setBcs(e.target.value)} placeholder="e.g. 6"/>
           </div>
         </Row>
         <Row cols={2}>
           <div>
-            <Lbl>Primary Condition</Lbl>
+            <Lbl>{t("form.primaryCondition")}</Lbl>
             <select value={condition} onChange={e => setCondition(e.target.value)}>
+              {/* Dropdown VALUES stay English per decision #1 — clinical grading terminology */}
               {DIET_CONDITIONS.map(c => (
                 <option key={c.value} value={c.value}>{c.label}</option>
               ))}
             </select>
           </div>
           <div>
-            <Lbl>Rehab Phase <span style={{
+            <Lbl>{t("form.rehabPhase")} <span style={{
               fontSize: 8, color: C.muted, background: C.bg, border: `1px solid ${C.border}`,
               padding: "1px 5px", borderRadius: 3, marginLeft: 5, fontWeight: 600,
             }}>decorative</span></Lbl>
             <select value={phase} onChange={e => setPhase(e.target.value)}>
-              <option value="">— Select phase —</option>
+              {/* Phase options stay English — clinical grading per decision #1 */}
+              <option value="">— {t("form.selectPhase")} —</option>
               <option value="1">Phase 1 — Acute Protection</option>
               <option value="2">Phase 2 — Early Mobilization</option>
               <option value="3">Phase 3 — Controlled Strengthening</option>
@@ -1352,11 +1394,11 @@ function DietCatalogEngine() {
         borderRadius: 6, display: "flex", justifyContent: "space-between",
         alignItems: "center", flexWrap: "wrap", gap: 10,
       }}>
-        <div style={{ fontSize: 10, letterSpacing: ".1em", fontWeight: 600 }}>
-          MARS PETCARE THERAPEUTIC CATALOG
+        <div style={{ fontSize: 10, letterSpacing: ".1em", fontWeight: 600, textTransform: "uppercase" }}>
+          {t("diet.marsPortfolioFooter")}
         </div>
         <div style={{ fontSize: 11, fontWeight: 700, color: C.green }}>
-          {CATALOG_STATS.categories} categories · {CATALOG_STATS.brands} brands · {CATALOG_STATS.products} product lines
+          {t("diet.categoryCount", { count: CATALOG_STATS.categories, brands: CATALOG_STATS.brands, products: CATALOG_STATS.products })}
         </div>
       </div>
     </div>
@@ -1468,20 +1510,19 @@ function MetricsPanel() {
 
 // ── DIET DECISION SUPPORT (dedicated block) ───────────────────────────────────
 function DietPanel() {
+  const { t } = useTranslation();
   return <>
-    <Sec title="Therapeutic Diet Decision Support" color={C.green} colorLt={C.greenLt} noTop>
-      {/* Scope-of-practice banner — always visible */}
+    <Sec title={t("diet.blockTitle")} color={C.green} colorLt={C.greenLt} noTop>
+      {/* Scope-of-practice banner — SafetyText (English-locked + EN badge) */}
       <div style={{
         padding:"11px 14px", background:C.redLt, border:`1px solid ${C.red}44`,
         borderRadius:6, marginBottom:14, fontSize:11, color:C.text, lineHeight:1.65,
       }}>
-        <div style={{ fontSize:10, fontWeight:700, color:C.red, letterSpacing:".08em", marginBottom:4 }}>
-          THERAPEUTIC DIET DECISION SUPPORT · LICENSED VETERINARIAN REVIEW ONLY
-        </div>
-        B.E.A.U. surfaces therapeutic product lines from the Mars Petcare portfolio for clinician review.
-        It does not diagnose, prescribe, or auto-select therapeutic diets. All product decisions require
-        licensed veterinarian judgment. Equivalent therapeutic diets from other veterinary formularies
-        may be substituted per clinic policy and clinician judgment.
+        <SafetyText
+          k="safety.dietScopeHeader"
+          as="div"
+          style={{ fontSize:10, fontWeight:700, color:C.red, letterSpacing:".08em", marginBottom:4, textTransform:"uppercase" }}/>
+        <SafetyText k="safety.dietScopeBanner" as="div"/>
       </div>
 
       {/* Description — no feature gate on the dedicated page */}
@@ -1495,11 +1536,9 @@ function DietPanel() {
           color:C.white, fontSize:14, fontWeight:700,
         }}>🥣</div>
         <div style={{ fontSize:12, color:C.text, lineHeight:1.65 }}>
-          <b style={{color:C.green}}>B.E.A.U. Nutritional Decision Support</b> — Surfaces the Mars Petcare
-          therapeutic portfolio (Royal Canin · Advance · Eukanuba Vet · Iams Vet · Nutro LID · Greenies)
-          filtered by patient species, BCS, condition, and rehabilitation phase. B.E.A.U. presents
-          clinician-reviewable options; B.E.A.U. never auto-selects or prescribes. Brand surfacing
-          is logged to support Mars Petcare integration analytics.
+          <b style={{color:C.green}}>{t("diet.featureGateTitle")}</b>
+          {" — "}
+          <SafetyText k="safety.neverAutoSelect" as="span"/>
         </div>
       </div>
 
@@ -1856,6 +1895,7 @@ function mapBackendExercise(ex) {
 }
 
 function LibraryPanel() {
+  const { t } = useTranslation();
   const [species, setSpecies] = useState("canine");
   const [cat,     setCat]     = useState("ALL");
   const [search,  setSearch]  = useState("");
@@ -1930,7 +1970,7 @@ function LibraryPanel() {
       📚 {note}
     </div>
     <div style={{ display:"flex", gap:8, marginBottom:10 }}>
-      <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search exercises by name or ID…" style={{ flex:1 }}/>
+      <input value={search} onChange={e=>setSearch(e.target.value)} placeholder={t("library.searchPlaceholder")} style={{ flex:1 }}/>
     </div>
     <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:16 }}>
       {CATS.map(c=>(
@@ -1944,7 +1984,7 @@ function LibraryPanel() {
       {loading && (
         <div style={{ padding:"40px 20px", textAlign:"center", color:C.muted, fontSize:12 }}>
           <div style={{ display:"inline-block", width:24, height:24, border:`3px solid ${C.border}`, borderTopColor:C.blue, borderRadius:"50%", animation:"spinK9 .8s linear infinite", marginBottom:12 }}/>
-          <div>Loading {species} exercises from backend…</div>
+          <div>{t("library.loadingFrom", { species: t(`common.${species}`) })}</div>
         </div>
       )}
       {!loading && error && (
@@ -1980,20 +2020,24 @@ function LibraryPanel() {
                 </div>
                 <Row>
                   <div>
-                    <div style={{ fontSize:10, fontWeight:700, color:C.red, letterSpacing:".08em", marginBottom:5 }}>CONTRAINDICATIONS</div>
+                    <div style={{ fontSize:10, fontWeight:700, color:C.red, letterSpacing:".08em", marginBottom:5, textTransform:"uppercase" }}>{t("library.contraindications")}</div>
                     {ex.contra.map(ct=><div key={ct} style={{ fontSize:11, color:C.red, marginBottom:3, display:"flex", gap:6 }}><span>✗</span>{ct}</div>)}
                   </div>
                   <div>
-                    <div style={{ fontSize:10, fontWeight:700, color:C.amber, letterSpacing:".08em", marginBottom:5 }}>RED FLAGS — STOP</div>
+                    {/* Red flag header is SAFETY-CRITICAL — English-locked with EN badge */}
+                    <SafetyText
+                      k="safety.stopCallVet"
+                      as="div"
+                      style={{ fontSize:10, fontWeight:700, color:C.amber, letterSpacing:".08em", marginBottom:5, textTransform:"uppercase" }}/>
                     {ex.rf.map(r=><div key={r} style={{ fontSize:11, color:C.amber, marginBottom:3, display:"flex", gap:6 }}><span>⚑</span>{r}</div>)}
                   </div>
                 </Row>
                 <div style={{ marginTop:10, padding:"10px 14px", background:C.bg, borderRadius:5, border:`1px solid ${C.border}` }}>
-                  <div style={{ fontSize:9, color:C.muted, fontWeight:700, letterSpacing:".1em", marginBottom:4 }}>FORM CUE</div>
+                  <div style={{ fontSize:9, color:C.muted, fontWeight:700, letterSpacing:".1em", marginBottom:4, textTransform:"uppercase" }}>{t("library.formCue")}</div>
                   <div style={{ fontSize:12, color:C.text, lineHeight:1.65 }}>{ex.cue}</div>
                 </div>
                 <div style={{ marginTop:8, padding:"10px 14px", background:C.greenLt, borderRadius:5, border:`1px solid ${C.green}33` }}>
-                  <div style={{ fontSize:9, color:C.green, fontWeight:700, letterSpacing:".1em", marginBottom:4 }}>EVIDENCE BASIS</div>
+                  <div style={{ fontSize:9, color:C.green, fontWeight:700, letterSpacing:".1em", marginBottom:4, textTransform:"uppercase" }}>{t("library.evidenceBasis")}</div>
                   <div style={{ fontSize:12, color:C.text, lineHeight:1.65 }}>{ex.evidence}</div>
                 </div>
               </div>
