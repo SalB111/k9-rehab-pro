@@ -99,13 +99,10 @@ export default function GeneratorView({ initialStep }) {
   const generate = async () => {
     if (loading) return; // Debounce — prevent double-submit
 
-    // Validation with toast feedback
+    // Only Patient Name + Client Name are required — all other blocks are optional
     const missing = [];
     if (!form.patientName.trim()) missing.push("Patient Name");
-    if (!form.diagnosis) missing.push("Diagnosis");
-    if (!form.affectedRegion) missing.push("Affected Region");
-    if (!form.treatmentApproach) missing.push("Treatment Approach");
-    if (!complianceAgreed) missing.push("Compliance Acknowledgment");
+    if (!form.clientLastName?.trim() && !form.clientFirstName?.trim()) missing.push("Client Name");
 
     if (missing.length > 0) {
       const msg = `Missing required: ${missing.join(", ")}`;

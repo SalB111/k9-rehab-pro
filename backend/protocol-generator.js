@@ -540,11 +540,14 @@ function validateIntake(formData) {
   const errors = [];
   const warnings = [];
 
-  // Required fields
-  if (!formData.diagnosis)          errors.push('Diagnosis is required');
-  if (!formData.affectedRegion)     errors.push('Affected region is required');
+  // Patient name and client name are required — other fields get sensible defaults
   if (!formData.patientName)        errors.push('Patient name is required');
-  if (!formData.treatmentApproach)  errors.push('Treatment approach is required (Surgical, Conservative, or Palliative)');
+  if (!formData.clientLastName && !formData.clientFirstName) errors.push('Client name is required');
+
+  // Default optional fields if not provided
+  if (!formData.diagnosis)          { formData.diagnosis = 'Conditioning'; warnings.push('No diagnosis selected — defaulting to General Conditioning'); }
+  if (!formData.affectedRegion)     { formData.affectedRegion = 'Generalized'; warnings.push('No affected region selected — defaulting to Generalized'); }
+  if (!formData.treatmentApproach)  { formData.treatmentApproach = 'Conservative'; warnings.push('No treatment approach selected — defaulting to Conservative'); }
 
   // Pain score — WARNING at >= 8, auto-route to palliative/comfort protocol
   // Source-of-truth: High-pain patients still need care — passive ROM, modalities,
