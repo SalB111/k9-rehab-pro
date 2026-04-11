@@ -510,8 +510,53 @@ const DIET_CATALOG = [
     id: "renal", num: "02",
     title: "Renal Support & Urinary Health",
     products: [
-      { brand: "Royal Canin", name: "Renal Support (A / F / S / T / E)", purpose: "CKD, renal insufficiency",           species: "both" },
+      {
+        brand: "Royal Canin", name: "Renal Support (A / F / S / T / E)",
+        purpose: "CKD, renal insufficiency", species: "both",
+        nutritional: {
+          variantNote: "Nutritional data below reflects the Renal Support S (Dry) variant per manufacturer product page.",
+          guaranteedAnalysis: {
+            "Crude Protein":  "10.5–14.5%",
+            "Crude Fat":      "16.0% min",
+            "Crude Fiber":    "3.7% max",
+            "Moisture":       "10.0% max",
+          },
+          keyNutrients: [
+            "EPA + DHA 0.28% min",
+            "Phosphorus 0.42% max",
+            "Vitamin E 350 IU/kg",
+            "Ascorbic Acid 160 mg/kg",
+          ],
+          calories: { kcalPerKg: "3,879 kcal ME/kg", kcalPerCup: "365 kcal/cup" },
+          clinicalRationale: "Low phosphorus and controlled protein reduce renal workload. Energy-dense for decreased appetite in CKD patients. Essential for senior rehab patients with concurrent kidney disease.",
+          bcsRange: [3, 7],
+          indications: ["CKD Stage 1–4", "Renal insufficiency", "Senior dog kidney support"],
+        },
+      },
       { brand: "Royal Canin", name: "Urinary SO",                        purpose: "Struvite dissolution, urinary health", species: "both" },
+      {
+        brand: "Royal Canin", name: "Renal Support + Mobility Support",
+        purpose: "Multifunction — concurrent CKD and joint disease in senior patients",
+        species: "both", positioning: "Multifunction",
+        nutritional: {
+          guaranteedAnalysis: {
+            "Crude Protein":  "12.0–16.0%",
+            "Crude Fat":      "14.0% min",
+            "Crude Fiber":    "3.7% max",
+            "Moisture":       "10.0% max",
+          },
+          keyNutrients: [
+            "EPA + DHA 0.36% min",
+            "Phosphorus 0.45% max",
+            "Vitamin E 350 IU/kg",
+            "Ascorbic Acid 240 mg/kg",
+          ],
+          calories: { kcalPerKg: "Consult product insert for complete guaranteed analysis", kcalPerCup: null },
+          clinicalRationale: "Addresses both kidney disease and joint degeneration in one diet. Eliminates the clinical dilemma of choosing between renal and mobility diets in senior patients with comorbidities.",
+          bcsRange: [3, 7],
+          indications: ["CKD + OA", "Renal + post-orthopedic surgery", "Senior with kidney + joint disease"],
+        },
+      },
       { brand: "Advance",     name: "Renal",                             purpose: "Kidney support",                      species: "both", positioning: "Technical Manual" },
       { brand: "Iams",        name: "Renal Plus",                        purpose: "CKD support",                          species: "both", positioning: "Veterinary Formula (Legacy)" },
     ],
@@ -531,7 +576,28 @@ const DIET_CATALOG = [
     id: "weight", num: "04",
     title: "Weight Management & Metabolic Support",
     products: [
-      { brand: "Royal Canin", name: "Satiety Support",      purpose: "Weight loss, appetite control", species: "both" },
+      {
+        brand: "Royal Canin", name: "Satiety Support",
+        purpose: "Weight loss, appetite control", species: "both",
+        nutritional: {
+          variantNote: "Nutritional data below reflects Satiety Support Weight Management (Dry) per manufacturer product page.",
+          guaranteedAnalysis: {
+            "Crude Protein":  "28.0% min",
+            "Crude Fat":      "7.5–11.5%",
+            "Crude Fiber":    "14.8–18.8%",
+            "Moisture":       "10.0% max",
+          },
+          keyNutrients: [
+            "Glucosamine 1,425 mg/kg",
+            "Chondroitin 80 mg/kg",
+            "High protein for lean mass preservation",
+          ],
+          calories: { kcalPerKg: "Consult product insert for complete guaranteed analysis", kcalPerCup: null },
+          clinicalRationale: "97% of dogs lost weight in 3 months. Reduces begging in 83% of dogs. Glucosamine and chondroitin support joints under stress from excess weight. High protein preserves lean muscle during caloric restriction.",
+          bcsRange: [7, 9],
+          indications: ["Obesity", "Overweight rehab patient", "Post-surgical weight reduction"],
+        },
+      },
       { brand: "Royal Canin", name: "Glycobalance",         purpose: "Glucose management",            species: "both" },
       { brand: "Eukanuba",    name: "Restricted Calorie",   purpose: "Weight loss",                   species: "both", positioning: "Veterinary Diets (Legacy)" },
       { brand: "Iams",        name: "Weight Control",       purpose: "Obesity management",            species: "both", positioning: "Veterinary Formula (Legacy)" },
@@ -541,7 +607,51 @@ const DIET_CATALOG = [
     id: "mobility", num: "05",
     title: "Mobility & Joint Support",
     products: [
-      { brand: "Royal Canin", name: "Mobility Support", purpose: "Osteoarthritis, joint health", species: "both" },
+      {
+        brand: "Royal Canin", name: "Mobility Support",
+        purpose: "Osteoarthritis, joint health", species: "both",
+        nutritional: {
+          variantNote: "Nutritional data below reflects Advanced Mobility Support (Dry) per manufacturer product page.",
+          guaranteedAnalysis: {
+            "Crude Protein":  "23.0% min",
+            "Crude Fat":      "10.0% min",
+            "Crude Fiber":    "5.2% max",
+            "Moisture":       "10.0% max",
+          },
+          keyNutrients: [
+            "Vitamin E 315 IU/kg",
+            "Ascorbic Acid 220 mg/kg",
+            "Omega-3 FA 0.5% min",
+            "Collagen added",
+          ],
+          calories: { kcalPerKg: "3,470 kcal ME/kg", kcalPerCup: "316 kcal/cup" },
+          clinicalRationale: "In clinical study, 88% of dogs showed improvement in mobility. Collagen supports joint cartilage health. Adapted calorie content maintains ideal body weight during reduced-activity recovery.",
+          bcsRange: [4, 7],
+          indications: ["Post-TPLO", "Post-CCL repair", "Hip dysplasia", "OA", "DJD"],
+        },
+      },
+      {
+        brand: "Royal Canin", name: "Mobility Support + Satiety",
+        purpose: "Joint support for overweight orthopedic patients",
+        species: "both", positioning: "Combination formulation",
+        nutritional: {
+          guaranteedAnalysis: {
+            "Crude Protein":  "26.0% min",
+            "Crude Fat":      "9.5% min",
+            "Crude Fiber":    "13.5–17.5%",
+            "Moisture":       "10.0% max",
+          },
+          keyNutrients: [
+            "Vitamin E 280 IU/kg",
+            "Ascorbic Acid 190 mg/kg",
+            "High fiber satiety blend",
+          ],
+          calories: { kcalPerKg: "Consult product insert for complete guaranteed analysis", kcalPerCup: null },
+          clinicalRationale: "Combines joint support with weight management. High fiber promotes satiety. Critical for overweight orthopedic patients where excess weight worsens surgical outcomes.",
+          bcsRange: [6, 9],
+          indications: ["Post-TPLO + overweight", "OA + obesity", "DJD + BCS > 6"],
+        },
+      },
       { brand: "Advance",     name: "Mobility",         purpose: "Joint support",                species: "both", positioning: "Technical Manual" },
     ],
   },
@@ -630,38 +740,272 @@ function BrandChip({ brand }) {
   );
 }
 
-function ProductCard({ product }) {
-  const purposeText = product.purpose || "Per product literature — consult manufacturer insert";
-  const speciesLabel = product.species === "feline" ? "Feline only" : "Canine and/or Feline";
+// Visual BCS 1–9 scale. Framed as "manufacturer-positioned" — never a
+// clinical indication. Preserves scope-of-practice: the card does not say
+// "this product is indicated for BCS X"; it says "this is where the
+// manufacturer positions this product."
+function BcsScale({ range }) {
+  if (!Array.isArray(range) || range.length !== 2) return null;
+  const [lo, hi] = range;
+  const dots = [1, 2, 3, 4, 5, 6, 7, 8, 9];
   return (
-    <div style={{
-      padding: "11px 13px", background: C.white, border: `1px solid ${C.border}`,
-      borderRadius: 6, marginBottom: 7,
-    }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5, flexWrap: "wrap" }}>
-        <BrandChip brand={product.brand} />
-        <span style={{ fontSize: 13, fontWeight: 700, color: C.navy }}>{product.name}</span>
-        <span style={{
-          fontSize: 8, color: C.muted, background: C.bg, border: `1px solid ${C.border}`,
-          padding: "1px 6px", borderRadius: 3, fontWeight: 600, letterSpacing: ".04em",
-        }}>{speciesLabel}</span>
-        {product.positioning && (
-          <span style={{
-            fontSize: 8, color: C.amber, background: C.amberLt, border: `1px solid ${C.amber}44`,
-            padding: "1px 6px", borderRadius: 3, fontWeight: 600, letterSpacing: ".04em",
-          }}>{product.positioning}</span>
-        )}
+    <div>
+      <div style={{
+        fontSize: 9, fontWeight: 700, color: C.muted, letterSpacing: ".08em",
+        textTransform: "uppercase", marginBottom: 5,
+      }}>
+        Manufacturer-positioned BCS range
       </div>
-      <div style={{ fontSize: 11, color: C.text, lineHeight: 1.55, marginBottom: 6 }}>
-        {purposeText}
+      <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+        {dots.map(n => {
+          const active = n >= lo && n <= hi;
+          return (
+            <div key={n} style={{
+              width: 22, height: 22, borderRadius: "50%",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              background: active ? C.green : C.bg,
+              color: active ? C.white : C.muted,
+              border: `1.5px solid ${active ? C.green : C.border}`,
+              fontSize: 10, fontWeight: 700,
+            }}>{n}</div>
+          );
+        })}
+        <span style={{
+          marginLeft: 8, fontSize: 10, color: C.green, fontWeight: 700,
+          letterSpacing: ".04em",
+        }}>BCS {lo}–{hi}</span>
       </div>
       <div style={{
-        fontSize: 9, color: C.muted, fontStyle: "italic", lineHeight: 1.5,
-        paddingTop: 6, borderTop: `1px dashed ${C.border}`,
+        fontSize: 9, color: C.muted, fontStyle: "italic", marginTop: 6, lineHeight: 1.5,
       }}>
-        For licensed veterinarian review — consult product insert for contraindications,
-        adverse reactions, and species-specific formulation.
+        Clinician judgment required — BCS alone is not a sufficient indication criterion.
       </div>
+    </div>
+  );
+}
+
+// Product card. Header is always visible and clickable. If the product has
+// nutritional data, clicking expands an owner-facing detail panel with
+// guaranteed analysis, key nutrients, calories, clinical rationale, visual
+// BCS range, indications, and the standard multi-brand equivalents note.
+// If nutritional data is absent, the card still expands but shows a
+// "Consult product insert" message (never fabricates data).
+function ProductCard({ product, expanded, onToggle }) {
+  const purposeText = product.purpose || "Per product literature — consult manufacturer insert";
+  const speciesLabel = product.species === "feline" ? "Feline only" : "Canine and/or Feline";
+  const hasNutritional = !!product.nutritional;
+  const n = product.nutritional || {};
+
+  const onKey = (e) => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onToggle(); }
+  };
+
+  return (
+    <div style={{
+      background: C.white, border: `1px solid ${expanded ? C.green : C.border}`,
+      borderRadius: 6, marginBottom: 7, overflow: "hidden",
+      transition: "border-color .15s",
+    }}>
+      {/* Clickable header — always visible */}
+      <div
+        role="button" tabIndex={0}
+        aria-expanded={expanded}
+        onClick={onToggle} onKeyDown={onKey}
+        style={{
+          padding: "11px 13px", cursor: "pointer", userSelect: "none",
+          background: expanded ? `${C.green}08` : C.white,
+        }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5, flexWrap: "wrap" }}>
+          <BrandChip brand={product.brand} />
+          <span style={{ fontSize: 13, fontWeight: 700, color: C.navy, flex: 1, minWidth: 0 }}>{product.name}</span>
+          <span style={{
+            fontSize: 8, color: C.muted, background: C.bg, border: `1px solid ${C.border}`,
+            padding: "1px 6px", borderRadius: 3, fontWeight: 600, letterSpacing: ".04em",
+          }}>{speciesLabel}</span>
+          {product.positioning && (
+            <span style={{
+              fontSize: 8, color: C.amber, background: C.amberLt, border: `1px solid ${C.amber}44`,
+              padding: "1px 6px", borderRadius: 3, fontWeight: 600, letterSpacing: ".04em",
+            }}>{product.positioning}</span>
+          )}
+          <span style={{ fontSize: 13, color: C.muted, marginLeft: 4 }}>{expanded ? "▾" : "▸"}</span>
+        </div>
+        <div style={{ fontSize: 11, color: C.text, lineHeight: 1.55, marginBottom: 6 }}>
+          {purposeText}
+        </div>
+        <div style={{
+          fontSize: 9, color: C.muted, fontStyle: "italic", lineHeight: 1.5,
+          paddingTop: 6, borderTop: `1px dashed ${C.border}`,
+        }}>
+          For licensed veterinarian review — consult product insert for contraindications,
+          adverse reactions, and species-specific formulation.
+        </div>
+      </div>
+
+      {/* Expanded detail panel */}
+      {expanded && (
+        <div style={{
+          padding: "14px 14px 12px 14px", background: `${C.green}05`,
+          borderTop: `1px solid ${C.green}33`, animation: "fadeIn .15s ease",
+        }}>
+          {!hasNutritional && (
+            <div style={{
+              padding: "12px 14px", background: C.white, border: `1px solid ${C.border}`,
+              borderRadius: 5, fontSize: 11, color: C.muted, lineHeight: 1.6,
+            }}>
+              <b style={{ color: C.navy }}>Nutritional data not yet verified for this product line.</b>
+              <br/>
+              Consult product insert for complete guaranteed analysis, key nutrients,
+              caloric content, and indications.
+            </div>
+          )}
+
+          {hasNutritional && (
+            <>
+              {n.variantNote && (
+                <div style={{
+                  padding: "7px 11px", background: C.white, border: `1px dashed ${C.border}`,
+                  borderRadius: 4, fontSize: 10, color: C.muted, fontStyle: "italic",
+                  marginBottom: 12, lineHeight: 1.5,
+                }}>
+                  {n.variantNote}
+                </div>
+              )}
+
+              {/* Two-column GA + Key Nutrients */}
+              <div style={{
+                display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12,
+              }}>
+                {/* Guaranteed Analysis */}
+                <div style={{
+                  background: C.white, border: `1px solid ${C.border}`,
+                  borderRadius: 5, padding: "10px 12px",
+                }}>
+                  <div style={{
+                    fontSize: 9, fontWeight: 700, color: C.green, letterSpacing: ".08em",
+                    textTransform: "uppercase", marginBottom: 7,
+                  }}>
+                    Guaranteed Analysis
+                  </div>
+                  {n.guaranteedAnalysis && Object.entries(n.guaranteedAnalysis).map(([k, v]) => (
+                    <div key={k} style={{
+                      display: "flex", justifyContent: "space-between",
+                      fontSize: 11, color: C.text, padding: "3px 0",
+                      borderBottom: `1px dashed ${C.border}`,
+                    }}>
+                      <span style={{ color: C.muted }}>{k}</span>
+                      <span style={{ fontWeight: 700, fontFamily: "monospace" }}>{v}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Key Nutrients */}
+                <div style={{
+                  background: C.white, border: `1px solid ${C.border}`,
+                  borderRadius: 5, padding: "10px 12px",
+                }}>
+                  <div style={{
+                    fontSize: 9, fontWeight: 700, color: C.green, letterSpacing: ".08em",
+                    textTransform: "uppercase", marginBottom: 7,
+                  }}>
+                    Key Therapeutic Nutrients
+                  </div>
+                  {Array.isArray(n.keyNutrients) && n.keyNutrients.map((item, i) => (
+                    <div key={i} style={{
+                      fontSize: 11, color: C.text, padding: "3px 0",
+                      display: "flex", gap: 6, alignItems: "flex-start",
+                    }}>
+                      <span style={{ color: C.green, fontWeight: 700, flexShrink: 0 }}>•</span>
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Caloric content */}
+              {n.calories && (
+                <div style={{
+                  background: C.white, border: `1px solid ${C.border}`, borderRadius: 5,
+                  padding: "8px 12px", marginBottom: 12,
+                }}>
+                  <div style={{
+                    fontSize: 9, fontWeight: 700, color: C.green, letterSpacing: ".08em",
+                    textTransform: "uppercase", marginBottom: 4,
+                  }}>
+                    Caloric Content
+                  </div>
+                  <div style={{ fontSize: 11, color: C.text, fontFamily: "monospace" }}>
+                    {n.calories.kcalPerCup
+                      ? `${n.calories.kcalPerKg} · ${n.calories.kcalPerCup}`
+                      : n.calories.kcalPerKg}
+                  </div>
+                </div>
+              )}
+
+              {/* Clinical rationale callout */}
+              {n.clinicalRationale && (
+                <div style={{
+                  background: C.greenLt, border: `1.5px solid ${C.green}44`,
+                  borderLeft: `4px solid ${C.green}`, borderRadius: 5,
+                  padding: "10px 13px", marginBottom: 12,
+                }}>
+                  <div style={{
+                    fontSize: 9, fontWeight: 700, color: C.green, letterSpacing: ".1em",
+                    textTransform: "uppercase", marginBottom: 5,
+                  }}>
+                    Clinical Rationale
+                  </div>
+                  <div style={{ fontSize: 11, color: C.text, lineHeight: 1.65, fontStyle: "italic" }}>
+                    {n.clinicalRationale}
+                  </div>
+                </div>
+              )}
+
+              {/* Visual BCS scale */}
+              {Array.isArray(n.bcsRange) && (
+                <div style={{
+                  background: C.white, border: `1px solid ${C.border}`, borderRadius: 5,
+                  padding: "10px 12px", marginBottom: 12,
+                }}>
+                  <BcsScale range={n.bcsRange} />
+                </div>
+              )}
+
+              {/* Indications */}
+              {Array.isArray(n.indications) && n.indications.length > 0 && (
+                <div style={{ marginBottom: 12 }}>
+                  <div style={{
+                    fontSize: 9, fontWeight: 700, color: C.green, letterSpacing: ".08em",
+                    textTransform: "uppercase", marginBottom: 6,
+                  }}>
+                    Indications
+                  </div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+                    {n.indications.map((ind, i) => (
+                      <span key={i} style={{
+                        fontSize: 10, background: C.greenLt, color: C.green,
+                        padding: "3px 9px", borderRadius: 3, fontWeight: 600,
+                        border: `1px solid ${C.green}33`,
+                      }}>{ind}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Per-card equivalent diets note — always shown when expanded */}
+          <div style={{
+            background: C.white, border: `1px solid ${C.border}`, borderRadius: 5,
+            padding: "10px 13px", fontSize: 10, color: C.muted, lineHeight: 1.65,
+            fontStyle: "italic",
+          }}>
+            <b style={{ color: C.navy, fontStyle: "normal" }}>Equivalent therapeutic diets</b> from
+            Hill's Prescription Diet, Purina Pro Plan Veterinary Diets, and Blue Buffalo
+            Natural Veterinary Diet may be substituted per clinician judgment.
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -671,7 +1015,8 @@ function DietCatalogEngine() {
   const [bcs,       setBcs]       = useState("");
   const [condition, setCondition] = useState("");
   const [phase,     setPhase]     = useState("");
-  const [expanded,  setExpanded]  = useState({});
+  const [expanded,        setExpanded]        = useState({}); // category expansion
+  const [expandedProduct, setExpandedProduct] = useState(null); // single product id
 
   // Species filter: feline-only products are hidden when clinician is in canine mode.
   const visibleCategories = DIET_CATALOG.map(cat => ({
@@ -826,7 +1171,17 @@ function DietCatalogEngine() {
             </div>
             {isExpanded && (
               <div style={{ padding: "0 14px 12px 14px", animation: "fadeIn .15s ease" }}>
-                {cat.products.map((p, i) => <ProductCard key={i} product={p}/>)}
+                {cat.products.map((p, i) => {
+                  const pid = `${cat.id}-${i}`;
+                  return (
+                    <ProductCard
+                      key={pid}
+                      product={p}
+                      expanded={expandedProduct === pid}
+                      onToggle={() => setExpandedProduct(cur => cur === pid ? null : pid)}
+                    />
+                  );
+                })}
               </div>
             )}
           </div>
