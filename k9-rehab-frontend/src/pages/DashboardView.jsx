@@ -763,8 +763,6 @@ function DietCatalogEngine() {
 
 // ── B.E.A.U. METRICS ──────────────────────────────────────────────────────────
 function MetricsPanel() {
-  const [dietEnabled, setDietEnabled] = useState(false);
-
   const gonioJoints = [
     { name:"Shoulder — Flexion",    normal:"30–57°",  note:"Varies by breed/size" },
     { name:"Shoulder — Extension",  normal:"154–165°", note:"" },
@@ -790,38 +788,7 @@ function MetricsPanel() {
   ];
 
   return <>
-    <Sec title="B.E.A.U. Metrics — Therapeutic Diet Decision Support" color={C.green} colorLt={C.greenLt} noTop>
-      {/* Scope-of-practice banner — always visible */}
-      <div style={{
-        padding:"11px 14px", background:C.redLt, border:`1px solid ${C.red}44`,
-        borderRadius:6, marginBottom:14, fontSize:11, color:C.text, lineHeight:1.65,
-      }}>
-        <div style={{ fontSize:10, fontWeight:700, color:C.red, letterSpacing:".08em", marginBottom:4 }}>
-          THERAPEUTIC DIET DECISION SUPPORT · LICENSED VETERINARIAN REVIEW ONLY
-        </div>
-        B.E.A.U. surfaces therapeutic product lines from the Mars Petcare portfolio for clinician review.
-        It does not diagnose, prescribe, or auto-select therapeutic diets. All product decisions require
-        licensed veterinarian judgment. Equivalent therapeutic diets from other veterinary formularies
-        may be substituted per clinic policy and clinician judgment.
-      </div>
-
-      {/* Feature gate */}
-      <div style={{ display:"flex", alignItems:"flex-start", gap:12, padding:"12px 14px", background:C.white, border:`1.5px solid ${C.green}`, borderRadius:7, marginBottom:14 }}>
-        <input type="checkbox" id="diet-rec" checked={dietEnabled} onChange={e=>setDietEnabled(e.target.checked)}
-          style={{ width:18, height:18, accentColor:C.green, flexShrink:0, marginTop:2 }}/>
-        <label htmlFor="diet-rec" style={{ fontSize:12, color:C.text, cursor:"pointer", lineHeight:1.65 }}>
-          <b style={{color:C.green}}>Enable B.E.A.U. Nutritional Decision Support</b> — Surfaces the Mars Petcare
-          therapeutic portfolio (Royal Canin · Advance · Eukanuba Vet · Iams Vet · Nutro LID · Greenies) filtered
-          by patient species, BCS, condition, and rehabilitation phase. B.E.A.U. presents clinician-reviewable
-          options; B.E.A.U. never auto-selects or prescribes. Brand surfacing is logged to support
-          Mars Petcare integration analytics.
-        </label>
-      </div>
-
-      {dietEnabled && <DietCatalogEngine/>}
-    </Sec>
-
-    <Sec title="Body Condition Score — Purina 9-Point Scale" color={C.green} colorLt={C.greenLt}>
+    <Sec title="Body Condition Score — Purina 9-Point Scale" color={C.green} colorLt={C.greenLt} noTop>
       <div style={{ padding:"10px 14px", background:C.white, border:`1px solid ${C.border}`, borderRadius:6, fontSize:11, color:C.muted, marginBottom:12, lineHeight:1.65 }}>
         <b style={{color:C.green}}>Purina BCS 9-Point Scale</b> — Reference standard per Laflamme 1997, endorsed by Millis & Levine. Score 4–5 = Ideal. Each point above/below 5 = approximately ±10–15% body weight deviation.
       </div>
@@ -893,6 +860,48 @@ function MetricsPanel() {
         <F label="Muscle Symmetry — Overall" options={["Symmetric","Mild asymmetry","Moderate asymmetry — document","Severe asymmetry"]}/>
         <F label="Postural Notes" placeholder="Additional postural / orthopedic observations…"/>
       </Row>
+    </Sec>
+  </>;
+}
+
+// ── DIET DECISION SUPPORT (dedicated block) ───────────────────────────────────
+function DietPanel() {
+  return <>
+    <Sec title="Therapeutic Diet Decision Support" color={C.green} colorLt={C.greenLt} noTop>
+      {/* Scope-of-practice banner — always visible */}
+      <div style={{
+        padding:"11px 14px", background:C.redLt, border:`1px solid ${C.red}44`,
+        borderRadius:6, marginBottom:14, fontSize:11, color:C.text, lineHeight:1.65,
+      }}>
+        <div style={{ fontSize:10, fontWeight:700, color:C.red, letterSpacing:".08em", marginBottom:4 }}>
+          THERAPEUTIC DIET DECISION SUPPORT · LICENSED VETERINARIAN REVIEW ONLY
+        </div>
+        B.E.A.U. surfaces therapeutic product lines from the Mars Petcare portfolio for clinician review.
+        It does not diagnose, prescribe, or auto-select therapeutic diets. All product decisions require
+        licensed veterinarian judgment. Equivalent therapeutic diets from other veterinary formularies
+        may be substituted per clinic policy and clinician judgment.
+      </div>
+
+      {/* Description — no feature gate on the dedicated page */}
+      <div style={{
+        display:"flex", alignItems:"flex-start", gap:12, padding:"12px 14px",
+        background:C.white, border:`1.5px solid ${C.green}`, borderRadius:7, marginBottom:14,
+      }}>
+        <div style={{
+          width:28, height:28, borderRadius:"50%", background:C.green, flexShrink:0,
+          display:"flex", alignItems:"center", justifyContent:"center",
+          color:C.white, fontSize:14, fontWeight:700,
+        }}>🥣</div>
+        <div style={{ fontSize:12, color:C.text, lineHeight:1.65 }}>
+          <b style={{color:C.green}}>B.E.A.U. Nutritional Decision Support</b> — Surfaces the Mars Petcare
+          therapeutic portfolio (Royal Canin · Advance · Eukanuba Vet · Iams Vet · Nutro LID · Greenies)
+          filtered by patient species, BCS, condition, and rehabilitation phase. B.E.A.U. presents
+          clinician-reviewable options; B.E.A.U. never auto-selects or prescribes. Brand surfacing
+          is logged to support Mars Petcare integration analytics.
+        </div>
+      </div>
+
+      <DietCatalogEngine/>
     </Sec>
   </>;
 }
@@ -1526,7 +1535,8 @@ const BLOCKS = [
   { id:"client",      label:"Client & Patient",     icon:"👤", color:C.blue,   colorLt:C.blueLt,   desc:"Demographics · Contact · Insurance" },
   { id:"diagnostics", label:"Diagnostics",           icon:"🩻", color:C.purple, colorLt:C.purpleLt, desc:"Imaging · Laboratory Work" },
   { id:"assessment",  label:"Assessment",            icon:"📋", color:C.amber,  colorLt:C.amberLt,  desc:"Diagnosis · Pain · Gait · Neuro" },
-  { id:"metrics",     label:"B.E.A.U. Metrics",      icon:"📐", color:C.green,  colorLt:C.greenLt,  desc:"Nutrition · BCS · Goniometry · Muscle" },
+  { id:"metrics",     label:"B.E.A.U. Metrics",      icon:"📐", color:C.green,  colorLt:C.greenLt,  desc:"BCS · Goniometry · Muscle · Postural" },
+  { id:"diet",        label:"Diet Decision Support", icon:"🥣", color:C.green,  colorLt:C.greenLt,  desc:"Mars Petcare therapeutic portfolio" },
   { id:"equipment",   label:"Clinic Equipment",      icon:"🏥", color:C.teal,   colorLt:C.tealLt,   desc:"Available rehabilitation tools" },
   { id:"home",        label:"Home Exercise Program", icon:"🏠", color:C.blue,   colorLt:C.blueLt,   desc:"Environment · HEP · Owner profile" },
   { id:"goals",       label:"Goals",                 icon:"🎯", color:"#BE185D",colorLt:"#FDF2F8",  desc:"Short-term · Long-term · Progress" },
@@ -1543,7 +1553,7 @@ const SIDEBAR_NAV = [
   { id:"hipaa",      icon:"🔒", label:"Veterinary HIPAA" },
 ];
 
-const BLOCK_COMPS   = { client:ClientPanel, diagnostics:DiagnosticsPanel, assessment:AssessmentPanel, metrics:MetricsPanel, equipment:EquipmentPanel, home:HomePanel, goals:GoalsPanel, conditioning:ConditioningPanel, protocol:ProtocolPanel, library:LibraryPanel };
+const BLOCK_COMPS   = { client:ClientPanel, diagnostics:DiagnosticsPanel, assessment:AssessmentPanel, metrics:MetricsPanel, diet:DietPanel, equipment:EquipmentPanel, home:HomePanel, goals:GoalsPanel, conditioning:ConditioningPanel, protocol:ProtocolPanel, library:LibraryPanel };
 const SIDEBAR_COMPS = { how:HowToUse, ask:AskBeau, about:AboutPanel, disclaimer:DisclaimerPanel, hipaa:HipaaPanel };
 
 export default function DashboardView({ setView, currentUser, onLogout }) {
