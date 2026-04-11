@@ -800,19 +800,34 @@ function ProductCard({ product, expanded, onToggle }) {
     if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onToggle(); }
   };
 
+  // Click handling: onClick lives on the OUTER wrapper so ANY click anywhere
+  // on the card (header, body, detail panel, card border, padding) fires the
+  // toggle. Only exception: clicks on genuinely interactive elements inside
+  // the detail panel get filtered out via e.target checks — there are none
+  // currently, but we future-proof by ignoring clicks on form elements.
+  const handleCardClick = (e) => {
+    const tag = (e.target.tagName || "").toLowerCase();
+    if (tag === "input" || tag === "select" || tag === "textarea" || tag === "button" || tag === "a") return;
+    onToggle();
+  };
+
   return (
-    <div style={{
-      background: C.white, border: `1px solid ${expanded ? C.green : C.border}`,
-      borderRadius: 6, marginBottom: 7, overflow: "hidden",
-      transition: "border-color .15s",
-    }}>
-      {/* Clickable header — always visible */}
+    <div
+      onClick={handleCardClick}
+      style={{
+        background: C.white, border: `1px solid ${expanded ? C.green : C.border}`,
+        borderRadius: 6, marginBottom: 7, overflow: "hidden",
+        transition: "border-color .15s", cursor: "pointer",
+      }}>
+      {/* Header is the a11y-anchored interactive element — focus, tab, keyboard.
+          onClick is NOT bound here (inherited via bubbling from the outer wrapper);
+          this preserves click-anywhere-to-toggle semantics. */}
       <div
         role="button" tabIndex={0}
         aria-expanded={expanded}
-        onClick={onToggle} onKeyDown={onKey}
+        onKeyDown={onKey}
         style={{
-          padding: "11px 13px", cursor: "pointer", userSelect: "none",
+          padding: "11px 13px", userSelect: "none",
           background: expanded ? `${C.green}08` : C.white,
         }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5, flexWrap: "wrap" }}>
