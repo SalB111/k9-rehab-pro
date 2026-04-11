@@ -380,6 +380,387 @@ function AssessmentPanel() {
   </>;
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// MARS PETCARE THERAPEUTIC DIET CATALOG — MULTI-BRAND CLINICAL NUTRITION
+// ═══════════════════════════════════════════════════════════════════════════
+// Source: Multi-Brand Clinical Nutrition Catalog (C3) provided by Sal Bonanno.
+// Category-level catalog only — NOT SKU-level. Every product line, clinical
+// purpose, and positioning label is transcribed verbatim from the source.
+// Per CLAUDE.md anti-hallucination rules:
+//   - No BCS thresholds or phase mappings are inferred beyond what the source
+//     explicitly provides (the source provides none).
+//   - Species defaults to "both" except for the one product explicitly flagged
+//     feline in the source (RC Gastrointestinal Fiber Response).
+//   - Products without explicit clinical-use text get a null purpose which
+//     renders as "Per product literature — consult manufacturer insert".
+//   - This is decision support only. B.E.A.U. never auto-selects a product.
+
+const MARS_BRANDS = {
+  "Royal Canin": { color: "#C8102E", bg: "#FCEAEC" },
+  "Advance":     { color: "#EF7622", bg: "#FDF1E7" },
+  "Eukanuba":    { color: "#8B0000", bg: "#F7E8E8" },
+  "Iams":        { color: "#003DA5", bg: "#E7EDF8" },
+  "Nutro":       { color: "#5B8C5A", bg: "#EDF4EC" },
+  "Greenies":    { color: "#7AB648", bg: "#F0F7E9" },
+};
+
+const DIET_CATALOG = [
+  {
+    id: "gi", num: "01",
+    title: "Gastrointestinal & Digestive Support",
+    products: [
+      { brand: "Royal Canin", name: "Gastrointestinal (GI)",         purpose: "Acute/chronic GI disease, diarrhea, pancreatitis support", species: "both" },
+      { brand: "Royal Canin", name: "Gastrointestinal Low Fat",      purpose: "Pancreatitis, hyperlipidemia",                             species: "both" },
+      { brand: "Royal Canin", name: "Gastrointestinal Fiber Response", purpose: "Constipation, colitis",                                  species: "feline" },
+      { brand: "Advance",     name: "Sensitive",                     purpose: "Sensitive stomachs, food intolerance",                     species: "both" },
+      { brand: "Advance",     name: "Gastrointestinal",              purpose: "Digestive disorders",                                      species: "both", positioning: "Technical Manual" },
+      { brand: "Eukanuba",    name: "EVD Intestinal",                purpose: "GI upset, malabsorption",                                  species: "both", positioning: "Veterinary Diets (Legacy)" },
+    ],
+  },
+  {
+    id: "renal", num: "02",
+    title: "Renal Support & Urinary Health",
+    products: [
+      { brand: "Royal Canin", name: "Renal Support (A / F / S / T / E)", purpose: "CKD, renal insufficiency",           species: "both" },
+      { brand: "Royal Canin", name: "Urinary SO",                        purpose: "Struvite dissolution, urinary health", species: "both" },
+      { brand: "Advance",     name: "Renal",                             purpose: "Kidney support",                      species: "both", positioning: "Technical Manual" },
+      { brand: "Iams",        name: "Renal Plus",                        purpose: "CKD support",                          species: "both", positioning: "Veterinary Formula (Legacy)" },
+    ],
+  },
+  {
+    id: "derm", num: "03",
+    title: "Dermatology & Food Sensitivities",
+    products: [
+      { brand: "Royal Canin", name: "Hydrolyzed Protein (HP)",           purpose: "Food allergies, dermatologic disease",       species: "both" },
+      { brand: "Royal Canin", name: "Ultamino",                          purpose: "Severe food allergies",                      species: "both" },
+      { brand: "Royal Canin", name: "Selected Protein (PR / PD / PU)",   purpose: "Novel protein diets",                        species: "both" },
+      { brand: "Nutro",       name: "Limited Ingredient Diet (LID)",     purpose: "Food sensitivities, simple ingredient profiles", species: "both", positioning: "Functional — not a vet diet" },
+      { brand: "Advance",     name: "Sensitive Skin",                    purpose: "Dermatologic support",                       species: "both" },
+    ],
+  },
+  {
+    id: "weight", num: "04",
+    title: "Weight Management & Metabolic Support",
+    products: [
+      { brand: "Royal Canin", name: "Satiety Support",      purpose: "Weight loss, appetite control", species: "both" },
+      { brand: "Royal Canin", name: "Glycobalance",         purpose: "Glucose management",            species: "both" },
+      { brand: "Eukanuba",    name: "Restricted Calorie",   purpose: "Weight loss",                   species: "both", positioning: "Veterinary Diets (Legacy)" },
+      { brand: "Iams",        name: "Weight Control",       purpose: "Obesity management",            species: "both", positioning: "Veterinary Formula (Legacy)" },
+    ],
+  },
+  {
+    id: "mobility", num: "05",
+    title: "Mobility & Joint Support",
+    products: [
+      { brand: "Royal Canin", name: "Mobility Support", purpose: "Osteoarthritis, joint health", species: "both" },
+      { brand: "Advance",     name: "Mobility",         purpose: "Joint support",                species: "both", positioning: "Technical Manual" },
+    ],
+  },
+  {
+    id: "recovery", num: "06",
+    title: "Recovery, Critical Care & High-Energy Support",
+    products: [
+      { brand: "Royal Canin", name: "Recovery RS", purpose: "Post-surgical, critical care, anorexia", species: "both" },
+      { brand: "Advance",     name: "Recovery",    purpose: "Post-operative, high-energy support",    species: "both", positioning: "Technical Manual" },
+    ],
+  },
+  {
+    id: "pediatric", num: "07",
+    title: "Pediatric, Growth & Reproduction",
+    products: [
+      { brand: "Royal Canin", name: "Pediatric Growth",             purpose: "Developmental support",     species: "both" },
+      { brand: "Royal Canin", name: "Gestation / Lactation Support", purpose: "Breeding females",         species: "both" },
+      { brand: "Eukanuba",    name: "Puppy / Performance",          purpose: "Growth, working dogs",      species: "both", positioning: "Non-vet clinical positioning" },
+    ],
+  },
+  {
+    id: "dental", num: "08",
+    title: "Dental Health",
+    products: [
+      { brand: "Royal Canin", name: "Dental",         purpose: "Tartar reduction, oral health", species: "both" },
+      { brand: "Greenies",    name: "Dental Treats",  purpose: "Plaque / tartar reduction",     species: "both", positioning: "Functional clinical nutrition" },
+    ],
+  },
+  {
+    id: "behavioral", num: "09",
+    title: "Behavioral & Cognitive Support",
+    products: [
+      { brand: "Royal Canin", name: "Calm",          purpose: "Stress-related behaviors",   species: "both" },
+      { brand: "Iams",        name: "Healthy Aging", purpose: "Cognitive support in seniors", species: "both", positioning: "Functional" },
+    ],
+  },
+  {
+    id: "specialty", num: "10",
+    title: "Specialty & Niche Clinical Categories",
+    products: [
+      { brand: "Royal Canin", name: "Hepatic",      purpose: "Liver disease",        species: "both" },
+      { brand: "Royal Canin", name: "Cardiac",      purpose: "Heart support",        species: "both" },
+      { brand: "Royal Canin", name: "Anallergenic", purpose: "Extreme allergy cases", species: "both" },
+      { brand: "Advance",     name: "Dental",       purpose: null,                    species: "both" },
+      { brand: "Advance",     name: "Weight Control", purpose: null,                  species: "both" },
+      { brand: "Advance",     name: "Urinary",      purpose: null,                    species: "both" },
+    ],
+  },
+];
+
+// Dropdown conditions map to catalog category ids for the "highlight matching
+// category" behavior. Clinician always retains override via the pills.
+const DIET_CONDITIONS = [
+  { label: "— Select condition —",                value: "",            cat: null },
+  { label: "GI / Digestive",                      value: "gi",          cat: "gi" },
+  { label: "Renal / Urinary",                     value: "renal",       cat: "renal" },
+  { label: "Dermatology / Food allergy",          value: "derm",        cat: "derm" },
+  { label: "Weight / Metabolic",                  value: "weight",      cat: "weight" },
+  { label: "Mobility / Joint / OA",               value: "mobility",    cat: "mobility" },
+  { label: "Recovery / Post-surgical",            value: "recovery",    cat: "recovery" },
+  { label: "Pediatric / Growth / Reproduction",   value: "pediatric",   cat: "pediatric" },
+  { label: "Dental",                              value: "dental",      cat: "dental" },
+  { label: "Behavioral / Cognitive",              value: "behavioral",  cat: "behavioral" },
+  { label: "Specialty (Hepatic / Cardiac / Allergy)", value: "specialty", cat: "specialty" },
+  { label: "Other / Multiple",                    value: "other",       cat: null },
+];
+
+// Catalog summary for the footer count — computed once at module load.
+const CATALOG_STATS = (() => {
+  const brands = new Set();
+  let productCount = 0;
+  DIET_CATALOG.forEach(cat => {
+    cat.products.forEach(p => { brands.add(p.brand); productCount++; });
+  });
+  return { categories: DIET_CATALOG.length, brands: brands.size, products: productCount };
+})();
+
+function BrandChip({ brand }) {
+  const meta = MARS_BRANDS[brand] || { color: C.muted, bg: C.bg };
+  return (
+    <span style={{
+      display: "inline-block", fontSize: 9, fontWeight: 700, letterSpacing: ".06em",
+      padding: "2px 8px", borderRadius: 3, color: meta.color, background: meta.bg,
+      border: `1px solid ${meta.color}44`, textTransform: "uppercase", whiteSpace: "nowrap",
+    }}>{brand}</span>
+  );
+}
+
+function ProductCard({ product }) {
+  const purposeText = product.purpose || "Per product literature — consult manufacturer insert";
+  const speciesLabel = product.species === "feline" ? "Feline only" : "Canine and/or Feline";
+  return (
+    <div style={{
+      padding: "11px 13px", background: C.white, border: `1px solid ${C.border}`,
+      borderRadius: 6, marginBottom: 7,
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5, flexWrap: "wrap" }}>
+        <BrandChip brand={product.brand} />
+        <span style={{ fontSize: 13, fontWeight: 700, color: C.navy }}>{product.name}</span>
+        <span style={{
+          fontSize: 8, color: C.muted, background: C.bg, border: `1px solid ${C.border}`,
+          padding: "1px 6px", borderRadius: 3, fontWeight: 600, letterSpacing: ".04em",
+        }}>{speciesLabel}</span>
+        {product.positioning && (
+          <span style={{
+            fontSize: 8, color: C.amber, background: C.amberLt, border: `1px solid ${C.amber}44`,
+            padding: "1px 6px", borderRadius: 3, fontWeight: 600, letterSpacing: ".04em",
+          }}>{product.positioning}</span>
+        )}
+      </div>
+      <div style={{ fontSize: 11, color: C.text, lineHeight: 1.55, marginBottom: 6 }}>
+        {purposeText}
+      </div>
+      <div style={{
+        fontSize: 9, color: C.muted, fontStyle: "italic", lineHeight: 1.5,
+        paddingTop: 6, borderTop: `1px dashed ${C.border}`,
+      }}>
+        For licensed veterinarian review — consult product insert for contraindications,
+        adverse reactions, and species-specific formulation.
+      </div>
+    </div>
+  );
+}
+
+function DietCatalogEngine() {
+  const [species,   setSpecies]   = useState("canine");
+  const [bcs,       setBcs]       = useState("");
+  const [condition, setCondition] = useState("");
+  const [phase,     setPhase]     = useState("");
+  const [expanded,  setExpanded]  = useState({});
+
+  // Species filter: feline-only products are hidden when clinician is in canine mode.
+  const visibleCategories = DIET_CATALOG.map(cat => ({
+    ...cat,
+    products: cat.products.filter(p => {
+      if (species === "canine" && p.species === "feline") return false;
+      return true;
+    }),
+  })).filter(cat => cat.products.length > 0);
+
+  // Condition → category highlight (NOT a hard filter — clinician retains override).
+  const conditionEntry = DIET_CONDITIONS.find(c => c.value === condition);
+  const highlightedCat = conditionEntry?.cat || null;
+
+  // BCS-indicated weight category highlight. Only arithmetic on weight status —
+  // never a clinical claim beyond the Purina BCS 9-point definition.
+  const bcsNum = parseInt(bcs, 10);
+  const weightIndicated = !isNaN(bcsNum) && bcsNum >= 6;
+
+  const toggleExpand = (id) => setExpanded(p => ({ ...p, [id]: !p[id] }));
+
+  const patientSummary = [
+    species === "feline" ? "Feline" : "Canine",
+    !isNaN(bcsNum) ? `BCS ${bcsNum}` : null,
+    conditionEntry && conditionEntry.value ? conditionEntry.label.replace(/^[^a-zA-Z]*/, "") : null,
+    phase ? `Phase ${phase}` : null,
+  ].filter(Boolean).join(" · ");
+
+  return (
+    <div style={{ animation: "fadeIn .15s ease" }}>
+      {/* Patient inputs */}
+      <div style={{
+        padding: "12px 14px", background: C.white, border: `1px solid ${C.border}`,
+        borderRadius: 6, marginBottom: 14,
+      }}>
+        <div style={{
+          fontSize: 10, fontWeight: 700, color: C.green, letterSpacing: ".08em",
+          textTransform: "uppercase", marginBottom: 10,
+        }}>Patient Inputs</div>
+        <Row cols={2}>
+          <div>
+            <Lbl>Species</Lbl>
+            <div style={{ display: "flex", gap: 6 }}>
+              {["canine", "feline"].map(s => (
+                <button key={s} onClick={() => setSpecies(s)}
+                  style={{
+                    flex: 1, padding: "8px", background: species === s ? C.green : C.white,
+                    border: `1.5px solid ${species === s ? C.green : C.border}`,
+                    color: species === s ? C.white : C.muted, borderRadius: 5,
+                    cursor: "pointer", fontSize: 11, fontWeight: 700, letterSpacing: ".06em",
+                  }}>
+                  {s === "canine" ? "🐕  CANINE" : "🐱  FELINE"}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <Lbl range="4–5">BCS (1–9)</Lbl>
+            <input type="number" min="1" max="9" value={bcs}
+              onChange={e => setBcs(e.target.value)} placeholder="e.g. 6"/>
+          </div>
+        </Row>
+        <Row cols={2}>
+          <div>
+            <Lbl>Primary Condition</Lbl>
+            <select value={condition} onChange={e => setCondition(e.target.value)}>
+              {DIET_CONDITIONS.map(c => (
+                <option key={c.value} value={c.value}>{c.label}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <Lbl>Rehab Phase <span style={{
+              fontSize: 8, color: C.muted, background: C.bg, border: `1px solid ${C.border}`,
+              padding: "1px 5px", borderRadius: 3, marginLeft: 5, fontWeight: 600,
+            }}>decorative</span></Lbl>
+            <select value={phase} onChange={e => setPhase(e.target.value)}>
+              <option value="">— Select phase —</option>
+              <option value="1">Phase 1 — Acute Protection</option>
+              <option value="2">Phase 2 — Early Mobilization</option>
+              <option value="3">Phase 3 — Controlled Strengthening</option>
+              <option value="4">Phase 4 — Return to Function</option>
+            </select>
+          </div>
+        </Row>
+        {patientSummary && (
+          <div style={{
+            marginTop: 12, padding: "8px 12px", background: C.greenLt,
+            border: `1px solid ${C.green}44`, borderRadius: 5, fontSize: 11,
+            color: C.green, fontWeight: 700, letterSpacing: ".04em",
+          }}>
+            Patient: {patientSummary}
+          </div>
+        )}
+      </div>
+
+      {/* Category pills */}
+      <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginBottom: 12 }}>
+        {visibleCategories.map(cat => {
+          const isHighlighted = cat.id === highlightedCat;
+          const isBcsWeight   = cat.id === "weight" && weightIndicated;
+          const isExpanded    = !!expanded[cat.id];
+          const accent = isHighlighted || isBcsWeight ? C.green : C.border;
+          return (
+            <button key={cat.id} onClick={() => toggleExpand(cat.id)}
+              style={{
+                padding: "5px 11px", fontSize: 10, border: `1px solid ${isExpanded ? C.green : accent}`,
+                background: isExpanded ? C.greenLt : (isHighlighted || isBcsWeight ? `${C.green}11` : C.white),
+                color: isExpanded || isHighlighted || isBcsWeight ? C.green : C.muted,
+                borderRadius: 4, cursor: "pointer", fontWeight: 600, display: "flex",
+                alignItems: "center", gap: 5,
+              }}>
+              <span style={{ fontFamily: "monospace", opacity: .6 }}>{cat.num}</span>
+              {cat.title.split(" & ")[0]}
+              {(isHighlighted || isBcsWeight) && <span style={{ fontSize: 9 }}>★</span>}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Category sections */}
+      {visibleCategories.map(cat => {
+        const isHighlighted = cat.id === highlightedCat || (cat.id === "weight" && weightIndicated);
+        const isExpanded = !!expanded[cat.id] || isHighlighted;
+        return (
+          <div key={cat.id} style={{
+            marginBottom: 12, border: `1px solid ${isHighlighted ? C.green : C.border}`,
+            borderRadius: 6, background: isHighlighted ? `${C.green}08` : C.white, overflow: "hidden",
+          }}>
+            <div onClick={() => toggleExpand(cat.id)}
+              style={{
+                padding: "11px 14px", cursor: "pointer", display: "flex",
+                alignItems: "center", gap: 10, userSelect: "none",
+                background: isHighlighted ? `${C.green}11` : C.white,
+              }}>
+              <span style={{
+                fontSize: 10, fontFamily: "monospace", color: C.muted, fontWeight: 700,
+              }}>{cat.num}</span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: C.navy, flex: 1 }}>
+                {cat.title}
+              </span>
+              <span style={{ fontSize: 10, color: C.muted }}>
+                {cat.products.length} product {cat.products.length === 1 ? "line" : "lines"}
+              </span>
+              {isHighlighted && (
+                <span style={{
+                  fontSize: 8, background: C.green, color: C.white, padding: "2px 7px",
+                  borderRadius: 3, fontWeight: 700, letterSpacing: ".08em",
+                }}>{cat.id === "weight" && weightIndicated ? "BCS INDICATED" : "CONDITION MATCH"}</span>
+              )}
+              <span style={{ fontSize: 14, color: C.muted }}>{isExpanded ? "▾" : "▸"}</span>
+            </div>
+            {isExpanded && (
+              <div style={{ padding: "0 14px 12px 14px", animation: "fadeIn .15s ease" }}>
+                {cat.products.map((p, i) => <ProductCard key={i} product={p}/>)}
+              </div>
+            )}
+          </div>
+        );
+      })}
+
+      {/* Portfolio footer count */}
+      <div style={{
+        marginTop: 16, padding: "12px 16px", background: C.navy, color: C.white,
+        borderRadius: 6, display: "flex", justifyContent: "space-between",
+        alignItems: "center", flexWrap: "wrap", gap: 10,
+      }}>
+        <div style={{ fontSize: 10, letterSpacing: ".1em", fontWeight: 600 }}>
+          MARS PETCARE THERAPEUTIC CATALOG
+        </div>
+        <div style={{ fontSize: 11, fontWeight: 700, color: C.green }}>
+          {CATALOG_STATS.categories} categories · {CATALOG_STATS.brands} brands · {CATALOG_STATS.products} product lines
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── B.E.A.U. METRICS ──────────────────────────────────────────────────────────
 function MetricsPanel() {
   const [dietEnabled, setDietEnabled] = useState(false);
@@ -409,31 +790,35 @@ function MetricsPanel() {
   ];
 
   return <>
-    <Sec title="B.E.A.U. Metrics — Nutritional Assessment" color={C.green} colorLt={C.greenLt} noTop>
+    <Sec title="B.E.A.U. Metrics — Therapeutic Diet Decision Support" color={C.green} colorLt={C.greenLt} noTop>
+      {/* Scope-of-practice banner — always visible */}
+      <div style={{
+        padding:"11px 14px", background:C.redLt, border:`1px solid ${C.red}44`,
+        borderRadius:6, marginBottom:14, fontSize:11, color:C.text, lineHeight:1.65,
+      }}>
+        <div style={{ fontSize:10, fontWeight:700, color:C.red, letterSpacing:".08em", marginBottom:4 }}>
+          THERAPEUTIC DIET DECISION SUPPORT · LICENSED VETERINARIAN REVIEW ONLY
+        </div>
+        B.E.A.U. surfaces therapeutic product lines from the Mars Petcare portfolio for clinician review.
+        It does not diagnose, prescribe, or auto-select therapeutic diets. All product decisions require
+        licensed veterinarian judgment. Equivalent therapeutic diets from other veterinary formularies
+        may be substituted per clinic policy and clinician judgment.
+      </div>
+
+      {/* Feature gate */}
       <div style={{ display:"flex", alignItems:"flex-start", gap:12, padding:"12px 14px", background:C.white, border:`1.5px solid ${C.green}`, borderRadius:7, marginBottom:14 }}>
         <input type="checkbox" id="diet-rec" checked={dietEnabled} onChange={e=>setDietEnabled(e.target.checked)}
           style={{ width:18, height:18, accentColor:C.green, flexShrink:0, marginTop:2 }}/>
         <label htmlFor="diet-rec" style={{ fontSize:12, color:C.text, cursor:"pointer", lineHeight:1.65 }}>
-          <b style={{color:C.green}}>Enable B.E.A.U. Nutritional Recommendation</b> — Allow B.E.A.U. to recommend a nutritional plan based on this patient's BCS, body weight, and clinical condition. If enabled, B.E.A.U. will suggest appropriate food options including Mars Petcare brands where indicated.
+          <b style={{color:C.green}}>Enable B.E.A.U. Nutritional Decision Support</b> — Surfaces the Mars Petcare
+          therapeutic portfolio (Royal Canin · Advance · Eukanuba Vet · Iams Vet · Nutro LID · Greenies) filtered
+          by patient species, BCS, condition, and rehabilitation phase. B.E.A.U. presents clinician-reviewable
+          options; B.E.A.U. never auto-selects or prescribes. Brand surfacing is logged to support
+          Mars Petcare integration analytics.
         </label>
       </div>
-      {dietEnabled && (
-        <div style={{ animation:"fadeIn .15s ease" }}>
-          <Row>
-            <F label="Current Food Brand" placeholder="e.g. Royal Canin, Hill's, Purina, Blue Buffalo…"/>
-            <F label="Current Food Type / Formula" placeholder="e.g. Joint mobility, weight control, puppy…"/>
-          </Row>
-          <Row>
-            <F label="Feeding Method" options={["Free choice","Scheduled — 1× daily","Scheduled — 2× daily","Scheduled — 3× daily","Prescription diet"]}/>
-            <F label="Approximate Daily Calories" placeholder="kcal/day if known"/>
-          </Row>
-          <F label="Food Allergies / Dietary Restrictions" placeholder="Known allergies, intolerances, or dietary restrictions…"/>
-          <F label="Supplement Use" placeholder="Joint supplements, omega-3, probiotics, other…"/>
-          <div style={{ padding:"10px 14px", background:C.greenLt, border:`1px solid ${C.green}44`, borderRadius:5, fontSize:11, color:C.muted, marginTop:8 }}>
-            B.E.A.U. will analyze this patient's BCS, ideal weight, and condition to generate a nutritional recommendation. Brand data is logged to support Mars Petcare integration analytics.
-          </div>
-        </div>
-      )}
+
+      {dietEnabled && <DietCatalogEngine/>}
     </Sec>
 
     <Sec title="Body Condition Score — Purina 9-Point Scale" color={C.green} colorLt={C.greenLt}>
