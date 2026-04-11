@@ -70,6 +70,32 @@
   "diet": {
     "blockTitle": "Aide à la Décision Diététique Thérapeutique",
     "featureGateTitle": "Aide à la Décision Nutritionnelle B.E.A.U.",
-    "marsPortfolioFooter": "Catalogue Thérapeutique Mars Petcare"
+    "marsPortfolioFooter": "Catalogue Thérapeutique Mars Petcare",
+    "categories": {
+      "gi":         "Gastro-intestinal et Soutien Digestif",
+      "renal":      "Soutien Rénal et Santé Urinaire",
+      "derm":       "Dermatologie et Sensibilités Alimentaires",
+      "weight":     "Gestion du Poids et Soutien Métabolique",
+      "mobility":   "Mobilité et Soutien Articulaire",
+      "recovery":   "Récupération, Soins Critiques et Soutien Haute Énergie",
+      "pediatric":  "Pédiatrique, Croissance et Reproduction",
+      "dental":     "Santé Dentaire",
+      "behavioral": "Soutien Comportemental et Cognitif",
+      "specialty":  "Spécialités et Catégories Cliniques de Niche"
+    },
+    "conditions": {
+      "none":       "— Sélectionner condition —",
+      "gi":         "GI / Digestif",
+      "renal":      "Rénal / Urinaire",
+      "derm":       "Dermatologie / Allergie alimentaire",
+      "weight":     "Poids / Métabolique",
+      "mobility":   "Mobilité / Articulaire / OA",
+      "recovery":   "Récupération / Post-chirurgical",
+      "pediatric":  "Pédiatrique / Croissance / Reproduction",
+      "dental":     "Dentaire",
+      "behavioral": "Comportemental / Cognitif",
+      "specialty":  "Spécialité (Hépatique / Cardiaque / Allergie)",
+      "other":      "Autre / Multiple"
+    }
   }
 }

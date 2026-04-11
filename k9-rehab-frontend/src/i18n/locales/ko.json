@@ -70,6 +70,32 @@
   "diet": {
     "blockTitle": "치료식 결정 지원",
     "featureGateTitle": "B.E.A.U. 영양 결정 지원",
-    "marsPortfolioFooter": "Mars Petcare 치료식 카탈로그"
+    "marsPortfolioFooter": "Mars Petcare 치료식 카탈로그",
+    "categories": {
+      "gi":         "소화기계 지원",
+      "renal":      "신장 지원 및 비뇨기 건강",
+      "derm":       "피부과 및 음식 과민증",
+      "weight":     "체중 관리 및 대사 지원",
+      "mobility":   "운동성 및 관절 지원",
+      "recovery":   "회복, 중환자 관리, 고에너지 지원",
+      "pediatric":  "소아, 성장 및 번식",
+      "dental":     "치아 건강",
+      "behavioral": "행동 및 인지 지원",
+      "specialty":  "전문 및 틈새 임상 카테고리"
+    },
+    "conditions": {
+      "none":       "— 상태 선택 —",
+      "gi":         "소화기계",
+      "renal":      "신장 / 비뇨기",
+      "derm":       "피부과 / 음식 알레르기",
+      "weight":     "체중 / 대사",
+      "mobility":   "운동성 / 관절 / OA",
+      "recovery":   "회복 / 수술 후",
+      "pediatric":  "소아 / 성장 / 번식",
+      "dental":     "치아",
+      "behavioral": "행동 / 인지",
+      "specialty":  "전문(간 / 심장 / 알레르기)",
+      "other":      "기타 / 복수"
+    }
   }
 }

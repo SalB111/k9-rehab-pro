@@ -1236,10 +1236,11 @@ function DietCatalogEngine() {
   const toggleExpand = (id) => setExpanded(p => ({ ...p, [id]: !p[id] }));
 
   const patientSummary = [
-    species === "feline" ? "Feline" : "Canine",
+    species === "feline" ? t("common.feline") : t("common.canine"),
     !isNaN(bcsNum) ? `BCS ${bcsNum}` : null,
-    conditionEntry && conditionEntry.value ? conditionEntry.label.replace(/^[^a-zA-Z]*/, "") : null,
-    phase ? `Phase ${phase}` : null,
+    // Pull the translated condition label from the locale bundle, not the raw English from DIET_CONDITIONS
+    conditionEntry && conditionEntry.value ? t(`diet.conditions.${conditionEntry.value}`, conditionEntry.label) : null,
+    phase ? `${t("form.rehabPhase")} ${phase}` : null,
   ].filter(Boolean).join(" · ");
 
   return (
@@ -1281,10 +1282,14 @@ function DietCatalogEngine() {
           <div>
             <Lbl>{t("form.primaryCondition")}</Lbl>
             <select value={condition} onChange={e => setCondition(e.target.value)}>
-              {/* Dropdown VALUES stay English per decision #1 — clinical grading terminology */}
-              {DIET_CONDITIONS.map(c => (
-                <option key={c.value} value={c.value}>{c.label}</option>
-              ))}
+              {/* Condition labels are navigation categories, not clinical grading —
+                  translate via diet.conditions.{id} keys. Values stay stable. */}
+              {DIET_CONDITIONS.map(c => {
+                const ik = c.value === "" ? "diet.conditions.none" : `diet.conditions.${c.value}`;
+                return (
+                  <option key={c.value} value={c.value}>{t(ik, c.label)}</option>
+                );
+              })}
             </select>
           </div>
           <div>
@@ -1330,7 +1335,8 @@ function DietCatalogEngine() {
                 alignItems: "center", gap: 5,
               }}>
               <span style={{ fontFamily: "monospace", opacity: .6 }}>{cat.num}</span>
-              {cat.title.split(" & ")[0]}
+              {/* Pill shows the first segment of the translated category title */}
+              {t(`diet.categories.${cat.id}`, cat.title).split(/\s*&\s*|\s*·\s*|\s*,\s*/)[0]}
               {(isHighlighted || isBcsWeight) && <span style={{ fontSize: 9 }}>★</span>}
             </button>
           );
@@ -1356,10 +1362,10 @@ function DietCatalogEngine() {
                 fontSize: 10, fontFamily: "monospace", color: C.muted, fontWeight: 700,
               }}>{cat.num}</span>
               <span style={{ fontSize: 13, fontWeight: 700, color: C.navy, flex: 1 }}>
-                {cat.title}
+                {t(`diet.categories.${cat.id}`, cat.title)}
               </span>
               <span style={{ fontSize: 10, color: C.muted }}>
-                {cat.products.length} product {cat.products.length === 1 ? "line" : "lines"}
+                {cat.products.length} {cat.products.length === 1 ? t("diet.productLine") : t("diet.productLines")}
               </span>
               {isHighlighted && (
                 <span style={{
