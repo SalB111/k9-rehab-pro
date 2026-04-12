@@ -4,9 +4,14 @@ import {
 } from "react-icons/fi";
 
 // Caduceus icon for Ask B.E.A.U. — matches the sidebar logo
-const CaduceusIcon = ({ className, ...props }) => (
-  <img src="/rod-logo.png" alt="" className={className} style={{ width: 18, height: 18, objectFit: "contain", filter: "brightness(1.3) drop-shadow(0 0 4px rgba(14,165,233,0.4))" }} {...props} />
-);
+import React from "react";
+function CaduceusIcon({ className }) {
+  return React.createElement("img", {
+    src: "/rod-logo.png", alt: "",
+    className: className || "",
+    style: { width: 18, height: 18, objectFit: "contain", filter: "brightness(1.3) drop-shadow(0 0 4px rgba(14,165,233,0.4))" }
+  });
+}
 
 const NAV = [
   { id: "dashboard",  label: "Dashboard",            icon: FiBarChart2,  desc: "Clinical dashboard" },
