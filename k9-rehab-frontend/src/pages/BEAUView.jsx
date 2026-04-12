@@ -344,7 +344,7 @@ useEffect(() => {
         {/* Welcome Screen */}
         {welcome && (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "60vh", textAlign: "center" }}>
-            <img src="/rod-logo.png" alt="B.E.A.U." style={{ width: 80, height: 80, borderRadius: 20, objectFit: "contain", marginBottom: 16, filter: "brightness(1.2) drop-shadow(0 0 12px rgba(14,165,233,0.4))" }} />
+            <img src="/rod-logo.png" alt="B.E.A.U." style={{ width: 200, height: 200, borderRadius: 30, objectFit: "contain", marginBottom: 24, filter: "brightness(1.2) drop-shadow(0 0 20px rgba(14,165,233,0.5))" }} />
             <h1 style={{ fontSize: 22, fontWeight: 700, color: C.text, margin: "0 0 6px" }}>B.E.A.U.</h1>
             <p style={{ fontSize: 13, color: C.textLight, maxWidth: 460, lineHeight: 1.6, margin: "0 0 28px" }}>
               Evidence-based canine rehabilitation intelligence. Load a patient for personalized protocols, or ask general clinical questions.

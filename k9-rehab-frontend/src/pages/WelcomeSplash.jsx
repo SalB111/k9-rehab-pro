@@ -211,7 +211,7 @@ export default function WelcomeSplash({ onEnter }) {
               src="/rod-logo.png"
               alt="Rod of Asclepius"
               style={{
-                width: 180,
+                width: 270,
                 height: "auto",
                 objectFit: "contain",
                 display: "block",
@@ -223,7 +223,7 @@ export default function WelcomeSplash({ onEnter }) {
 
           {/* K9-REHAB-PRO text — rod sits centered above */}
           <div style={{
-            fontSize: 36, fontWeight: 900, letterSpacing: 4,
+            fontSize: 54, fontWeight: 900, letterSpacing: 6,
             color: "#fff",
             fontFamily: "'Exo 2', 'Orbitron', system-ui, sans-serif",
             marginTop: -4,
@@ -237,7 +237,7 @@ export default function WelcomeSplash({ onEnter }) {
 
           {/* Glowing divider line */}
           <div style={{
-            width: 200, height: 2, margin: "12px auto",
+            width: 300, height: 3, margin: "16px auto",
             background: "linear-gradient(90deg, transparent, #4D7FFF, #FFFFFF, #4D7FFF, transparent)",
             opacity: textActive ? 0.8 : 0,
             transition: "opacity 0.8s ease 0.3s",
@@ -246,7 +246,7 @@ export default function WelcomeSplash({ onEnter }) {
 
           {/* B.E.A.U. text */}
           <div style={{
-            fontSize: 28, fontWeight: 900, letterSpacing: 6,
+            fontSize: 42, fontWeight: 900, letterSpacing: 9,
             color: "#6B8FFF",
             fontFamily: "'Exo 2', 'Orbitron', system-ui, sans-serif",
             textShadow: "0 0 20px rgba(14,165,233,0.8), 0 0 40px rgba(14,165,233,0.4)",
@@ -259,7 +259,7 @@ export default function WelcomeSplash({ onEnter }) {
 
           {/* Acronym subtitle */}
           <div style={{
-            fontSize: 9, letterSpacing: 3, color: "#7AAACF",
+            fontSize: 13, letterSpacing: 4, color: "#7AAACF",
             fontFamily: "'Courier New', monospace",
             textTransform: "uppercase",
             marginTop: 6,
@@ -274,13 +274,13 @@ export default function WelcomeSplash({ onEnter }) {
           <div
             onClick={phase === "ready" ? onEnter : undefined}
             style={{
-              fontSize: 16, fontWeight: 700, letterSpacing: 10,
+              fontSize: 22, fontWeight: 700, letterSpacing: 14,
               color: "#4D7FFF",
               fontFamily: "'Courier New', monospace",
-              marginTop: 28,
+              marginTop: 36,
               cursor: phase === "ready" ? "pointer" : "default",
               textShadow: phase === "ready" ? "0 0 20px rgba(57,255,126,0.8), 0 0 40px rgba(57,255,126,0.4)" : "none",
-              padding: "12px 44px",
+              padding: "16px 60px",
               border: phase === "ready" ? "2px solid rgba(57,255,126,0.7)" : "1px solid transparent",
               borderRadius: 6,
               background: phase === "ready" ? "rgba(57,255,126,0.06)" : "transparent",
