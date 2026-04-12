@@ -147,7 +147,7 @@ function Modal({ title, color, colorLt, icon, onClose, children }) {
         {/* Footer */}
         <div style={{ padding:"13px 22px", borderTop:`1px solid ${C.border}`, display:"flex", justifyContent:"flex-end", gap:10, flexShrink:0, background:C.bg, borderRadius:"0 0 10px 10px" }}>
           <button onClick={onClose} style={{ padding:"9px 22px", background:C.white, border:`1px solid ${C.border}`, color:C.muted, borderRadius:5, cursor:"pointer", fontSize:12, fontWeight:600, textTransform:"uppercase" }}>{t("modal.close")}</button>
-          <button style={{ padding:"9px 22px", background:color, border:"none", color:C.white, borderRadius:5, cursor:"pointer", fontSize:12, fontWeight:700, letterSpacing:".06em", textTransform:"uppercase" }}>{t("modal.saveAndClose")}</button>
+          <button onClick={onClose} style={{ padding:"9px 22px", background:color, border:"none", color:C.white, borderRadius:5, cursor:"pointer", fontSize:12, fontWeight:700, letterSpacing:".06em", textTransform:"uppercase" }}>{t("modal.saveAndClose")}</button>
         </div>
       </div>
     </div>
@@ -2333,17 +2333,29 @@ export default function DashboardView({ setView, currentUser, onLogout }) {
         </div>
       </div>
 
-      {block && BlockComp && (
-        <Modal title={t(`tiles.${block.id}.label`)} color={block.color} colorLt={block.colorLt} icon={block.icon} onClose={()=>setOpenBlock(null)}>
-          <BlockComp patientName="Max"/>
-        </Modal>
-      )}
+      {BLOCKS.map(b => {
+        const Comp = BLOCK_COMPS[b.id];
+        if (!Comp) return null;
+        return (
+          <div key={b.id} style={{ display: openBlock === b.id ? 'contents' : 'none' }}>
+            <Modal title={t(`tiles.${b.id}.label`)} color={b.color} colorLt={b.colorLt} icon={b.icon} onClose={()=>setOpenBlock(null)}>
+              <Comp patientName="Max"/>
+            </Modal>
+          </div>
+        );
+      })}
 
-      {sideBlock && SideComp && (
-        <Modal title={t(`nav.${sideBlock.id}`)} color={C.blue} colorLt={C.blueLt} icon={sideBlock.icon} onClose={()=>setOpenSidebar(null)}>
-          <SideComp/>
-        </Modal>
-      )}
+      {SIDEBAR_NAV.map(s => {
+        const Comp = SIDEBAR_COMPS[s.id];
+        if (!Comp) return null;
+        return (
+          <div key={s.id} style={{ display: openSidebar === s.id ? 'contents' : 'none' }}>
+            <Modal title={t(`nav.${s.id}`)} color={C.blue} colorLt={C.blueLt} icon={s.icon} onClose={()=>setOpenSidebar(null)}>
+              <Comp/>
+            </Modal>
+          </div>
+        );
+      })}
     </div>
   );
 }
