@@ -81,7 +81,7 @@ export default function App() {
   function renderView() {
     switch (view) {
       case "dashboard":
-        return <DashboardView setView={setView} currentUser={currentUser} onLogout={handleLogout} />;
+        return <DashboardView setView={setView} currentUser={currentUser} onLogout={handleLogout} patient={selectedPatient} setSelectedPatient={setSelectedPatient} />;
       case "generator":
         return (
           <GeneratorView
@@ -140,23 +140,6 @@ export default function App() {
     return (
       <ToastProvider>
         <LoginView onLogin={handleLogin} onRegister={handleRegister} />
-      </ToastProvider>
-    );
-  }
-
-  // New v2 DashboardView has its own full-height sidebar — render standalone.
-  if (view === "dashboard") {
-    return (
-      <ToastProvider>
-        <Suspense
-          fallback={
-            <div className="flex items-center justify-center h-screen">
-              <div className="w-8 h-8 border-3 border-[var(--k9-teal)] border-t-transparent rounded-full animate-spin" />
-            </div>
-          }
-        >
-          {renderView()}
-        </Suspense>
       </ToastProvider>
     );
   }

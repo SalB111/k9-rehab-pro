@@ -315,6 +315,20 @@ async function createTables() {
     console.log("📦 Migration: added species column to patients");
   } catch { /* column already exists */ }
 
+  // Migration: add dashboard_data, visit_count, last_visit_date for returning patient support
+  try {
+    await run("ALTER TABLE patients ADD COLUMN dashboard_data TEXT DEFAULT '{}'");
+    console.log("📦 Migration: added dashboard_data column to patients");
+  } catch { /* column already exists */ }
+  try {
+    await run("ALTER TABLE patients ADD COLUMN visit_count INTEGER DEFAULT 0");
+    console.log("📦 Migration: added visit_count column to patients");
+  } catch { /* column already exists */ }
+  try {
+    await run("ALTER TABLE patients ADD COLUMN last_visit_date TEXT");
+    console.log("📦 Migration: added last_visit_date column to patients");
+  } catch { /* column already exists */ }
+
   console.log("📦 All tables created (V2 only)");
 }
 

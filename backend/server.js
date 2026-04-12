@@ -156,24 +156,36 @@ app.put("/api/patients/:id", async (req, res) => {
       name, species, breed, age, weight, sex, condition, affected_region,
       surgery_date, lameness_grade, body_condition_score, pain_level,
       mobility_level, current_medications, medical_history,
-      special_instructions, client_name, client_email, client_phone, referring_vet
+      special_instructions, client_name, client_email, client_phone, referring_vet,
+      dashboard_data
     } = req.body;
-    await run(
-      `UPDATE patients SET
-        name=?, species=?, breed=?, age=?, weight=?, sex=?, condition=?,
-        affected_region=?, surgery_date=?, lameness_grade=?,
-        body_condition_score=?, pain_level=?, mobility_level=?,
-        current_medications=?, medical_history=?, special_instructions=?,
-        client_name=?, client_email=?, client_phone=?, referring_vet=?
-      WHERE id=?`,
-      [
-        name, species || "canine", breed, age, weight, sex, condition, affected_region,
-        surgery_date, lameness_grade, body_condition_score, pain_level,
-        mobility_level, current_medications, medical_history,
-        special_instructions, client_name, client_email, client_phone,
-        referring_vet, req.params.id
-      ]
-    );
+
+    // Build update dynamically — only include fields that were provided
+    const fields = [];
+    const values = [];
+    const optional = {
+      name, species: species || "canine", breed, age, weight, sex, condition,
+      affected_region, surgery_date, lameness_grade, body_condition_score,
+      pain_level, mobility_level, current_medications, medical_history,
+      special_instructions, client_name, client_email, client_phone, referring_vet,
+    };
+    for (const [k, v] of Object.entries(optional)) {
+      if (v !== undefined) { fields.push(`${k}=?`); values.push(v); }
+    }
+    // Dashboard data — JSON blob of all block form fields
+    if (dashboard_data !== undefined) {
+      fields.push("dashboard_data=?");
+      values.push(typeof dashboard_data === "string" ? dashboard_data : JSON.stringify(dashboard_data));
+      // Increment visit count and update last visit date
+      fields.push("visit_count = COALESCE(visit_count, 0) + 1");
+      fields.push("last_visit_date = datetime('now')");
+    }
+
+    if (fields.length > 0) {
+      values.push(req.params.id);
+      await run(`UPDATE patients SET ${fields.join(", ")} WHERE id=?`, values);
+    }
+
     const patient = await get("SELECT * FROM patients WHERE id = ?", [req.params.id]);
     res.json({ success: true, data: patient });
   } catch (err) {

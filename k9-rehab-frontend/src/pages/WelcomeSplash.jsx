@@ -42,16 +42,16 @@ export default function WelcomeSplash({ onEnter }) {
     const h = canvas.height = window.innerHeight;
 
     // Generate sparks
-    for (let i = 0; i < 80; i++) {
+    for (let i = 0; i < 140; i++) {
       sparksRef.current.push({
-        x: w / 2 + (Math.random() - 0.5) * 120,
-        y: h / 2 + (Math.random() - 0.5) * 120,
-        vx: (Math.random() - 0.5) * 5,
-        vy: (Math.random() - 0.5) * 5,
-        size: Math.random() * 3 + 1,
+        x: w / 2 + (Math.random() - 0.5) * 400,
+        y: h / 2 + (Math.random() - 0.5) * 400,
+        vx: (Math.random() - 0.5) * 8,
+        vy: (Math.random() - 0.5) * 8,
+        size: Math.random() * 4 + 1.5,
         life: Math.random() * 60 + 30,
         maxLife: 90,
-        color: Math.random() > 0.5 ? "#1D9E75" : "#0EA5E9",
+        color: Math.random() > 0.5 ? "#4D7FFF" : "#FFFFFF",
       });
     }
 
@@ -70,7 +70,7 @@ export default function WelcomeSplash({ onEnter }) {
       ctx.strokeStyle = color;
       ctx.lineWidth = width;
       ctx.shadowColor = color;
-      ctx.shadowBlur = 8;
+      ctx.shadowBlur = 14;
       ctx.stroke();
       ctx.shadowBlur = 0;
     }
@@ -82,18 +82,18 @@ export default function WelcomeSplash({ onEnter }) {
 
       // Draw electricity bolts continuously
       const cx = w / 2, cy = h / 2;
-      const boltCount = 1 + Math.floor(Math.random() * 2);
+      const boltCount = 2 + Math.floor(Math.random() * 3);
       for (let b = 0; b < boltCount; b++) {
         const angle = Math.random() * Math.PI * 2;
-        const dist = 50 + Math.random() * 120;
+        const dist = 80 + Math.random() * 300;
         const x2 = cx + Math.cos(angle) * dist;
         const y2 = cy + Math.sin(angle) * dist;
-        const color = Math.random() > 0.5 ? "rgba(14,165,233,0.5)" : "rgba(29,158,117,0.4)";
-        drawBolt(ctx, cx + (Math.random() - 0.5) * 50, cy + (Math.random() - 0.5) * 50, x2, y2, color, 0.8 + Math.random() * 0.8);
+        const color = Math.random() > 0.5 ? "rgba(77,127,255,0.8)" : "rgba(140,170,255,0.7)";
+        drawBolt(ctx, cx + (Math.random() - 0.5) * 120, cy + (Math.random() - 0.5) * 120, x2, y2, color, 0.8 + Math.random() * 0.8);
         // Branch bolt
         if (Math.random() > 0.4) {
-          const bx = x2 + (Math.random() - 0.5) * 70;
-          const by = y2 + (Math.random() - 0.5) * 70;
+          const bx = x2 + (Math.random() - 0.5) * 150;
+          const by = y2 + (Math.random() - 0.5) * 150;
           drawBolt(ctx, x2, y2, bx, by, color, 0.4);
         }
       }
@@ -198,7 +198,7 @@ export default function WelcomeSplash({ onEnter }) {
               ? "transform 3s cubic-bezier(0.16, 1, 0.3, 1), opacity 2.5s ease"
               : "transform 0.3s ease-out",
             filter: phase !== "zoom"
-              ? "drop-shadow(0 0 30px rgba(14,165,233,0.5)) drop-shadow(0 0 60px rgba(29,158,117,0.3))"
+              ? "drop-shadow(0 0 30px rgba(14,165,233,0.5)) drop-shadow(0 0 60px rgba(77,127,255,0.3))"
               : "none",
             transformStyle: "preserve-3d",
             textAlign: "center",
@@ -216,7 +216,7 @@ export default function WelcomeSplash({ onEnter }) {
                 objectFit: "contain",
                 display: "block",
                 margin: "0 auto",
-                filter: "brightness(1.2) contrast(1.1) drop-shadow(0 0 20px rgba(14,165,233,0.6)) drop-shadow(0 0 40px rgba(29,158,117,0.3))",
+                filter: "brightness(1.2) contrast(1.1) drop-shadow(0 0 20px rgba(14,165,233,0.6)) drop-shadow(0 0 40px rgba(77,127,255,0.3))",
               }}
             />
           </div>
@@ -227,7 +227,7 @@ export default function WelcomeSplash({ onEnter }) {
             color: "#fff",
             fontFamily: "'Exo 2', 'Orbitron', system-ui, sans-serif",
             marginTop: -4,
-            textShadow: "0 0 20px rgba(14,165,233,0.6), 0 0 40px rgba(29,158,117,0.3), 0 2px 4px rgba(0,0,0,0.8)",
+            textShadow: "0 0 20px rgba(77,127,255,0.8), 0 0 40px rgba(0,0,160,0.5), 0 2px 4px rgba(0,0,0,0.8)",
             opacity: textActive ? 1 : 0,
             transform: textActive ? "translateY(0)" : "translateY(15px)",
             transition: "opacity 0.8s ease, transform 0.8s ease",
@@ -238,16 +238,16 @@ export default function WelcomeSplash({ onEnter }) {
           {/* Glowing divider line */}
           <div style={{
             width: 200, height: 2, margin: "12px auto",
-            background: "linear-gradient(90deg, transparent, #0EA5E9, #1D9E75, #0EA5E9, transparent)",
+            background: "linear-gradient(90deg, transparent, #4D7FFF, #FFFFFF, #4D7FFF, transparent)",
             opacity: textActive ? 0.8 : 0,
             transition: "opacity 0.8s ease 0.3s",
-            boxShadow: "0 0 10px rgba(14,165,233,0.5)",
+            boxShadow: "0 0 12px rgba(77,127,255,0.6)",
           }} />
 
           {/* B.E.A.U. text */}
           <div style={{
             fontSize: 28, fontWeight: 900, letterSpacing: 6,
-            color: "#0EA5E9",
+            color: "#6B8FFF",
             fontFamily: "'Exo 2', 'Orbitron', system-ui, sans-serif",
             textShadow: "0 0 20px rgba(14,165,233,0.8), 0 0 40px rgba(14,165,233,0.4)",
             opacity: textActive ? 1 : 0,
@@ -275,32 +275,32 @@ export default function WelcomeSplash({ onEnter }) {
             onClick={phase === "ready" ? onEnter : undefined}
             style={{
               fontSize: 16, fontWeight: 700, letterSpacing: 10,
-              color: "#1D9E75",
+              color: "#4D7FFF",
               fontFamily: "'Courier New', monospace",
               marginTop: 28,
               cursor: phase === "ready" ? "pointer" : "default",
-              textShadow: phase === "ready" ? "0 0 15px rgba(29,158,117,0.6)" : "none",
+              textShadow: phase === "ready" ? "0 0 20px rgba(57,255,126,0.8), 0 0 40px rgba(57,255,126,0.4)" : "none",
               padding: "12px 44px",
-              border: phase === "ready" ? "1px solid rgba(29,158,117,0.4)" : "1px solid transparent",
+              border: phase === "ready" ? "2px solid rgba(57,255,126,0.7)" : "1px solid transparent",
               borderRadius: 6,
-              background: phase === "ready" ? "rgba(29,158,117,0.08)" : "transparent",
+              background: phase === "ready" ? "rgba(57,255,126,0.06)" : "transparent",
               transition: "all 0.4s ease",
               opacity: phase === "ready" ? 1 : 0,
               display: "inline-block",
             }}
             onMouseEnter={e => {
               if (phase === "ready") {
-                e.target.style.background = "rgba(29,158,117,0.15)";
-                e.target.style.borderColor = "rgba(29,158,117,0.7)";
-                e.target.style.textShadow = "0 0 25px rgba(29,158,117,0.8)";
+                e.target.style.background = "rgba(57,255,126,0.15)";
+                e.target.style.borderColor = "rgba(57,255,126,1)";
+                e.target.style.textShadow = "0 0 30px rgba(57,255,126,1), 0 0 60px rgba(57,255,126,0.5)";
                 e.target.style.transform = "scale(1.05)";
               }
             }}
             onMouseLeave={e => {
               if (phase === "ready") {
-                e.target.style.background = "rgba(29,158,117,0.08)";
-                e.target.style.borderColor = "rgba(29,158,117,0.4)";
-                e.target.style.textShadow = "0 0 15px rgba(29,158,117,0.6)";
+                e.target.style.background = "rgba(77,127,255,0.08)";
+                e.target.style.borderColor = "rgba(77,127,255,0.4)";
+                e.target.style.textShadow = "0 0 15px rgba(77,127,255,0.6)";
                 e.target.style.transform = "scale(1)";
               }
             }}

@@ -707,7 +707,7 @@ export default function AnatomyViewer3D({ exerciseCode, diagnosis, species = "Ca
 
     // Scene
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0a1628);
+    scene.background = new THREE.Color(0xdce4ed);
     scene.fog = new THREE.FogExp2(0x0a1628, 0.18);
     sceneRef.current = scene;
 
@@ -816,25 +816,25 @@ export default function AnatomyViewer3D({ exerciseCode, diagnosis, species = "Ca
   );
 
   return (
-    <div style={{ background:"#0a1628", border:"1px solid rgba(30,58,95,0.5)", borderRadius:12,
+    <div style={{ background:"#edf2f7", border:"1px solid #cbd5e1", borderRadius:12,
       padding: compact ? "12px 14px" : "16px 20px", marginBottom:12, position:"relative",
-      boxShadow:"0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.03)" }}>
+      boxShadow:"0 4px 24px rgba(0,0,0,0.08)" }}>
 
       {/* ── Header bar ── */}
-      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:10, paddingBottom:10, borderBottom:"1px solid rgba(30,58,95,0.6)" }}>
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:10, paddingBottom:10, borderBottom:"1px solid #cbd5e1" }}>
         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-          {isFeline ? <TbCat size={18} style={{color:"#a78bfa"}}/> : <TbDog size={18} style={{color:"var(--k9-teal)"}}/>}
-          <span style={{ fontSize:13, fontWeight:800, color:"#f1f5f9", letterSpacing:0.8, textTransform:"uppercase" }}>
+          {isFeline ? <TbCat size={18} style={{color:"#fff"}}/> : <TbDog size={18} style={{color:"#fff"}}/>}
+          <span style={{ fontSize:13, fontWeight:800, color:"#1a2744", letterSpacing:0.8, textTransform:"uppercase" }}>
             3D Anatomy Viewer
           </span>
-          <span style={{ fontSize:10, padding:"3px 10px", borderRadius:4, background:"rgba(20,184,166,0.12)",
-            border:"1px solid rgba(20,184,166,0.3)", color:"var(--k9-teal)", fontWeight:700, letterSpacing:0.6 }}>
+          <span style={{ fontSize:10, padding:"4px 12px", borderRadius:20, background: isFeline ? "#7c3aed" : "#0c4a6e",
+            border:"none", color:"#ffffff", fontWeight:700, letterSpacing:0.6 }}>
             {isFeline ? "FELINE" : "CANINE"}
           </span>
           {exerciseCode && (
             <span style={{ fontSize:11, padding:"3px 10px", borderRadius:4,
-              background:"rgba(57,255,126,0.06)", border:"1px solid rgba(57,255,126,0.2)",
-              color:"#39FF7E", fontWeight:600, letterSpacing:0.3 }}>
+              background:"#dcfce7", border:"1px solid #86efac",
+              color:"#166534", fontWeight:600, letterSpacing:0.3 }}>
               {exerciseCode.replace(/_/g," ")}
             </span>
           )}
@@ -843,24 +843,24 @@ export default function AnatomyViewer3D({ exerciseCode, diagnosis, species = "Ca
           <button onClick={() => { const next = !autoRotate; setAutoRotate(next); autoRotateRef.current = next; }}
             title={autoRotate ? "Stop rotation" : "Auto-rotate"}
             style={{ display:"flex", alignItems:"center", gap:4, padding:"5px 12px", borderRadius:6,
-              background: autoRotate ? "rgba(20,184,166,0.15)" : "transparent",
-              border:`1px solid ${autoRotate ? "var(--k9-teal)" : "rgba(100,116,139,0.3)"}`,
-              color: autoRotate ? "var(--k9-teal)" : "#94a3b8", fontSize:11, fontWeight:600, cursor:"pointer",
+              background: autoRotate ? "#0c4a6e" : "#ffffff",
+              border:`1px solid ${autoRotate ? "#0c4a6e" : "#cbd5e1"}`,
+              color: autoRotate ? "#ffffff" : "#475569", fontSize:11, fontWeight:600, cursor:"pointer",
               transition:"all 0.15s" }}>
             <FiRotateCw size={12}/> Rotate
           </button>
           <button onClick={() => setClientMode(m => !m)}
             title={clientMode ? "Clinical labels" : "Owner-friendly labels"}
             style={{ display:"flex", alignItems:"center", gap:4, padding:"5px 12px", borderRadius:6,
-              background: clientMode ? "rgba(20,184,166,0.15)" : "transparent",
-              border:`1px solid ${clientMode ? "var(--k9-teal)" : "rgba(100,116,139,0.3)"}`,
-              color: clientMode ? "var(--k9-teal)" : "#94a3b8", fontSize:11, fontWeight:600, cursor:"pointer",
+              background: clientMode ? "#0c4a6e" : "#ffffff",
+              border:`1px solid ${clientMode ? "#0c4a6e" : "#cbd5e1"}`,
+              color: clientMode ? "#ffffff" : "#475569", fontSize:11, fontWeight:600, cursor:"pointer",
               transition:"all 0.15s" }}>
             <FiEye size={12}/> {clientMode ? "Owner" : "Clinical"}
           </button>
           <button onClick={() => setVisible(false)} style={{ display:"flex", alignItems:"center", padding:"5px 10px", borderRadius:6,
-            background:"transparent", border:"1px solid rgba(100,116,139,0.3)",
-            color:"#94a3b8", fontSize:11, cursor:"pointer", transition:"all 0.15s" }}>
+            background:"#ffffff", border:"1px solid #cbd5e1",
+            color:"#475569", fontSize:11, cursor:"pointer", transition:"all 0.15s" }}>
             <FiX size={12}/>
           </button>
         </div>

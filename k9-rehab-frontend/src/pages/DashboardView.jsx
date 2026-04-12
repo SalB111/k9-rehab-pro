@@ -1,9 +1,12 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, createContext, useContext } from "react";
 import { useTranslation } from "react-i18next";
 import i18n, { SUPPORTED_LOCALES } from "../i18n";
 
 // Ensure i18n is initialized (side effect — the import above runs the init)
 void i18n;
+
+// ─── FORM CONTEXT ─── auto-wires all F fields without modifying each call
+const DashFormContext = createContext({ data: {}, update: () => {}, blockId: null });
 
 // ─── THEME — WHITE CLINICAL ───────────────────────────────────────────────────
 const C = {
@@ -75,18 +78,24 @@ const Lbl = ({ children, range }) => (
   </div>
 );
 
-const F = ({ label, placeholder, type="text", options, rows, range, hint }) => (
-  <div>
-    <Lbl range={range}>{label}</Lbl>
-    {options
-      ? <select><option value="">Select…</option>{options.map(o=><option key={o}>{o}</option>)}</select>
-      : rows
-        ? <textarea placeholder={placeholder} rows={rows}/>
-        : <input type={type} placeholder={placeholder}/>
-    }
-    {hint && <div style={{ fontSize:10, color:C.muted, marginTop:4, fontStyle:"italic" }}>{hint}</div>}
-  </div>
-);
+const F = ({ label, placeholder, type="text", options, rows, range, hint }) => {
+  const { data, update, blockId } = useContext(DashFormContext);
+  const key = blockId ? `${blockId}::${label}` : label;
+  const value = data[key] ?? "";
+  const onChange = (val) => update(key, val);
+  return (
+    <div>
+      <Lbl range={range}>{label}</Lbl>
+      {options
+        ? <select value={value} onChange={e => onChange(e.target.value)}><option value="">Select…</option>{options.map(o=><option key={o} value={o}>{o}</option>)}</select>
+        : rows
+          ? <textarea placeholder={placeholder} rows={rows} value={value} onChange={e => onChange(e.target.value)}/>
+          : <input type={type} placeholder={placeholder} value={value} onChange={e => onChange(e.target.value)}/>
+      }
+      {hint && <div style={{ fontSize:10, color:C.muted, marginTop:4, fontStyle:"italic" }}>{hint}</div>}
+    </div>
+  );
+};
 
 const Row = ({ children, cols=2 }) => (
   <div style={{ display:"grid", gridTemplateColumns:`repeat(${cols},1fr)`, gap:12 }}>{children}</div>
@@ -125,8 +134,9 @@ function CbItem({ label, checked, onToggle, children }) {
 }
 
 // ─── MODAL ────────────────────────────────────────────────────────────────────
-function Modal({ title, color, colorLt, icon, onClose, children }) {
+function Modal({ title, color, colorLt, icon, onClose, children, beauContext, beauOpen, setBeauOpen, beauQuery, setBeauQuery, beauAnswer, beauLoading, onAskBeau }) {
   const { t } = useTranslation();
+  const hasBeau = !!beauContext && !!setBeauOpen;
   return (
     <div style={{ position:"fixed", inset:0, zIndex:200, background:"rgba(26,39,68,.55)", display:"flex", alignItems:"center", justifyContent:"center", padding:20, animation:"fadeIn .18s ease" }}
       onClick={e=>{ if(e.target===e.currentTarget) onClose(); }}>
@@ -140,10 +150,43 @@ function Modal({ title, color, colorLt, icon, onClose, children }) {
             <div style={{ fontSize:15, fontWeight:700, color:C.navy }}>{title}</div>
             <div style={{ fontSize:9, color:C.muted, letterSpacing:".13em", textTransform:"uppercase" }}>{t("modal.engineSubtitle")}</div>
           </div>
+          {hasBeau && (
+            <button onClick={() => setBeauOpen(!beauOpen)}
+              style={{ padding:"6px 14px", background: beauOpen ? "#0EA5E9" : C.blueLt, border:`1px solid ${beauOpen ? "#0EA5E9" : C.border}`, color: beauOpen ? C.white : "#0EA5E9", borderRadius:5, cursor:"pointer", fontSize:11, fontWeight:700, letterSpacing:".06em", transition:"all .15s", marginRight:8 }}>
+              {beauOpen ? "✕ Close B.E.A.U." : "⬡ Ask B.E.A.U."}
+            </button>
+          )}
           <button onClick={onClose} style={{ background:"none", border:`1px solid ${C.border}`, color:C.muted, fontSize:16, cursor:"pointer", padding:"4px 10px", borderRadius:5 }}>✕</button>
         </div>
         {/* Body */}
-        <div style={{ flex:1, overflowY:"auto", padding:22 }}>{children}</div>
+        <div style={{ flex:1, overflowY:"auto", padding:22 }}>
+          {children}
+          {/* ── Contextual B.E.A.U. ── */}
+          {hasBeau && beauOpen && (
+            <div style={{ marginTop:20, padding:16, background:"#F0F9FF", border:"1px solid #0EA5E944", borderRadius:8, animation:"fadeIn .15s ease" }}>
+              <div style={{ fontSize:11, fontWeight:700, color:"#0EA5E9", letterSpacing:".1em", marginBottom:10 }}>ASK B.E.A.U. — {title.toUpperCase()}</div>
+              <div style={{ display:"flex", gap:8 }}>
+                <textarea
+                  value={beauQuery || ""}
+                  onChange={e => setBeauQuery(e.target.value)}
+                  placeholder={`Ask B.E.A.U. about ${title.toLowerCase()}…`}
+                  rows={2}
+                  style={{ flex:1, fontSize:12, padding:"10px 12px", border:"1px solid #0EA5E944", borderRadius:5, resize:"vertical" }}
+                  onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); onAskBeau(); } }}
+                />
+                <button onClick={onAskBeau} disabled={beauLoading || !beauQuery?.trim()}
+                  style={{ padding:"10px 18px", background: beauLoading ? "#E0F2FE" : "#0EA5E9", border:"none", color:C.white, borderRadius:5, cursor: beauLoading ? "not-allowed" : "pointer", fontSize:11, fontWeight:700, alignSelf:"flex-end", minWidth:80 }}>
+                  {beauLoading ? "..." : "ASK"}
+                </button>
+              </div>
+              {beauAnswer && (
+                <div style={{ marginTop:12, padding:14, background:C.white, border:"1px solid #0EA5E933", borderRadius:6 }}>
+                  <pre style={{ fontSize:12, color:C.text, whiteSpace:"pre-wrap", lineHeight:1.8, fontFamily:"Georgia, serif" }}>{beauAnswer}</pre>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
         {/* Footer */}
         <div style={{ padding:"13px 22px", borderTop:`1px solid ${C.border}`, display:"flex", justifyContent:"flex-end", gap:10, flexShrink:0, background:C.bg, borderRadius:"0 0 10px 10px" }}>
           <button onClick={onClose} style={{ padding:"9px 22px", background:C.white, border:`1px solid ${C.border}`, color:C.muted, borderRadius:5, cursor:"pointer", fontSize:12, fontWeight:600, textTransform:"uppercase" }}>{t("modal.close")}</button>
@@ -284,6 +327,54 @@ function SafetyText({ k, as = "span", style, className, showBadge = true }) {
 function ClientPanel() {
   const [species, setSpecies] = useState("Canine");
   const breeds = species === "Feline" ? FELINE_BREEDS : CANINE_BREEDS;
+  const { data, update, blockId } = useContext(DashFormContext);
+
+  // ── Weight conversion helpers ──
+  const lbsKey = `${blockId}::Weight (lbs)`;
+  const kgKey  = `${blockId}::Weight (kg)`;
+  const lbsVal = data[lbsKey] ?? "";
+  const kgVal  = data[kgKey] ?? "";
+
+  const onLbsChange = (val) => {
+    update(lbsKey, val);
+    const n = parseFloat(val);
+    if (!isNaN(n) && n > 0) update(kgKey, (n / 2.20462).toFixed(1));
+    else if (val === "") update(kgKey, "");
+  };
+  const onKgChange = (val) => {
+    update(kgKey, val);
+    const n = parseFloat(val);
+    if (!isNaN(n) && n > 0) update(lbsKey, (n * 2.20462).toFixed(1));
+    else if (val === "") update(lbsKey, "");
+  };
+
+  // ── DOB ↔ Age conversion helpers ──
+  const dobKey = `${blockId}::Date of Birth`;
+  const ageKey = `${blockId}::Age (years)`;
+  const dobVal = data[dobKey] ?? "";
+  const ageVal = data[ageKey] ?? "";
+
+  const onDobChange = (val) => {
+    update(dobKey, val);
+    if (val) {
+      const birth = new Date(val);
+      const now = new Date();
+      let years = now.getFullYear() - birth.getFullYear();
+      if (now.getMonth() < birth.getMonth() || (now.getMonth() === birth.getMonth() && now.getDate() < birth.getDate())) years--;
+      if (years >= 0) update(ageKey, String(years));
+    }
+  };
+  const onAgeChange = (val) => {
+    update(ageKey, val);
+    const n = parseInt(val, 10);
+    if (!isNaN(n) && n >= 0 && n < 30) {
+      const now = new Date();
+      const birthYear = now.getFullYear() - n;
+      const dob = `${birthYear}-${String(now.getMonth()+1).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")}`;
+      update(dobKey, dob);
+    }
+  };
+
   return <>
     <Sec title="Client Information" color={C.blue} colorLt={C.blueLt} noTop>
       <Row><F label="Client First Name" placeholder="First name"/><F label="Client Last Name" placeholder="Last name"/></Row>
@@ -305,10 +396,28 @@ function ClientPanel() {
         <div><Lbl>Breed</Lbl><select><option value="">Select breed…</option>{breeds.map(b=><option key={b}>{b}</option>)}</select></div>
         <F label="Sex" options={["Male — Intact","Male — Neutered","Female — Intact","Female — Spayed"]}/>
       </Row>
-      <Row><F label="Date of Birth" type="date"/><F label="Color / Markings" placeholder="e.g. Black & tan, tricolor"/></Row>
       <Row cols={3}>
-        <F label="Weight (lbs)" placeholder="0.0"/>
-        <F label="Weight (kg)" placeholder="0.0" hint="Auto-converts from lbs"/>
+        <div>
+          <Lbl>Date of Birth</Lbl>
+          <input type="date" value={dobVal} onChange={e => onDobChange(e.target.value)}/>
+        </div>
+        <div>
+          <Lbl>Age (years)</Lbl>
+          <input type="number" placeholder="e.g. 6" min="0" max="30" value={ageVal} onChange={e => onAgeChange(e.target.value)}/>
+          <div style={{ fontSize:10, color:C.muted, marginTop:4, fontStyle:"italic" }}>Auto-converts to/from DOB</div>
+        </div>
+        <F label="Color / Markings" placeholder="e.g. Black & tan, tricolor"/>
+      </Row>
+      <Row cols={3}>
+        <div>
+          <Lbl>Weight (lbs)</Lbl>
+          <input type="number" placeholder="0.0" step="0.1" value={lbsVal} onChange={e => onLbsChange(e.target.value)}/>
+        </div>
+        <div>
+          <Lbl>Weight (kg)</Lbl>
+          <input type="number" placeholder="0.0" step="0.1" value={kgVal} onChange={e => onKgChange(e.target.value)}/>
+          <div style={{ fontSize:10, color:C.muted, marginTop:4, fontStyle:"italic" }}>Auto-converts to/from lbs</div>
+        </div>
         <F label="Microchip #" placeholder="15-digit number"/>
       </Row>
       <Row><F label="Specialist / Surgeon" placeholder="Referring specialist name & clinic"/><F label="Next Appointment" type="date"/></Row>
@@ -1704,7 +1813,7 @@ function GoalsPanel() {
 // (never the Anthropic API directly — API keys must stay server-side).
 async function callBeau(systemPrompt, userMessage) {
   const token = localStorage.getItem("token");
-  const apiBase = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+  const apiBase = import.meta.env.VITE_API_URL || "http://localhost:10000/api";
   const res = await fetch(`${apiBase}/beau/chat`, {
     method: "POST",
     headers: {
@@ -1790,10 +1899,58 @@ function ConditioningPanel() {
 }
 
 // ── PROTOCOL SUMMARY ──────────────────────────────────────────────────────────
-function ProtocolPanel({ patientName }) {
-  const [generating, setGenerating] = useState(false);
-  const [protocol,   setProtocol]   = useState("");
-  const [copied,     setCopied]     = useState(false);
+function ProtocolPanel({ patientName, patientData }) {
+  const [generating, setGenerating]       = useState(false);
+  const [protocol,   setProtocol]         = useState("");
+  const [copied,     setCopied]           = useState(false);
+  // Quick generate state
+  const [quickCondition, setQuickCondition] = useState(patientData?.condition || "");
+  const [quickRegion,    setQuickRegion]    = useState(patientData?.affected_region || "");
+  const [quickProtocol,  setQuickProtocol]  = useState(null);
+  const [quickLoading,   setQuickLoading]   = useState(false);
+
+  const CONDITIONS = [
+    { value: "TPLO Post-Op", label: "TPLO / CCL Post-Op" },
+    { value: "IVDD", label: "IVDD (Intervertebral Disc Disease)" },
+    { value: "Osteoarthritis", label: "Osteoarthritis (OA)" },
+    { value: "Geriatric Mobility", label: "Geriatric / Mobility Decline" },
+  ];
+  const REGIONS = [
+    "Stifle (Knee)", "Hip", "Elbow", "Shoulder", "Spine — Cervical",
+    "Spine — Thoracolumbar", "Spine — Lumbosacral", "Tarsus (Hock)",
+    "Carpus (Wrist)", "Multiple joints", "Generalized",
+  ];
+
+  const quickGenerate = async () => {
+    if (!quickCondition) return;
+    setQuickLoading(true); setQuickProtocol(null);
+    try {
+      const apiBase = import.meta.env.VITE_API_URL || "http://localhost:10000/api";
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${apiBase}/generate-protocol`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          patientName: patientName || "Patient",
+          clientFirstName: patientData?.client_name?.split(" ")[0] || "Client",
+          clientLastName: patientData?.client_name?.split(" ").slice(1).join(" ") || "",
+          diagnosis: quickCondition,
+          affectedRegion: quickRegion || "Generalized",
+          species: patientData?.species || "canine",
+          breed: patientData?.breed || "",
+          age: patientData?.age || 0,
+          weight: patientData?.weight || 0,
+          protocolLength: 8,
+        }),
+      });
+      const json = await res.json();
+      setQuickProtocol(json.data || json);
+    } catch (err) { setQuickProtocol({ error: err.message }); }
+    setQuickLoading(false);
+  };
 
   const generate = async () => {
     setGenerating(true); setProtocol("");
@@ -1816,7 +1973,7 @@ SAFETY GUARDRAILS — EVERY SESSION
 RED FLAGS — STOP AND CONTACT VETERINARIAN IMMEDIATELY
 
 EVIDENCE BASIS`,
-        `Generate a comprehensive rehabilitation protocol. Patient: ${patientName||"Current Patient on file"}. Generate a thorough evidence-based protocol demonstrating B.E.A.U.'s full clinical capability across all phases and exercise categories.`
+        `Generate a comprehensive rehabilitation protocol. Patient: ${patientName||"Current Patient on file"}. Condition: ${quickCondition || patientData?.condition || "General rehabilitation"}. Generate a thorough evidence-based protocol demonstrating B.E.A.U.'s full clinical capability across all phases and exercise categories.`
       );
       setProtocol(text);
     } catch (err) { setProtocol(`Connection error: ${err.message}`); }
@@ -1826,9 +1983,84 @@ EVIDENCE BASIS`,
   const copy = () => { navigator.clipboard?.writeText(protocol); setCopied(true); setTimeout(()=>setCopied(false), 2000); };
 
   return <>
-    <Sec title="Generate Protocol" color={C.green} colorLt={C.greenLt} noTop>
+    {/* ── QUICK GENERATE ── */}
+    <Sec title="Quick Protocol Generation" color={C.green} colorLt={C.greenLt} noTop>
+      <div style={{ fontSize:11, color:C.muted, marginBottom:14, lineHeight:1.65 }}>
+        Generate a structured, evidence-based rehab protocol in seconds. Select the condition and hit generate — B.E.A.U. handles the rest using ACVSMR-aligned exercise selection.
+      </div>
+      <Row>
+        <div>
+          <Lbl>What condition are we treating {patientName || "this patient"} for?</Lbl>
+          <select value={quickCondition} onChange={e => setQuickCondition(e.target.value)}
+            style={{ fontSize:13, fontWeight:600, padding:"10px 12px" }}>
+            <option value="">Select condition…</option>
+            {CONDITIONS.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+          </select>
+        </div>
+        <div>
+          <Lbl>Affected Region</Lbl>
+          <select value={quickRegion} onChange={e => setQuickRegion(e.target.value)}>
+            <option value="">Select region…</option>
+            {REGIONS.map(r => <option key={r} value={r}>{r}</option>)}
+          </select>
+        </div>
+      </Row>
+      <button onClick={quickGenerate} disabled={quickLoading || !quickCondition}
+        style={{ width:"100%", marginTop:14, padding:"14px", background: quickLoading ? C.greenLt : !quickCondition ? "#e2e8f0" : C.green, border:"none", color: !quickCondition ? C.muted : C.white, borderRadius:6, cursor: quickLoading || !quickCondition ? "not-allowed":"pointer", fontSize:14, fontWeight:700, letterSpacing:".1em", display:"flex", alignItems:"center", gap:12, justifyContent:"center", transition:"all .2s" }}>
+        {quickLoading
+          ? <><div style={{ width:18, height:18, border:"2px solid white", borderTopColor:"transparent", borderRadius:"50%", animation:"spinK9 .8s linear infinite" }}/> GENERATING PROTOCOL…</>
+          : "⚡ QUICK GENERATE PROTOCOL"}
+      </button>
+    </Sec>
+
+    {/* ── QUICK PROTOCOL RESULTS ── */}
+    {quickProtocol && !quickProtocol.error && (
+      <Sec title={`Structured Protocol — ${quickProtocol.protocolType?.toUpperCase() || "REHAB"} · ${quickProtocol.totalWeeks} Weeks`} color={C.green} colorLt={C.greenLt}>
+        <div style={{ marginBottom:14, padding:"10px 14px", background:C.greenLt, border:`1px solid ${C.green}44`, borderRadius:6, fontSize:11, color:C.green, fontWeight:600 }}>
+          {quickProtocol.totalWeeks} weeks · {quickProtocol.weeks?.length || 0} phases · {quickProtocol.weeks?.reduce((s,w)=>s+(w.exercises?.length||0),0) || 0} total exercises · Evidence-gated
+        </div>
+        {quickProtocol.weeks?.map(week => (
+          <div key={week.week} style={{ marginBottom:16, border:`1px solid ${C.border}`, borderRadius:7, overflow:"hidden" }}>
+            <div style={{ padding:"10px 14px", background:C.blueLt, borderBottom:`1px solid ${C.border}`, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+              <div style={{ fontSize:12, fontWeight:700, color:C.navy }}>Week {week.week}{week.phaseInfo ? ` — ${week.phaseInfo.name}` : ""}</div>
+              <span style={{ fontSize:10, color:C.muted }}>{week.exercises?.length || 0} exercises</span>
+            </div>
+            <div style={{ padding:12 }}>
+              {week.exercises?.map((ex, i) => (
+                <div key={i} style={{ padding:"8px 10px", background: i%2===0 ? C.white : C.bg, borderRadius:4, marginBottom:4, display:"grid", gridTemplateColumns:"2fr 1fr 1fr 1fr", gap:8, alignItems:"center", fontSize:11 }}>
+                  <div>
+                    <span style={{ fontWeight:600, color:C.navy }}>{ex.name}</span>
+                    <span style={{ marginLeft:6, fontSize:9, padding:"1px 5px", background: ex.evidence_grade === "A" ? "#DCFCE7" : ex.evidence_grade === "B" ? "#DBEAFE" : "#FEF3C7", borderRadius:3, color: ex.evidence_grade === "A" ? "#166534" : ex.evidence_grade === "B" ? "#1E40AF" : "#92400E", fontWeight:600 }}>
+                      {ex.evidence_grade || "B"}
+                    </span>
+                  </div>
+                  <span style={{ color:C.muted }}>{ex.sets || 3} × {ex.reps || 10}</span>
+                  <span style={{ color:C.muted }}>{ex.frequency || "2x daily"}</span>
+                  <span style={{ color:C.muted }}>{ex.duration_minutes || 10} min</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+        {quickProtocol.warnings?.length > 0 && (
+          <div style={{ padding:"10px 14px", background:C.amberLt, border:`1px solid ${C.amber}44`, borderRadius:6, fontSize:11, color:C.amber, fontWeight:500, marginTop:8 }}>
+            {quickProtocol.warnings.map((w,i) => <div key={i}>⚠ {w}</div>)}
+          </div>
+        )}
+      </Sec>
+    )}
+    {quickProtocol?.error && (
+      <div style={{ padding:"12px 14px", background:C.redLt, border:`1px solid ${C.red}44`, borderRadius:6, fontSize:12, color:C.red, marginBottom:16 }}>
+        Error: {quickProtocol.error}
+      </div>
+    )}
+
+    <Divider/>
+
+    {/* ── B.E.A.U. FULL PROTOCOL ── */}
+    <Sec title="B.E.A.U. AI-Generated Protocol" color={C.green} colorLt={C.greenLt}>
       <div style={{ fontSize:12, color:C.muted, marginBottom:16, lineHeight:1.65 }}>
-        B.E.A.U. synthesizes all information from Assessment, B.E.A.U. Metrics, Clinic Equipment, Home Exercise Program, and Goals to generate a complete evidence-based rehabilitation protocol. Fill in the relevant blocks before generating.
+        For a narrative clinical protocol with full evidence citations, safety guardrails, and home exercise instructions — use B.E.A.U.'s AI generation below.
       </div>
       <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:8, marginBottom:16 }}>
         {["Assessment ✓","B.E.A.U. Metrics ✓","Clinic Equipment ✓","Home Environment ✓","Goals ✓","Diagnostics ✓"].map(b=>(
@@ -1839,7 +2071,7 @@ EVIDENCE BASIS`,
         style={{ width:"100%", padding:"14px", background: generating ? C.greenLt : C.green, border:"none", color:C.white, borderRadius:6, cursor: generating?"not-allowed":"pointer", fontSize:14, fontWeight:700, letterSpacing:".1em", display:"flex", alignItems:"center", gap:12, justifyContent:"center" }}>
         {generating
           ? <><div style={{ width:18, height:18, border:"2px solid white", borderTopColor:"transparent", borderRadius:"50%", animation:"spinK9 .8s linear infinite" }}/> GENERATING B.E.A.U. PROTOCOL…</>
-          : "⚡ GENERATE COMPLETE PROTOCOL"}
+          : "🧠 GENERATE FULL B.E.A.U. PROTOCOL"}
       </button>
     </Sec>
 
@@ -1924,7 +2156,7 @@ function LibraryPanel() {
   // not be hardcoded in the UI.
   useEffect(() => {
     let cancelled = false;
-    const apiBase = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+    const apiBase = import.meta.env.VITE_API_URL || "http://localhost:10000/api";
     setLoading(true);
     setError(null);
 
@@ -2196,17 +2428,17 @@ function HipaaPanel() {
 // and descriptions are resolved via t(`tiles.<id>.label`) / t(`nav.<id>`)
 // at render time so the UI re-renders when the user changes locale.
 const BLOCKS = [
-  { id:"client",       icon:"👤", color:C.blue,    colorLt:C.blueLt   },
-  { id:"diagnostics",  icon:"🩻", color:C.purple,  colorLt:C.purpleLt },
-  { id:"assessment",   icon:"📋", color:C.amber,   colorLt:C.amberLt  },
-  { id:"metrics",      icon:"📐", color:C.green,   colorLt:C.greenLt  },
-  { id:"diet",         icon:"🥣", color:C.green,   colorLt:C.greenLt  },
-  { id:"equipment",    icon:"🏥", color:C.teal,    colorLt:C.tealLt   },
-  { id:"home",         icon:"🏠", color:C.blue,    colorLt:C.blueLt   },
-  { id:"goals",        icon:"🎯", color:"#BE185D", colorLt:"#FDF2F8"  },
-  { id:"conditioning", icon:"💪", color:"#0D9488", colorLt:"#F0FDFB"  },
-  { id:"protocol",     icon:"⚡", color:C.green,   colorLt:C.greenLt  },
-  { id:"library",      icon:"📚", color:C.navy,    colorLt:C.blueLt   },
+  { id:"client",       icon:"🐾", color:C.blue,    colorLt:C.blueLt   },
+  { id:"diagnostics",  icon:"🦴", color:C.purple,  colorLt:C.purpleLt },
+  { id:"assessment",   icon:"🐕", color:C.amber,   colorLt:C.amberLt  },
+  { id:"metrics",      icon:"🦮", color:C.green,   colorLt:C.greenLt  },
+  { id:"diet",         icon:"🍖", color:C.green,   colorLt:C.greenLt  },
+  { id:"equipment",    icon:"🐕‍🦺", color:C.teal,    colorLt:C.tealLt   },
+  { id:"home",         icon:"🏡", color:C.blue,    colorLt:C.blueLt   },
+  { id:"goals",        icon:"🏆", color:"#BE185D", colorLt:"#FDF2F8"  },
+  { id:"conditioning", icon:"🐺", color:"#0D9488", colorLt:"#F0FDFB"  },
+  { id:"protocol",     icon:"🐶", color:C.green,   colorLt:C.greenLt  },
+  { id:"library",      icon:"🦴", color:C.navy,    colorLt:C.blueLt   },
 ];
 
 const SIDEBAR_NAV = [
@@ -2220,109 +2452,239 @@ const SIDEBAR_NAV = [
 const BLOCK_COMPS   = { client:ClientPanel, diagnostics:DiagnosticsPanel, assessment:AssessmentPanel, metrics:MetricsPanel, diet:DietPanel, equipment:EquipmentPanel, home:HomePanel, goals:GoalsPanel, conditioning:ConditioningPanel, protocol:ProtocolPanel, library:LibraryPanel };
 const SIDEBAR_COMPS = { how:HowToUse, ask:AskBeau, about:AboutPanel, disclaimer:DisclaimerPanel, hipaa:HipaaPanel };
 
-export default function DashboardView({ setView, currentUser, onLogout }) {
+// ── CONTEXTUAL B.E.A.U. PROMPTS ──────────────────────────────────────────────
+const BEAU_BLOCK_CONTEXTS = {
+  client:       "You are helping with patient intake — demographics, breed-specific considerations, owner communication. Reference breed predispositions and signalment relevance.",
+  diagnostics:  "You are helping interpret diagnostic results — radiographs, bloodwork, MRI findings. Identify rehabilitation-relevant findings and how they affect protocol selection.",
+  assessment:   "You are helping with clinical assessment — pain scoring (CSU scale, BPI), functional grading, lameness assessment, neurological evaluation. Focus on objective measurement.",
+  metrics:      "You are helping with B.E.A.U. metrics — girth measurements, goniometry/ROM interpretation, body condition scoring, HCPI scoring, LOAD scoring. Explain clinical significance and normal ranges.",
+  diet:         "You are helping with veterinary nutrition — caloric requirements, therapeutic diets, body condition scoring, weight management. Reference Mars Petcare clinical nutrition portfolio where applicable.",
+  equipment:    "You are helping with equipment selection — underwater treadmill settings, TENS/NMES parameters, laser therapy protocols (Class IV), therapeutic ultrasound, shockwave therapy indications.",
+  home:         "You are helping design home exercise programs — client education, exercise selection appropriate for home, frequency/duration recommendations, safety guidelines, environment assessment.",
+  goals:        "You are helping set rehabilitation goals — SMART goals, phase-appropriate milestones, validated outcome measures, realistic timeline expectations based on condition and evidence.",
+  conditioning: "You are helping with conditioning programs — progressive overload, sport-specific training, return-to-function criteria, fitness maintenance protocols.",
+};
+
+export default function DashboardView({ setView, currentUser, onLogout, patient, setSelectedPatient }) {
   const { t } = useTranslation();
   const [openBlock,   setOpenBlock]   = useState(null);
   const [openSidebar, setOpenSidebar] = useState(null);
   const [saved,       setSaved]       = useState(false);
+  // ── Form state — persists across block opens, keyed by "blockId::label"
+  const [dashData, setDashData] = useState({});
+  // ── Ask B.E.A.U. per block
+  const [beauOpen, setBeauOpen]     = useState(false);
+  const [beauQuery, setBeauQuery]   = useState("");
+  const [beauAnswer, setBeauAnswer] = useState("");
+  const [beauLoading, setBeauLoading] = useState(false);
+  // ── Patient search
+  const [allPatients, setAllPatients] = useState([]);
+  const [searchOpen, setSearchOpen]   = useState(false);
+  const [searchQ, setSearchQ]         = useState("");
+  const searchRef = useRef(null);
 
-  const displayName = currentUser?.username || currentUser?.name || "Clinician";
-  const credLabel   = currentUser?.role === "admin" ? t("sidebar.credAdmin") : t("sidebar.credClinician");
-  const initials    = displayName.split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase() || "SB";
-  const patient     = "Max — German Shepherd · TPLO Post-Op";
+  const apiBase = import.meta.env.VITE_API_URL || "http://localhost:10000/api";
+  const token = localStorage.getItem("token");
+  const authHeaders = { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) };
 
-  const handleSave = () => { setSaved(true); setTimeout(()=>setSaved(false),2400); };
-  const handleExit = () => {
-    if (typeof onLogout === "function") { onLogout(); return; }
-    if (typeof setView === "function")   { setView("clients"); }
+  const patientName = patient?.name || null;
+  const visitCount = patient?.visit_count || 0;
+  const patientLabel = patient
+    ? `${patient.name} — ${patient.breed || "Unknown breed"} · ${patient.condition || "No condition"}${visitCount > 0 ? ` · Visit #${visitCount}` : ""}`
+    : null;
+
+  // ── Fetch patient list for search
+  useEffect(() => {
+    fetch(`${apiBase}/patients`, { headers: authHeaders })
+      .then(r => r.json())
+      .then(d => setAllPatients(d.data || d || []))
+      .catch(() => {});
+  }, []);
+
+  // ── Close search dropdown on outside click
+  useEffect(() => {
+    const onDoc = (e) => { if (searchRef.current && !searchRef.current.contains(e.target)) setSearchOpen(false); };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, []);
+
+  const filteredPatients = searchQ
+    ? allPatients.filter(p => `${p.name} ${p.breed} ${p.client_name} ${p.condition}`.toLowerCase().includes(searchQ.toLowerCase()))
+    : allPatients;
+
+  // ── Select patient from search → load their full record + dashboard data
+  const selectPatient = async (p) => {
+    setSearchOpen(false);
+    setSearchQ("");
+    try {
+      const res = await fetch(`${apiBase}/patients/${p.id}`, { headers: authHeaders });
+      const json = await res.json();
+      const fullPatient = json.data || json;
+      if (setSelectedPatient) setSelectedPatient(fullPatient);
+    } catch {
+      if (setSelectedPatient) setSelectedPatient(p);
+    }
+  };
+
+  // ── Pre-populate from patient on mount / patient change
+  useEffect(() => {
+    if (!patient) return;
+    // Load saved dashboard_data from backend first
+    let savedDash = {};
+    if (patient.dashboard_data) {
+      try {
+        savedDash = typeof patient.dashboard_data === "string" ? JSON.parse(patient.dashboard_data) : patient.dashboard_data;
+      } catch { savedDash = {}; }
+    }
+    // Merge: backend saved data → patient basic fields → existing form state
+    setDashData(prev => ({
+      ...savedDash,
+      ...prev,
+      "client::Client First Name": patient.client_name?.split(" ")[0] || savedDash["client::Client First Name"] || "",
+      "client::Client Last Name": patient.client_name?.split(" ").slice(1).join(" ") || savedDash["client::Client Last Name"] || "",
+      "client::Phone": patient.client_phone || savedDash["client::Phone"] || "",
+      "client::Email": patient.client_email || savedDash["client::Email"] || "",
+      "client::Patient Name": patient.name || savedDash["client::Patient Name"] || "",
+      "client::Weight (lbs)": patient.weight ? String(patient.weight) : savedDash["client::Weight (lbs)"] || "",
+    }));
+  }, [patient?.id]);
+
+  const updateField = (key, val) => setDashData(prev => ({ ...prev, [key]: val }));
+
+  const handleSave = async () => {
+    if (patient?.id) {
+      try {
+        const res = await fetch(`${apiBase}/patients/${patient.id}`, {
+          method: "PUT",
+          headers: authHeaders,
+          body: JSON.stringify({
+            name: dashData["client::Patient Name"] || patient.name,
+            client_name: [dashData["client::Client First Name"], dashData["client::Client Last Name"]].filter(Boolean).join(" ") || patient.client_name,
+            client_phone: dashData["client::Phone"] || patient.client_phone,
+            client_email: dashData["client::Email"] || patient.client_email,
+            weight: parseFloat(dashData["client::Weight (lbs)"]) || patient.weight,
+            dashboard_data: dashData,
+          }),
+        });
+        // Update patient object with new visit count
+        const json = await res.json();
+        if (json.data && setSelectedPatient) setSelectedPatient(json.data);
+      } catch { /* fall through to visual save */ }
+    }
+    // Also persist to localStorage as draft backup
+    try { localStorage.setItem(`k9dash_${patient?.id || "draft"}`, JSON.stringify(dashData)); } catch {}
+    setSaved(true); setTimeout(()=>setSaved(false),2400);
+  };
+
+  // Load draft from localStorage as fallback
+  useEffect(() => {
+    try {
+      const draft = localStorage.getItem(`k9dash_${patient?.id || "draft"}`);
+      if (draft) setDashData(prev => {
+        const parsed = JSON.parse(draft);
+        // Only use localStorage if no backend data was loaded
+        const hasBackendData = Object.keys(prev).some(k => k.includes("::") && k !== "client::Patient Name");
+        return hasBackendData ? prev : { ...parsed, ...prev };
+      });
+    } catch {}
+  }, [patient?.id]);
+
+  const askBeauInContext = async () => {
+    if (!beauQuery.trim() || !openBlock) return;
+    setBeauLoading(true); setBeauAnswer("");
+    try {
+      const ctx = BEAU_BLOCK_CONTEXTS[openBlock] || "";
+      const patientCtx = patient ? `Patient: ${patient.name}, ${patient.breed || "unknown breed"}, ${patient.age || "unknown age"}, ${patient.weight || "unknown weight"}lbs, Condition: ${patient.condition || "not specified"}.` : "";
+      const text = await callBeau(
+        `You are B.E.A.U. — the Biomedical Evidence-based Analytical Unit of K9 Rehab Pro™. ${ctx} ${patientCtx} Answer concisely and clinically. No markdown. Reference evidence where applicable (Millis & Levine, Drum, ACVSMR standards).`,
+        beauQuery
+      );
+      setBeauAnswer(text);
+    } catch (err) { setBeauAnswer(`Error: ${err.message}`); }
+    setBeauLoading(false);
   };
 
   const block     = BLOCKS.find(b=>b.id===openBlock);
-  const BlockComp = openBlock ? BLOCK_COMPS[openBlock] : null;
-  const SideComp  = openSidebar ? SIDEBAR_COMPS[openSidebar] : null;
-  const sideBlock = SIDEBAR_NAV.find(s=>s.id===openSidebar);
+
+  // No patient gate — dashboard always shows the 11-block grid.
+  // If no patient is selected, header shows a prompt to select one.
 
   return (
-    <div className="k9v2" style={{ display:"flex", height:"100vh", overflow:"hidden", background:C.bg }}>
-      <style>{CSS}</style>
+    <DashFormContext.Provider value={{ data: dashData, update: updateField, blockId: openBlock }}>
+      <div className="k9v2" style={{ background:C.bg, minHeight:"100vh" }}>
+        <style>{CSS}</style>
 
-      {/* ── SIDEBAR ── */}
-      <div style={{ width:210, flexShrink:0, background:C.navy, display:"flex", flexDirection:"column", boxShadow:"2px 0 12px rgba(0,0,0,.15)" }}>
-        <div style={{ padding:"18px 16px 14px", borderBottom:"1px solid rgba(255,255,255,.08)" }}>
-          <div style={{ fontSize:22, fontWeight:900, color:C.white, letterSpacing:".04em", fontFamily:"'Segoe UI', system-ui, sans-serif" }}>
-            B.E.A.U.<span style={{ color:C.green }}>™</span>
-          </div>
-          <div style={{ fontSize:9, color:"rgba(255,255,255,.45)", letterSpacing:".16em", marginTop:2 }}>K9 REHAB PRO™</div>
-          <div style={{ display:"flex", alignItems:"center", gap:6, marginTop:10 }}>
-            <div style={{ width:7, height:7, borderRadius:"50%", background:C.green, boxShadow:`0 0 8px ${C.green}`, animation:"pulseK9 1.6s ease-in-out infinite" }}/>
-            <span style={{ fontSize:9, color:C.green, fontWeight:600, textTransform:"uppercase" }}>{t("sidebar.systemOnline")}</span>
-          </div>
-        </div>
-
-        <div style={{ padding:"12px 14px", borderBottom:"1px solid rgba(255,255,255,.08)", background:"rgba(255,255,255,.05)" }}>
-          <div style={{ fontSize:8, color:"rgba(255,255,255,.35)", letterSpacing:".12em", marginBottom:6, textTransform:"uppercase" }}>{t("sidebar.signedInAs")}</div>
-          <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-            <div style={{ width:32, height:32, borderRadius:"50%", background:C.green, display:"flex", alignItems:"center", justifyContent:"center", fontSize:13, fontWeight:700, color:C.white, flexShrink:0 }}>{initials}</div>
-            <div>
-              <div style={{ fontSize:12, fontWeight:700, color:C.white }}>{displayName}</div>
-              <div style={{ fontSize:9, color:"rgba(255,255,255,.45)", lineHeight:1.4 }}>{credLabel}</div>
+        {/* ── HEADER ── */}
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"13px 24px", background:C.white, borderBottom:`1px solid ${C.border}`, boxShadow:"0 1px 6px rgba(26,39,68,.07)" }}>
+          <div style={{ flex:1 }}>
+            <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+              <div style={{ fontSize:17, fontWeight:700, color:C.navy }}>{t("dashboard.title")}</div>
+              {/* ── Patient Search ── */}
+              <div ref={searchRef} style={{ position:"relative" }}>
+                <input
+                  type="text"
+                  placeholder={patient ? patientLabel : "Search patient by name, breed, or owner..."}
+                  value={searchQ}
+                  onChange={e => { setSearchQ(e.target.value); setSearchOpen(true); }}
+                  onFocus={() => setSearchOpen(true)}
+                  style={{
+                    width: 380, padding:"7px 12px 7px 32px", fontSize:12, border:`1px solid ${C.border}`,
+                    borderRadius:6, background:C.bg, outline:"none", color:C.navy, fontWeight: patient ? 600 : 400,
+                  }}
+                />
+                <span style={{ position:"absolute", left:10, top:8, fontSize:14, color:C.muted }}>🔍</span>
+                {searchOpen && filteredPatients.length > 0 && (
+                  <div style={{
+                    position:"absolute", top:"100%", left:0, right:0, zIndex:300,
+                    background:C.white, border:`1px solid ${C.border}`, borderRadius:8,
+                    boxShadow:"0 8px 32px rgba(0,0,0,.15)", maxHeight:280, overflowY:"auto", marginTop:4,
+                  }}>
+                    {filteredPatients.map(p => (
+                      <div key={p.id} onClick={() => selectPatient(p)}
+                        style={{
+                          padding:"10px 14px", cursor:"pointer", borderBottom:`1px solid ${C.bg}`,
+                          display:"flex", justifyContent:"space-between", alignItems:"center",
+                          background: patient?.id === p.id ? C.greenLt : "transparent",
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.background = C.bg}
+                        onMouseLeave={e => e.currentTarget.style.background = patient?.id === p.id ? C.greenLt : "transparent"}>
+                        <div>
+                          <div style={{ fontSize:13, fontWeight:600, color:C.navy }}>{p.name}</div>
+                          <div style={{ fontSize:10, color:C.muted }}>{p.breed} · {p.client_name}{p.visit_count > 0 ? ` · Visit #${p.visit_count}` : ""}</div>
+                        </div>
+                        <span style={{ fontSize:9, padding:"2px 8px", borderRadius:4, background:C.blueLt, color:C.blue, fontWeight:700 }}>
+                          {p.condition || "—"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        </div>
-
-        <div style={{ padding:"10px 14px", borderBottom:"1px solid rgba(255,255,255,.08)", background:"rgba(0,196,106,.08)" }}>
-          <div style={{ fontSize:8, color:"rgba(255,255,255,.35)", letterSpacing:".12em", marginBottom:3, textTransform:"uppercase" }}>{t("sidebar.activePatient")}</div>
-          <div style={{ fontSize:11, fontWeight:600, color:C.white, lineHeight:1.4 }}>{patient}</div>
-        </div>
-
-        <div style={{ flex:1, overflowY:"auto", padding:"10px 8px" }}>
-          {SIDEBAR_NAV.map(item=>(
-            <div key={item.id} className="sb-btn"
-              onClick={()=>setOpenSidebar(item.id)}
-              style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 10px", marginBottom:2 }}>
-              <span style={{ fontSize:16, width:22, textAlign:"center", flexShrink:0 }}>{item.icon}</span>
-              <span style={{ fontSize:11, color:"rgba(255,255,255,.7)", fontWeight:500 }}>{t(`nav.${item.id}`)}</span>
-            </div>
-          ))}
-          {typeof setView === "function" && (
-            <div className="sb-btn" onClick={()=>setView("clients")} style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 10px", marginTop:10, borderTop:"1px solid rgba(255,255,255,.08)", paddingTop:14 }}>
-              <span style={{ fontSize:16, width:22, textAlign:"center", flexShrink:0 }}>←</span>
-              <span style={{ fontSize:11, color:"rgba(255,255,255,.7)", fontWeight:500 }}>{t("sidebar.backToClients")}</span>
-            </div>
-          )}
-        </div>
-
-        <div style={{ padding:"12px 10px", borderTop:"1px solid rgba(255,255,255,.08)" }}>
-          <button onClick={handleSave}
-            style={{ width:"100%", padding:"10px", background: saved ? C.green : "rgba(0,196,106,.18)", border:`1px solid ${C.green}`, color:C.white, borderRadius:6, cursor:"pointer", fontSize:11, fontWeight:700, letterSpacing:".1em", marginBottom:8, transition:"all .2s", textTransform:"uppercase" }}>
-            {saved ? `✓  ${t("sidebar.saved")}` : t("sidebar.save")}
-          </button>
-          <button onClick={handleExit} style={{ width:"100%", padding:"10px", background:"rgba(192,57,43,.15)", border:"1px solid rgba(192,57,43,.5)", color:"#EF9A9A", borderRadius:6, cursor:"pointer", fontSize:11, fontWeight:700, letterSpacing:".1em", textTransform:"uppercase" }}>
-            {typeof onLogout === "function" ? t("sidebar.signOut") : t("sidebar.exit")}
-          </button>
-        </div>
-      </div>
-
-      {/* ── MAIN ── */}
-      <div style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden" }}>
-        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"13px 24px", background:C.white, borderBottom:`1px solid ${C.border}`, flexShrink:0, boxShadow:"0 1px 6px rgba(26,39,68,.07)" }}>
-          <div>
-            <div style={{ fontSize:17, fontWeight:700, color:C.navy }}>{t("dashboard.title")}</div>
-            <div style={{ fontSize:10, color:C.muted, letterSpacing:".08em", marginTop:1, textTransform:"uppercase" }}>{t("dashboard.subtitle")}</div>
+            {patientLabel && (
+              <div style={{ fontSize:11, color:C.muted, marginTop:2 }}>
+                <span style={{ fontWeight:600, color:C.navy }}>{patientLabel}</span>
+              </div>
+            )}
           </div>
           <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+            <button onClick={handleSave}
+              style={{ padding:"8px 18px", background: saved ? C.green : C.greenLt, border:`1px solid ${C.green}66`, color: saved ? C.white : C.green, borderRadius:5, cursor:"pointer", fontSize:11, fontWeight:700, letterSpacing:".08em", transition:"all .2s" }}>
+              {saved ? "✓ SAVED" : "SAVE"}
+            </button>
             <LanguageSelector/>
             <div style={{ padding:"6px 14px", background:C.greenLt, border:`1px solid ${C.green}44`, borderRadius:5, fontSize:11, color:C.green, fontWeight:700, textTransform:"uppercase" }}>
-              🟢 {t("dashboard.beauReady")}
+              B.E.A.U. READY
             </div>
           </div>
         </div>
 
-        <div style={{ flex:1, overflowY:"auto", padding:22 }}>
+        {/* ── BLOCK GRID ── */}
+        <div style={{ padding:22 }}>
           <div style={{ display:"grid", gridTemplateColumns:"repeat(3, 1fr)", gap:16 }}>
             {BLOCKS.map((b,i)=>(
               <div key={b.id} className="block-card"
-                onClick={()=>setOpenBlock(b.id)}
+                onClick={()=>{ setOpenBlock(b.id); setBeauOpen(false); setBeauQuery(""); setBeauAnswer(""); }}
                 style={{ background:C.white, border:`1.5px solid ${C.border}`, borderRadius:9, padding:"22px 20px", position:"relative", overflow:"hidden", boxShadow:"0 1px 6px rgba(26,39,68,.06)", animationDelay:`${i*.04}s`, animation:"fadeUp .3s ease both" }}>
                 <div style={{ position:"absolute", top:0, left:0, right:0, height:4, background:b.color }}/>
                 <div style={{ width:44, height:44, borderRadius:10, background:b.colorLt, border:`1px solid ${b.color}33`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:22, marginBottom:14, boxShadow:`0 2px 8px ${b.color}22` }}>
@@ -2340,31 +2702,39 @@ export default function DashboardView({ setView, currentUser, onLogout }) {
             <span style={{ fontSize:9, color:C.gray, letterSpacing:".1em" }}>{t("dashboard.footerCopyright")}</span>
           </div>
         </div>
+
+        {/* ── BLOCK MODALS ── */}
+        {BLOCKS.map(b => {
+          const Comp = BLOCK_COMPS[b.id];
+          if (!Comp) return null;
+          return (
+            <div key={b.id} style={{ display: openBlock === b.id ? 'contents' : 'none' }}>
+              <Modal title={t(`tiles.${b.id}.label`)} color={b.color} colorLt={b.colorLt} icon={b.icon} onClose={()=>setOpenBlock(null)}
+                beauContext={BEAU_BLOCK_CONTEXTS[b.id]}
+                beauOpen={beauOpen} setBeauOpen={setBeauOpen}
+                beauQuery={beauQuery} setBeauQuery={setBeauQuery}
+                beauAnswer={beauAnswer} beauLoading={beauLoading}
+                onAskBeau={askBeauInContext}
+              >
+                <Comp patientName={patientName} patientData={patient}/>
+              </Modal>
+            </div>
+          );
+        })}
+
+        {/* ── INFO MODALS (How to Use, Ask B.E.A.U., About, Disclaimer, HIPAA) ── */}
+        {SIDEBAR_NAV.map(s => {
+          const Comp = SIDEBAR_COMPS[s.id];
+          if (!Comp) return null;
+          return (
+            <div key={s.id} style={{ display: openSidebar === s.id ? 'contents' : 'none' }}>
+              <Modal title={t(`nav.${s.id}`)} color={C.blue} colorLt={C.blueLt} icon={s.icon} onClose={()=>setOpenSidebar(null)}>
+                <Comp/>
+              </Modal>
+            </div>
+          );
+        })}
       </div>
-
-      {BLOCKS.map(b => {
-        const Comp = BLOCK_COMPS[b.id];
-        if (!Comp) return null;
-        return (
-          <div key={b.id} style={{ display: openBlock === b.id ? 'contents' : 'none' }}>
-            <Modal title={t(`tiles.${b.id}.label`)} color={b.color} colorLt={b.colorLt} icon={b.icon} onClose={()=>setOpenBlock(null)}>
-              <Comp patientName="Max"/>
-            </Modal>
-          </div>
-        );
-      })}
-
-      {SIDEBAR_NAV.map(s => {
-        const Comp = SIDEBAR_COMPS[s.id];
-        if (!Comp) return null;
-        return (
-          <div key={s.id} style={{ display: openSidebar === s.id ? 'contents' : 'none' }}>
-            <Modal title={t(`nav.${s.id}`)} color={C.blue} colorLt={C.blueLt} icon={s.icon} onClose={()=>setOpenSidebar(null)}>
-              <Comp/>
-            </Modal>
-          </div>
-        );
-      })}
-    </div>
+    </DashFormContext.Provider>
   );
 }

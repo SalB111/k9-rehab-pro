@@ -13,9 +13,9 @@ import { useToast } from "../components/Toast";
 
 const PrintableHandout = React.lazy(() => import("../components/handout/PrintableHandout"));
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// EVIDENCE SECTION â€” Evidence-based reference display
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
+// EVIDENCE SECTION â€" Evidence-based reference display
+// â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 function EvidenceSection({ grade, refs }) {
   if (!grade && (!refs || refs.length === 0)) return null;
 
@@ -25,10 +25,10 @@ function EvidenceSection({ grade, refs }) {
   // Determine link label based on reference type
   const linkLabel = (ref) => {
     if (!ref.url) return null;
-    if (ref.type === "Textbook") return "ðŸ“– View Book";
-    if (ref.type === "Conference") return "ðŸ”Ž Search";
-    if (ref.url.includes("doi.org")) return "ðŸ”— DOI";
-    return "ðŸ”¬ PubMed";
+    if (ref.type === "Textbook") return "ðŸ"– View Book";
+    if (ref.type === "Conference") return "ðŸ"Ž Search";
+    if (ref.url.includes("doi.org")) return "ðŸ"— DOI";
+    return "ðŸ"¬ PubMed";
   };
 
   return (
@@ -111,9 +111,9 @@ function EvidenceSection({ grade, refs }) {
   );
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 // EXERCISE CARD (expandable)
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 function ExerciseCard({ e, onOpenStoryboard, onUseInProtocol, onPrintHandout }) {
   const [open, setOpen] = useState(false);
   const [showAnatomy, setShowAnatomy] = useState(false);
@@ -133,13 +133,13 @@ function ExerciseCard({ e, onOpenStoryboard, onUseInProtocol, onPrintHandout }) 
       boxShadow: "0 1px 3px rgba(0,0,0,0.07)", overflow: "hidden",
       transition: "box-shadow 0.15s", gridColumn: open ? "1 / -1" : undefined
     }}>
-      {/* Header â€” always visible */}
+      {/* Header â€" always visible */}
       <div style={{ padding: 20, cursor: "pointer" }} onClick={() => setOpen(o => !o)}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
           <div style={{ fontWeight: 700, fontSize: 14, color: C.text, flex: 1, paddingRight: 12 }}>
             {e.name}
           </div>
-          <span style={{ fontSize: 18, color: C.textLight, lineHeight: 1 }}>{open ? "â–²" : "â–¼"}</span>
+          <span style={{ fontSize: 18, color: C.textLight, lineHeight: 1 }}>{open ? "▲" : "▼"}</span>
         </div>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
           <span style={S.badge("blue")}>{e.category}</span>
@@ -254,11 +254,11 @@ function ExerciseCard({ e, onOpenStoryboard, onUseInProtocol, onPrintHandout }) 
 
           {/* Red Flags */}
           {e.red_flags?.length > 0 && (
-            <div style={{ background: C.surface, borderRadius: 8, padding: 14, marginTop: 12, border: `1px solid ${C.border}`, borderLeft: `3px solid ${C.red}` }}>
-              <div style={{ ...S.label, color: C.red, marginBottom: 8 }}>Red Flags â€” Stop Immediately</div>
+            <div style={{ background: "#fef2f2", borderRadius: 8, padding: 14, marginTop: 12, border: "1px solid #fecaca", borderLeft: "3px solid #dc2626" }}>
+              <div style={{ ...S.label, color: "#dc2626", marginBottom: 8 }}>Red Flags — Stop Immediately</div>
               <ul style={{ margin: 0, paddingLeft: 16 }}>
                 {e.red_flags.map((flag, i) => (
-                  <li key={i} style={{ fontSize: 12, color: C.text, marginBottom: 4, fontWeight: 500 }}>{flag}</li>
+                  <li key={i} style={{ fontSize: 12, color: "#111", marginBottom: 4, fontWeight: 500 }}>{flag}</li>
                 ))}
               </ul>
             </div>
@@ -267,11 +267,11 @@ function ExerciseCard({ e, onOpenStoryboard, onUseInProtocol, onPrintHandout }) 
           {/* Contraindications + Progression */}
           <div style={{ ...S.grid(2), marginTop: 12 }}>
             {e.contraindications && (
-              <div style={{ background: C.surface, borderRadius: 8, padding: 14, border: `1px solid ${C.border}`, borderLeft: `3px solid ${C.red}` }}>
-                <div style={{ ...S.label, color: C.red, marginBottom: 8 }}>Contraindications</div>
+              <div style={{ background: "#fff7ed", borderRadius: 8, padding: 14, border: "1px solid #fed7aa", borderLeft: "3px solid #ea580c" }}>
+                <div style={{ ...S.label, color: "#ea580c", marginBottom: 8 }}>Contraindications</div>
                 <ul style={{ margin: 0, paddingLeft: 16 }}>
                   {(Array.isArray(e.contraindications) ? e.contraindications : [e.contraindications]).map((c, i) => (
-                    <li key={i} style={{ fontSize: 12, color: C.text, marginBottom: 4 }}>{c}</li>
+                    <li key={i} style={{ fontSize: 12, color: "#111", marginBottom: 4 }}>{c}</li>
                   ))}
                 </ul>
               </div>
@@ -284,7 +284,7 @@ function ExerciseCard({ e, onOpenStoryboard, onUseInProtocol, onPrintHandout }) 
             )}
           </div>
 
-          {/* Clinical Parameters â€” Dosage, Timing, Classification */}
+          {/* Clinical Parameters â€" Dosage, Timing, Classification */}
           {(e.clinical_parameters || e.clinical_classification) && (
             <div style={{ marginTop: 12 }}>
               <div style={{ ...S.label, color: C.text, marginBottom: 8 }}>Clinical Parameters</div>
@@ -345,12 +345,12 @@ function ExerciseCard({ e, onOpenStoryboard, onUseInProtocol, onPrintHandout }) 
             </div>
           )}
 
-          {/* Evidence-Based References â€” FULL WIDTH */}
+          {/* Evidence-Based References â€" FULL WIDTH */}
           <div style={{ marginTop: 12 }}>
             <EvidenceSection grade={e.evidence_base?.grade} refs={e.evidence_base?.references} />
           </div>
 
-          {/* â”€â”€ Anatomy Viewer Button â”€â”€ */}
+          {/* â"€â"€ Anatomy Viewer Button â"€â"€ */}
           <button
             onClick={(ev) => { ev.stopPropagation(); setShowAnatomy(a => !a); }}
             style={{
@@ -367,7 +367,7 @@ function ExerciseCard({ e, onOpenStoryboard, onUseInProtocol, onPrintHandout }) 
             {showAnatomy ? "Hide Anatomy Viewer" : "View Targeted Muscles"}
           </button>
 
-          {/* â”€â”€ Inline Anatomy Viewer Panel â”€â”€ */}
+          {/* â"€â"€ Inline Anatomy Viewer Panel â"€â"€ */}
           {showAnatomy && (
             <div style={{ marginTop: 8 }}>
               <AnatomyViewer3D
@@ -378,7 +378,7 @@ function ExerciseCard({ e, onOpenStoryboard, onUseInProtocol, onPrintHandout }) 
             </div>
           )}
 
-          {/* Storyboard Button â€” only when storyboard exists */}
+          {/* Storyboard Button â€" only when storyboard exists */}
           {e.client_education?.storyboard_available && onOpenStoryboard && (
             <button onClick={undefined}
               style={{
@@ -445,31 +445,34 @@ function ExerciseCard({ e, onOpenStoryboard, onUseInProtocol, onPrintHandout }) 
   );
 }
 
-// Category icon/color map â€” SVG icons from K9Icons.js, emoji fallback
+// Category icon/color map â€" SVG icons from K9Icons.js, emoji fallback
 const CAT_META = {
-  "Passive Therapy":          { color: C.bg, text: C.text, icon: "ðŸ¤²", SvgIcon: getK9Icon("Passive Therapy") },
-  "Active Assisted":          { color: C.bg, text: C.text, icon: "ðŸ¦®", SvgIcon: getK9Icon("Active Assisted") },
-  "Strengthening":            { color: C.bg, text: C.text, icon: "ðŸ’ª", SvgIcon: getK9Icon("Strengthening") },
-  "Balance & Proprioception": { color: C.bg, text: C.text, icon: "âš–ï¸", SvgIcon: getK9Icon("Balance & Proprioception") },
-  "Aquatic Therapy":          { color: C.bg, text: C.text, icon: "ðŸŒŠ", SvgIcon: getK9Icon("Aquatic Therapy") },
-  "Hydrotherapy":             { color: C.bg, text: C.text, icon: "ðŸŠ", SvgIcon: getK9Icon("Hydrotherapy") },
-  "Therapeutic Modalities":   { color: C.bg, text: C.text, icon: "âš¡", SvgIcon: getK9Icon("Therapeutic Modalities") },
-  "Manual Therapy":           { color: C.bg, text: C.text, icon: "ðŸ‘", SvgIcon: getK9Icon("Manual Therapy") },
-  "Functional Training":      { color: C.bg, text: C.text, icon: "ðŸƒ", SvgIcon: getK9Icon("Functional Training") },
-  "Geriatric Care":           { color: C.bg, text: C.text, icon: "ðŸ¾", SvgIcon: getK9Icon("Geriatric Care") },
-  "Post-Surgical":            { color: C.bg, text: C.text, icon: "ðŸ©º", SvgIcon: getK9Icon("Post-Surgical") },
-  "Neurological Rehab":       { color: C.bg, text: C.text, icon: "ðŸ§ ", SvgIcon: getK9Icon("Neurological Rehab") },
-  "Sport Conditioning":       { color: C.bg, text: C.text, icon: "ðŸ…", SvgIcon: getK9Icon("Sport Conditioning") },
-  "Complementary Therapy":    { color: C.bg, text: C.text, icon: "ðŸŒ¿", SvgIcon: getK9Icon("Complementary Therapy") },
-  "Pediatric Rehabilitation": { color: C.bg, text: C.text, icon: "ðŸ¶", SvgIcon: getK9Icon("Pediatric Rehabilitation") },
-  "Palliative Care":          { color: C.bg, text: C.text, icon: "â¤ï¸", SvgIcon: getK9Icon("Palliative Care") },
-  "Breed-Specific":           { color: C.bg, text: C.text, icon: "ðŸ¦´", SvgIcon: getK9Icon("Breed-Specific") },
-  "Canine Strength (Zink)":   { color: C.bg, text: C.text, icon: "ðŸ‹ï¸", SvgIcon: getK9Icon("Canine Strength (Zink)") },
+  "Passive Therapy":          { color: C.bg, text: C.text, icon: "🐾", SvgIcon: getK9Icon("Passive Therapy") },
+  "Active Assisted":          { color: C.bg, text: C.text, icon: "🐕", SvgIcon: getK9Icon("Active Assisted") },
+  "Strengthening":            { color: C.bg, text: C.text, icon: "🐺", SvgIcon: getK9Icon("Strengthening") },
+  "Balance & Proprioception": { color: C.bg, text: C.text, icon: "🦮", SvgIcon: getK9Icon("Balance & Proprioception") },
+  "Aquatic Therapy":          { color: C.bg, text: C.text, icon: "🐠", SvgIcon: getK9Icon("Aquatic Therapy") },
+  "Hydrotherapy":             { color: C.bg, text: C.text, icon: "💧", SvgIcon: getK9Icon("Hydrotherapy") },
+  "Therapeutic Modalities":   { color: C.bg, text: C.text, icon: "⚡", SvgIcon: getK9Icon("Therapeutic Modalities") },
+  "Manual Therapy":           { color: C.bg, text: C.text, icon: "🦴", SvgIcon: getK9Icon("Manual Therapy") },
+  "Functional Training":      { color: C.bg, text: C.text, icon: "🏃", SvgIcon: getK9Icon("Functional Training") },
+  "Geriatric Care":           { color: C.bg, text: C.text, icon: "🧓", SvgIcon: getK9Icon("Geriatric Care") },
+  "Post-Surgical":            { color: C.bg, text: C.text, icon: "🩺", SvgIcon: getK9Icon("Post-Surgical") },
+  "Neurological Rehab":       { color: C.bg, text: C.text, icon: "🧠", SvgIcon: getK9Icon("Neurological Rehab") },
+  "Sport Conditioning":       { color: C.bg, text: C.text, icon: "🏆", SvgIcon: getK9Icon("Sport Conditioning") },
+  "Complementary Therapy":    { color: C.bg, text: C.text, icon: "🌿", SvgIcon: getK9Icon("Complementary Therapy") },
+  "Pediatric Rehabilitation": { color: C.bg, text: C.text, icon: "🐶", SvgIcon: getK9Icon("Pediatric Rehabilitation") },
+  "Palliative Care":          { color: C.bg, text: C.text, icon: "❤️", SvgIcon: getK9Icon("Palliative Care") },
+  "Breed-Specific":           { color: C.bg, text: C.text, icon: "🐩", SvgIcon: getK9Icon("Breed-Specific") },
+  "Canine Strength (Zink)":   { color: C.bg, text: C.text, icon: "💪", SvgIcon: getK9Icon("Canine Strength (Zink)") },
+
+  "Feline Rehabilitation":       { color: C.bg, text: C.text, icon: "🐱", SvgIcon: getK9Icon("Feline Rehabilitation") },
+  "Neurological Rehabilitation": { color: C.bg, text: C.text, icon: "🧠", SvgIcon: getK9Icon("Neurological Rehabilitation") },
 };
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// EXERCISES VIEW â€” Full Exercise Library Browser
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
+// EXERCISES VIEW â€" Full Exercise Library Browser
+// â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 function ExercisesView({ setView, setGenKey, setGenInitialStep }) {
   const [exercises, setExercises] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -528,7 +531,7 @@ function ExercisesView({ setView, setGenKey, setGenInitialStep }) {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "40vh", gap: 12 }}>
         <div style={{ width: 32, height: 32, borderRadius: "50%", border: `3px solid ${C.border}`, borderTopColor: C.teal, animation: "spin 0.8s linear infinite" }} />
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-        <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>Loading exercises...</span>
+        <span style={{ fontSize: 13, fontWeight: 600, color: "#111" }}>Loading exercises...</span>
       </div>
     );
   }
@@ -547,11 +550,11 @@ function ExercisesView({ setView, setGenKey, setGenInitialStep }) {
       <div style={{ ...S.card, padding: "16px 20px" }}>
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
           <div style={{ position: "relative", flex: 1, minWidth: 200 }}>
-            <FiSearch size={14} style={{ position: "absolute", left: 12, top: 11, color: C.textLight }} />
+            <FiSearch size={14} style={{ position: "absolute", left: 12, top: 11, color: "#333" }} />
             <input style={{ ...S.input, paddingLeft: 34, height: 38 }} placeholder="Search by name, description, or categoryâ€¦"
               value={search} onChange={e => setSearch(e.target.value)} />
           </div>
-          <span style={{ fontSize: 12, color: C.textLight, whiteSpace: "nowrap", fontWeight: 600 }}>
+          <span style={{ fontSize: 12, color: "#333", whiteSpace: "nowrap", fontWeight: 600 }}>
             {filtered.length} of {exercises.length} exercises
           </span>
           {setView && (
@@ -592,7 +595,7 @@ function ExercisesView({ setView, setGenKey, setGenInitialStep }) {
       <div style={{ ...S.card, padding: 20 }}>
         {/* Header row: title + difficulty counts */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-          <div style={{ fontSize: 12, fontWeight: 800, color: C.text, textTransform: "uppercase", letterSpacing: "1px" }}>
+          <div style={{ fontSize: 12, fontWeight: 800, color: "#111", textTransform: "uppercase", letterSpacing: "1px" }}>
             Exercise Categories
           </div>
           <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
@@ -604,7 +607,7 @@ function ExercisesView({ setView, setGenKey, setGenInitialStep }) {
               <div key={d.label} onClick={() => setFilterDiff(prev => prev === d.label ? "" : d.label)}
                 style={{ display: "flex", alignItems: "baseline", gap: 5, cursor: "pointer", transition: "opacity 0.15s", opacity: filterDiff && filterDiff !== d.label ? 0.4 : 1 }}>
                 <span style={{ fontSize: 18, fontWeight: 800, color: d.color, lineHeight: 1 }}>{d.count}</span>
-                <span style={{ fontSize: 11, fontWeight: 700, color: C.textMid, textTransform: "uppercase", letterSpacing: "0.5px" }}>{d.label}</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: "#222", textTransform: "uppercase", letterSpacing: "0.5px" }}>{d.label}</span>
               </div>
             ))}
           </div>
@@ -614,14 +617,14 @@ function ExercisesView({ setView, setGenKey, setGenInitialStep }) {
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
           {categories.map(cat => {
-            const meta = CAT_META[cat] || { icon: "ðŸ“‹" };
+            const meta = CAT_META[cat] || { icon: "ðŸ"‹" };
             const count = grouped[cat]?.length || 0;
             return (
               <button key={cat} onClick={() => scrollToCat(cat)} style={{
                 display: "flex", alignItems: "center", gap: 6,
                 padding: "8px 14px", borderRadius: 8, cursor: "pointer",
                 background: C.bg, border: `1.5px solid ${C.border}`,
-                color: C.text, fontSize: 12, fontWeight: 600,
+                color: "#111", fontSize: 12, fontWeight: 600,
                 transition: "all 0.15s",
                 opacity: count > 0 ? 1 : 0.4,
               }}
@@ -645,7 +648,7 @@ function ExercisesView({ setView, setGenKey, setGenInitialStep }) {
       {/* â•â•â•â•â•â•â•â•â•â•â• LIST VIEW â•â•â•â•â•â•â•â•â•â•â• */}
       {viewMode === "list" && (
         filtered.length === 0 ? (
-          <div style={{ ...S.card, textAlign: "center", color: C.textLight, padding: 48 }}>
+          <div style={{ ...S.card, textAlign: "center", color: "#333", padding: 48 }}>
             No exercises match your search
           </div>
         ) : (
@@ -673,9 +676,9 @@ function ExercisesView({ setView, setGenKey, setGenInitialStep }) {
                       onMouseEnter={ev => ev.currentTarget.style.background = C.bg}
                       onMouseLeave={ev => ev.currentTarget.style.background = "transparent"}
                     >
-                      <td style={{ padding: "8px 14px", fontSize: 12, fontWeight: 600, color: C.text, borderBottom: `1px solid ${C.border}` }}>{e.name}</td>
-                      <td style={{ padding: "8px 14px", fontSize: 10, fontWeight: 600, color: C.textLight, fontFamily: "monospace", borderBottom: `1px solid ${C.border}` }}>{e.code}</td>
-                      <td style={{ padding: "8px 14px", fontSize: 11, color: C.text, borderBottom: `1px solid ${C.border}` }}>{e.category}</td>
+                      <td style={{ padding: "8px 14px", fontSize: 12, fontWeight: 600, color: "#111", borderBottom: `1px solid ${C.border}` }}>{e.name}</td>
+                      <td style={{ padding: "8px 14px", fontSize: 10, fontWeight: 600, color: "#333", fontFamily: "monospace", borderBottom: `1px solid ${C.border}` }}>{e.code}</td>
+                      <td style={{ padding: "8px 14px", fontSize: 11, color: "#111", borderBottom: `1px solid ${C.border}` }}>{e.category}</td>
                       <td style={{ padding: "8px 14px", borderBottom: `1px solid ${C.border}` }}>
                         <span style={{ fontSize: 10, fontWeight: 700, color: diffColor, background: `${diffColor}18`, padding: "2px 8px", borderRadius: 6 }}>{e.difficulty_level}</span>
                       </td>
@@ -703,15 +706,15 @@ function ExercisesView({ setView, setGenKey, setGenInitialStep }) {
         )
       )}
 
-      {/* â•â•â•â•â•â•â•â•â•â•â• GRID VIEW â€” Category sections â•â•â•â•â•â•â•â•â•â•â• */}
+      {/* â•â•â•â•â•â•â•â•â•â•â• GRID VIEW â€" Category sections â•â•â•â•â•â•â•â•â•â•â• */}
       {viewMode === "grid" && Object.entries(grouped).length === 0 && (
-        <div style={{ ...S.card, textAlign: "center", color: C.textLight, padding: 48 }}>
+        <div style={{ ...S.card, textAlign: "center", color: "#333", padding: 48 }}>
           No exercises match your search
         </div>
       )}
 
       {viewMode === "grid" && Object.entries(grouped).sort(([a], [b]) => a.localeCompare(b)).map(([cat, exList]) => {
-        const meta = CAT_META[cat] || { color: C.bg, text: C.textMid, icon: "ðŸ“‹" };
+        const meta = CAT_META[cat] || { color: C.bg, text: C.textMid, icon: "ðŸ"‹" };
         const isCollapsed = collapsedCats[cat];
 
         return (
@@ -732,8 +735,8 @@ function ExercisesView({ setView, setGenKey, setGenInitialStep }) {
                   <span style={{ fontSize: 20 }}>{meta.icon}</span>
                 )}
                 <div style={{ textAlign: "center" }}>
-                  <span style={{ fontWeight: 900, fontSize: 16, color: C.text, letterSpacing: 0.5 }}>{cat}</span>
-                  <span style={{ marginLeft: 8, fontSize: 12, color: C.textMid, fontWeight: 600 }}>
+                  <span style={{ fontWeight: 900, fontSize: 16, color: "#111", letterSpacing: 0.5 }}>{cat}</span>
+                  <span style={{ marginLeft: 8, fontSize: 12, color: "#222", fontWeight: 600 }}>
                     {exList.length} exercise{exList.length !== 1 ? "s" : ""}
                   </span>
                 </div>
@@ -745,7 +748,7 @@ function ExercisesView({ setView, setGenKey, setGenInitialStep }) {
                   return <span key={d} style={{ ...S.badge(d === "Easy" ? "green" : d === "Advanced" ? "orange" : "blue"),
                     fontSize: 10 }}>{n} {d}</span>;
                 })}
-                <span style={{ color: C.textLight, fontSize: 12, fontWeight: 700, marginLeft: 8 }}>
+                <span style={{ color: "#333", fontSize: 12, fontWeight: 700, marginLeft: 8 }}>
                   {isCollapsed ? "▼" : "▲"}
                 </span>
               </div>
@@ -768,7 +771,7 @@ function ExercisesView({ setView, setGenKey, setGenInitialStep }) {
                     display: "flex", alignItems: "center", gap: 6,
                     padding: "7px 16px", borderRadius: 8, cursor: "pointer",
                     background: C.bg, border: `1.5px solid ${C.border}`,
-                    color: C.text, fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px",
+                    color: "#111", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px",
                     transition: "all 0.15s",
                   }}
                   onMouseEnter={e => { e.currentTarget.style.borderColor = C.teal; e.currentTarget.style.color = C.teal; }}

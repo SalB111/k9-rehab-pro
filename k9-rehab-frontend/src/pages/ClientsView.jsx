@@ -227,7 +227,7 @@ Register Patient
                 cursor: "pointer", transition: "background 0.1s",
                 background: selectedIds.has(c.id) ? "rgba(14,165,233,0.06)" : "transparent",
               }}
-                onClick={() => { if (setView && setSelectedPatient) { setSelectedPatient(c); setView("patient-detail"); } }}
+                onClick={() => { if (setView && setSelectedPatient) { setSelectedPatient(c); setView("patient"); } }}
                 onMouseEnter={e => { if (!selectedIds.has(c.id)) e.currentTarget.style.background = C.bg; }}
                 onMouseLeave={e => { if (!selectedIds.has(c.id)) e.currentTarget.style.background = "transparent"; }}>
                 <td style={{ ...S.td, textAlign: "center", padding: "10px 0" }}
