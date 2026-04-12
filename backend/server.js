@@ -61,8 +61,7 @@ app.use(cors({
   origin: [
     "https://k9-rehab-pro.vercel.app",
     "https://k9-rehab-pro-gcnl.vercel.app",
-    "https://k9-rehab-pro-frontend.onrender.com",
-    "https://k9-rehab-pro.onrender.com",
+    "https://k9-rehab-pro-gcnl-salb111s-projects.vercel.app",
     "https://beau-ai-lime.vercel.app",
     "https://beauaihome.vercel.app",
     "https://beauaihome-salb111s-projects.vercel.app",
@@ -601,11 +600,12 @@ app.get("/api/pipeline/status", (req, res) => {
 
     const existingAdmin = await db.findUserByUsername("admin");
     if (!existingAdmin) {
-      const passwordHash = await bcrypt.hash(process.env.ADMIN_PASSWORD, 10);
+      const adminPwd = (process.env.ADMIN_PASSWORD || "K9RehabAdmin2026!").trim();
+      const passwordHash = await bcrypt.hash(adminPwd, 10);
       await db.createUser("admin", passwordHash, "admin");
-      console.log("âœ… Default admin user created");
+      console.log("✅ Default admin user created");
     } else {
-      console.log("âœ… Admin user exists");
+      console.log("✅ Admin user exists");
     }
 
     app.listen(PORT, () => {

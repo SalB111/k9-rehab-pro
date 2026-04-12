@@ -1717,8 +1717,17 @@ async function callBeau(systemPrompt, userMessage) {
     }),
   });
   if (!res.ok) throw new Error(`B.E.A.U. API ${res.status}`);
-  const data = await res.json();
-  return data.content?.[0]?.text || data.text || data.response || "No response.";
+  // Handle SSE streaming response
+  const raw = await res.text();
+  let result = "";
+  for (const line of raw.split("\n")) {
+    if (!line.startsWith("data: ")) continue;
+    try {
+      const parsed = JSON.parse(line.slice(6));
+      if (parsed.type === "delta" && parsed.text) result += parsed.text;
+    } catch { /* skip non-JSON lines */ }
+  }
+  return result || "No response.";
 }
 
 function ConditioningPanel() {
