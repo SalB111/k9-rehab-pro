@@ -256,7 +256,7 @@ useEffect(() => {
       {/* Header Bar */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 20px", borderBottom: `1px solid ${C.border}`, background: C.surface, flexShrink: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <img src="/Beau.png" alt="B.E.A.U." style={{ width: 38, height: 38, borderRadius: 10, objectFit: "cover", boxShadow: `0 0 12px rgba(14,165,233,0.3)` }} />
+          <img src="/rod-logo.png" alt="B.E.A.U." style={{ width: 38, height: 38, borderRadius: 10, objectFit: "contain", filter: "brightness(1.2) drop-shadow(0 0 8px rgba(14,165,233,0.4))" }} />
           <div>
             <div style={{ fontSize: 14, fontWeight: 700, color: C.text, letterSpacing: 0.5 }}>
               B.E.A.U. <span style={{ color: C.teal, fontSize: 10, fontWeight: 600, background: `${C.teal}15`, padding: "2px 7px", borderRadius: 4, marginLeft: 6 }}>Biomedical Evidence-Based Analytical Unit</span>
@@ -344,7 +344,7 @@ useEffect(() => {
         {/* Welcome Screen */}
         {welcome && (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "60vh", textAlign: "center" }}>
-            <img src="/Beau.png" alt="B.E.A.U." style={{ width: 80, height: 80, borderRadius: 20, objectFit: "cover", marginBottom: 16, boxShadow: `0 0 30px ${C.teal}20`, border: `2px solid ${C.teal}30` }} />
+            <img src="/rod-logo.png" alt="B.E.A.U." style={{ width: 80, height: 80, borderRadius: 20, objectFit: "contain", marginBottom: 16, filter: "brightness(1.2) drop-shadow(0 0 12px rgba(14,165,233,0.4))" }} />
             <h1 style={{ fontSize: 22, fontWeight: 700, color: C.text, margin: "0 0 6px" }}>B.E.A.U.</h1>
             <p style={{ fontSize: 13, color: C.textLight, maxWidth: 460, lineHeight: 1.6, margin: "0 0 28px" }}>
               Evidence-based canine rehabilitation intelligence. Load a patient for personalized protocols, or ask general clinical questions.
