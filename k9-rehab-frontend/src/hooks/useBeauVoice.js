@@ -33,24 +33,27 @@ function scoreVoice(voice, langCode) {
   // Must match language
   if (!lang.startsWith(langCode.slice(0, 2).toLowerCase())) return -1;
 
-  // Prefer local (not remote) for lower latency
-  if (voice.localService) score += 5;
+  // Prefer online/cloud voices — they are LOUDER and higher quality on Windows
+  if (!voice.localService) score += 8;
 
   // Prefer male voices (deeper, matches B.E.A.U.'s character)
   if (name.includes("male") && !name.includes("female")) score += 10;
-  if (name.includes("david")) score += 8;    // Windows deep male
-  if (name.includes("mark")) score += 8;     // Windows male
-  if (name.includes("daniel")) score += 7;   // macOS male
-  if (name.includes("alex")) score += 7;     // macOS male
-  if (name.includes("jorge")) score += 7;    // Spanish male
-  if (name.includes("thomas")) score += 7;   // French/German male
-  if (name.includes("google") && name.includes("male")) score += 6;
+  if (name.includes("google")) score += 9;   // Google voices are louder on Chrome
+  if (name.includes("david")) score += 7;    // Windows deep male
+  if (name.includes("mark")) score += 7;     // Windows male
+  if (name.includes("daniel")) score += 6;   // macOS male
+  if (name.includes("alex")) score += 6;     // macOS male
+  if (name.includes("jorge")) score += 6;    // Spanish male
+  if (name.includes("thomas")) score += 6;   // French/German male
 
   // Deprioritize female voices slightly (B.E.A.U. is envisioned as deep male)
   if (name.includes("female") || name.includes("zira") || name.includes("hazel")) score -= 3;
 
-  // Prefer "enhanced" or "premium" quality
-  if (name.includes("enhanced") || name.includes("premium") || name.includes("neural")) score += 4;
+  // Prefer "enhanced" or "premium" quality — typically louder
+  if (name.includes("enhanced") || name.includes("premium") || name.includes("neural")) score += 6;
+
+  // Microsoft Online voices are louder than local ones on Windows
+  if (name.includes("online") || name.includes("natural")) score += 7;
 
   return score;
 }
@@ -185,9 +188,9 @@ export default function useBeauVoice(locale = "en") {
       const utt = new SpeechSynthesisUtterance(chunks[chunkIndex]);
       if (voice) utt.voice = voice;
       utt.lang = LOCALE_VOICE_MAP[locale] || "en-US";
-      utt.rate = 0.95;     // Authoritative pace
-      utt.pitch = 0.80;    // Deep, charismatic voice
-      utt.volume = 1.0;
+      utt.rate = 1.0;      // Clear, confident pace
+      utt.pitch = 0.85;    // Deep, charismatic voice
+      utt.volume = 1.0;    // Max browser volume
       utt.onend = () => { chunkIndex++; speakNext(); };
       utt.onerror = () => { chunkIndex++; speakNext(); };
       utteranceRef.current = utt;
