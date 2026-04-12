@@ -173,7 +173,7 @@ useEffect(() => {
   const saveSession = async (allMessages) => {
     if (allMessages.length === 0) return;
     try {
-      const body = { messages: allMessages, patient_id: patient?.id || null };
+      const body = { messages: allMessages, patient_id: patient?.id || null, language: i18nInst.language || "en" };
       if (sessionId) body.session_id = sessionId;
       const r = await fetch(`${API}/beau/sessions`, {
         method: "POST",
