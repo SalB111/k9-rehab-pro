@@ -464,6 +464,7 @@ const narrativeEngine = require("./engines/narrative/narrative-engine");
 const presentationEngine = require("./engines/presentation/presentation-engine");
 const visualEngine = require("./engines/visual/visual-engine");
 app.use("/api/beau", beauLimiter, beauRouter);
+app.use("/api/tts", require("./tts-router"));
 
 // Knowledge Engine search endpoint
 app.get("/api/beau/knowledge/search", (req, res) => {

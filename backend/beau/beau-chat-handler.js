@@ -31,7 +31,7 @@ function registerEngineHook(name, hook) {
  * @param {Object} res — Express response (SSE stream)
  */
 async function handleChat(req, res) {
-  const { messages, patient } = req.body;
+  const { messages, patient, language } = req.body;
 
   if (!messages || !Array.isArray(messages) || messages.length === 0) {
     return res.status(400).json({ error: "Messages array is required" });
@@ -73,7 +73,14 @@ async function handleChat(req, res) {
     }
 
     // ── Pipeline Step 2: Build system prompt ──
-    const systemPrompt = buildSystemPrompt(patient, additionalContext);
+    let systemPrompt = buildSystemPrompt(patient, additionalContext);
+
+    // ── Language instruction — respond in the user's selected language ──
+    const LANG_NAMES = { es:"Spanish", fr:"French", de:"German", "pt-BR":"Brazilian Portuguese", pt:"Portuguese", it:"Italian", ja:"Japanese", ko:"Korean", "zh-CN":"Mandarin Chinese", zh:"Mandarin Chinese", nl:"Dutch" };
+    const targetLang = LANG_NAMES[language];
+    if (targetLang) {
+      systemPrompt += `\n\nIMPORTANT: The user's interface is set to ${targetLang}. You MUST respond entirely in ${targetLang}. Keep medical terminology accurate but translate all explanations, instructions, and clinical guidance into ${targetLang}. Exercise names may remain in English with ${targetLang} translation in parentheses.`;
+    }
 
     // ── Pipeline Step 3: Clean messages for Anthropic API ──
     // Anthropic expects alternating user/assistant messages

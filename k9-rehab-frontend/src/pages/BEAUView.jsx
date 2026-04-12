@@ -126,7 +126,7 @@ useEffect(() => {
           "Content-Type": "application/json",
           ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
         },
-        body: JSON.stringify({ messages: newMsgs, patient }),
+        body: JSON.stringify({ messages: newMsgs, patient, language: i18nInst.language || "en" }),
       });
 
       if (!res.ok) {

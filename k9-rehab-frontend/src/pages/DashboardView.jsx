@@ -1813,7 +1813,7 @@ function GoalsPanel() {
 // ── CONDITIONING ──────────────────────────────────────────────────────────────
 // NOTE: B.E.A.U. calls are routed through the backend /api/beau/chat endpoint
 // (never the Anthropic API directly — API keys must stay server-side).
-async function callBeau(systemPrompt, userMessage) {
+async function callBeau(systemPrompt, userMessage, language) {
   const token = localStorage.getItem("token");
   const apiBase = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
   const res = await fetch(`${apiBase}/beau/chat`, {
@@ -1825,6 +1825,7 @@ async function callBeau(systemPrompt, userMessage) {
     body: JSON.stringify({
       system: systemPrompt,
       messages: [{ role: "user", content: userMessage }],
+      language: language || "en",
     }),
   });
   if (!res.ok) throw new Error(`B.E.A.U. API ${res.status}`);
@@ -1844,14 +1845,15 @@ async function callBeau(systemPrompt, userMessage) {
 function ConditioningPanel() {
   const [generating, setGenerating] = useState(false);
   const [exercises,  setExercises]  = useState("");
-  const { beauVoice: bv } = useContext(DashFormContext);
+  const { beauVoice: bv, uiLang } = useContext(DashFormContext);
 
   const generateConditioning = async () => {
     setGenerating(true); setExercises("");
     try {
       const text = await callBeau(
         `You are B.E.A.U. — the clinical AI of K9 Rehab Pro™. Generate creative, progressive conditioning exercises for a patient who has completed rehabilitation and needs something new and more challenging. Think like a skilled rehabilitation nurse who wants to keep sessions interesting and progressive. Include exercises the clinician may not have thought of. Reference evidence from Millis & Levine, Drum, or Marcellin-Little where relevant. No markdown. Write in clinical sentences with exercise name, technique, sets/reps, and progression cue.`,
-        "Generate 5 progressive conditioning exercises that are creative, evidence-based, and more advanced than standard rehabilitation exercises. Include at least one aquatic, one proprioceptive, and one strength-focused exercise."
+        "Generate 5 progressive conditioning exercises that are creative, evidence-based, and more advanced than standard rehabilitation exercises. Include at least one aquatic, one proprioceptive, and one strength-focused exercise.",
+        uiLang
       );
       setExercises(text);
       if (bv?.autoSpeak && text) bv.speak(text);
@@ -1906,7 +1908,7 @@ function ConditioningPanel() {
 function ProtocolPanel({ patientName, patientData }) {
   const [generating, setGenerating]       = useState(false);
   const [protocol,   setProtocol]         = useState("");
-  const { beauVoice: bv } = useContext(DashFormContext);
+  const { beauVoice: bv, uiLang } = useContext(DashFormContext);
   const [copied,     setCopied]           = useState(false);
   // Quick generate state
   const [quickCondition, setQuickCondition] = useState(patientData?.condition || "");
@@ -1978,7 +1980,8 @@ SAFETY GUARDRAILS — EVERY SESSION
 RED FLAGS — STOP AND CONTACT VETERINARIAN IMMEDIATELY
 
 EVIDENCE BASIS`,
-        `Generate a comprehensive rehabilitation protocol. Patient: ${patientName||"Current Patient on file"}. Condition: ${quickCondition || patientData?.condition || "General rehabilitation"}. Generate a thorough evidence-based protocol demonstrating B.E.A.U.'s full clinical capability across all phases and exercise categories.`
+        `Generate a comprehensive rehabilitation protocol. Patient: ${patientName||"Current Patient on file"}. Condition: ${quickCondition || patientData?.condition || "General rehabilitation"}. Generate a thorough evidence-based protocol demonstrating B.E.A.U.'s full clinical capability across all phases and exercise categories.`,
+        uiLang
       );
       setProtocol(text);
       if (bv?.autoSpeak && text) bv.speak(text);
@@ -2332,6 +2335,7 @@ function AskBeau() {
   const [q, setQ]       = useState("");
   const [ans, setAns]   = useState("");
   const [busy, setBusy] = useState(false);
+  const { uiLang } = useContext(DashFormContext);
 
   const ask = async () => {
     if (!q.trim()) return;
@@ -2339,7 +2343,8 @@ function AskBeau() {
     try {
       const text = await callBeau(
         `You are B.E.A.U. — clinical AI assistant of K9 Rehab Pro™. Answer rehabilitation questions concisely. Cite Millis & Levine, Drum, Marcellin-Little, Jaeger, or Lorenz & Kornegay when relevant. No markdown. Clinical sentences only.`,
-        q
+        q,
+        uiLang
       );
       setAns(text);
     } catch (err) { setAns(`Connection error: ${err.message}`); }
@@ -2604,7 +2609,8 @@ export default function DashboardView({ setView, currentUser, onLogout, patient,
       const patientCtx = patient ? `Patient: ${patient.name}, ${patient.breed || "unknown breed"}, ${patient.age || "unknown age"}, ${patient.weight || "unknown weight"}lbs, Condition: ${patient.condition || "not specified"}.` : "";
       const text = await callBeau(
         `You are B.E.A.U. — the Biomedical Evidence-based Analytical Unit of K9 Rehab Pro™. ${ctx} ${patientCtx} Answer concisely and clinically. No markdown. Reference evidence where applicable (Millis & Levine, Drum, ACVSMR standards).`,
-        beauQuery
+        beauQuery,
+        i18nInst.language || "en"
       );
       setBeauAnswer(text);
       if (beauVoice.autoSpeak && text) beauVoice.speak(text);
@@ -2618,7 +2624,7 @@ export default function DashboardView({ setView, currentUser, onLogout, patient,
   // If no patient is selected, header shows a prompt to select one.
 
   return (
-    <DashFormContext.Provider value={{ data: dashData, update: updateField, blockId: openBlock, beauVoice }}>
+    <DashFormContext.Provider value={{ data: dashData, update: updateField, blockId: openBlock, beauVoice, uiLang: i18nInst.language || "en" }}>
       <div className="k9v2" style={{ background:C.bg, minHeight:"100vh" }}>
         <style>{CSS}</style>
 

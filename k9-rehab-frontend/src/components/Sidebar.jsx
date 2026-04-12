@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import NAV from "../constants/navigation";
-import { FiPlus, FiLogOut, FiChevronLeft, FiChevronRight } from "react-icons/fi";
+import { FiPlus, FiLogOut, FiChevronLeft, FiChevronRight, FiGlobe } from "react-icons/fi";
+import { useTranslation } from "react-i18next";
+import { SUPPORTED_LOCALES } from "../i18n";
 
 export default function Sidebar({ view, setView, currentUser, onLogout }) {
   const [collapsed, setCollapsed] = useState(() => {
@@ -88,6 +90,9 @@ export default function Sidebar({ view, setView, currentUser, onLogout }) {
         })}
       </nav>
 
+      {/* Language Selector */}
+      <SidebarLanguage collapsed={collapsed} />
+
       {/* Bottom Section */}
       <div className="mt-auto border-t border-white/10">
         {currentUser && (
@@ -129,5 +134,47 @@ export default function Sidebar({ view, setView, currentUser, onLogout }) {
         </button>
       </div>
     </aside>
+  );
+}
+
+function SidebarLanguage({ collapsed }) {
+  const { i18n: i18nInst } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const current = SUPPORTED_LOCALES.find(l => l.code === i18nInst.language)
+    || SUPPORTED_LOCALES.find(l => i18nInst.language?.startsWith(l.code))
+    || SUPPORTED_LOCALES[0];
+
+  return (
+    <div className="px-2 mb-1">
+      <button
+        onClick={() => setOpen(!open)}
+        className={`
+          w-full flex items-center gap-3 px-3 py-2 rounded-lg
+          text-[12px] font-medium transition-all duration-150
+          text-[#7AAACF] hover:bg-white/5 hover:text-white
+          ${collapsed ? "justify-center px-0" : ""}
+        `}
+      >
+        <FiGlobe className="w-[16px] h-[16px] flex-shrink-0" />
+        {!collapsed && <span>{current.flag} {current.name}</span>}
+      </button>
+      {open && !collapsed && (
+        <div className="mt-1 mx-1 rounded-lg bg-white/5 border border-white/10 max-h-[200px] overflow-y-auto">
+          {SUPPORTED_LOCALES.map(l => (
+            <button
+              key={l.code}
+              onClick={() => { i18nInst.changeLanguage(l.code); setOpen(false); }}
+              className={`
+                w-full flex items-center gap-2 px-3 py-1.5 text-[11px]
+                transition-colors duration-100
+                ${l.code === current.code ? "text-white bg-white/10 font-semibold" : "text-[#7AAACF] hover:text-white hover:bg-white/5"}
+              `}
+            >
+              <span>{l.flag}</span> <span>{l.name}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }

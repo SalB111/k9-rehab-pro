@@ -1,204 +1,126 @@
 // ============================================================================
-// B.E.A.U. VOICE — Text-to-Speech for the Clinical AI Assistant
+// B.E.A.U. VOICE — OpenAI TTS for the Clinical AI Assistant
 // ============================================================================
-// Deep, charismatic, authoritative voice — like a seasoned clinical colleague.
+// Deep, charismatic "onyx" voice via OpenAI TTS-1 API.
 // Auto-speaks by default with toggle for click-only mode.
-// Supports all 10 platform languages via browser speechSynthesis API.
+// Supports all 10 platform languages natively.
+// Falls back to browser speechSynthesis if OpenAI TTS is unavailable.
 // ============================================================================
 
 import { useState, useEffect, useRef, useCallback } from "react";
 
-// ── Locale → speechSynthesis language code mapping ──
-const LOCALE_VOICE_MAP = {
-  en:      "en-US",
-  es:      "es-ES",
-  fr:      "fr-FR",
-  de:      "de-DE",
-  "pt-BR": "pt-BR",
-  pt:      "pt-BR",
-  it:      "it-IT",
-  ja:      "ja-JP",
-  ko:      "ko-KR",
-  "zh-CN": "zh-CN",
-  zh:      "zh-CN",
-  nl:      "nl-NL",
-};
-
-// ── Voice preference scoring — prefer deeper male voices ──
-function scoreVoice(voice, langCode) {
-  let score = 0;
-  const name = voice.name.toLowerCase();
-  const lang = voice.lang?.toLowerCase() || "";
-
-  // Must match language
-  if (!lang.startsWith(langCode.slice(0, 2).toLowerCase())) return -1;
-
-  // Prefer online/cloud voices — they are LOUDER and higher quality on Windows
-  if (!voice.localService) score += 8;
-
-  // Prefer male voices (deeper, matches B.E.A.U.'s character)
-  if (name.includes("male") && !name.includes("female")) score += 10;
-  if (name.includes("google")) score += 9;   // Google voices are louder on Chrome
-  if (name.includes("david")) score += 7;    // Windows deep male
-  if (name.includes("mark")) score += 7;     // Windows male
-  if (name.includes("daniel")) score += 6;   // macOS male
-  if (name.includes("alex")) score += 6;     // macOS male
-  if (name.includes("jorge")) score += 6;    // Spanish male
-  if (name.includes("thomas")) score += 6;   // French/German male
-
-  // Deprioritize female voices slightly (B.E.A.U. is envisioned as deep male)
-  if (name.includes("female") || name.includes("zira") || name.includes("hazel")) score -= 3;
-
-  // Prefer "enhanced" or "premium" quality — typically louder
-  if (name.includes("enhanced") || name.includes("premium") || name.includes("neural")) score += 6;
-
-  // Microsoft Online voices are louder than local ones on Windows
-  if (name.includes("online") || name.includes("natural")) score += 7;
-
-  return score;
-}
-
-function getBestVoice(locale) {
-  const synth = window.speechSynthesis;
-  if (!synth) return null;
-
-  const voices = synth.getVoices();
-  if (!voices.length) return null;
-
-  const langCode = LOCALE_VOICE_MAP[locale] || LOCALE_VOICE_MAP.en;
-
-  // Score and sort voices for the target language
-  const scored = voices
-    .map(v => ({ voice: v, score: scoreVoice(v, langCode) }))
-    .filter(v => v.score >= 0)
-    .sort((a, b) => b.score - a.score);
-
-  // Fallback: try base language code (e.g., "en" from "en-US")
-  if (scored.length === 0) {
-    const base = langCode.slice(0, 2);
-    const fallback = voices
-      .map(v => ({ voice: v, score: scoreVoice(v, base) }))
-      .filter(v => v.score >= 0)
-      .sort((a, b) => b.score - a.score);
-    return fallback[0]?.voice || voices[0] || null;
-  }
-
-  return scored[0]?.voice || null;
-}
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
 // ============================================================================
 // HOOK: useBeauVoice
 // ============================================================================
-// Returns: { speak, stop, isSpeaking, autoSpeak, setAutoSpeak, voiceName }
-//
-// speak(text)  — reads text aloud using B.E.A.U.'s voice
-// stop()       — stops current speech
-// isSpeaking   — boolean, true while voice is active
-// autoSpeak    — boolean, true = auto-speak new responses
-// setAutoSpeak — toggle auto-speak on/off
-// voiceName    — name of the selected voice (for UI display)
-// ============================================================================
-
 export default function useBeauVoice(locale = "en") {
   const [autoSpeak, setAutoSpeak] = useState(() => {
     try { return localStorage.getItem("k9_beau_autospeak") !== "false"; } catch { return true; }
   });
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [voiceName, setVoiceName] = useState("");
-  const [voicesLoaded, setVoicesLoaded] = useState(false);
-  const utteranceRef = useRef(null);
+  const [voiceName, setVoiceName] = useState("BEAU (Onyx)");
+  const audioRef = useRef(null);
+  const abortRef = useRef(null);
 
   // Persist auto-speak preference
   useEffect(() => {
     try { localStorage.setItem("k9_beau_autospeak", autoSpeak ? "true" : "false"); } catch {}
   }, [autoSpeak]);
 
-  // Load voices (they load async in some browsers)
-  useEffect(() => {
-    const synth = window.speechSynthesis;
-    if (!synth) return;
-
-    const loadVoices = () => {
-      const v = synth.getVoices();
-      if (v.length > 0) {
-        setVoicesLoaded(true);
-        const best = getBestVoice(locale);
-        setVoiceName(best?.name || "Default");
-      }
-    };
-
-    loadVoices();
-    synth.addEventListener("voiceschanged", loadVoices);
-    return () => synth.removeEventListener("voiceschanged", loadVoices);
-  }, [locale]);
-
   const stop = useCallback(() => {
-    const synth = window.speechSynthesis;
-    if (synth) {
-      synth.cancel();
-      setIsSpeaking(false);
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      audioRef.current = null;
     }
+    if (abortRef.current) {
+      abortRef.current.abort();
+      abortRef.current = null;
+    }
+    setIsSpeaking(false);
   }, []);
 
-  const speak = useCallback((text) => {
-    const synth = window.speechSynthesis;
-    if (!synth || !text?.trim()) return;
+  const speak = useCallback(async (text) => {
+    if (!text?.trim()) return;
 
     // Stop any current speech
-    synth.cancel();
+    stop();
 
-    // Clean text for speech — remove markdown, code blocks, excess whitespace
+    // Clean text for speech
     const cleaned = text
       .replace(/```[\s\S]*?```/g, "")       // code blocks
       .replace(/\*\*([^*]+)\*\*/g, "$1")    // bold
       .replace(/\*([^*]+)\*/g, "$1")        // italic
       .replace(/#+\s/g, "")                 // headers
-      .replace(/[-•·]\s/g, "")              // bullets
-      .replace(/\n{2,}/g, ". ")             // paragraph breaks → pause
-      .replace(/\n/g, " ")                  // newlines → space
+      .replace(/[-\u2022\u00b7]\s/g, "")    // bullets
+      .replace(/\n{2,}/g, ". ")             // paragraph breaks
+      .replace(/\n/g, " ")                  // newlines
       .replace(/\s{2,}/g, " ")              // collapse spaces
-      .trim();
+      .trim()
+      .slice(0, 4096);                      // OpenAI TTS max
 
     if (!cleaned) return;
 
-    // Chunk long text (speechSynthesis has a ~200-300 char limit in some browsers)
-    const MAX_CHUNK = 250;
-    const sentences = cleaned.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [cleaned];
-    const chunks = [];
-    let current = "";
-    for (const s of sentences) {
-      if ((current + s).length > MAX_CHUNK && current) {
-        chunks.push(current.trim());
-        current = s;
-      } else {
-        current += s;
-      }
-    }
-    if (current.trim()) chunks.push(current.trim());
-
-    const voice = getBestVoice(locale);
     setIsSpeaking(true);
+    const controller = new AbortController();
+    abortRef.current = controller;
 
-    let chunkIndex = 0;
-    const speakNext = () => {
-      if (chunkIndex >= chunks.length) {
-        setIsSpeaking(false);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_BASE}/tts`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ text: cleaned, language: locale }),
+        signal: controller.signal,
+      });
+
+      if (!res.ok) {
+        // Fallback to browser TTS if OpenAI fails
+        console.warn("[B.E.A.U. Voice] OpenAI TTS failed, falling back to browser TTS");
+        fallbackSpeak(cleaned, locale);
         return;
       }
-      const utt = new SpeechSynthesisUtterance(chunks[chunkIndex]);
-      if (voice) utt.voice = voice;
-      utt.lang = LOCALE_VOICE_MAP[locale] || "en-US";
-      utt.rate = 1.0;      // Clear, confident pace
-      utt.pitch = 0.85;    // Deep, charismatic voice
-      utt.volume = 1.0;    // Max browser volume
-      utt.onend = () => { chunkIndex++; speakNext(); };
-      utt.onerror = () => { chunkIndex++; speakNext(); };
-      utteranceRef.current = utt;
-      synth.speak(utt);
-    };
 
-    speakNext();
-  }, [locale]);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      audio.volume = 1.0;
+      audioRef.current = audio;
 
-  return { speak, stop, isSpeaking, autoSpeak, setAutoSpeak, voiceName, voicesLoaded };
+      audio.onended = () => {
+        setIsSpeaking(false);
+        URL.revokeObjectURL(url);
+        audioRef.current = null;
+      };
+      audio.onerror = () => {
+        setIsSpeaking(false);
+        URL.revokeObjectURL(url);
+        audioRef.current = null;
+      };
+
+      await audio.play();
+    } catch (err) {
+      if (err.name === "AbortError") return;
+      console.warn("[B.E.A.U. Voice] TTS error, falling back:", err.message);
+      fallbackSpeak(cleaned, locale);
+    }
+  }, [locale, stop]);
+
+  return { speak, stop, isSpeaking, autoSpeak, setAutoSpeak, voiceName, voicesLoaded: true };
+}
+
+// ── Browser TTS fallback ──
+function fallbackSpeak(text, locale) {
+  const synth = window.speechSynthesis;
+  if (!synth) return;
+  synth.cancel();
+  const utt = new SpeechSynthesisUtterance(text.slice(0, 300));
+  utt.rate = 1.0;
+  utt.pitch = 0.85;
+  utt.volume = 1.0;
+  synth.speak(utt);
 }
