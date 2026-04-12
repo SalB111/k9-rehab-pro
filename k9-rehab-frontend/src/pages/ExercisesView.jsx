@@ -25,10 +25,10 @@ function EvidenceSection({ grade, refs }) {
   // Determine link label based on reference type
   const linkLabel = (ref) => {
     if (!ref.url) return null;
-    if (ref.type === "Textbook") return "ðŸ"– View Book";
-    if (ref.type === "Conference") return "ðŸ"Ž Search";
-    if (ref.url.includes("doi.org")) return "ðŸ"— DOI";
-    return "ðŸ"¬ PubMed";
+    if (ref.type === "Textbook") return "\uD83D\uDCD6 View Book";
+    if (ref.type === "Conference") return "\uD83D\uDD0E Search";
+    if (ref.url.includes("doi.org")) return "\uD83D\uDD17 DOI";
+    return "\uD83D\uDD2C PubMed";
   };
 
   return (
@@ -551,7 +551,7 @@ function ExercisesView({ setView, setGenKey, setGenInitialStep }) {
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
           <div style={{ position: "relative", flex: 1, minWidth: 200 }}>
             <FiSearch size={14} style={{ position: "absolute", left: 12, top: 11, color: "#333" }} />
-            <input style={{ ...S.input, paddingLeft: 34, height: 38 }} placeholder="Search by name, description, or categoryâ€¦"
+            <input style={{ ...S.input, paddingLeft: 34, height: 38 }} placeholder="Search by name, description, or category..."
               value={search} onChange={e => setSearch(e.target.value)} />
           </div>
           <span style={{ fontSize: 12, color: "#333", whiteSpace: "nowrap", fontWeight: 600 }}>
@@ -617,7 +617,7 @@ function ExercisesView({ setView, setGenKey, setGenInitialStep }) {
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
           {categories.map(cat => {
-            const meta = CAT_META[cat] || { icon: "ðŸ"‹" };
+            const meta = CAT_META[cat] || { icon: "\uD83D\uDCCB" };
             const count = grouped[cat]?.length || 0;
             return (
               <button key={cat} onClick={() => scrollToCat(cat)} style={{
@@ -714,7 +714,7 @@ function ExercisesView({ setView, setGenKey, setGenInitialStep }) {
       )}
 
       {viewMode === "grid" && Object.entries(grouped).sort(([a], [b]) => a.localeCompare(b)).map(([cat, exList]) => {
-        const meta = CAT_META[cat] || { color: C.bg, text: C.textMid, icon: "ðŸ"‹" };
+        const meta = CAT_META[cat] || { color: C.bg, text: C.textMid, icon: "\uD83D\uDCCB" };
         const isCollapsed = collapsedCats[cat];
 
         return (
