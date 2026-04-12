@@ -185,8 +185,8 @@ export default function useBeauVoice(locale = "en") {
       const utt = new SpeechSynthesisUtterance(chunks[chunkIndex]);
       if (voice) utt.voice = voice;
       utt.lang = LOCALE_VOICE_MAP[locale] || "en-US";
-      utt.rate = 0.92;     // Slightly slower — authoritative pace
-      utt.pitch = 0.85;    // Deeper pitch — charismatic, not robotic
+      utt.rate = 0.95;     // Authoritative pace
+      utt.pitch = 0.80;    // Deep, charismatic voice
       utt.volume = 1.0;
       utt.onend = () => { chunkIndex++; speakNext(); };
       utt.onerror = () => { chunkIndex++; speakNext(); };

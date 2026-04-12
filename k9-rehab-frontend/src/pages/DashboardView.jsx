@@ -1815,7 +1815,7 @@ function GoalsPanel() {
 // (never the Anthropic API directly — API keys must stay server-side).
 async function callBeau(systemPrompt, userMessage) {
   const token = localStorage.getItem("token");
-  const apiBase = import.meta.env.VITE_API_URL || "http://localhost:10000/api";
+  const apiBase = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
   const res = await fetch(`${apiBase}/beau/chat`, {
     method: "POST",
     headers: {
@@ -1930,7 +1930,7 @@ function ProtocolPanel({ patientName, patientData }) {
     if (!quickCondition) return;
     setQuickLoading(true); setQuickProtocol(null);
     try {
-      const apiBase = import.meta.env.VITE_API_URL || "http://localhost:10000/api";
+      const apiBase = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
       const token = localStorage.getItem("token");
       const res = await fetch(`${apiBase}/generate-protocol`, {
         method: "POST",
@@ -2162,7 +2162,7 @@ function LibraryPanel() {
   // not be hardcoded in the UI.
   useEffect(() => {
     let cancelled = false;
-    const apiBase = import.meta.env.VITE_API_URL || "http://localhost:10000/api";
+    const apiBase = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
     setLoading(true);
     setError(null);
 
@@ -2490,7 +2490,7 @@ export default function DashboardView({ setView, currentUser, onLogout, patient,
   const [searchQ, setSearchQ]         = useState("");
   const searchRef = useRef(null);
 
-  const apiBase = import.meta.env.VITE_API_URL || "http://localhost:10000/api";
+  const apiBase = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
   const token = localStorage.getItem("token");
   const authHeaders = { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) };
 

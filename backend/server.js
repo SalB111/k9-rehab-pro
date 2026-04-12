@@ -2,6 +2,7 @@
 // K9-REHAB-PRO â€” BACKEND SERVER (PRODUCTION READY)
 // ============================================================================
 
+require("dotenv").config({ override: true });
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");

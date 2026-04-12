@@ -42,7 +42,7 @@ export default function BeauVoiceControl({ isSpeaking, autoSpeak, setAutoSpeak, 
             animation: "pulseK9 1.2s ease-in-out infinite",
           }}
         >
-          \u{23F9} Stop
+          {"\u23F9"} Stop
         </button>
       )}
     </div>
