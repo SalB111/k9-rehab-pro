@@ -8,6 +8,9 @@ import {
 import C from "../constants/colors";
 import { API } from "../api/axios";
 import { useToast } from "../components/Toast";
+import useBeauVoice from "../hooks/useBeauVoice";
+import BeauVoiceControl, { SpeakButton } from "../components/BeauVoiceControl";
+import { useTranslation } from "react-i18next";
 
 const DiagramRenderer = lazy(() => import("../components/beau/DiagramRenderer"));
 const NarrativePanel = lazy(() => import("../components/beau/NarrativePanel"));
@@ -28,6 +31,8 @@ function BEAUView({ authToken, setView }) {
   const [showPatientPanel, setShowPatientPanel] = useState(false);
   const [aiStatus, setAiStatus] = useState(null);
   const [sessionId, setSessionId] = useState(null);
+  const { i18n: i18nInst } = useTranslation();
+  const beauVoice = useBeauVoice(i18nInst.language || "en");
   const [sessionHistory, setSessionHistory] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [intelligence, setIntelligence] = useState(null);
@@ -155,6 +160,8 @@ useEffect(() => {
       const finalMsgs = [...newMsgs, { role: "assistant", content: full }];
       setMsgs(finalMsgs);
       saveSession(finalMsgs);
+      // B.E.A.U. voice — auto-speak the response
+      if (beauVoice.autoSpeak && full) beauVoice.speak(full);
     } catch (err) {
       setStream("");
       setMsgs(p => [...p, { role: "assistant", content: `**B.E.A.U. is temporarily unavailable.**\n\nPlease check that the server is running. If the issue persists, contact your system administrator.` }]);
@@ -282,6 +289,14 @@ useEffect(() => {
           <button onClick={() => setView?.("about")} style={{ display: "flex", alignItems: "center", gap: 5, background: `${C.teal}12`, border: `1px solid ${C.teal}40`, borderRadius: 8, color: C.teal, padding: "6px 12px", cursor: "pointer", fontSize: 11, fontWeight: 600 }} title="About B.E.A.U.">
             <FiShield size={11} /> About B.E.A.U.
           </button>
+          <BeauVoiceControl
+            isSpeaking={beauVoice.isSpeaking}
+            autoSpeak={beauVoice.autoSpeak}
+            setAutoSpeak={beauVoice.setAutoSpeak}
+            onStop={beauVoice.stop}
+            voiceName={beauVoice.voiceName}
+            compact
+          />
           <button onClick={() => setSidebarOpen(o => !o)} style={{ background: sidebarOpen ? `${C.teal}15` : `${C.navy}08`, border: `1px solid ${C.border}`, borderRadius: 8, color: sidebarOpen ? C.teal : C.text, padding: "6px 10px", cursor: "pointer", fontSize: 11, fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>
             <FiClock size={11} /> {sidebarOpen ? "Hide" : "History"}
           </button>
@@ -362,7 +377,12 @@ useEffect(() => {
               boxShadow: m.role === "user" ? `0 3px 12px ${C.navy}20` : "0 1px 4px rgba(0,0,0,0.04)",
             }}>
               {m.role === "assistant"
-                ? <MessageContent content={m.content} renderMd={renderMd} onPresentation={setPresentationDeck} />
+                ? <>
+                    <MessageContent content={m.content} renderMd={renderMd} onPresentation={setPresentationDeck} />
+                    <div style={{ display:"flex", justifyContent:"flex-end", marginTop:6 }}>
+                      <SpeakButton onClick={() => beauVoice.speak(m.content)} isSpeaking={beauVoice.isSpeaking} />
+                    </div>
+                  </>
                 : <span style={{ fontWeight: 500 }}>{m.content}</span>
               }
             </div>

@@ -1,12 +1,14 @@
 import { useState, useRef, useEffect, createContext, useContext } from "react";
 import { useTranslation } from "react-i18next";
 import i18n, { SUPPORTED_LOCALES } from "../i18n";
+import useBeauVoice from "../hooks/useBeauVoice";
+import BeauVoiceControl, { SpeakButton } from "../components/BeauVoiceControl";
 
 // Ensure i18n is initialized (side effect — the import above runs the init)
 void i18n;
 
 // ─── FORM CONTEXT ─── auto-wires all F fields without modifying each call
-const DashFormContext = createContext({ data: {}, update: () => {}, blockId: null });
+const DashFormContext = createContext({ data: {}, update: () => {}, blockId: null, beauVoice: null });
 
 // ─── THEME — WHITE CLINICAL ───────────────────────────────────────────────────
 const C = {
@@ -1842,6 +1844,7 @@ async function callBeau(systemPrompt, userMessage) {
 function ConditioningPanel() {
   const [generating, setGenerating] = useState(false);
   const [exercises,  setExercises]  = useState("");
+  const { beauVoice: bv } = useContext(DashFormContext);
 
   const generateConditioning = async () => {
     setGenerating(true); setExercises("");
@@ -1851,6 +1854,7 @@ function ConditioningPanel() {
         "Generate 5 progressive conditioning exercises that are creative, evidence-based, and more advanced than standard rehabilitation exercises. Include at least one aquatic, one proprioceptive, and one strength-focused exercise."
       );
       setExercises(text);
+      if (bv?.autoSpeak && text) bv.speak(text);
     } catch (err) { setExercises(`Connection error: ${err.message}`); }
     setGenerating(false);
   };
@@ -1902,6 +1906,7 @@ function ConditioningPanel() {
 function ProtocolPanel({ patientName, patientData }) {
   const [generating, setGenerating]       = useState(false);
   const [protocol,   setProtocol]         = useState("");
+  const { beauVoice: bv } = useContext(DashFormContext);
   const [copied,     setCopied]           = useState(false);
   // Quick generate state
   const [quickCondition, setQuickCondition] = useState(patientData?.condition || "");
@@ -1976,6 +1981,7 @@ EVIDENCE BASIS`,
         `Generate a comprehensive rehabilitation protocol. Patient: ${patientName||"Current Patient on file"}. Condition: ${quickCondition || patientData?.condition || "General rehabilitation"}. Generate a thorough evidence-based protocol demonstrating B.E.A.U.'s full clinical capability across all phases and exercise categories.`
       );
       setProtocol(text);
+      if (bv?.autoSpeak && text) bv.speak(text);
     } catch (err) { setProtocol(`Connection error: ${err.message}`); }
     setGenerating(false);
   };
@@ -2466,7 +2472,8 @@ const BEAU_BLOCK_CONTEXTS = {
 };
 
 export default function DashboardView({ setView, currentUser, onLogout, patient, setSelectedPatient }) {
-  const { t } = useTranslation();
+  const { t, i18n: i18nInst } = useTranslation();
+  const beauVoice = useBeauVoice(i18nInst.language || "en");
   const [openBlock,   setOpenBlock]   = useState(null);
   const [openSidebar, setOpenSidebar] = useState(null);
   const [saved,       setSaved]       = useState(false);
@@ -2600,6 +2607,7 @@ export default function DashboardView({ setView, currentUser, onLogout, patient,
         beauQuery
       );
       setBeauAnswer(text);
+      if (beauVoice.autoSpeak && text) beauVoice.speak(text);
     } catch (err) { setBeauAnswer(`Error: ${err.message}`); }
     setBeauLoading(false);
   };
@@ -2610,7 +2618,7 @@ export default function DashboardView({ setView, currentUser, onLogout, patient,
   // If no patient is selected, header shows a prompt to select one.
 
   return (
-    <DashFormContext.Provider value={{ data: dashData, update: updateField, blockId: openBlock }}>
+    <DashFormContext.Provider value={{ data: dashData, update: updateField, blockId: openBlock, beauVoice }}>
       <div className="k9v2" style={{ background:C.bg, minHeight:"100vh" }}>
         <style>{CSS}</style>
 
@@ -2672,6 +2680,14 @@ export default function DashboardView({ setView, currentUser, onLogout, patient,
               style={{ padding:"8px 18px", background: saved ? C.green : C.greenLt, border:`1px solid ${C.green}66`, color: saved ? C.white : C.green, borderRadius:5, cursor:"pointer", fontSize:11, fontWeight:700, letterSpacing:".08em", transition:"all .2s" }}>
               {saved ? "✓ SAVED" : "SAVE"}
             </button>
+            <BeauVoiceControl
+              isSpeaking={beauVoice.isSpeaking}
+              autoSpeak={beauVoice.autoSpeak}
+              setAutoSpeak={beauVoice.setAutoSpeak}
+              onStop={beauVoice.stop}
+              voiceName={beauVoice.voiceName}
+              compact
+            />
             <LanguageSelector/>
             <div style={{ padding:"6px 14px", background:C.greenLt, border:`1px solid ${C.green}44`, borderRadius:5, fontSize:11, color:C.green, fontWeight:700, textTransform:"uppercase" }}>
               B.E.A.U. READY
