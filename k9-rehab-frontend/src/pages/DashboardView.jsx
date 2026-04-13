@@ -2377,11 +2377,11 @@ function AboutPanel() {
       <div style={{ fontSize:13, color:C.navy, fontWeight:700, marginBottom:2 }}>K9 Rehab Pro™</div>
       <div style={{ fontSize:11, color:C.muted, marginBottom:20 }}>Clinical Protocol Intelligence · Version 2.4</div>
       {[["Creator","Salvatore Bonanno — Veterinary Technician & Canine Rehabilitation Nurse, 30+ years experience in animal medicine"],
-        ["Clinical Background","Founder and sole operator of the canine rehabilitation department at Lauderdale Veterinary Specialists (BluePearl Fort Lauderdale) 2016–2024. Currently operating The Doggy Style Gym LLC, Fort Lauderdale, FL"],
+        ["Clinical Background","Founder and sole operator of the canine rehabilitation department at Lauderdale Veterinary Specialists (BluePearl Fort Lauderdale) 2016–2024. Currently operating Salvatore Bonanno, Fort Lauderdale, FL"],
         ["Evidence Sources","Millis DL & Levine D — Canine Rehabilitation & Physical Therapy 2nd Ed. (2014) · Drum MG (2010) · Marcellin-Little DJ (2015) · Jaeger GH et al (2007) · Lorenz MD & Kornegay JN (2011) · Levine D et al (2010) · Hielm-Björkman AK et al (2003)"],
         ["Exercise Library","260 evidence-based exercises · 5 categories · Canine and Feline · All exercises include evidence level, dosing, contraindications, and red flags"],
         ["AI Engine","Anthropic Claude — routed via secure backend /api/beau/chat"],
-        ["Copyright","© 2026 The Doggy Style Gym LLC. All rights reserved. K9 Rehab Pro™ and B.E.A.U.™ are trademarks of The Doggy Style Gym LLC."],
+        ["Copyright","© 2026 Salvatore Bonanno. All rights reserved. K9 Rehab Pro™ and B.E.A.U.™ are trademarks of Salvatore Bonanno."],
       ].map(([l,v])=>(
         <div key={l} style={{ marginBottom:14, paddingBottom:14, borderBottom:`1px solid ${C.border}` }}>
           <div style={{ fontSize:9, color:C.green, fontWeight:700, letterSpacing:".12em", textTransform:"uppercase", marginBottom:4 }}>{l}</div>
@@ -2427,7 +2427,7 @@ function HipaaPanel() {
           <div>{b}</div>
         </div>
       ))}
-      <div style={{ fontSize:11, color:C.gray, marginTop:8 }}>© 2026 The Doggy Style Gym LLC · K9 Rehab Pro™ · Privacy policy effective April 2026</div>
+      <div style={{ fontSize:11, color:C.gray, marginTop:8 }}>© 2026 Salvatore Bonanno · K9 Rehab Pro™ · Privacy policy effective April 2026</div>
     </div>
   );
 }
