@@ -118,6 +118,7 @@ function ExerciseCard({ e, onOpenStoryboard, onUseInProtocol, onPrintHandout }) 
   const [open, setOpen] = useState(false);
   const [showAnatomy, setShowAnatomy] = useState(false);
   const cardTopRef = useRef(null);
+  const anatomyRef = useRef(null);
   const diffColor = e.difficulty_level === "Easy" ? "green" : e.difficulty_level === "Advanced" ? "orange" : "blue";
 
   const closeCard = () => {
@@ -352,7 +353,7 @@ function ExerciseCard({ e, onOpenStoryboard, onUseInProtocol, onPrintHandout }) 
 
           {/* â"€â"€ Anatomy Viewer Button â"€â"€ */}
           <button
-            onClick={(ev) => { ev.stopPropagation(); setShowAnatomy(a => !a); }}
+            onClick={(ev) => { ev.stopPropagation(); setShowAnatomy(a => { if (!a) setTimeout(() => anatomyRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 100); return !a; }); }}
             style={{
               marginTop: 12, width: "100%", padding: "10px 16px", borderRadius: 8,
               background: showAnatomy ? "rgba(20,184,166,0.15)" : C.bg,
@@ -369,7 +370,7 @@ function ExerciseCard({ e, onOpenStoryboard, onUseInProtocol, onPrintHandout }) 
 
           {/* â"€â"€ Inline Anatomy Viewer Panel â"€â"€ */}
           {showAnatomy && (
-            <div style={{ marginTop: 8 }}>
+            <div ref={anatomyRef} style={{ marginTop: 8 }}>
               <AnatomyViewer3D
                 exerciseCode={e.code}
                 diagnosis={null}
