@@ -15,6 +15,7 @@ const { all, get, run } = require("./db-providers/sqlite-provider");
 const authRoutes = require("./auth-routes");
 
 const app = express();
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 10000;
 
 // ---------------------------------------------------------------------------
