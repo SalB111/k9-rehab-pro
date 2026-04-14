@@ -24,6 +24,7 @@
   "nav": {
     "how": "How to Use K9 Rehab Pro",
     "ask": "Ask B.E.A.U.",
+    "helsinki": "Helsinki Pain Index",
     "about": "About",
     "disclaimer": "Disclaimer",
     "hipaa": "Veterinary HIPAA"
@@ -31,7 +32,7 @@
   "tiles": {
     "client":       { "label": "Client & Patient",        "desc": "Demographics · Contact · Insurance" },
     "diagnostics":  { "label": "Diagnostics",              "desc": "Imaging · Laboratory Work" },
-    "assessment":   { "label": "Assessment",               "desc": "Diagnosis · Pain · Gait · Neuro" },
+    "assessment":   { "label": "Clinical Assessment",      "desc": "Diagnosis · Pain · Gait · Neuro" },
     "metrics":      { "label": "B.E.A.U. Metrics",         "desc": "BCS · Goniometry · Muscle · Postural" },
     "diet":         { "label": "Diet Decision Support",    "desc": "Mars Petcare therapeutic portfolio" },
     "equipment":    { "label": "Clinic Equipment",         "desc": "Available rehabilitation tools" },

@@ -140,17 +140,35 @@ const Row = ({ children, cols=2 }) => (
   <div style={{ display:"grid", gridTemplateColumns:`repeat(${cols},1fr)`, gap:12 }}>{children}</div>
 );
 
-const Sec = ({ title, color=C.blue, colorLt, children, noTop }) => (
-  <div style={{ marginBottom:22 }}>
-    <div style={{ fontSize:11, fontWeight:700, color, letterSpacing:".1em", textTransform:"uppercase",
-      background: colorLt || C.blueLt, borderLeft:`3px solid ${color}`,
-      padding:"7px 12px", borderRadius:"0 5px 5px 0", marginBottom:12,
-      marginTop: noTop ? 0 : 4 }}>
-      {title}
+// Sec — section wrapper. When `collapsible` is truthy, header is clickable and
+// body is hidden until expanded. `defaultOpen` controls initial state.
+// Backward compatible: omitting `collapsible` renders same as before.
+const Sec = ({ title, color=C.blue, colorLt, children, noTop, collapsible, defaultOpen=false }) => {
+  const [open, setOpen] = useState(defaultOpen);
+  const isHidden = collapsible && !open;
+  return (
+    <div style={{ marginBottom: isHidden ? 8 : 22 }}>
+      <div
+        onClick={collapsible ? () => setOpen(o => !o) : undefined}
+        style={{
+          fontSize:11, fontWeight:700, color, letterSpacing:".1em", textTransform:"uppercase",
+          background: colorLt || C.blueLt, borderLeft:`3px solid ${color}`,
+          padding:"7px 12px", borderRadius:"0 5px 5px 0",
+          marginBottom: isHidden ? 0 : 12,
+          marginTop: noTop ? 0 : 4,
+          cursor: collapsible ? "pointer" : "default",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          userSelect: "none",
+        }}>
+        <span>{title}</span>
+        {collapsible && (
+          <span style={{ fontSize: 10, opacity: 0.8 }}>{open ? "▼" : "▶"}</span>
+        )}
+      </div>
+      {!isHidden && children}
     </div>
-    {children}
-  </div>
-);
+  );
+};
 
 const Divider = () => <div style={{ height:1, background:C.border, margin:"18px 0" }}/>;
 
@@ -369,9 +387,19 @@ function SafetyText({ k, as = "span", style, className, showBadge = true }) {
 
 // ── CLIENT & PATIENT ──────────────────────────────────────────────────────────
 function ClientPanel() {
-  const [species, setSpecies] = useState("Canine");
+  const { data, update, blockId, handleSave } = useContext(DashFormContext);
+  const [updating, setUpdating] = useState(false);
+  // Species defaults to Canine; use dashData value if present so breed list stays in sync
+  const species = data["client::Species"] || "Canine";
+  const setSpecies = (v) => update("client::Species", v);
   const breeds = species === "Feline" ? FELINE_BREEDS : CANINE_BREEDS;
-  const { data, update, blockId } = useContext(DashFormContext);
+
+  const onUpdateClick = async () => {
+    if (updating) return;
+    setUpdating(true);
+    try { await handleSave?.(); }
+    finally { setTimeout(() => setUpdating(false), 600); }
+  };
 
   // ── Weight conversion helpers ──
   const lbsKey = `${blockId}::Weight (lbs)`;
@@ -431,13 +459,21 @@ function ClientPanel() {
       <Row><F label="Patient Name" placeholder="Pet's name"/>
         <div>
           <Lbl>Species</Lbl>
-          <select value={species} onChange={e=>setSpecies(e.target.value)}>
-            {["Canine","Feline"].map(s=><option key={s}>{s}</option>)}
+          <select value={species}
+            onChange={e => setSpecies(e.target.value)}>
+            {["Canine","Feline"].map(s=><option key={s} value={s}>{s}</option>)}
           </select>
         </div>
       </Row>
       <Row>
-        <div><Lbl>Breed</Lbl><select><option value="">Select breed…</option>{breeds.map(b=><option key={b}>{b}</option>)}</select></div>
+        <div>
+          <Lbl>Breed</Lbl>
+          <select value={data["client::Breed"] || ""}
+            onChange={e => update("client::Breed", e.target.value)}>
+            <option value="">Select breed…</option>
+            {breeds.map(b=><option key={b} value={b}>{b}</option>)}
+          </select>
+        </div>
         <F label="Sex" options={["Male — Intact","Male — Neutered","Female — Intact","Female — Spayed"]}/>
       </Row>
       <Row cols={3}>
@@ -466,6 +502,41 @@ function ClientPanel() {
       </Row>
       <F label="Specialist / Surgeon" placeholder="Referring specialist name & clinic"/>
     </Sec>
+
+    {/* ── UPDATE PATIENT RECORD — explicit commit button per Dr. Zaslow ── */}
+    <div style={{
+      marginTop: 14, padding: "16px 20px",
+      background: "linear-gradient(135deg, #ecfdf5 0%, #f0fdfa 100%)",
+      border: "1.5px solid #10b981", borderRadius: 10,
+      display: "flex", alignItems: "center", justifyContent: "space-between",
+      gap: 14,
+    }}>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontSize: 12, fontWeight: 800, color: "#065f46", letterSpacing: ".04em", marginBottom: 3 }}>
+          Ready to save changes?
+        </div>
+        <div style={{ fontSize: 11, color: "#047857", lineHeight: 1.5 }}>
+          Click <strong>UPDATE PATIENT RECORD</strong> to lock in all edits to the database.
+          This persists the patient chart and creates a visit record.
+        </div>
+      </div>
+      <button
+        onClick={onUpdateClick}
+        disabled={updating}
+        style={{
+          padding: "13px 24px",
+          background: updating ? "#d1fae5" : "linear-gradient(135deg, #10b981 0%, #14b8a6 100%)",
+          border: "none", color: updating ? "#065f46" : "#ffffff",
+          borderRadius: 8, cursor: updating ? "wait" : "pointer",
+          fontSize: 12, fontWeight: 800, letterSpacing: ".08em",
+          whiteSpace: "nowrap",
+          boxShadow: updating ? "none" : "0 4px 14px rgba(16,185,129,0.35)",
+          display: "inline-flex", alignItems: "center", gap: 8,
+          transition: "all .18s ease",
+        }}>
+        {updating ? "⏳ UPDATING…" : "✓ UPDATE PATIENT RECORD"}
+      </button>
+    </div>
   </>;
 }
 
@@ -655,13 +726,14 @@ function DiagnosticsPanel() {
 }
 
 // ── ASSESSMENT ────────────────────────────────────────────────────────────────
+// MedicationsSection — content only, no Sec wrapper. Caller wraps with <Sec> (collapsible or not).
 function MedicationsSection() {
   const [meds, setMeds] = useState([{id:1},{id:2}]);
   const nextId = useRef(3);
   const addMed = () => { setMeds(p=>[...p,{id:nextId.current++}]); };
   const removeMed = (id) => { if(meds.length > 1) setMeds(p=>p.filter(m=>m.id!==id)); };
   return (
-    <Sec title="Current Medications & Supplements" color={C.amber} colorLt={C.amberLt}>
+    <>
       <div style={{ fontSize:11, color:C.muted, marginBottom:12 }}>
         List all current medications, dosages, and frequencies. Include prescription drugs, OTC medications, and supplements.
       </div>
@@ -691,12 +763,30 @@ function MedicationsSection() {
         </Row>
         <F label="Medication Notes / Allergies" placeholder="Known drug allergies, adverse reactions, or medication concerns…"/>
       </div>
-    </Sec>
+    </>
   );
 }
 
 function AssessmentPanel() {
+  // Pain location anatomical regions (Sal's approved list)
+  const PAIN_LOCATIONS = [
+    "Cervical Spine","Thoracic Spine","Lumbar Spine","Pelvis",
+    "Left Shoulder","Right Shoulder","Left Elbow","Right Elbow",
+    "Left Carpus","Right Carpus","Left Hip","Right Hip",
+    "Left Stifle","Right Stifle","Left Tarsus","Right Tarsus",
+    "Generalized","Other"
+  ];
+  const PAIN_AGGRAVATING = [
+    "Exercise","Rising from rest","Stairs","Jumping",
+    "Cold weather","Palpation","Weight bearing","Prolonged sitting","Other"
+  ];
+  const PAIN_ALLEVIATING = [
+    "Rest","Medication","Heat therapy","Cold therapy",
+    "Massage","Reduced activity","Swimming","Other"
+  ];
+
   return <>
+    {/* ── SECTION 1 — ALWAYS OPEN ── */}
     <Sec title="Initial Clinical Assessment" color={C.amber} colorLt={C.amberLt} noTop>
       <Row>
         <F label="Assessment Date" type="date"/>
@@ -711,9 +801,42 @@ function AssessmentPanel() {
       <F label="Initial Assessment Narrative" placeholder="Clinical impressions, functional limitations, overall patient presentation…" rows={3}/>
     </Sec>
 
-    <MedicationsSection/>
+    {/* ── SECTION 2 — PAIN ASSESSMENT (COLLAPSED) ── */}
+    <Sec title="▶ Pain Assessment — Colorado State University Scale" color={C.red} colorLt={C.redLt} collapsible defaultOpen={false}>
+      <div style={{ padding:"10px 14px", background:C.white, border:`1px solid ${C.border}`, borderRadius:6, fontSize:11, color:C.muted, marginBottom:14, lineHeight:1.7 }}>
+        <b style={{color:C.red}}>CSU Acute Pain Scale (0–4)</b> — Referenced in Millis & Levine, Canine Rehabilitation & Physical Therapy 2nd Ed.
+        Scores reflect behavioral and physiological indicators. For chronic patients, open the <b>Helsinki Chronic Pain Index</b> from the sidebar for the printable client questionnaire.
+      </div>
+      <Row cols={2}>
+        <F label="CSU Acute Pain Score (0–4)" options={["0 — Happy, comfortable, no signs of pain","1 — Minor discomfort, responds to petting","2 — Moderate pain, reacts to palpation","3 — Severe pain, vocalizes / guards","4 — Excruciating, entire body tense / rigid"]}/>
+        <F label="Pain Assessment at" options={["Rest","Activity","Palpation","Post-exercise"]}/>
+      </Row>
+      <Row cols={3}>
+        <F label="Numeric Rating Scale (NRS 0–10)" placeholder="0–10" hint="0 = no pain, 10 = worst possible"/>
+        <F label="Pain Character" options={["Acute","Subacute","Chronic","Neuropathic","Mixed"]}/>
+        <F label="Pain Onset" options={["Sudden","Gradual","Post-surgical","Unknown"]}/>
+      </Row>
+      <Row>
+        <F label="Pain Location — Primary" options={PAIN_LOCATIONS}/>
+        <F label="Pain Location — Secondary" options={PAIN_LOCATIONS}/>
+      </Row>
+      <Row>
+        <F label="Pain Aggravating Factors" options={PAIN_AGGRAVATING}/>
+        <F label="Pain Alleviating Factors" options={PAIN_ALLEVIATING}/>
+      </Row>
+      <Row>
+        <F label="Current Pain Medications" placeholder="Drug, dose, frequency"/>
+        <F label="Response to Analgesia" options={["Excellent — Full relief","Good — Significant relief","Partial — Some improvement","Poor — Minimal response","None"]}/>
+      </Row>
+    </Sec>
 
-    <Sec title="Clinical Diagnosis & Problem List" color={C.amber} colorLt={C.amberLt}>
+    {/* ── SECTION 3 — CURRENT MEDICATIONS & SUPPLEMENTS (COLLAPSED) ── */}
+    <Sec title="▶ Current Medications & Supplements" color={C.amber} colorLt={C.amberLt} collapsible defaultOpen={false}>
+      <MedicationsSection/>
+    </Sec>
+
+    {/* ── SECTION 4 — DIAGNOSIS & PROBLEM LIST (COLLAPSED) ── */}
+    <Sec title="▶ Clinical Diagnosis & Problem List" color={C.amber} colorLt={C.amberLt} collapsible defaultOpen={false}>
       <div style={{ fontSize:11, color:C.muted, marginBottom:12 }}>
         Primary diagnosis, comorbidities, and active problem list — as per Millis & Levine structured assessment format.
       </div>
@@ -731,34 +854,8 @@ function AssessmentPanel() {
       </Row>
     </Sec>
 
-    <Sec title="Pain Assessment — Colorado State University Scale" color={C.red} colorLt={C.redLt}>
-      <div style={{ padding:"10px 14px", background:C.white, border:`1px solid ${C.border}`, borderRadius:6, fontSize:11, color:C.muted, marginBottom:14, lineHeight:1.7 }}>
-        <b style={{color:C.red}}>CSU Acute Pain Scale (0–4)</b> — Referenced in Millis & Levine, Canine Rehabilitation & Physical Therapy 2nd Ed.
-        Scores reflect behavioral and physiological indicators. Use in conjunction with the Helsinki Chronic Pain Index for chronic patients.
-      </div>
-      <Row cols={2}>
-        <F label="CSU Acute Pain Score (0–4)" options={["0 — Happy, comfortable, no signs of pain","1 — Minor discomfort, responds to petting","2 — Moderate pain, reacts to palpation","3 — Severe pain, vocalizes / guards","4 — Excruciating, entire body tense / rigid"]}/>
-        <F label="Pain Assessment at" options={["Rest","Activity","Palpation","Post-exercise"]}/>
-      </Row>
-      <Row cols={3}>
-        <F label="Numeric Rating Scale (NRS 0–10)" placeholder="0–10" hint="0 = no pain, 10 = worst possible"/>
-        <F label="Pain Character" options={["Acute","Subacute","Chronic","Neuropathic","Mixed"]}/>
-        <F label="Pain Onset" options={["Sudden","Gradual","Post-surgical","Unknown"]}/>
-      </Row>
-      <F label="Helsinki Chronic Pain Index Score" placeholder="Total score (0–44)" hint="HCPI: 44-item owner questionnaire for chronic musculoskeletal pain — Hielm-Björkman et al 2003"/>
-      <Row>
-        <F label="Pain Location — Primary" placeholder="e.g. Right stifle, medial aspect"/>
-        <F label="Pain Location — Secondary" placeholder="e.g. Left hip compensatory"/>
-      </Row>
-      <F label="Pain Aggravating Factors" placeholder="e.g. Prolonged standing, stair climbing, rising from rest…"/>
-      <F label="Pain Alleviating Factors" placeholder="e.g. Rest, cold therapy, NSAIDs, position change…"/>
-      <Row>
-        <F label="Current Pain Medications" placeholder="Drug, dose, frequency"/>
-        <F label="Response to Analgesia" options={["Excellent — Full relief","Good — Significant relief","Partial — Some improvement","Poor — Minimal response","None"]}/>
-      </Row>
-    </Sec>
-
-    <Sec title="Gait Analysis" color={C.amber} colorLt={C.amberLt}>
+    {/* ── SECTION 5 — GAIT ANALYSIS (COLLAPSED) ── */}
+    <Sec title="▶ Gait Analysis" color={C.amber} colorLt={C.amberLt} collapsible defaultOpen={false}>
       <Row>
         <F label="Gait Assessment Method" options={["Visual observation — Subjective","Force plate analysis","Pressure walkway (e.g. Tekscan)","Video slow-motion analysis","Treadmill analysis","Kinematic analysis"]}/>
         <F label="Surface Assessed On" options={["Non-slip flooring","Grass / Outdoor","Treadmill","Walkway / Corridor","Mixed surfaces"]}/>
@@ -775,7 +872,8 @@ function AssessmentPanel() {
       <F label="Gait Analysis Notes" placeholder="Detailed observations — cadence, symmetry, toe clearance, head bob, hip hike…" rows={3}/>
     </Sec>
 
-    <Sec title="Neurological Assessment" color={C.amber} colorLt={C.amberLt}>
+    {/* ── SECTION 6 — NEUROLOGICAL (COLLAPSED) ── */}
+    <Sec title="▶ Neurological Assessment" color={C.amber} colorLt={C.amberLt} collapsible defaultOpen={false}>
       <Row>
         <F label="Neurological Grade (Frankel / ASIA Modified)" options={["Grade I — Pain only, no deficits","Grade II — Ambulatory paresis","Grade III — Non-ambulatory paresis","Grade IV — Plegia with deep pain","Grade V — Plegia without deep pain"]}/>
         <F label="Lesion Localization" options={["N/A — No neurological signs","C1–C5 (Cervical)","C6–T2 (Cervical enlargement)","T3–L3 (Thoracolumbar)","L4–S3 (Lumbosacral enlargement)","Peripheral nerve","Neuromuscular junction","Muscle"]}/>
@@ -2536,6 +2634,172 @@ function AskBeau() {
   );
 }
 
+// ──────────────────────────────────────────────────────────────────────────────
+// HELSINKI CHRONIC PAIN INDEX — Hielm-Björkman et al. (2003)
+// Owner-completed questionnaire for canine chronic musculoskeletal pain.
+// 11 items × 0–4 points = 0–44 total.
+// ──────────────────────────────────────────────────────────────────────────────
+const HELSINKI_QUESTIONS = [
+  { n: 1,  text: "General mood / vitality" },
+  { n: 2,  text: "Willingness to play" },
+  { n: 3,  text: "Vocalization when moving (whining, whimpering)" },
+  { n: 4,  text: "Manner of walking (trot)" },
+  { n: 5,  text: "Manner of walking (gallop)" },
+  { n: 6,  text: "Manner of jumping (e.g. into car, on couch)" },
+  { n: 7,  text: "Manner of lying down" },
+  { n: 8,  text: "Manner of rising from rest" },
+  { n: 9,  text: "Ease of movement after resting" },
+  { n: 10, text: "Ease of movement after heavy exercise" },
+  { n: 11, text: "Ease of movement in cold weather" },
+];
+const HELSINKI_OPTIONS = [
+  { v: "0", label: "0 — Normal / no difficulty" },
+  { v: "1", label: "1 — Slightly altered" },
+  { v: "2", label: "2 — Moderately altered" },
+  { v: "3", label: "3 — Severely altered" },
+  { v: "4", label: "4 — Cannot perform / severe distress" },
+];
+
+function HelsinkiPanel() {
+  const { data, update } = useContext(DashFormContext);
+
+  // Auto-calculate total score from all 11 question answers
+  const total = HELSINKI_QUESTIONS.reduce((sum, q) => {
+    const v = parseInt(data[`helsinki::Q${q.n}`], 10);
+    return sum + (isNaN(v) ? 0 : v);
+  }, 0);
+
+  // Store total in dashData so it's persisted with the patient record
+  useEffect(() => {
+    update("helsinki::Total Score", String(total));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [total]);
+
+  const interpretation =
+    total === 0 ? { label: "Not scored", color: C.muted, bg: C.bg } :
+    total <= 11 ? { label: "Minimal pain — routine monitoring", color: C.green, bg: C.greenLt } :
+    total <= 22 ? { label: "Mild pain — consider NSAIDs + rehab", color: "#B45309", bg: "#FEF3C7" } :
+    total <= 33 ? { label: "Moderate pain — multimodal analgesia indicated", color: "#EA580C", bg: "#FFF7ED" } :
+                  { label: "Severe pain — aggressive multimodal therapy + reassessment", color: C.red, bg: C.redLt };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  return (
+    <div style={{ fontSize: 12, color: C.text }}>
+      {/* ── Header & description ── */}
+      <div style={{ marginBottom: 18 }}>
+        <div style={{ fontSize: 16, fontWeight: 800, color: C.navy, marginBottom: 4 }}>
+          Helsinki Chronic Pain Index — Print for Client
+        </div>
+        <div style={{ fontSize: 11, color: C.muted, lineHeight: 1.7, marginBottom: 12 }}>
+          Validated 11-item owner-completed questionnaire for chronic musculoskeletal pain.
+          Reference: <em>Hielm-Björkman AK et al (2003), Am J Vet Res</em>. Each item scored 0–4;
+          total score 0–44. Print this page for the client to complete at home, then enter results
+          when they return.
+        </div>
+
+        <button onClick={handlePrint}
+          style={{
+            padding: "9px 18px", background: C.blue, border: "none", color: C.white,
+            borderRadius: 6, cursor: "pointer", fontSize: 12, fontWeight: 700,
+            letterSpacing: ".06em", display: "inline-flex", alignItems: "center", gap: 8,
+          }}>
+          🖨️ PRINT QUESTIONNAIRE FOR CLIENT
+        </button>
+      </div>
+
+      {/* ── Patient / date header (for printed form) ── */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 18, padding: "12px 14px", border: `1px dashed ${C.border}`, borderRadius: 6 }}>
+        <div>
+          <Lbl>Patient Name</Lbl>
+          <input placeholder="Patient"
+            value={data["helsinki::Patient Name"] || ""}
+            onChange={e => update("helsinki::Patient Name", e.target.value)}/>
+        </div>
+        <div>
+          <Lbl>Assessment Date</Lbl>
+          <input type="date"
+            value={data["helsinki::Date"] || ""}
+            onChange={e => update("helsinki::Date", e.target.value)}/>
+        </div>
+      </div>
+
+      {/* ── 11 Questions ── */}
+      {HELSINKI_QUESTIONS.map(q => {
+        const val = data[`helsinki::Q${q.n}`] || "";
+        return (
+          <div key={q.n} style={{
+            marginBottom: 12, padding: "10px 14px",
+            background: val ? C.blueLt : C.white,
+            border: `1px solid ${val ? C.blue : C.border}`,
+            borderRadius: 6,
+          }}>
+            <div style={{ fontWeight: 700, fontSize: 12, color: C.navy, marginBottom: 8 }}>
+              {q.n}. {q.text}
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 6 }}>
+              {HELSINKI_OPTIONS.map(opt => {
+                const selected = val === opt.v;
+                return (
+                  <div key={opt.v}
+                    onClick={() => update(`helsinki::Q${q.n}`, opt.v)}
+                    style={{
+                      padding: "6px 8px", textAlign: "center",
+                      border: `1.5px solid ${selected ? C.blue : C.border}`,
+                      background: selected ? C.blue : C.white,
+                      color: selected ? C.white : C.text,
+                      borderRadius: 4, cursor: "pointer",
+                      fontSize: 10, fontWeight: 600, lineHeight: 1.3,
+                      transition: "all .12s",
+                    }}>
+                    {opt.label}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+
+      {/* ── Total Score + Interpretation ── */}
+      <div style={{
+        marginTop: 16, padding: "16px 20px",
+        background: interpretation.bg,
+        border: `1.5px solid ${interpretation.color}`,
+        borderRadius: 8,
+      }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+          <span style={{ fontSize: 11, fontWeight: 700, color: interpretation.color, letterSpacing: ".08em", textTransform: "uppercase" }}>
+            Total Score
+          </span>
+          <span style={{ fontSize: 28, fontWeight: 900, color: interpretation.color }}>
+            {total} <span style={{ fontSize: 14, fontWeight: 600 }}>/ 44</span>
+          </span>
+        </div>
+        <div style={{ fontSize: 12, fontWeight: 600, color: interpretation.color }}>
+          {interpretation.label}
+        </div>
+      </div>
+
+      {/* ── Clinician notes ── */}
+      <div style={{ marginTop: 14 }}>
+        <Lbl>Clinician Notes</Lbl>
+        <textarea rows={3} placeholder="Clinical interpretation, treatment plan, reassessment interval…"
+          value={data["helsinki::Clinician Notes"] || ""}
+          onChange={e => update("helsinki::Clinician Notes", e.target.value)}/>
+      </div>
+
+      <div style={{ marginTop: 14, padding: "10px 14px", background: C.bg, border: `1px dashed ${C.border}`, borderRadius: 6, fontSize: 10, color: C.muted, lineHeight: 1.6 }}>
+        <b>Clinical scoring guide:</b> 0–11 Minimal · 12–22 Mild · 23–33 Moderate · 34–44 Severe.
+        HCPI responsiveness validated against force-plate analysis (Hielm-Björkman 2009).
+        Reassess at 4–6 week intervals or after therapy changes.
+      </div>
+    </div>
+  );
+}
+
 function AboutPanel() {
   return (
     <div style={{ fontSize:12, color:C.muted, lineHeight:1.8 }}>
@@ -2621,13 +2885,14 @@ const BLOCKS = [
 const SIDEBAR_NAV = [
   { id:"how",        icon:"❓" },
   { id:"ask",        icon:"⬡"  },
+  { id:"helsinki",   icon:"📝" },
   { id:"about",      icon:"ℹ️" },
   { id:"disclaimer", icon:"⚠️" },
   { id:"hipaa",      icon:"🔒" },
 ];
 
 const BLOCK_COMPS   = { client:ClientPanel, diagnostics:DiagnosticsPanel, assessment:AssessmentPanel, metrics:MetricsPanel, diet:DietPanel, equipment:EquipmentPanel, home:HomePanel, goals:GoalsPanel, conditioning:ConditioningPanel, protocol:ProtocolPanel, library:LibraryPanel };
-const SIDEBAR_COMPS = { how:HowToUse, ask:AskBeau, about:AboutPanel, disclaimer:DisclaimerPanel, hipaa:HipaaPanel };
+const SIDEBAR_COMPS = { how:HowToUse, ask:AskBeau, helsinki:HelsinkiPanel, about:AboutPanel, disclaimer:DisclaimerPanel, hipaa:HipaaPanel };
 
 // ── CONTEXTUAL B.E.A.U. PROMPTS ──────────────────────────────────────────────
 const BEAU_BLOCK_CONTEXTS = {
@@ -2660,15 +2925,23 @@ export default function DashboardView({ setView, currentUser, onLogout, patient,
   const [searchOpen, setSearchOpen]   = useState(false);
   const [searchQ, setSearchQ]         = useState("");
   const searchRef = useRef(null);
+  // ── Update toast (for UPDATE PATIENT RECORD button success feedback)
+  const [updateToast, setUpdateToast] = useState(null); // { type: "success"|"error", message: string }
 
   const apiBase = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
   const token = localStorage.getItem("token");
   const authHeaders = { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) };
 
-  const patientName = patient?.name || null;
+  // ── LIVE patient header — reads from dashData first, falls back to patient object ──
+  // Updates instantly as clinician edits any field in Client & Patient block.
+  // No Save & Close required to see changes reflected in the header.
+  const liveName = (dashData["client::Patient Name"] || "").trim() || patient?.name || "";
+  const liveBreed = (dashData["client::Breed"] || "").trim() || patient?.breed || "";
+  const liveSpecies = dashData["client::Species"] || (patient?.species === "feline" ? "Feline" : patient?.species === "canine" ? "Canine" : "");
+  const patientName = liveName || null;
   const visitCount = patient?.visit_count || 0;
-  const patientLabel = patient
-    ? `${patient.name} — ${patient.breed || "Unknown breed"} · ${patient.condition || "No condition"}${visitCount > 0 ? ` · Visit #${visitCount}` : ""}`
+  const patientLabel = liveName
+    ? `${liveName}${liveBreed ? ` — ${liveBreed}` : ""}${liveSpecies ? ` · ${liveSpecies}` : ""}${visitCount > 0 ? ` · Visit #${visitCount}` : ""}`
     : null;
 
   // ── Patient anchor lock — Phase 1A Fix 1 ──
@@ -2742,15 +3015,22 @@ export default function DashboardView({ setView, currentUser, onLogout, patient,
         savedDash = typeof patient.dashboard_data === "string" ? JSON.parse(patient.dashboard_data) : patient.dashboard_data;
       } catch { savedDash = {}; }
     }
-    // REPLACE (not merge with prev) — patient.* fields override savedDash for client info
+    // REPLACE (not merge with prev). Seed ALL patient-table columns into their
+    // DashFormContext keys so the dropdowns/inputs show current values on load.
+    // Priority order: savedDash (from dashboard_data JSON) first, then patient columns as fallback.
+    const speciesCapitalized = patient.species === "feline" ? "Feline" : patient.species === "canine" ? "Canine" : "";
     setDashData({
       ...savedDash,
-      "client::Client First Name": patient.client_name?.split(" ")[0] || savedDash["client::Client First Name"] || "",
-      "client::Client Last Name": patient.client_name?.split(" ").slice(1).join(" ") || savedDash["client::Client Last Name"] || "",
-      "client::Phone": patient.client_phone || savedDash["client::Phone"] || "",
-      "client::Email": patient.client_email || savedDash["client::Email"] || "",
-      "client::Patient Name": patient.name || savedDash["client::Patient Name"] || "",
-      "client::Weight (lbs)": patient.weight ? String(patient.weight) : savedDash["client::Weight (lbs)"] || "",
+      "client::Client First Name": savedDash["client::Client First Name"] || patient.client_name?.split(" ")[0] || "",
+      "client::Client Last Name":  savedDash["client::Client Last Name"]  || patient.client_name?.split(" ").slice(1).join(" ") || "",
+      "client::Phone":             savedDash["client::Phone"]             || patient.client_phone || "",
+      "client::Email":             savedDash["client::Email"]             || patient.client_email || "",
+      "client::Patient Name":      savedDash["client::Patient Name"]      || patient.name || "",
+      "client::Breed":             savedDash["client::Breed"]             || patient.breed || "",
+      "client::Species":           savedDash["client::Species"]           || speciesCapitalized || "Canine",
+      "client::Sex":               savedDash["client::Sex"]               || patient.sex || "",
+      "client::Weight (lbs)":      savedDash["client::Weight (lbs)"]      || (patient.weight ? String(patient.weight) : ""),
+      "client::Age (years)":       savedDash["client::Age (years)"]       || (patient.age ? String(patient.age) : ""),
     });
   }, [patient?.id]);
 
@@ -2824,8 +3104,14 @@ export default function DashboardView({ setView, currentUser, onLogout, patient,
         const listJson = await listRes.json();
         setAllPatients(listJson.data || listJson || []);
       } catch {}
+
+      // Success toast
+      setUpdateToast({ type: "success", message: "Patient record updated successfully" });
+      setTimeout(() => setUpdateToast(null), 3200);
     } catch (err) {
       console.error("[handleSave]", err);
+      setUpdateToast({ type: "error", message: `Save failed: ${err.message}` });
+      setTimeout(() => setUpdateToast(null), 4500);
     }
 
     // Also persist to localStorage as draft backup
@@ -2869,7 +3155,7 @@ export default function DashboardView({ setView, currentUser, onLogout, patient,
   // If no patient is selected, header shows a prompt to select one.
 
   return (
-    <DashFormContext.Provider value={{ data: dashData, update: updateField, blockId: openBlock, beauVoice, uiLang: i18nInst.language || "en" }}>
+    <DashFormContext.Provider value={{ data: dashData, update: updateField, blockId: openBlock, beauVoice, uiLang: i18nInst.language || "en", handleSave, updateToast, setUpdateToast }}>
       <div className="k9v2" style={{ background:C.bg, minHeight:"100vh" }}>
         <style>{CSS}</style>
 
@@ -2962,6 +3248,22 @@ export default function DashboardView({ setView, currentUser, onLogout, patient,
               Please enter Client and Patient name first. Redirecting to Client & Patient block...
             </div>
           )}
+          {/* ── UPDATE PATIENT RECORD success/error toast ── */}
+          {updateToast && (
+            <div style={{
+              position:"fixed", top:80, right:24, zIndex:400, padding:"14px 20px",
+              background: updateToast.type === "success" ? "#f0fdf4" : "#fef2f2",
+              border: `1px solid ${updateToast.type === "success" ? "#bbf7d0" : "#fecaca"}`,
+              borderLeft: `4px solid ${updateToast.type === "success" ? "#16a34a" : "#dc2626"}`,
+              borderRadius:6, boxShadow:"0 8px 24px rgba(0,0,0,.15)",
+              fontSize:13, color: updateToast.type === "success" ? "#166534" : "#991b1b",
+              maxWidth:360, animation:"fadeIn .2s ease",
+              display:"flex", alignItems:"center", gap:10,
+            }}>
+              <span style={{ fontSize:18 }}>{updateToast.type === "success" ? "✅" : "⚠️"}</span>
+              <span style={{ fontWeight:600 }}>{updateToast.message}</span>
+            </div>
+          )}
           <div style={{ display:"grid", gridTemplateColumns:"repeat(3, 1fr)", gap:16 }}>
             {BLOCKS.map((b,i)=>{
               const locked = !isUnlocked && b.id !== "client";
@@ -2990,24 +3292,27 @@ export default function DashboardView({ setView, currentUser, onLogout, patient,
         </div>
 
         {/* ── BLOCK MODALS ── */}
-        {BLOCKS.map(b => {
+        {/* Only the active block is mounted — ensures Sec collapsible state
+            resets (defaultOpen=false) every time the modal is reopened. */}
+        {(() => {
+          if (!openBlock) return null;
+          const b = BLOCKS.find(x => x.id === openBlock);
+          if (!b) return null;
           const Comp = BLOCK_COMPS[b.id];
           if (!Comp) return null;
           return (
-            <div key={b.id} style={{ display: openBlock === b.id ? 'contents' : 'none' }}>
-              <Modal title={t(`tiles.${b.id}.label`)} color={b.color} colorLt={b.colorLt} icon={b.icon} onClose={()=>setOpenBlock(null)}
-                patientLabel={patientLabel}
-                beauContext={BEAU_BLOCK_CONTEXTS[b.id]}
-                beauOpen={beauOpen} setBeauOpen={setBeauOpen}
-                beauQuery={beauQuery} setBeauQuery={setBeauQuery}
-                beauAnswer={beauAnswer} beauLoading={beauLoading}
-                onAskBeau={askBeauInContext}
-              >
-                <Comp patientName={patientName} patientData={patient}/>
-              </Modal>
-            </div>
+            <Modal key={b.id} title={t(`tiles.${b.id}.label`)} color={b.color} colorLt={b.colorLt} icon={b.icon} onClose={()=>setOpenBlock(null)}
+              patientLabel={patientLabel}
+              beauContext={BEAU_BLOCK_CONTEXTS[b.id]}
+              beauOpen={beauOpen} setBeauOpen={setBeauOpen}
+              beauQuery={beauQuery} setBeauQuery={setBeauQuery}
+              beauAnswer={beauAnswer} beauLoading={beauLoading}
+              onAskBeau={askBeauInContext}
+            >
+              <Comp patientName={patientName} patientData={patient}/>
+            </Modal>
           );
-        })}
+        })()}
 
         {/* ── INFO MODALS (How to Use, Ask B.E.A.U., About, Disclaimer, HIPAA) ── */}
         {SIDEBAR_NAV.map(s => {
