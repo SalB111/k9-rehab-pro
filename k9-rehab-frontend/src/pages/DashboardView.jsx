@@ -464,7 +464,7 @@ function ClientPanel() {
         </div>
         <F label="Microchip #" placeholder="15-digit number"/>
       </Row>
-      <Row><F label="Specialist / Surgeon" placeholder="Referring specialist name & clinic"/><F label="Next Appointment" type="date"/></Row>
+      <F label="Specialist / Surgeon" placeholder="Referring specialist name & clinic"/>
     </Sec>
   </>;
 }
