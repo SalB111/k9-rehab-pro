@@ -99,6 +99,43 @@ const F = ({ label, placeholder, type="text", options, rows, range, hint }) => {
   );
 };
 
+// Reusable weight pair — lbs + kg side by side with auto-conversion
+// Works in any panel. Stores values in DashFormContext keyed by fieldBase.
+const WeightPair = ({ label, fieldBase }) => {
+  const { data, update } = useContext(DashFormContext);
+  const lbsKey = `${fieldBase} (lbs)`;
+  const kgKey  = `${fieldBase} (kg)`;
+  const lbsVal = data[lbsKey] ?? "";
+  const kgVal  = data[kgKey] ?? "";
+
+  const onLbs = (val) => {
+    update(lbsKey, val);
+    const n = parseFloat(val);
+    if (!isNaN(n) && n > 0) update(kgKey, (n / 2.20462).toFixed(1));
+    else if (val === "") update(kgKey, "");
+  };
+  const onKg = (val) => {
+    update(kgKey, val);
+    const n = parseFloat(val);
+    if (!isNaN(n) && n > 0) update(lbsKey, (n * 2.20462).toFixed(1));
+    else if (val === "") update(lbsKey, "");
+  };
+
+  return (
+    <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+      <div>
+        <Lbl>{label} (lbs)</Lbl>
+        <input type="number" placeholder="0.0" step="0.1" value={lbsVal} onChange={e => onLbs(e.target.value)}/>
+      </div>
+      <div>
+        <Lbl>{label} (kg)</Lbl>
+        <input type="number" placeholder="0.0" step="0.1" value={kgVal} onChange={e => onKg(e.target.value)}/>
+        <div style={{ fontSize:10, color:C.muted, marginTop:4, fontStyle:"italic" }}>Auto-converts to/from lbs</div>
+      </div>
+    </div>
+  );
+};
+
 const Row = ({ children, cols=2 }) => (
   <div style={{ display:"grid", gridTemplateColumns:`repeat(${cols},1fr)`, gap:12 }}>{children}</div>
 );
@@ -136,7 +173,7 @@ function CbItem({ label, checked, onToggle, children }) {
 }
 
 // ─── MODAL ────────────────────────────────────────────────────────────────────
-function Modal({ title, color, colorLt, icon, onClose, children, beauContext, beauOpen, setBeauOpen, beauQuery, setBeauQuery, beauAnswer, beauLoading, onAskBeau }) {
+function Modal({ title, color, colorLt, icon, onClose, children, beauContext, beauOpen, setBeauOpen, beauQuery, setBeauQuery, beauAnswer, beauLoading, onAskBeau, patientLabel }) {
   const { t } = useTranslation();
   const hasBeau = !!beauContext && !!setBeauOpen;
   return (
@@ -151,6 +188,11 @@ function Modal({ title, color, colorLt, icon, onClose, children, beauContext, be
           <div style={{ flex:1 }}>
             <div style={{ fontSize:15, fontWeight:700, color:C.navy }}>{title}</div>
             <div style={{ fontSize:9, color:C.muted, letterSpacing:".13em", textTransform:"uppercase" }}>{t("modal.engineSubtitle")}</div>
+            {patientLabel && (
+              <div style={{ fontSize:11, fontWeight:600, color:C.green, marginTop:4, display:"flex", alignItems:"center", gap:4 }}>
+                <span>👤</span><span>{patientLabel}</span>
+              </div>
+            )}
           </div>
           {hasBeau && (
             <button onClick={() => setBeauOpen(!beauOpen)}
@@ -1553,11 +1595,9 @@ function MetricsPanel() {
       <div style={{ padding:"10px 14px", background:C.white, border:`1px solid ${C.border}`, borderRadius:6, fontSize:11, color:C.muted, marginBottom:12, lineHeight:1.65 }}>
         <b style={{color:C.green}}>Purina BCS 9-Point Scale</b> — Reference standard per Laflamme 1997, endorsed by Millis & Levine. Score 4–5 = Ideal. Each point above/below 5 = approximately ±10–15% body weight deviation.
       </div>
-      <Row cols={3}>
-        <F label="BCS Score (1–9)" options={["1 — Emaciated: Ribs, spine visible","2 — Very thin","3 — Thin: Ribs easily felt","4 — Underweight: Slight fat cover","5 — Ideal: Ribs felt, waist visible","6 — Overweight: Ribs felt with pressure","7 — Heavy: Ribs difficult to feel","8 — Obese: Ribs not palpable","9 — Morbidly obese"]}/>
-        <F label="Current Weight (lbs)" placeholder="0.0"/>
-        <F label="Ideal Body Weight (lbs)" placeholder="0.0"/>
-      </Row>
+      <F label="BCS Score (1–9)" options={["1 — Emaciated: Ribs, spine visible","2 — Very thin","3 — Thin: Ribs easily felt","4 — Underweight: Slight fat cover","5 — Ideal: Ribs felt, waist visible","6 — Overweight: Ribs felt with pressure","7 — Heavy: Ribs difficult to feel","8 — Obese: Ribs not palpable","9 — Morbidly obese"]}/>
+      <WeightPair label="Current Weight" fieldBase="metrics::Current Weight"/>
+      <WeightPair label="Ideal Body Weight" fieldBase="metrics::Ideal Body Weight"/>
       <Row>
         <F label="Weight Status" options={["Underweight","Ideal","Overweight 10–20%","Overweight >20%","Obese"]}/>
         <F label="Weight Trend" options={["Stable","Gaining","Losing","Significant gain","Significant loss"]}/>
@@ -1878,10 +1918,8 @@ function ConditioningPanel() {
       <F label="Sport / Activity Type" placeholder="e.g. Agility, flyball, hunting, dock diving, herding, search & rescue, companion pet…"/>
       <F label="Preferred Activities / Equipment" placeholder="e.g. Swimming, treadmill, fetch, hiking, agility obstacles, balance work…"/>
       <F label="Limitations / Precautions" placeholder="Ongoing restrictions — joints to protect, surfaces to avoid, intensity limits…" rows={2}/>
-      <Row>
-        <F label="Weight Goal (lbs)" placeholder="Target weight"/>
-        <F label="Target BCS" options={["4","5 — Ideal","6"]}/>
-      </Row>
+      <WeightPair label="Weight Goal" fieldBase="conditioning::Weight Goal"/>
+      <F label="Target BCS" options={["4","5 — Ideal","6"]}/>
     </Sec>
 
     <Sec title="B.E.A.U. Conditioning Exercise Generator" color="#14B8A6" colorLt="#F0FDFB">
@@ -2505,6 +2543,32 @@ export default function DashboardView({ setView, currentUser, onLogout, patient,
     ? `${patient.name} — ${patient.breed || "Unknown breed"} · ${patient.condition || "No condition"}${visitCount > 0 ? ` · Visit #${visitCount}` : ""}`
     : null;
 
+  // ── Patient anchor lock — Phase 1A Fix 1 ──
+  // All blocks except "client" are locked until both Client Name and Patient Name are entered.
+  // Either form-field entry OR a selected patient (with client_name + name) unlocks blocks.
+  const hasClientName = !!(
+    (dashData["client::Client First Name"] && dashData["client::Client First Name"].trim()) ||
+    (dashData["client::Client Last Name"] && dashData["client::Client Last Name"].trim()) ||
+    patient?.client_name
+  );
+  const hasPatientName = !!(
+    (dashData["client::Patient Name"] && dashData["client::Patient Name"].trim()) ||
+    patient?.name
+  );
+  const isUnlocked = hasClientName && hasPatientName;
+  const [showLockToast, setShowLockToast] = useState(false);
+
+  // Gated block click handler — redirects to client block if locked
+  const handleBlockClick = (blockId) => {
+    if (blockId === "client" || isUnlocked) {
+      setOpenBlock(blockId); setBeauOpen(false); setBeauQuery(""); setBeauAnswer("");
+    } else {
+      setShowLockToast(true);
+      setTimeout(() => setShowLockToast(false), 3500);
+      setOpenBlock("client"); setBeauOpen(false); setBeauQuery(""); setBeauAnswer("");
+    }
+  };
+
   // ── Fetch patient list for search
   useEffect(() => {
     fetch(`${apiBase}/patients`, { headers: authHeaders })
@@ -2539,6 +2603,8 @@ export default function DashboardView({ setView, currentUser, onLogout, patient,
   };
 
   // ── Pre-populate from patient on mount / patient change
+  // FIX: When patient.id changes, REPLACE dashData with savedDash (no merge with stale prev).
+  // Stale prev would leak old patient's form data into the newly-loaded patient.
   useEffect(() => {
     if (!patient) return;
     // Load saved dashboard_data from backend first
@@ -2548,41 +2614,92 @@ export default function DashboardView({ setView, currentUser, onLogout, patient,
         savedDash = typeof patient.dashboard_data === "string" ? JSON.parse(patient.dashboard_data) : patient.dashboard_data;
       } catch { savedDash = {}; }
     }
-    // Merge: backend saved data → patient basic fields → existing form state
-    setDashData(prev => ({
+    // REPLACE (not merge with prev) — patient.* fields override savedDash for client info
+    setDashData({
       ...savedDash,
-      ...prev,
       "client::Client First Name": patient.client_name?.split(" ")[0] || savedDash["client::Client First Name"] || "",
       "client::Client Last Name": patient.client_name?.split(" ").slice(1).join(" ") || savedDash["client::Client Last Name"] || "",
       "client::Phone": patient.client_phone || savedDash["client::Phone"] || "",
       "client::Email": patient.client_email || savedDash["client::Email"] || "",
       "client::Patient Name": patient.name || savedDash["client::Patient Name"] || "",
       "client::Weight (lbs)": patient.weight ? String(patient.weight) : savedDash["client::Weight (lbs)"] || "",
-    }));
+    });
   }, [patient?.id]);
 
   const updateField = (key, val) => setDashData(prev => ({ ...prev, [key]: val }));
 
   const handleSave = async () => {
-    if (patient?.id) {
-      try {
-        const res = await fetch(`${apiBase}/patients/${patient.id}`, {
-          method: "PUT",
+    // Build the payload from form fields
+    const patientName = dashData["client::Patient Name"]?.trim();
+    const clientName = [dashData["client::Client First Name"], dashData["client::Client Last Name"]].filter(s => s && s.trim()).join(" ").trim();
+    const clientPhone = dashData["client::Phone"] || null;
+    const clientEmail = dashData["client::Email"] || null;
+    const weight = parseFloat(dashData["client::Weight (lbs)"]) || 0;
+    const breed = dashData["client::Breed"] || "Mixed Breed";
+
+    // Guard: must have at least patient name + client name to save
+    if (!patientName || !clientName) {
+      setSaved(false);
+      return;
+    }
+
+    try {
+      let targetPatient = patient;
+
+      // ── CREATE patient if no existing patient is selected ──
+      // This is the fix for the silent save bug. When user types names into the
+      // form WITHOUT selecting an existing patient, we POST first to create.
+      if (!patient?.id) {
+        const createRes = await fetch(`${apiBase}/patients`, {
+          method: "POST",
           headers: authHeaders,
           body: JSON.stringify({
-            name: dashData["client::Patient Name"] || patient.name,
-            client_name: [dashData["client::Client First Name"], dashData["client::Client Last Name"]].filter(Boolean).join(" ") || patient.client_name,
-            client_phone: dashData["client::Phone"] || patient.client_phone,
-            client_email: dashData["client::Email"] || patient.client_email,
-            weight: parseFloat(dashData["client::Weight (lbs)"]) || patient.weight,
-            dashboard_data: dashData,
+            name: patientName,
+            species: "canine",
+            breed,
+            age: 0,
+            weight,
+            sex: dashData["client::Sex"] || null,
+            condition: dashData["client::Diagnosis"] || dashData["assessment::Primary Diagnosis"] || "Rehabilitation",
+            client_name: clientName,
+            client_email: clientEmail,
+            client_phone: clientPhone,
           }),
         });
-        // Update patient object with new visit count
-        const json = await res.json();
-        if (json.data && setSelectedPatient) setSelectedPatient(json.data);
-      } catch { /* fall through to visual save */ }
+        const createJson = await createRes.json();
+        if (!createJson?.data?.id) throw new Error("Patient creation failed");
+        targetPatient = createJson.data;
+      }
+
+      // ── PUT dashboard_data to the patient (existing or just-created) ──
+      const putRes = await fetch(`${apiBase}/patients/${targetPatient.id}`, {
+        method: "PUT",
+        headers: authHeaders,
+        body: JSON.stringify({
+          name: patientName,
+          client_name: clientName,
+          client_phone: clientPhone || targetPatient.client_phone,
+          client_email: clientEmail || targetPatient.client_email,
+          weight: weight || targetPatient.weight,
+          breed: breed || targetPatient.breed,
+          dashboard_data: dashData,
+        }),
+      });
+      const putJson = await putRes.json();
+
+      // Update parent patient state with the saved patient (includes new visit_count)
+      if (putJson?.data && setSelectedPatient) setSelectedPatient(putJson.data);
+
+      // Refresh the patient list so search finds the new patient
+      try {
+        const listRes = await fetch(`${apiBase}/patients`, { headers: authHeaders });
+        const listJson = await listRes.json();
+        setAllPatients(listJson.data || listJson || []);
+      } catch {}
+    } catch (err) {
+      console.error("[handleSave]", err);
     }
+
     // Also persist to localStorage as draft backup
     try { localStorage.setItem(`k9dash_${patient?.id || "draft"}`, JSON.stringify(dashData)); } catch {}
     setSaved(true); setTimeout(()=>setSaved(false),2400);
@@ -2703,20 +2820,39 @@ export default function DashboardView({ setView, currentUser, onLogout, patient,
 
         {/* ── BLOCK GRID ── */}
         <div style={{ padding:22 }}>
+          {!isUnlocked && (
+            <div style={{ marginBottom:16, padding:"12px 18px", background:"#fffbeb", border:"1px solid #fde68a", borderLeft:"4px solid #f59e0b", borderRadius:6, display:"flex", alignItems:"center", gap:10, fontSize:12, color:"#92400e" }}>
+              <span style={{ fontSize:18 }}>⚠️</span>
+              <div>
+                <strong>Patient Anchor Required.</strong> Enter <strong>Client Name</strong> + <strong>Patient Name</strong> in the <strong>Client & Patient</strong> block to unlock all clinical features.
+              </div>
+            </div>
+          )}
+          {showLockToast && (
+            <div style={{ position:"fixed", top:80, right:24, zIndex:300, padding:"12px 18px", background:"#fef2f2", border:"1px solid #fecaca", borderLeft:"4px solid #dc2626", borderRadius:6, boxShadow:"0 8px 24px rgba(0,0,0,.15)", fontSize:12, color:"#991b1b", maxWidth:340, animation:"fadeIn .2s ease" }}>
+              <div style={{ fontWeight:700, marginBottom:4 }}>🔒 Block Locked</div>
+              Please enter Client and Patient name first. Redirecting to Client & Patient block...
+            </div>
+          )}
           <div style={{ display:"grid", gridTemplateColumns:"repeat(3, 1fr)", gap:16 }}>
-            {BLOCKS.map((b,i)=>(
+            {BLOCKS.map((b,i)=>{
+              const locked = !isUnlocked && b.id !== "client";
+              return (
               <div key={b.id} className="block-card"
-                onClick={()=>{ setOpenBlock(b.id); setBeauOpen(false); setBeauQuery(""); setBeauAnswer(""); }}
-                style={{ background:C.white, border:`1.5px solid ${C.border}`, borderRadius:9, padding:"22px 20px", position:"relative", overflow:"hidden", boxShadow:"0 1px 6px rgba(26,39,68,.06)", animationDelay:`${i*.04}s`, animation:"fadeUp .3s ease both" }}>
-                <div style={{ position:"absolute", top:0, left:0, right:0, height:4, background:b.color }}/>
-                <div style={{ width:44, height:44, borderRadius:10, background:b.colorLt, border:`1px solid ${b.color}33`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:22, marginBottom:14, boxShadow:`0 2px 8px ${b.color}22` }}>
+                onClick={()=>handleBlockClick(b.id)}
+                style={{ background:C.white, border:`1.5px solid ${locked ? "#cbd5e1" : C.border}`, borderRadius:9, padding:"22px 20px", position:"relative", overflow:"hidden", boxShadow:"0 1px 6px rgba(26,39,68,.06)", animationDelay:`${i*.04}s`, animation:"fadeUp .3s ease both", opacity: locked ? 0.55 : 1 }}>
+                <div style={{ position:"absolute", top:0, left:0, right:0, height:4, background: locked ? "#cbd5e1" : b.color }}/>
+                {locked && (
+                  <div style={{ position:"absolute", top:10, right:12, fontSize:16, opacity:0.7 }}>🔒</div>
+                )}
+                <div style={{ width:44, height:44, borderRadius:10, background: locked ? "#f1f5f9" : b.colorLt, border:`1px solid ${locked ? "#cbd5e1" : b.color+"33"}`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:22, marginBottom:14, boxShadow: locked ? "none" : `0 2px 8px ${b.color}22`, filter: locked ? "grayscale(0.6)" : "none" }}>
                   {b.icon}
                 </div>
                 <div style={{ fontSize:14, fontWeight:700, color:C.navy, marginBottom:5 }}>{t(`tiles.${b.id}.label`)}</div>
                 <div style={{ fontSize:11, color:C.muted, lineHeight:1.55 }}>{t(`tiles.${b.id}.desc`)}</div>
-                <div style={{ position:"absolute", bottom:16, right:16, fontSize:16, color:b.color, opacity:.35 }}>→</div>
+                <div style={{ position:"absolute", bottom:16, right:16, fontSize:16, color: locked ? "#94a3b8" : b.color, opacity:.35 }}>→</div>
               </div>
-            ))}
+            );})}
           </div>
 
           <div style={{ marginTop:20, padding:"10px 4px", display:"flex", justifyContent:"space-between", borderTop:`1px solid ${C.border}` }}>
@@ -2732,6 +2868,7 @@ export default function DashboardView({ setView, currentUser, onLogout, patient,
           return (
             <div key={b.id} style={{ display: openBlock === b.id ? 'contents' : 'none' }}>
               <Modal title={t(`tiles.${b.id}.label`)} color={b.color} colorLt={b.colorLt} icon={b.icon} onClose={()=>setOpenBlock(null)}
+                patientLabel={patientLabel}
                 beauContext={BEAU_BLOCK_CONTEXTS[b.id]}
                 beauOpen={beauOpen} setBeauOpen={setBeauOpen}
                 beauQuery={beauQuery} setBeauQuery={setBeauQuery}
