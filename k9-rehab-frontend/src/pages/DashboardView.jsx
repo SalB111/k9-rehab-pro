@@ -99,6 +99,39 @@ const F = ({ label, placeholder, type="text", options, rows, range, hint }) => {
   );
 };
 
+// Multi-select checkbox group. Stores selected options as a "||"-joined
+// string in DashFormContext so it survives save/reload without schema change.
+// Key format: <blockId>::<label>
+const MultiF = ({ label, options, hint, accent="#EC4899" }) => {
+  const { data, update, blockId } = useContext(DashFormContext);
+  const key = blockId ? `${blockId}::${label}` : label;
+  const raw = data[key] ?? "";
+  const selected = raw ? raw.split("||").filter(Boolean) : [];
+  const toggle = (opt) => {
+    const next = selected.includes(opt)
+      ? selected.filter(x => x !== opt)
+      : [...selected, opt];
+    update(key, next.join("||"));
+  };
+  return (
+    <div>
+      <Lbl>{label}</Lbl>
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:6, padding:"10px 12px", background:C.white, border:`1px solid ${C.border}`, borderRadius:5 }}>
+        {options.map(o => {
+          const checked = selected.includes(o);
+          return (
+            <div key={o} className={`cb-row${checked?" active":""}`} onClick={() => toggle(o)} style={{ cursor:"pointer" }}>
+              <input type="checkbox" checked={checked} readOnly style={{ width:14, height:14, accentColor:accent, flexShrink:0 }}/>
+              <span style={{ fontSize:11, color: checked ? accent : C.text }}>{o}</span>
+            </div>
+          );
+        })}
+      </div>
+      {hint && <div style={{ fontSize:10, color:C.muted, marginTop:4, fontStyle:"italic" }}>{hint}</div>}
+    </div>
+  );
+};
+
 // Reusable weight pair — lbs + kg side by side with auto-conversion
 // Works in any panel. Stores values in DashFormContext keyed by fieldBase.
 const WeightPair = ({ label, fieldBase }) => {
@@ -1170,42 +1203,27 @@ function HomePanel() {
 function GoalsPanel() {
   return <>
     <Sec title="Rehabilitation Goals" color="#EC4899" colorLt="#FDF2F8" noTop>
-      <F label="Primary Rehabilitation Goal" options={["Return to normal household activity","Pain management — improve quality of life","Post-surgical recovery — full function","Neurological rehabilitation — ambulation","Weight management — target BCS 5","Improve joint range of motion","Improve muscle mass / strength","Return to sport or working function","Senior wellness / mobility maintenance","Palliative care — comfort focused","Other"]}/>
-      <Row>
-        <F label="Target Return to Function Date" type="date"/>
-        <F label="Activity Level Goal" options={["Independent ambulation","Leash walks — flat terrain","Leash walks — moderate terrain","Offleash activity","Full sport / working dog return","Companion / household activity only"]}/>
-      </Row>
+      <MultiF label="Primary Rehabilitation Goals" options={["Return to normal household activity","Pain management — improve quality of life","Post-surgical recovery — full function","Neurological rehabilitation — ambulation","Weight management — target BCS 5","Improve joint range of motion","Improve muscle mass / strength","Return to sport or working function","Senior wellness / mobility maintenance","Palliative care — comfort focused","Other"]}/>
     </Sec>
 
-    <Sec title="Short-Term Goals (0–4 Weeks)" color="#EC4899" colorLt="#FDF2F8">
+    <Sec title="Short-Term Goals" color="#EC4899" colorLt="#FDF2F8">
       <F label="Short-Term Clinical Goals" placeholder="e.g. Achieve partial weight bearing by week 2, pain score ≤3/10 at rest, full ROM within 10° of normal…" rows={3}/>
       <F label="Short-Term Functional Goals" placeholder="e.g. Able to navigate 3 steps independently, complete 10-minute leash walk…" rows={2}/>
-      <F label="Short-Term Milestone — Target Date" type="date"/>
     </Sec>
 
-    <Sec title="Long-Term Goals (4–12+ Weeks)" color="#EC4899" colorLt="#FDF2F8">
+    <Sec title="Long-Term Goals" color="#EC4899" colorLt="#FDF2F8">
       <F label="Long-Term Clinical Goals" placeholder="e.g. Full weight bearing, thigh circumference within 1cm bilaterally, full stifle ROM restored…" rows={3}/>
       <F label="Long-Term Functional Goals" placeholder="e.g. Return to offleash play, stair climbing without assistance, sport-specific movement…" rows={2}/>
     </Sec>
 
-    <Sec title="Owner Goals" color="#EC4899" colorLt="#FDF2F8">
+    <Sec title="Owner Goals" color="#EC4899" colorLt="#FDF2F8" collapsible defaultOpen={false}>
       <F label="Owner's Primary Goal (in their own words)" placeholder="What does the owner most want for their pet?…" rows={2}/>
       <Row>
         <F label="Owner Priority" options={["Pain relief above all","Fastest possible recovery","Independence at home","Return to sport / activity","Quality of life / comfort","Maximize lifespan"]}/>
         <F label="Client Communication Preference" options={["Email — protocol PDF","Text — exercise reminders","Phone call follow-up","In-person recheck only","Patient portal / app"]}/>
       </Row>
     </Sec>
-
-    <Sec title="Progress Tracking Schedule" color="#EC4899" colorLt="#FDF2F8">
-      <Row>
-        <F label="Next Recheck Date" type="date"/>
-        <F label="Recheck Frequency" options={["Weekly","Every 2 weeks","Monthly","Every 6 weeks","As needed / PRN"]}/>
-      </Row>
-      <F label="Measurable Outcome Targets" placeholder="Specific measurable targets: thigh circumference goal, lameness grade goal, NRS pain goal, goniometry targets…" rows={3}/>
-      <div style={{ padding:"10px 14px", background:"#FDF2F8", border:"1px solid #EC489933", borderRadius:5, fontSize:11, color:C.muted, marginTop:8 }}>
-        <b style={{color:"#EC4899"}}>Note:</b> Goniometry targets, muscle circumference goals, and BCS targets are managed in the B.E.A.U. Metrics block. Progress measurements are recorded there at each recheck.
-      </div>
-    </Sec>
+    {/* Progress Tracking Schedule moved to Block 10 — Protocol Summary */}
   </>;
 }
 
