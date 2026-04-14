@@ -172,6 +172,45 @@ const Sec = ({ title, color=C.blue, colorLt, children, noTop, collapsible, defau
 
 const Divider = () => <div style={{ height:1, background:C.border, margin:"18px 0" }}/>;
 
+// ─── COLLAPSIBLE SUB-SECTION ──────────────────────────────────────────────────
+// Lightweight nested collapsible for use inside a non-collapsible Sec.
+// Used when protocol/reference text must stay visible while input fields collapse.
+// Local state resets on unmount (relies on parent Modal conditional-render fix).
+const CollapsibleSub = ({ title, children, defaultOpen=false, accentColor=C.teal }) => {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div style={{
+      border: `1px solid ${C.border}`,
+      borderRadius: 6,
+      overflow: "hidden",
+      marginBottom: 12,
+      marginTop: 4,
+    }}>
+      <div
+        onClick={() => setOpen(o => !o)}
+        style={{
+          padding: "10px 14px",
+          background: open ? C.bg : C.white,
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          fontSize: 11,
+          fontWeight: 700,
+          color: accentColor,
+          letterSpacing: ".08em",
+          textTransform: "uppercase",
+          borderBottom: open ? `1px solid ${C.border}` : "none",
+          userSelect: "none",
+        }}>
+        <span>{title}</span>
+        <span style={{ fontSize: 10, opacity: 0.85 }}>{open ? "▼" : "▶"}</span>
+      </div>
+      {open && <div style={{ padding: "14px" }}>{children}</div>}
+    </div>
+  );
+};
+
 // ─── CHECKBOX ITEM ────────────────────────────────────────────────────────────
 function CbItem({ label, checked, onToggle, children }) {
   return (
@@ -1792,6 +1831,8 @@ function DietCatalogEngine() {
 
 // ── B.E.A.U. METRICS ──────────────────────────────────────────────────────────
 function MetricsPanel() {
+  const { data, update } = useContext(DashFormContext);
+
   const gonioJoints = [
     { name:"Shoulder — Flexion",    normal:"30–57°",  note:"Varies by breed/size" },
     { name:"Shoulder — Extension",  normal:"154–165°", note:"" },
@@ -1816,68 +1857,89 @@ function MetricsPanel() {
     { name:"Left Crus (Lower Leg)",      ref:"Compare bilaterally" },
   ];
 
-  return <>
-    <Sec title="Body Condition Score — Purina 9-Point Scale" color={C.green} colorLt={C.greenLt} noTop>
-      <div style={{ padding:"10px 14px", background:C.white, border:`1px solid ${C.border}`, borderRadius:6, fontSize:11, color:C.muted, marginBottom:12, lineHeight:1.65 }}>
-        <b style={{color:C.green}}>Purina BCS 9-Point Scale</b> — Reference standard per Laflamme 1997, endorsed by Millis & Levine. Score 4–5 = Ideal. Each point above/below 5 = approximately ±10–15% body weight deviation.
-      </div>
-      <F label="BCS Score (1–9)" options={["1 — Emaciated: Ribs, spine visible","2 — Very thin","3 — Thin: Ribs easily felt","4 — Underweight: Slight fat cover","5 — Ideal: Ribs felt, waist visible","6 — Overweight: Ribs felt with pressure","7 — Heavy: Ribs difficult to feel","8 — Obese: Ribs not palpable","9 — Morbidly obese"]}/>
-      <WeightPair label="Current Weight" fieldBase="metrics::Current Weight"/>
-      <WeightPair label="Ideal Body Weight" fieldBase="metrics::Ideal Body Weight"/>
-      <Row>
-        <F label="Weight Status" options={["Underweight","Ideal","Overweight 10–20%","Overweight >20%","Obese"]}/>
-        <F label="Weight Trend" options={["Stable","Gaining","Losing","Significant gain","Significant loss"]}/>
-      </Row>
-    </Sec>
+  // ── DashFormContext wiring helpers for raw inputs ──
+  const getVal = (key) => data[key] ?? "";
+  const setVal = (key, val) => update(key, val);
 
-    <Sec title="Goniometry — Range of Motion" color={C.teal} colorLt={C.tealLt}>
+  return <>
+    {/* ── BCS section removed per Dr. Zaslow — BCS now lives in BEAU Metrics sidebar nutrition panel ── */}
+
+    {/* ── GONIOMETRY ── Protocol text always visible, measurements in CollapsibleSub ── */}
+    <Sec title="Goniometry — Range of Motion" color={C.teal} colorLt={C.tealLt} noTop>
       <div style={{ padding:"10px 14px", background:C.white, border:`1px solid ${C.border}`, borderRadius:6, fontSize:11, color:C.muted, marginBottom:12, lineHeight:1.65 }}>
         <b style={{color:C.teal}}>Protocol per Millis & Levine 2014</b> — Measure with patient in lateral recumbency. Use a standard goniometer. Record both active and passive ROM where applicable. Normal ranges are approximate — breed and size variations apply.
       </div>
-      <Row>
-        <F label="Goniometer Type" options={["Standard 2-arm goniometer","Digital goniometer","Fluid inclinometer","iPhone / digital app"]}/>
-        <F label="Position During Assessment" options={["Lateral recumbency — right side up","Lateral recumbency — left side up","Standing","Other"]}/>
-      </Row>
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:10, marginTop:4 }}>
-        {gonioJoints.map(j=>(
-          <div key={j.name} style={{ padding:"10px 12px", background:C.white, border:`1px solid ${C.border}`, borderRadius:6 }}>
-            <div style={{ fontSize:10, fontWeight:700, color:C.teal, marginBottom:6, display:"flex", alignItems:"center", gap:8 }}>
-              {j.name}
-              <span style={{ fontSize:9, color:C.muted, background:C.tealLt, padding:"1px 6px", borderRadius:3 }}>Normal: {j.normal}</span>
-            </div>
-            <Row cols={2}>
-              <div><Lbl>Right (°)</Lbl><input placeholder="°"/></div>
-              <div><Lbl>Left (°)</Lbl><input placeholder="°"/></div>
-            </Row>
-            {j.note && <div style={{ fontSize:9, color:C.muted, marginTop:4, fontStyle:"italic" }}>{j.note}</div>}
-          </div>
-        ))}
-      </div>
-      <div style={{ marginTop:12 }}>
-        <Lbl>Goniometry Notes</Lbl>
-        <textarea placeholder="Deviations from normal, pain on motion, capsular end-feel vs muscle guarding end-feel…" rows={2}/>
-      </div>
+
+      <CollapsibleSub title="Enter Goniometric Measurements" accentColor={C.teal}>
+        <Row>
+          <F label="Goniometer Type" options={["Standard 2-arm goniometer","Digital goniometer","Fluid inclinometer","iPhone / digital app"]}/>
+          <F label="Position During Assessment" options={["Lateral recumbency — right side up","Lateral recumbency — left side up","Standing","Other"]}/>
+        </Row>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:10, marginTop:8 }}>
+          {gonioJoints.map(j=>{
+            const keyR = `metrics::${j.name} (R)`;
+            const keyL = `metrics::${j.name} (L)`;
+            return (
+              <div key={j.name} style={{ padding:"10px 12px", background:C.white, border:`1px solid ${C.border}`, borderRadius:6 }}>
+                <div style={{ fontSize:10, fontWeight:700, color:C.teal, marginBottom:6, display:"flex", alignItems:"center", gap:8 }}>
+                  {j.name}
+                  <span style={{ fontSize:9, color:C.muted, background:C.tealLt, padding:"1px 6px", borderRadius:3 }}>Normal: {j.normal}</span>
+                </div>
+                <Row cols={2}>
+                  <div>
+                    <Lbl>Right (°)</Lbl>
+                    <input type="number" placeholder="°" value={getVal(keyR)} onChange={e => setVal(keyR, e.target.value)}/>
+                  </div>
+                  <div>
+                    <Lbl>Left (°)</Lbl>
+                    <input type="number" placeholder="°" value={getVal(keyL)} onChange={e => setVal(keyL, e.target.value)}/>
+                  </div>
+                </Row>
+                {j.note && <div style={{ fontSize:9, color:C.muted, marginTop:4, fontStyle:"italic" }}>{j.note}</div>}
+              </div>
+            );
+          })}
+        </div>
+        <div style={{ marginTop:12 }}>
+          <F label="Goniometry Notes" placeholder="Deviations from normal, pain on motion, capsular end-feel vs muscle guarding end-feel…" rows={2}/>
+        </div>
+      </CollapsibleSub>
     </Sec>
 
+    {/* ── MUSCLE CIRCUMFERENCE ── Protocol visible, measurements in CollapsibleSub ── */}
     <Sec title="Muscle Circumference Measurements" color={C.teal} colorLt={C.tealLt}>
       <div style={{ padding:"10px 14px", background:C.white, border:`1px solid ${C.border}`, borderRadius:6, fontSize:11, color:C.muted, marginBottom:12, lineHeight:1.65 }}>
         <b style={{color:C.teal}}>Protocol per Millis & Levine 2014</b> — Thigh: measure at 70% of femur length distal from greater trochanter with stifle at 135°. A difference of ≥1 cm between limbs is clinically significant atrophy.
       </div>
-      <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
-        {muscles.map(m=>(
-          <div key={m.name} style={{ padding:"10px 14px", background:C.white, border:`1px solid ${C.border}`, borderRadius:6 }}>
-            <div style={{ fontSize:11, fontWeight:700, color:C.teal, marginBottom:4 }}>{m.name}</div>
-            <Row cols={2}>
-              <div><Lbl>Measurement (cm)</Lbl><input placeholder="0.0 cm"/></div>
-              <div><Lbl>Asymmetry vs Contralateral</Lbl><input placeholder="e.g. −1.5 cm atrophy"/></div>
-            </Row>
-            <div style={{ fontSize:9, color:C.muted, marginTop:6, fontStyle:"italic" }}>{m.ref}</div>
-          </div>
-        ))}
-      </div>
+
+      <CollapsibleSub title="Enter Muscle Measurements" accentColor={C.teal}>
+        <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+          {muscles.map(m=>{
+            const keyCm = `metrics::${m.name} (cm)`;
+            const keyAsym = `metrics::${m.name} Asymmetry`;
+            return (
+              <div key={m.name} style={{ padding:"10px 14px", background:C.white, border:`1px solid ${C.border}`, borderRadius:6 }}>
+                <div style={{ fontSize:11, fontWeight:700, color:C.teal, marginBottom:4 }}>{m.name}</div>
+                <Row cols={2}>
+                  <div>
+                    <Lbl>Measurement (cm)</Lbl>
+                    <input type="number" step="0.1" placeholder="0.0 cm" value={getVal(keyCm)} onChange={e => setVal(keyCm, e.target.value)}/>
+                  </div>
+                  <div>
+                    <Lbl>Asymmetry vs Contralateral</Lbl>
+                    <input placeholder="e.g. −1.5 cm atrophy" value={getVal(keyAsym)} onChange={e => setVal(keyAsym, e.target.value)}/>
+                  </div>
+                </Row>
+                <div style={{ fontSize:9, color:C.muted, marginTop:6, fontStyle:"italic" }}>{m.ref}</div>
+              </div>
+            );
+          })}
+        </div>
+      </CollapsibleSub>
     </Sec>
 
-    <Sec title="Postural & Angle Assessment" color={C.teal} colorLt={C.tealLt}>
+    {/* ── POSTURAL & ANGLE ASSESSMENT ── Entire section collapsed by default ── */}
+    <Sec title="▶ Postural & Angle Assessment" color={C.teal} colorLt={C.tealLt} collapsible defaultOpen={false}>
       <Row cols={3}>
         <F label="Pelvic Tilt (°)" placeholder="°" range="Level ±5°"/>
         <F label="Spinal Alignment" options={["Normal","Kyphosis","Lordosis","Scoliosis — left","Scoliosis — right","Mixed"]}/>
