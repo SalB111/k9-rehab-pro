@@ -472,56 +472,184 @@ function ClientPanel() {
 // ── DIAGNOSTICS ───────────────────────────────────────────────────────────────
 function DiagnosticsPanel() {
   const imaging = ["Radiograph (X-Ray)","CT Scan","MRI","Ultrasound","Myelogram","Nuclear Scintigraphy","Fluoroscopy","Echocardiogram"];
-  const labwork = [
-    { cat:"Complete Blood Count (CBC)", tests:["RBC","WBC","Hemoglobin","Hematocrit","Platelets","Neutrophils","Lymphocytes","Monocytes","Eosinophils","Basophils"] },
-    { cat:"Blood Chemistry / Metabolic Panel", tests:["BUN (Blood Urea Nitrogen)","Creatinine","BUN:Creatinine Ratio","Glucose","Total Protein","Albumin","Globulin","ALT (SGPT)","AST (SGOT)","ALP (Alkaline Phosphatase)","GGT","Total Bilirubin","Cholesterol","Triglycerides","Calcium","Phosphorus","Sodium","Potassium","Chloride","CO2 / Bicarbonate"] },
-    { cat:"Thyroid", tests:["Total T4","Free T4","TSH","T3"] },
-    { cat:"Urinalysis", tests:["Specific Gravity","pH","Protein","Glucose","Ketones","Bilirubin","Blood / RBC","WBC","Casts","Bacteria","Crystals"] },
-    { cat:"Additional Panels", tests:["Lyme Disease","Ehrlichia","Anaplasma","Heartworm Antigen","FELV / FIV (Feline)","Coagulation Panel (PT/PTT)","Bile Acids","Cortisol (Basal)","ACTH Stimulation","Low-dose Dexamethasone Suppression"] },
-  ];
-  const [imgSel,  setImgSel]  = useState({});
+  const labTypes = ["CBC","Chemistry Panel","Urinalysis","Thyroid Panel","Urinary Culture"];
+  const { data, update } = useContext(DashFormContext);
+
+  const isImgSelected = (im) => !!data[`diagnostics::Imaging ${im}`];
+  const toggleImg = (im) => update(`diagnostics::Imaging ${im}`, isImgSelected(im) ? "" : "performed");
+  const imgStatus = (im) => data[`diagnostics::Imaging ${im}`] || "";
+  const setImgStatus = (im, status) => update(`diagnostics::Imaging ${im}`, status);
+
+  const isLabChecked = (k) => !!data[`diagnostics::Lab ${k}`];
+  const toggleLab = (k) => update(`diagnostics::Lab ${k}`, isLabChecked(k) ? "" : "true");
+
+  const reportName = data["diagnostics::Lab Report Filename"] || "";
+  const onFilePick = (e) => {
+    const f = e.target.files?.[0];
+    if (f) {
+      const sizeKb = Math.round(f.size / 1024);
+      update("diagnostics::Lab Report Filename", `${f.name} (${sizeKb} KB)`);
+    }
+  };
+  const clearFile = () => update("diagnostics::Lab Report Filename", "");
 
   return <>
     <Sec title="Diagnostic Imaging" color={C.purple} colorLt={C.purpleLt} noTop>
-      <div style={{ fontSize:11, color:C.muted, marginBottom:12 }}>
-        Check all imaging studies performed. Enter date and findings for each.
+      <div style={{ fontSize:11, color:C.muted, marginBottom:14, lineHeight:1.6 }}>
+        Select imaging studies performed or recommended. Multiple selections allowed. Use the toggle per item to mark recommended studies not yet performed.
       </div>
-      <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
-        {imaging.map(im=>(
-          <CbItem key={im} label={im} checked={imgSel[im]} onToggle={()=>setImgSel(p=>({...p,[im]:!p[im]}))}>
-            <Row>
-              <div><Lbl>Date Performed</Lbl><input type="date"/></div>
-              <div><Lbl>Facility / Radiologist</Lbl><input placeholder="Where performed…"/></div>
-            </Row>
-            <div><Lbl>Findings & Interpretation</Lbl><textarea placeholder={`${im} findings…`} rows={2}/></div>
-          </CbItem>
-        ))}
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(2, 1fr)", gap:8 }}>
+        {imaging.map(im => {
+          const selected = isImgSelected(im);
+          const status = imgStatus(im);
+          return (
+            <div key={im} style={{
+              border: `1.5px solid ${selected ? C.purple : C.border}`,
+              background: selected ? C.purpleLt : C.white,
+              borderRadius: 6, padding: "10px 12px", cursor: "pointer",
+              transition: "all .12s",
+            }}>
+              <div onClick={() => toggleImg(im)} style={{ display:"flex", alignItems:"center", gap:8 }}>
+                <div style={{
+                  width: 16, height: 16, borderRadius: 3,
+                  border: `1.5px solid ${selected ? C.purple : C.border}`,
+                  background: selected ? C.purple : C.white,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  color: C.white, fontSize: 11, fontWeight: 900,
+                }}>{selected ? "✓" : ""}</div>
+                <span style={{ fontSize: 12, fontWeight: 600, color: selected ? C.purple : C.text }}>{im}</span>
+              </div>
+              {selected && (
+                <div style={{ display:"flex", gap:6, marginTop:8, paddingLeft: 24 }}>
+                  {["performed","recommended"].map(s => (
+                    <div key={s}
+                      onClick={(e) => { e.stopPropagation(); setImgStatus(im, s); }}
+                      style={{
+                        padding: "3px 10px", fontSize: 10, fontWeight: 700,
+                        borderRadius: 12, border: `1px solid ${status === s ? C.purple : C.border}`,
+                        background: status === s ? C.purple : C.white,
+                        color: status === s ? C.white : C.muted,
+                        textTransform: "uppercase", letterSpacing: ".06em",
+                      }}>
+                      {s}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      <div style={{ marginTop: 14 }}>
+        <F label="Other Imaging / Notes" placeholder="Additional imaging studies or notes (e.g. breed-specific views, comparison films)…" rows={2}/>
       </div>
     </Sec>
 
     <Sec title="Laboratory Work" color={C.purple} colorLt={C.purpleLt}>
-      <Row>
-        <div><Lbl>Lab Date</Lbl><input type="date"/></div>
-        <div><Lbl>Laboratory / Reference Lab</Lbl><input placeholder="e.g. IDEXX, Antech, In-house"/></div>
-      </Row>
-      {labwork.map(grp=>(
-        <div key={grp.cat} style={{ marginBottom:16 }}>
-          <div style={{ fontSize:10, fontWeight:700, color:C.purple, letterSpacing:".08em", textTransform:"uppercase", marginBottom:8, marginTop:12, paddingBottom:4, borderBottom:`1px solid ${C.purpleLt}` }}>
-            {grp.cat}
-          </div>
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:8 }}>
-            {grp.tests.map(t=>(
-              <div key={t}>
-                <Lbl>{t}</Lbl>
-                <input placeholder="Value"/>
-              </div>
-            ))}
-          </div>
+      <div style={{ fontSize:11, color:C.muted, marginBottom:14, lineHeight:1.6, padding:"10px 14px", background:C.purpleLt, border:`1px solid ${C.purple}33`, borderRadius:6 }}>
+        <strong style={{ color: C.purple }}>Rehab intake scope:</strong> Record which labs were performed — not individual values. Abnormal results route to the appropriate department. Attach the full lab report PDF/image for reference.
+      </div>
+
+      {/* Master "Labwork performed" checkbox */}
+      <div onClick={() => toggleLab("Performed")}
+        style={{
+          display: "flex", alignItems: "center", gap: 10, padding: "10px 14px",
+          border: `1.5px solid ${isLabChecked("Performed") ? C.purple : C.border}`,
+          background: isLabChecked("Performed") ? C.purpleLt : C.white,
+          borderRadius: 6, cursor: "pointer", marginBottom: 12,
+        }}>
+        <div style={{
+          width: 18, height: 18, borderRadius: 4,
+          border: `1.5px solid ${isLabChecked("Performed") ? C.purple : C.border}`,
+          background: isLabChecked("Performed") ? C.purple : C.white,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          color: C.white, fontSize: 12, fontWeight: 900,
+        }}>{isLabChecked("Performed") ? "✓" : ""}</div>
+        <span style={{ fontSize: 13, fontWeight: 700, color: isLabChecked("Performed") ? C.purple : C.text }}>
+          Labwork performed
+        </span>
+      </div>
+
+      {/* Individual lab type checkboxes */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8, marginBottom: 12 }}>
+        {labTypes.map(lab => {
+          const checked = isLabChecked(lab);
+          return (
+            <div key={lab} onClick={() => toggleLab(lab)}
+              style={{
+                display: "flex", alignItems: "center", gap: 9, padding: "9px 12px",
+                border: `1.5px solid ${checked ? C.purple : C.border}`,
+                background: checked ? C.purpleLt : C.white,
+                borderRadius: 6, cursor: "pointer",
+              }}>
+              <div style={{
+                width: 16, height: 16, borderRadius: 3,
+                border: `1.5px solid ${checked ? C.purple : C.border}`,
+                background: checked ? C.purple : C.white,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                color: C.white, fontSize: 11, fontWeight: 900,
+              }}>{checked ? "✓" : ""}</div>
+              <span style={{ fontSize: 12, fontWeight: 600, color: checked ? C.purple : C.text }}>{lab}</span>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Other lab — checkbox + free text */}
+      <div onClick={() => toggleLab("Other")}
+        style={{
+          display: "flex", alignItems: "center", gap: 9, padding: "9px 12px",
+          border: `1.5px solid ${isLabChecked("Other") ? C.purple : C.border}`,
+          background: isLabChecked("Other") ? C.purpleLt : C.white,
+          borderRadius: 6, cursor: "pointer", marginBottom: 8,
+        }}>
+        <div style={{
+          width: 16, height: 16, borderRadius: 3,
+          border: `1.5px solid ${isLabChecked("Other") ? C.purple : C.border}`,
+          background: isLabChecked("Other") ? C.purple : C.white,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          color: C.white, fontSize: 11, fontWeight: 900,
+        }}>{isLabChecked("Other") ? "✓" : ""}</div>
+        <span style={{ fontSize: 12, fontWeight: 600, color: isLabChecked("Other") ? C.purple : C.text }}>Other</span>
+      </div>
+      {isLabChecked("Other") && (
+        <div style={{ marginBottom: 12 }}>
+          <F label="Other Tests — Specify" placeholder="List any additional diagnostic tests performed…" rows={2}/>
         </div>
-      ))}
+      )}
+
       <Divider/>
-      <div><Lbl>Other / Additional Tests</Lbl><textarea placeholder="Any additional diagnostic tests not listed above…" rows={2}/></div>
-      <div><Lbl>Overall Lab Interpretation / Notes</Lbl><textarea placeholder="Clinician interpretation of laboratory results…" rows={3}/></div>
+
+      {/* Single Lab Date + Reference Laboratory */}
+      <Row>
+        <F label="Lab Date" type="date"/>
+        <F label="Reference Laboratory" placeholder="e.g. IDEXX, Antech, In-house"/>
+      </Row>
+
+      {/* Attach Lab Report */}
+      <div style={{ marginTop: 14 }}>
+        <Lbl>Attach Lab Report</Lbl>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <label style={{
+            display: "inline-flex", alignItems: "center", gap: 8, padding: "9px 16px",
+            background: C.purpleLt, border: `1.5px solid ${C.purple}`, borderRadius: 6,
+            color: C.purple, fontSize: 12, fontWeight: 700, cursor: "pointer",
+            letterSpacing: ".04em",
+          }}>
+            📎 Choose File (PDF or Image)
+            <input type="file" accept=".pdf,image/*" onChange={onFilePick} style={{ display: "none" }}/>
+          </label>
+          {reportName && (
+            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 12px", background: C.greenLt, border: `1px solid ${C.green}55`, borderRadius: 6, fontSize: 11, color: C.green, fontWeight: 600 }}>
+              ✓ {reportName}
+              <span onClick={clearFile} style={{ cursor: "pointer", color: C.red, fontSize: 13, marginLeft: 4 }}>✕</span>
+            </div>
+          )}
+        </div>
+        <div style={{ fontSize: 10, color: C.muted, marginTop: 6, fontStyle: "italic" }}>
+          File is captured for reference. Full lab report upload to patient record — coming in next version.
+        </div>
+      </div>
     </Sec>
   </>;
 }
