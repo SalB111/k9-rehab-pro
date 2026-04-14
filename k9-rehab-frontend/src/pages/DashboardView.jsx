@@ -232,7 +232,14 @@ function CbItem({ label, checked, onToggle, children }) {
 // ─── MODAL ────────────────────────────────────────────────────────────────────
 function Modal({ title, color, colorLt, icon, onClose, children, beauContext, beauOpen, setBeauOpen, beauQuery, setBeauQuery, beauAnswer, beauLoading, onAskBeau, patientLabel }) {
   const { t } = useTranslation();
+  const { handleSave } = useContext(DashFormContext);
+  const [saving, setSaving] = useState(false);
   const hasBeau = !!beauContext && !!setBeauOpen;
+  const onSaveClose = async () => {
+    if (saving) return;
+    setSaving(true);
+    try { await handleSave?.(); } finally { setSaving(false); onClose(); }
+  };
   return (
     <div style={{ position:"fixed", inset:0, zIndex:200, background:"rgba(26,39,68,.55)", display:"flex", alignItems:"center", justifyContent:"center", padding:20, animation:"fadeIn .18s ease" }}
       onClick={e=>{ if(e.target===e.currentTarget) onClose(); }}>
@@ -291,7 +298,7 @@ function Modal({ title, color, colorLt, icon, onClose, children, beauContext, be
         {/* Footer */}
         <div style={{ padding:"13px 22px", borderTop:`1px solid ${C.border}`, display:"flex", justifyContent:"flex-end", gap:10, flexShrink:0, background:C.bg, borderRadius:"0 0 10px 10px" }}>
           <button onClick={onClose} style={{ padding:"9px 22px", background:C.white, border:`1px solid ${C.border}`, color:C.muted, borderRadius:5, cursor:"pointer", fontSize:12, fontWeight:600, textTransform:"uppercase" }}>{t("modal.close")}</button>
-          <button onClick={onClose} style={{ padding:"9px 22px", background:color, border:"none", color:C.white, borderRadius:5, cursor:"pointer", fontSize:12, fontWeight:700, letterSpacing:".06em", textTransform:"uppercase" }}>{t("modal.saveAndClose")}</button>
+          <button onClick={onSaveClose} disabled={saving} style={{ padding:"9px 22px", background: saving ? "#cbd5e1" : color, border:"none", color:C.white, borderRadius:5, cursor: saving ? "wait" : "pointer", fontSize:12, fontWeight:700, letterSpacing:".06em", textTransform:"uppercase" }}>{saving ? "⏳ SAVING…" : t("modal.saveAndClose")}</button>
         </div>
       </div>
     </div>
@@ -1053,32 +1060,38 @@ function MetricsPanel() {
 // ── CLINIC EQUIPMENT ──────────────────────────────────────────────────────────
 function EquipmentPanel() {
   const cats = [
-    { cat:"Hydrotherapy", items:["Underwater Treadmill (UWTM)","Therapy Pool — Full submersion","Portable Aquatic Tank","Cold Water Spa / Whirlpool"] },
-    { cat:"Land Exercise Equipment", items:["Land Treadmill","Cavaletti Rail Set","Balance Discs — Set","Balance Board / Rocker Board","Wobble Board","Foam Pads / Rolls","Physioroll / Peanut Ball","Resistance Bands / Theraband","Parallel Bars","Exercise Steps / Stairs (clinic)","Ramps","Cone Set","Agility Equipment"] },
-    { cat:"Electrotherapy & Modalities", items:["NMES Unit (Neuromuscular E-Stim)","TENS Unit","Therapeutic Ultrasound","Class IV Therapeutic Laser","Class IIIb Laser","Shockwave Therapy","PEMF (Pulsed Electromagnetic Field)","Cryotherapy Unit","Moist Heat / Hydrocollator","Infrared Therapy"] },
-    { cat:"Manual Therapy & Assessment", items:["Standard Goniometer","Digital Goniometer","Pressure Algometer","Measuring Tape (thigh circumference)","Force Platform / Pressure Walkway","Video Gait Analysis System","Kinematic Analysis System","IRAP / PRP Equipment"] },
-    { cat:"Support & Mobility", items:["Slings — Front end","Slings — Rear end","Full-body Harness","Wheelchairs / Carts","Orthoses / Braces","Non-slip Flooring / Mats","Treatment Table — Adjustable","Treatment Table — Hydraulic"] },
+    { cat:"Hydrotherapy", defaultOpen:true, items:["Underwater Treadmill (UWTM)","Therapy Pool — Full submersion","Portable Aquatic Tank","Cold Water Spa / Whirlpool"] },
+    { cat:"Land Exercise Equipment", defaultOpen:false, items:["Land Treadmill","Cavaletti Rail Set","Balance Discs — Set","Balance Board / Rocker Board","Wobble Board","Foam Pads / Rolls","Physioroll / Peanut Ball","Resistance Bands / Theraband","Parallel Bars","Exercise Steps / Stairs (clinic)","Ramps","Cone Set","Agility Equipment"] },
+    { cat:"Electrotherapy & Modalities", defaultOpen:false, items:["NMES Unit (Neuromuscular E-Stim)","TENS Unit","Therapeutic Ultrasound","Class IV Therapeutic Laser","Class IIIb Laser","Shockwave Therapy","PEMF (Pulsed Electromagnetic Field)","Cryotherapy Unit","Moist Heat / Hydrocollator","Infrared Therapy"] },
+    { cat:"Manual Therapy & Assessment", defaultOpen:false, items:["Standard Goniometer","Digital Goniometer","Pressure Algometer","Measuring Tape (thigh circumference)","Force Platform / Pressure Walkway","Video Gait Analysis System","Kinematic Analysis System","IRAP / PRP Equipment"] },
+    { cat:"Support & Mobility", defaultOpen:false, items:["Slings — Front end","Slings — Rear end","Full-body Harness","Wheelchairs / Carts","Orthoses / Braces","Non-slip Flooring / Mats","Treatment Table — Adjustable","Treatment Table — Hydraulic"] },
   ];
-  const [sel, setSel] = useState({});
-  const toggle = k => setSel(p=>({...p,[k]:!p[k]}));
+  // ── Wired to DashFormContext so checkbox state persists via save/reload ──
+  // Key format: equipment::<CategoryName>::<ItemName>
+  // Truthy = "true"  Falsy = ""
+  const { data, update } = useContext(DashFormContext);
 
   return <>
     <div style={{ fontSize:11, color:C.muted, marginBottom:16, padding:"10px 14px", background:C.blueLt, borderRadius:6, border:`1px solid ${C.blue}33` }}>
       Check all equipment currently available at this clinic. B.E.A.U. uses this inventory to generate the in-clinic rehabilitation protocol — only available equipment will be prescribed.
     </div>
     {cats.map(grp=>(
-      <Sec key={grp.cat} title={grp.cat} color={C.teal} colorLt={C.tealLt}>
+      <Sec key={grp.cat} title={grp.cat} color={C.teal} colorLt={C.tealLt} collapsible defaultOpen={grp.defaultOpen}>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:7 }}>
-          {grp.items.map(item=>(
-            <div key={item} className={`cb-row${sel[item]?" active":""}`} onClick={()=>toggle(item)}>
-              <input type="checkbox" checked={!!sel[item]} readOnly style={{ width:15, height:15, accentColor:C.teal, flexShrink:0 }}/>
-              <span style={{ fontSize:11, color:sel[item]?C.teal:C.text }}>{item}</span>
-            </div>
-          ))}
+          {grp.items.map(item=>{
+            const k = `equipment::${grp.cat}::${item}`;
+            const checked = data[k] === "true";
+            return (
+              <div key={item} className={`cb-row${checked?" active":""}`} onClick={()=>update(k, checked ? "" : "true")}>
+                <input type="checkbox" checked={checked} readOnly style={{ width:15, height:15, accentColor:C.teal, flexShrink:0 }}/>
+                <span style={{ fontSize:11, color:checked?C.teal:C.text }}>{item}</span>
+              </div>
+            );
+          })}
         </div>
       </Sec>
     ))}
-    <Sec title="Other Equipment" color={C.teal} colorLt={C.tealLt}>
+    <Sec title="Other Equipment" color={C.teal} colorLt={C.tealLt} collapsible defaultOpen={true}>
       <F label="Describe any additional equipment not listed above" placeholder="Additional equipment, brand names, unique modalities…" rows={2}/>
     </Sec>
   </>;
