@@ -45,11 +45,12 @@
     "dotenv": "^17.3.1",
     "express": "^4.18.2",
     "express-rate-limit": "^8.2.1",
+    "groq-sdk": "^1.1.2",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.3",
     "mammoth": "^1.11.0",
     "openai": "^6.34.0",
-    "sqlite3": "5.1.6"
+    "sqlite3": "^6.0.1"
   },
   "devDependencies": {
     "supabase": "^2.76.9"
