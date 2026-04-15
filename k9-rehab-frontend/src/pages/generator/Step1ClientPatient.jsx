@@ -254,8 +254,8 @@ export default function Step1ClientPatient({ form, setField, goToStep, handleWei
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
           <div>
-            <label style={{ ...S.label, fontWeight: 700 }}>Treating Clinician *</label>
-            <input style={{ ...S.input, ...inp, border: `2px solid ${C.border}` }} value={form.treatingClinician} onChange={e => setField("treatingClinician", e.target.value)} placeholder="Dr. Jane Smith" />
+            <label style={{ ...S.label, fontWeight: 700 }}>Treating Rehabilitation Nurse / Professional *</label>
+            <input style={{ ...S.input, ...inp, border: `2px solid ${C.border}` }} value={form.treatingClinician} onChange={e => setField("treatingClinician", e.target.value)} placeholder="e.g. Jane Smith, RVT" />
           </div>
           <div>
             <label style={S.label}>Credentials</label>

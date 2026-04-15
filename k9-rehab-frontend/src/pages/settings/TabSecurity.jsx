@@ -48,7 +48,7 @@ export function TabSecurity({ security, setSecurity, flashSave, isOpen, toggleSe
       <SettingsSection id="sec_compliance" open={isOpen("sec_compliance")} onToggle={toggleSection} icon={FiShield} title="Security & Compliance">
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {[
-            ["JWT Authentication & Role-Based Access", true, "Active — clinician and admin roles enforced"],
+            ["JWT Authentication & Role-Based Access", true, "Active — nurse, staff, and admin roles enforced"],
             ["Audit Trail Logging", true, "Active — all data operations and safety reports logged"],
             ["State Veterinary Board Alignment", true, "Active — protocol logic follows state practice act guidelines"],
             ["No Data Sold, Shared, or Used for Advertising", true, "Active — patient data remains within your deployment"],

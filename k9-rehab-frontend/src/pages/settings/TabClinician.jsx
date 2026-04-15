@@ -14,7 +14,7 @@ export function TabClinician({ clinician, setClinician, flashSave, isOpen, toggl
             <label style={sty.fieldLabel}>Full Name</label>
             <input style={S.input} value={clinician.name}
               onChange={e => setClinician({ ...clinician, name: e.target.value })}
-              placeholder="Dr. Jane Smith" />
+              placeholder="e.g. Jane Smith, RVT" />
           </div>
           <div style={sty.fieldRow}>
             <label style={sty.fieldLabel}>Professional Title</label>

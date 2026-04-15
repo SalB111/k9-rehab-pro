@@ -314,22 +314,37 @@ const Sec = ({ title, color=C.blue, colorLt, children, noTop, collapsible, defau
         onClick={collapsible ? () => setOpen(o => !o) : undefined}
         style={{
           fontSize:11, fontWeight:700, color, letterSpacing:".1em", textTransform:"uppercase",
-          background: colorLt || C.blueLt, borderLeft:`3px solid ${color}`,
-          padding:"7px 12px", borderRadius:"0 5px 5px 0",
+          // Feature: when section has data and is collapsed, header gets a
+          // cyan glow + darker accent background so users can see "this has
+          // data" from across the room. When expanded or empty, normal styling.
+          background: (hasData && !open)
+            ? "rgba(0,229,255,0.12)"
+            : (colorLt || C.blueLt),
+          borderLeft: `3px solid ${color}`,
+          padding: "7px 12px",
+          borderRadius: "0 5px 5px 0",
           marginBottom: isHidden ? 0 : 12,
           marginTop: noTop ? 0 : 4,
           cursor: collapsible ? "pointer" : "default",
           display: "flex", alignItems: "center", justifyContent: "space-between",
           userSelect: "none",
+          boxShadow: (hasData && !open) ? "0 0 8px rgba(0,229,255,0.25)" : "none",
+          transition: "background .15s, box-shadow .15s",
         }}>
         <span style={{ display:"flex", alignItems:"center", gap:8 }}>
           <span>{title}</span>
-          {hasData && (
-            <span title="Section has data" style={{ width:8, height:8, borderRadius:"50%", background:C.teal, boxShadow:`0 0 0 2px ${C.tealLt}`, flexShrink:0 }}/>
-          )}
         </span>
         {collapsible && (
-          <span style={{ fontSize: 10, opacity: 0.8 }}>{open ? "▼" : "▶"}</span>
+          <span style={{
+            fontSize: hasData ? 13 : 10,
+            fontWeight: hasData ? 900 : 700,
+            color: hasData && !open ? "#00e5ff" : "inherit",
+            opacity: 0.9,
+            textShadow: hasData && !open ? "0 0 6px rgba(0,229,255,0.6)" : "none",
+            transition: "color .15s, text-shadow .15s",
+          }}>
+            {open ? "▼" : (hasData ? "✓" : "▶")}
+          </span>
         )}
       </div>
       {!isHidden && children}
@@ -338,6 +353,17 @@ const Sec = ({ title, color=C.blue, colorLt, children, noTop, collapsible, defau
 };
 
 const Divider = () => <div style={{ height:1, background:C.border, margin:"18px 0" }}/>;
+
+// ─── CLINICAL NOTES — drop-in collapsible for every block panel ───────────────
+// Renders as the final Sec in each panel; key auto-derives via F's blockId
+// context so storage keys are like "client::Clinical Notes", "treatment::..."
+// etc. Collapsed by default. Field is a 4-row textarea for rehabilitation
+// nurse / veterinary professional observations.
+const ClinicalNotes = () => (
+  <Sec title="Clinical Notes" color={C.navy} colorLt={C.blueLt} collapsible defaultOpen={false}>
+    <F label="Clinical Notes" placeholder="Rehabilitation nurse observations, progression notes, recommendations..." rows={4}/>
+  </Sec>
+);
 
 // ─── COLLAPSIBLE SUB-SECTION ──────────────────────────────────────────────────
 // Lightweight nested collapsible for use inside a non-collapsible Sec.
@@ -696,6 +722,7 @@ function ClientPanel() {
         {updating ? "⏳ UPDATING…" : "✓ UPDATE PATIENT RECORD"}
       </button>
     </div>
+    <ClinicalNotes/>
   </>;
 }
 
@@ -881,6 +908,7 @@ function DiagnosticsPanel() {
         </div>
       </div>
     </Sec>
+    <ClinicalNotes/>
   </>;
 }
 
@@ -1064,6 +1092,249 @@ function AssessmentPanel() {
       </Row>
       <F label="Neurological Notes" placeholder="Additional neurological findings — cranial nerves, postural reactions, spinal reflexes…" rows={2}/>
     </Sec>
+    <ClinicalNotes/>
+  </>;
+}
+
+// ── TREATMENT & SURGICAL STATUS ───────────────────────────────────────────────
+// Three mutually-exclusive approaches (Surgical / Conservative / Palliative).
+// Selection stored in `treatment::Approach` drives which field set is rendered.
+// All nested fields use standard F components so they auto-wire under
+// "treatment::*" keys in DashFormContext.
+function TreatmentPanel() {
+  const { data, update } = useContext(DashFormContext);
+  const approach = data["treatment::Approach"] || "";
+
+  // Days Post-Op auto-calc from Surgery Date
+  const surgeryDate = data["treatment::Surgery Date"] || "";
+  const daysPostOp = (() => {
+    if (!surgeryDate) return "";
+    const d = new Date(surgeryDate);
+    if (isNaN(d.getTime())) return "";
+    const ms = Date.now() - d.getTime();
+    const days = Math.floor(ms / (1000 * 60 * 60 * 24));
+    return days >= 0 ? String(days) : "";
+  })();
+
+  const cardStyle = (selected, color) => ({
+    flex: 1,
+    padding: "20px 16px",
+    borderRadius: 10,
+    cursor: "pointer",
+    textAlign: "center",
+    background: selected ? color : C.white,
+    color: selected ? C.white : C.text,
+    border: selected ? `2px solid ${color}` : `1.5px solid ${C.border}`,
+    boxShadow: selected ? `0 4px 14px ${color}33` : "0 1px 4px rgba(26,39,68,.06)",
+    transition: "all .15s",
+    userSelect: "none",
+  });
+
+  return <>
+    <Sec title="Treatment Approach" color="#F59E0B" colorLt="#FFFBEB" noTop>
+      <div style={{ fontSize:11, color:C.muted, marginBottom:14, lineHeight:1.65 }}>
+        Select the primary treatment approach for this patient. Each approach reveals a tailored field set below.
+      </div>
+      <div style={{ display:"flex", gap:12 }}>
+        <div style={cardStyle(approach === "Surgical", "#F59E0B")}
+             onClick={() => update("treatment::Approach", "Surgical")}>
+          <div style={{ fontSize:28, marginBottom:6 }}>🏥</div>
+          <div style={{ fontSize:13, fontWeight:800, letterSpacing:".05em" }}>SURGICAL</div>
+          <div style={{ fontSize:10, marginTop:4, opacity:.85 }}>Post-op recovery</div>
+        </div>
+        <div style={cardStyle(approach === "Conservative", "#0EA5E9")}
+             onClick={() => update("treatment::Approach", "Conservative")}>
+          <div style={{ fontSize:28, marginBottom:6 }}>💊</div>
+          <div style={{ fontSize:13, fontWeight:800, letterSpacing:".05em" }}>CONSERVATIVE</div>
+          <div style={{ fontSize:10, marginTop:4, opacity:.85 }}>Non-surgical management</div>
+        </div>
+        <div style={cardStyle(approach === "Palliative", "#BE185D")}
+             onClick={() => update("treatment::Approach", "Palliative")}>
+          <div style={{ fontSize:28, marginBottom:6 }}>💗</div>
+          <div style={{ fontSize:13, fontWeight:800, letterSpacing:".05em" }}>PALLIATIVE</div>
+          <div style={{ fontSize:10, marginTop:4, opacity:.85 }}>Comfort care / QoL</div>
+        </div>
+      </div>
+    </Sec>
+
+    {/* ── SURGICAL FIELDS ── */}
+    {approach === "Surgical" && (
+      <Sec title="Surgical Details" color="#F59E0B" colorLt="#FFFBEB">
+        <Row>
+          <F label="Surgery Type" options={[
+            "TPLO — Tibial Plateau Leveling Osteotomy",
+            "TTA — Tibial Tuberosity Advancement",
+            "FHO — Femoral Head Ostectomy",
+            "TPA — Total Hip Arthroplasty",
+            "Hip Replacement",
+            "Spinal Surgery — Hemilaminectomy",
+            "Spinal Surgery — Ventral Slot",
+            "Spinal Surgery — Dorsal Laminectomy",
+            "Soft Tissue Surgery",
+            "Fracture Repair — Internal Fixation",
+            "Fracture Repair — External Fixation",
+            "Amputation",
+            "Other — Specify in notes"
+          ]}/>
+          <F label="Surgeon Name" placeholder="e.g. Dr. Smith, DACVS"/>
+        </Row>
+        <Row cols={3}>
+          <F label="Surgery Date" type="date"/>
+          <div>
+            <Lbl>Days Post-Op</Lbl>
+            <input type="text" value={daysPostOp} readOnly placeholder="Auto-calculated"
+                   style={{ background:"#F9FAFB", color:C.muted, cursor:"default" }}/>
+            <div style={{ fontSize:10, color:C.muted, marginTop:4, fontStyle:"italic" }}>Auto-calculated from Surgery Date</div>
+          </div>
+          <F label="Weight Bearing Status" options={[
+            "Non-weight bearing (NWB)",
+            "Toe-touching (TTWB)",
+            "Partial weight bearing (PWB)",
+            "Full weight bearing (FWB)"
+          ]}/>
+        </Row>
+        <F label="Affected Limb(s)" options={[
+          "Right forelimb (RF)","Left forelimb (LF)",
+          "Right hindlimb (RH)","Left hindlimb (LH)",
+          "Both hindlimbs","Both forelimbs","All four limbs",
+          "Spinal / truncal","Other"
+        ]}/>
+        <F label="Activity Restrictions" placeholder="e.g. Strict crate rest 2 weeks, leash-only walks, no stairs…" rows={2}/>
+        <Row cols={3}>
+          <div>
+            <Lbl>E-Collar Required</Lbl>
+            <div className={`cb-row${data["treatment::E-Collar Required"]==="true"?" active":""}`}
+                 onClick={() => update("treatment::E-Collar Required", data["treatment::E-Collar Required"]==="true" ? "" : "true")}>
+              <input type="checkbox" checked={data["treatment::E-Collar Required"]==="true"} readOnly
+                     style={{ width:15, height:15, accentColor:"#F59E0B", flexShrink:0 }}/>
+              <span style={{ fontSize:11 }}>Yes — E-collar required</span>
+            </div>
+          </div>
+          <div>
+            <Lbl>Strict Crate Rest</Lbl>
+            <div className={`cb-row${data["treatment::Strict Crate Rest"]==="true"?" active":""}`}
+                 onClick={() => update("treatment::Strict Crate Rest", data["treatment::Strict Crate Rest"]==="true" ? "" : "true")}>
+              <input type="checkbox" checked={data["treatment::Strict Crate Rest"]==="true"} readOnly
+                     style={{ width:15, height:15, accentColor:"#F59E0B", flexShrink:0 }}/>
+              <span style={{ fontSize:11 }}>Yes — strict crate rest</span>
+            </div>
+          </div>
+          <div>
+            <Lbl>Sling Assist Required</Lbl>
+            <div className={`cb-row${data["treatment::Sling Assist Required"]==="true"?" active":""}`}
+                 onClick={() => update("treatment::Sling Assist Required", data["treatment::Sling Assist Required"]==="true" ? "" : "true")}>
+              <input type="checkbox" checked={data["treatment::Sling Assist Required"]==="true"} readOnly
+                     style={{ width:15, height:15, accentColor:"#F59E0B", flexShrink:0 }}/>
+              <span style={{ fontSize:11 }}>Yes — sling assist</span>
+            </div>
+          </div>
+        </Row>
+        <F label="Incision Status" options={[
+          "Healing well — no concern",
+          "Mild erythema",
+          "Mild swelling",
+          "Serosanguinous discharge",
+          "Dehiscence — clinician review",
+          "Infection suspected — URGENT",
+          "Fully healed / staples removed",
+          "Not yet evaluated"
+        ]}/>
+      </Sec>
+    )}
+
+    {/* ── CONSERVATIVE FIELDS ── */}
+    {approach === "Conservative" && (
+      <Sec title="Conservative Management Details" color="#0EA5E9" colorLt="#F0F9FF">
+        <Row>
+          <F label="Primary Diagnosis" options={[
+            "Cranial Cruciate Ligament Partial Tear (conservative)",
+            "Hip Dysplasia — Mild",
+            "Hip Dysplasia — Moderate",
+            "Elbow Dysplasia",
+            "Osteoarthritis — Mild",
+            "Osteoarthritis — Moderate",
+            "Osteoarthritis — Severe",
+            "IVDD — Hansen Type I (mild)",
+            "IVDD — Hansen Type II (chronic)",
+            "Lumbosacral Disease",
+            "Spondylosis",
+            "Bicipital Tenosynovitis",
+            "Supraspinatus Tendinopathy",
+            "Medial Shoulder Instability",
+            "Iliopsoas Strain",
+            "Sporting Injury — Soft Tissue",
+            "Muscle Contracture",
+            "Myositis",
+            "Peripheral Neuropathy",
+            "Degenerative Myelopathy",
+            "Fibrocartilaginous Embolism (FCE)",
+            "Geriatric Mobility Decline",
+            "Obesity-related Mobility Loss",
+            "Other — Specify in notes"
+          ]}/>
+          <F label="Onset Date or Duration" placeholder="e.g. 3 months ago, acute 5 days, chronic"/>
+        </Row>
+        <Row>
+          <F label="Affected Area" options={[
+            "Cervical spine","Thoracolumbar spine","Lumbosacral spine","Pelvis",
+            "Shoulder — right","Shoulder — left",
+            "Elbow — right","Elbow — left",
+            "Carpus — right","Carpus — left",
+            "Hip — right","Hip — left",
+            "Stifle — right","Stifle — left",
+            "Tarsus — right","Tarsus — left",
+            "Multiple joints","Generalized","Other"
+          ]}/>
+          <F label="Weight Bearing Status" options={[
+            "Full weight bearing — no lameness",
+            "Full weight bearing — intermittent lameness",
+            "Partial weight bearing",
+            "Toe-touching (TTWB)",
+            "Non-weight bearing (NWB)"
+          ]}/>
+        </Row>
+        <F label="Activity Restrictions" placeholder="e.g. Leash walks only, no running, no stairs, restricted play…" rows={2}/>
+        <F label="Current Medications" placeholder="NSAIDs, gabapentin, supplements — include dose and frequency" rows={2}/>
+        <F label="Referral Source" options={[
+          "Primary care veterinarian",
+          "Orthopedic specialist (DACVS)",
+          "Neurology specialist (DACVIM-Neuro)",
+          "Sports medicine specialist (DACVSMR)",
+          "Self-referred by owner",
+          "Other specialty"
+        ]}/>
+      </Sec>
+    )}
+
+    {/* ── PALLIATIVE FIELDS ── */}
+    {approach === "Palliative" && (
+      <Sec title="Palliative / Comfort Care Details" color="#BE185D" colorLt="#FDF2F8">
+        <F label="Primary Condition" options={[
+          "End-stage osteoarthritis",
+          "Terminal cancer — mobility decline",
+          "Degenerative myelopathy — advanced",
+          "Severe congestive heart failure",
+          "Chronic kidney disease — end-stage",
+          "Advanced geriatric decline",
+          "Chronic refractory pain",
+          "Post-paralysis — DPP absent",
+          "Other — Specify in notes"
+        ]}/>
+        <F label="Quality of Life Goal" placeholder="e.g. Maintain comfortable mobility, preserve ability to rise unassisted, reduce pain at rest…" rows={2}/>
+        <F label="Pain Management Protocol" placeholder="e.g. Gabapentin 10mg/kg q8h, meloxicam 0.1mg/kg sid, laser therapy weekly…" rows={2}/>
+        <F label="Owner Goals & Expectations" placeholder="e.g. Maximize comfort, family time, avoid further surgery, hospice approach…" rows={3}/>
+        <div style={{ marginTop:8 }}>
+          <Lbl>DNR / Comfort Care Only</Lbl>
+          <div className={`cb-row${data["treatment::DNR Comfort Care Only"]==="true"?" active":""}`}
+               onClick={() => update("treatment::DNR Comfort Care Only", data["treatment::DNR Comfort Care Only"]==="true" ? "" : "true")}>
+            <input type="checkbox" checked={data["treatment::DNR Comfort Care Only"]==="true"} readOnly
+                   style={{ width:15, height:15, accentColor:"#BE185D", flexShrink:0 }}/>
+            <span style={{ fontSize:11 }}>Yes — owner has elected Do Not Resuscitate / comfort care only</span>
+          </div>
+        </div>
+      </Sec>
+    )}
+    <ClinicalNotes/>
   </>;
 }
 
@@ -1192,6 +1463,7 @@ function MetricsPanel() {
         <F label="Postural Notes" placeholder="Additional postural / orthopedic observations…"/>
       </Row>
     </Sec>
+    <ClinicalNotes/>
   </>;
 }
 
@@ -1232,6 +1504,7 @@ function EquipmentPanel() {
     <Sec title="Other Equipment" color={C.teal} colorLt={C.tealLt} collapsible defaultOpen={true}>
       <F label="Describe any additional equipment not listed above" placeholder="Additional equipment, brand names, unique modalities…" rows={2}/>
     </Sec>
+    <ClinicalNotes/>
   </>;
 }
 
@@ -1301,6 +1574,7 @@ function HomePanel() {
       </Row>
       <F label="Owner Notes / Concerns" placeholder="Any concerns about ability to perform exercises, physical limitations, household members who will help…" rows={2}/>
     </Sec>
+    <ClinicalNotes/>
   </>;
 }
 
@@ -1329,6 +1603,7 @@ function GoalsPanel() {
       </Row>
     </Sec>
     {/* Progress Tracking Schedule moved to Block 10 — Protocol Summary */}
+    <ClinicalNotes/>
   </>;
 }
 
@@ -1662,6 +1937,7 @@ REQUIREMENTS:
         })()}
       </Sec>
     </fieldset>
+    <ClinicalNotes/>
   </>;
 }
 
@@ -1893,6 +2169,7 @@ EVIDENCE BASIS`;
         </div>
       </Sec>
     )}
+    <ClinicalNotes/>
   </>;
 }
 
@@ -2397,6 +2674,7 @@ const BLOCKS = [
   { id:"client",       icon:"🐾", color:C.blue,    colorLt:C.blueLt   },
   { id:"diagnostics",  icon:"🦴", color:C.purple,  colorLt:C.purpleLt },
   { id:"assessment",   icon:"🐕", color:C.amber,   colorLt:C.amberLt  },
+  { id:"treatment",    icon:"🩺", color:"#F59E0B", colorLt:"#FFFBEB"  },
   { id:"metrics",      icon:"🦮", color:C.green,   colorLt:C.greenLt  },
   { id:"equipment",    icon:"🐕‍🦺", color:C.teal,    colorLt:C.tealLt   },
   { id:"home",         icon:"🏡", color:C.blue,    colorLt:C.blueLt   },
@@ -2415,7 +2693,7 @@ const SIDEBAR_NAV = [
   { id:"hipaa",      icon:"🔒" },
 ];
 
-const BLOCK_COMPS   = { client:ClientPanel, diagnostics:DiagnosticsPanel, assessment:AssessmentPanel, metrics:MetricsPanel, equipment:EquipmentPanel, home:HomePanel, goals:GoalsPanel, conditioning:ConditioningPanel, protocol:ProtocolPanel, library:LibraryPanel };
+const BLOCK_COMPS   = { client:ClientPanel, diagnostics:DiagnosticsPanel, assessment:AssessmentPanel, treatment:TreatmentPanel, metrics:MetricsPanel, equipment:EquipmentPanel, home:HomePanel, goals:GoalsPanel, conditioning:ConditioningPanel, protocol:ProtocolPanel, library:LibraryPanel };
 const SIDEBAR_COMPS = { how:HowToUse, ask:AskBeau, helsinki:HelsinkiPanel, about:AboutPanel, disclaimer:DisclaimerPanel, hipaa:HipaaPanel };
 
 // ── CONTEXTUAL B.E.A.U. PROMPTS ──────────────────────────────────────────────
@@ -2423,6 +2701,7 @@ const BEAU_BLOCK_CONTEXTS = {
   client:       "You are helping with patient intake — demographics, breed-specific considerations, owner communication. Reference breed predispositions and signalment relevance.",
   diagnostics:  "You are helping interpret diagnostic results — radiographs, bloodwork, MRI findings. Identify rehabilitation-relevant findings and how they affect protocol selection.",
   assessment:   "You are helping with clinical assessment — pain scoring (CSU scale, BPI), functional grading, lameness assessment, neurological evaluation. Focus on objective measurement.",
+  treatment:    "You are helping with treatment and surgical status planning — post-op recovery phase guidance, conservative management protocols, or palliative comfort care. Tailor advice to the selected approach (Surgical / Conservative / Palliative) and current restrictions.",
   metrics:      "You are helping with B.E.A.U. metrics — girth measurements, goniometry/ROM interpretation, body condition scoring, HCPI scoring, LOAD scoring. Explain clinical significance and normal ranges.",
   equipment:    "You are helping with equipment selection — underwater treadmill settings, TENS/NMES parameters, laser therapy protocols (Class IV), therapeutic ultrasound, shockwave therapy indications.",
   home:         "You are helping design home exercise programs — client education, exercise selection appropriate for home, frequency/duration recommendations, safety guidelines, environment assessment.",
@@ -2433,7 +2712,18 @@ const BEAU_BLOCK_CONTEXTS = {
 export default function DashboardView({ setView, currentUser, onLogout, patient, setSelectedPatient }) {
   const { t, i18n: i18nInst } = useTranslation();
   const beauVoice = useBeauVoice(i18nInst.language || "en");
-  const [openBlock,   setOpenBlock]   = useState(null);
+  const [openBlock,   setOpenBlock]   = useState(() => {
+    // Phase 1D intake-redirect: if Sidebar pushed a "New Client/Patient Intake"
+    // trigger into localStorage, auto-open that block on first dashboard mount.
+    try {
+      const target = localStorage.getItem("beau_open_block");
+      if (target) {
+        localStorage.removeItem("beau_open_block");
+        return target;
+      }
+    } catch {}
+    return null;
+  });
   const [openSidebar, setOpenSidebar] = useState(null);
   const [saved,       setSaved]       = useState(false);
   // ── Form state — persists across block opens, keyed by "blockId::label"

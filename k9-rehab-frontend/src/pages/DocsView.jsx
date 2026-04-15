@@ -37,7 +37,7 @@ const SECTIONS = [
   {
     title: "Chapter 3. Exercise Library",
     items: [
-      { id: "exercise-overview", label: "3.1 Library Overview (223)" },
+      { id: "exercise-overview", label: "3.1 Library Overview (260)" },
       { id: "exercise-structure", label: "3.2 Exercise Data Structure" },
       { id: "intervention-types", label: "3.3 Intervention Categories" },
       { id: "exercise-examples", label: "3.4 Key Exercise Examples" },
@@ -243,7 +243,7 @@ export default function DocsView({ setView }) {
             <span>4 Conditions</span>
             <span>16 Phases</span>
             <span>52 Protocol Exercises</span>
-            <span>223 Exercise Library</span>
+            <span>260 Validated Exercises</span>
             <span>Full Modality Integration</span>
           </div>
 
@@ -260,7 +260,7 @@ export default function DocsView({ setView }) {
           <H4>In Scope</H4>
           <UL>
             <li>Rehabilitation protocol generation for <strong>diagnosed conditions</strong></li>
-            <li>Exercise selection, dosing, and progression from the validated 223-exercise library</li>
+            <li>Exercise selection, dosing, and progression from the validated 260-exercise library</li>
             <li>Phase-gated progression based on clinical assessment criteria</li>
             <li>Clinical education and evidence reference</li>
           </UL>
@@ -424,7 +424,7 @@ export default function DocsView({ setView }) {
           {/* ═══════════════════ CH 3: EXERCISE LIBRARY ═══════════════════ */}
           <H2 id="exercise-overview" num="Chapter 3.">Exercise Library</H2>
           <H3 id="exercise-overview" num="3.1">Library Overview</H3>
-          <P>The exercise library contains <strong>223 evidence-based exercises</strong> with 52 mapped directly to protocol phases. Every exercise includes standardized metadata for clinical decision support.</P>
+          <P>The exercise library contains <strong>260 evidence-based exercises</strong> with 52 mapped directly to protocol phases. Every exercise includes standardized metadata for clinical decision support.</P>
 
           <H3 id="exercise-structure" num="3.2">Exercise Data Structure</H3>
           <P>Each exercise entry contains the following fields:</P>
@@ -580,7 +580,7 @@ export default function DocsView({ setView }) {
           <H3 id="anti-hallucination" num="6.2">Anti-Hallucination Rules</H3>
           <P>These rules are <strong>non-negotiable</strong> and apply to all AI output:</P>
           <OL>
-            <li><strong>Exercise Library Lock:</strong> Every exercise referenced must match an exercise code in the 223-exercise library. Unmatched exercise name = blocked output + clinician alert.</li>
+            <li><strong>Exercise Library Lock:</strong> Every exercise referenced must match an exercise code in the 260-exercise library. Unmatched exercise name = blocked output + clinician alert.</li>
             <li><strong>Dosing from Source Only:</strong> Sets, reps, duration, frequency, and intensity must be extracted from the source-of-truth document. B.E.A.U. must NOT generate novel dosing. If source doesn't specify: "Dosing: Per clinician assessment".</li>
             <li><strong>No Invented Clinical Data:</strong> Descriptions, contraindications, indications, evidence grades, and phase assignments must trace to source documents. Unknown values flagged as <C>[UNVERIFIED]</C>.</li>
             <li><strong>Post-Generation Verification:</strong> Every AI response referencing exercises is cross-checked against the exercise database before delivery. Novel exercise names trigger a block.</li>

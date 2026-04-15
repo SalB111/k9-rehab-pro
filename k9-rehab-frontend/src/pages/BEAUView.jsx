@@ -372,7 +372,7 @@ useEffect(() => {
             </div>
             <h1 style={{ fontSize: 22, fontWeight: 700, color: C.text, margin: "0 0 6px" }}>B.E.A.U.</h1>
             <p style={{ fontSize: 13, color: C.textLight, maxWidth: 460, lineHeight: 1.6, margin: "0 0 28px" }}>
-              Evidence-based canine rehabilitation intelligence. Load a patient for personalized protocols, or ask general clinical questions.
+              Evidence-based canine and feline rehabilitation intelligence. Load a patient for personalized protocols, or ask general clinical questions.
             </p>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, maxWidth: 500, width: "100%" }}>
               {STARTERS.map((s, i) => (

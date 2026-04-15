@@ -16,10 +16,10 @@ function AboutView() {
           K9 REHAB PRO
         </h1>
         <div style={{ fontSize: 12, fontWeight: 700, color: C.teal, textTransform: "uppercase", letterSpacing: "2px", marginBottom: 16, textShadow: `0 0 8px ${C.tealLight}` }}>
-          Clinical Decision-Support System for Evidence-Based Canine Exercise Protocols
+          Clinical Decision-Support System for Evidence-Based Canine AND FELINE Rehabilitation Protocols
         </div>
         <p style={{ fontSize: 14, color: C.text, lineHeight: 1.8, maxWidth: 650, margin: "0 auto" }}>
-          K9 Rehab Pro is a veterinary rehabilitation platform built for the clinicians who dedicate their careers to helping dogs recover, move, and live better. Designed from the ground up using evidence-based methodology, it transforms clinical expertise into structured, repeatable rehabilitation protocols.
+          K9 Rehab Pro is a veterinary rehabilitation platform built for the rehabilitation nurses and veterinary professionals who dedicate their careers to helping dogs and cats recover, move, and live better. Designed from the ground up using evidence-based methodology, it transforms clinical expertise into structured, repeatable rehabilitation protocols.
         </p>
       </div>
 
@@ -86,7 +86,16 @@ function AboutView() {
       <div style={{ ...S.card, border: `1px solid ${C.border}`, borderTop: `3px solid ${C.navy}`, padding: "24px 28px" }}>
         <h3 style={{ fontSize: 14, fontWeight: 900, color: C.text, marginBottom: 8 }}>About the Founder</h3>
         <p style={{ fontSize: 12, color: C.textMid, lineHeight: 1.7, margin: "0 0 12px" }}>
-          K9 Rehab Pro was built by <strong style={{ color: C.text }}>Salvatore Bonanno</strong>, a Canine Rehabilitation Nurse (CCRN) and software developer with 30 years of veterinary nursing experience. Salvatore founded and ran the canine rehabilitation department at BluePearl Veterinary Partners (formerly Lauderdale Veterinary Specialists) in Fort Lauderdale, Florida from 2016-2024. Every protocol, phase gate, and clinical rule in this system came from real clinical work with real patients.
+          K9 Rehab Pro&trade; was built by <strong style={{ color: C.text }}>Salvatore Bonanno</strong>, a Canine Rehabilitation Nurse with over 30 years of experience in animal medicine and veterinary nursing. For the past decade, canine and feline rehabilitation became his passion and purpose.
+        </p>
+        <p style={{ fontSize: 12, color: C.textMid, lineHeight: 1.7, margin: "0 0 12px" }}>
+          Salvatore served as the lead &mdash; and sole &mdash; rehabilitation nurse at BluePearl Veterinary Partners (formerly Lauderdale Veterinary Specialists) in Fort Lauderdale, Florida from 2016 to 2024, where he built and ran the entire rehabilitation department from the ground up.
+        </p>
+        <p style={{ fontSize: 12, color: C.textMid, lineHeight: 1.7, margin: "0 0 12px" }}>
+          Every protocol, phase gate, clinical rule, and exercise in this platform was born from real patients, real cases, and real outcomes. K9 Rehab Pro&trade; is not theoretical &mdash; it is 8 years of hands-on rehabilitation nursing transformed into intelligent clinical software.
+        </p>
+        <p style={{ fontSize: 12, color: C.textMid, lineHeight: 1.7, margin: "0 0 12px" }}>
+          B.E.A.U. &mdash; the Biomedical Evidence-based Analytical Unit &mdash; is the AI engine powering every protocol recommendation, grounded in the science of Dr. Millis, Dr. Levine, and their colleagues in veterinary rehabilitation.
         </p>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "end", paddingTop: 12, borderTop: `1px solid ${C.border}` }}>
           <div>

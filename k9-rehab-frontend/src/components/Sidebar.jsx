@@ -41,10 +41,17 @@ export default function Sidebar({ view, setView, currentUser, onLogout }) {
         )}
       </div>
 
-      {/* New Patient Intake — starts the clinical workflow */}
+      {/* New Patient Intake — routes to Dashboard Client & Patient block.
+          Per Sal 2026-04-15: the old generator wizard is disabled (files
+          remain on disk but navigation is rerouted). DashboardView reads
+          "beau_open_block" from localStorage on mount and auto-opens the
+          named block. */}
       <div className="px-3 mt-4 mb-2">
         <button
-          onClick={() => setView("generator")}
+          onClick={() => {
+            try { localStorage.setItem("beau_open_block", "client"); } catch {}
+            setView("dashboard");
+          }}
           className={`
             w-full flex items-center justify-center gap-2 py-2.5 rounded-lg
             bg-gradient-to-r from-[#1D9E75] to-[#0EA5E9]

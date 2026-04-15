@@ -1,5 +1,5 @@
 // src/pages/BeauMetricsView.jsx
-// BEAU Metrics — AI Nutrition + Rehabilitation Protocol Generator
+// PetCare Nutrition — AI Nutrition + Rehabilitation Protocol Generator
 // Uses 12 Mars PetCare / Waltham knowledge nodes via beauService
 
 import React, { useState } from "react";
@@ -12,6 +12,35 @@ import BeauVoiceControl from "../components/BeauVoiceControl";
 const SPECIES = ["Canine", "Feline"];
 const LIFE_STAGES = ["Puppy/Kitten", "Adult", "Senior"];
 const BCS_OPTIONS = ["1","2","3","4","5","6","7","8","9"];
+
+// Purina Pro Plan 9-point Body Condition Score reference (text-based).
+// Displayed as an inline card between Patient Info and the BCS dropdown
+// so clinicians have the scoring rubric in-view while recording BCS.
+const PURINA_BCS_SCALE = [
+  { score: "1", label: "Emaciated", desc: "Ribs, lumbar vertebrae, pelvic bones and all bony prominences evident. No discernible body fat. Obvious loss of muscle mass." },
+  { score: "2", label: "Very thin", desc: "Ribs, lumbar vertebrae and pelvic bones easily visible. No palpable fat. Minimal loss of muscle mass." },
+  { score: "3", label: "Thin", desc: "Ribs easily palpated and may be visible with no palpable fat. Tops of lumbar vertebrae visible. Obvious waist." },
+  { score: "4", label: "Underweight", desc: "Ribs easily palpable with minimal fat covering. Waist easily noted from above. Abdominal tuck evident." },
+  { score: "5", label: "Ideal", desc: "Ribs palpable without excess fat covering. Waist observed from above behind ribs. Abdomen tucked up when viewed from side." },
+  { score: "6", label: "Slightly overweight", desc: "Ribs palpable with slight excess fat covering. Waist discernible from above but not prominent. Abdominal tuck apparent." },
+  { score: "7", label: "Overweight", desc: "Ribs palpable with difficulty; heavy fat cover. Noticeable fat deposits over lumbar area and base of tail. Waist absent or barely visible." },
+  { score: "8", label: "Obese", desc: "Ribs not palpable under very heavy fat cover, or palpable only with significant pressure. Heavy fat deposits over lumbar area and base of tail. Waist absent. No abdominal tuck. May have obvious abdominal distension." },
+  { score: "9", label: "Severely obese", desc: "Massive fat deposits over thorax, spine and base of tail. Waist and abdominal tuck absent. Fat deposits on neck and limbs. Obvious abdominal distension." },
+];
+
+// Map a recommended brand/product string to an Order URL and AutoShip URL.
+// Used after a protocol is generated to surface purchase links appropriate
+// for the brand B.E.A.U. recommended.
+const BRAND_LINKS = [
+  { match: /royal\s*canin/i,   name: "Royal Canin",    order: "https://www.royalcanin.com/us", autoship: "https://www.royalcanin.com/us" },
+  { match: /pro\s*plan|purina/i, name: "Purina Pro Plan", order: "https://www.proplan.com",       autoship: "https://www.proplan.com" },
+  { match: /pedigree/i,        name: "Pedigree",       order: "https://www.pedigree.com",      autoship: "https://www.pedigree.com" },
+];
+const resolveBrandLinks = (productName) => {
+  if (!productName) return null;
+  for (const b of BRAND_LINKS) if (b.match.test(productName)) return b;
+  return null;
+};
 const CONDITIONS = [
   "Osteoarthritis", "TPLO Post-Op", "CCL Rupture", "IVDD",
   "Hip Dysplasia", "Obesity", "Diabetes", "Renal Disease",
@@ -26,8 +55,8 @@ export default function BeauMetricsView({ authToken, setView }) {
 
   // Patient form
   const [form, setForm] = useState({
-    name: "", species: "Canine", breed: "", age: "",
-    weightKg: "", bcs: "5", lifeStage: "Adult",
+    name: "", species: "Canine", breed: "", age: "", dob: "",
+    weightLbs: "", weightKg: "", bcs: "5", lifeStage: "Adult",
     conditions: [], notes: "",
   });
   const [loading, setLoading] = useState(false);
@@ -35,6 +64,53 @@ export default function BeauMetricsView({ authToken, setView }) {
   const [error, setError] = useState(null);
 
   const updateForm = (k, v) => setForm(prev => ({ ...prev, [k]: v }));
+
+  // ── Weight lbs/kg bidirectional conversion ──
+  const onLbs = (val) => {
+    setForm(prev => {
+      const next = { ...prev, weightLbs: val };
+      const n = parseFloat(val);
+      if (!isNaN(n) && n > 0) next.weightKg = (n / 2.20462).toFixed(1);
+      else if (val === "") next.weightKg = "";
+      return next;
+    });
+  };
+  const onKg = (val) => {
+    setForm(prev => {
+      const next = { ...prev, weightKg: val };
+      const n = parseFloat(val);
+      if (!isNaN(n) && n > 0) next.weightLbs = (n * 2.20462).toFixed(1);
+      else if (val === "") next.weightLbs = "";
+      return next;
+    });
+  };
+
+  // ── Age/DOB bidirectional conversion ──
+  const onAge = (val) => {
+    setForm(prev => {
+      const next = { ...prev, age: val };
+      const n = parseInt(val, 10);
+      if (!isNaN(n) && n >= 0 && n < 30) {
+        const now = new Date();
+        const by = now.getFullYear() - n;
+        next.dob = `${by}-${String(now.getMonth()+1).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")}`;
+      }
+      return next;
+    });
+  };
+  const onDob = (val) => {
+    setForm(prev => {
+      const next = { ...prev, dob: val };
+      if (val) {
+        const birth = new Date(val);
+        const now = new Date();
+        let years = now.getFullYear() - birth.getFullYear();
+        if (now.getMonth() < birth.getMonth() || (now.getMonth() === birth.getMonth() && now.getDate() < birth.getDate())) years--;
+        if (years >= 0) next.age = String(years);
+      }
+      return next;
+    });
+  };
   const toggleCondition = (c) => setForm(prev => ({
     ...prev,
     conditions: prev.conditions.includes(c)
@@ -96,7 +172,7 @@ export default function BeauMetricsView({ authToken, setView }) {
       {/* Header */}
       <div style={S.header}>
         <div>
-          <div style={S.title}>BEAU Metrics</div>
+          <div style={S.title}>PetCare Nutrition</div>
           <div style={S.subtitle}>AI Nutrition + Rehabilitation Protocol Engine \u2014 Mars PetCare / Waltham Science</div>
         </div>
         <BeauVoiceControl
@@ -132,22 +208,6 @@ export default function BeauMetricsView({ authToken, setView }) {
             <input style={S.input} value={form.breed} onChange={e => updateForm("breed", e.target.value)} placeholder="e.g. Labrador Retriever" />
           </div>
           <div>
-            <div style={S.label}>Age</div>
-            <input style={S.input} value={form.age} onChange={e => updateForm("age", e.target.value)} placeholder="e.g. 6 years" />
-          </div>
-          <div>
-            <div style={S.label}>Weight (kg)</div>
-            <input style={S.input} type="number" value={form.weightKg} onChange={e => updateForm("weightKg", e.target.value)} placeholder="e.g. 30" />
-          </div>
-        </div>
-        <div style={S.grid3}>
-          <div>
-            <div style={S.label}>Body Condition Score (1-9)</div>
-            <select style={S.select} value={form.bcs} onChange={e => updateForm("bcs", e.target.value)}>
-              {BCS_OPTIONS.map(b => <option key={b} value={b}>{b}/9{b === "5" ? " (Ideal)" : b <= "3" ? " (Underweight)" : b >= "7" ? " (Overweight)" : ""}</option>)}
-            </select>
-          </div>
-          <div>
             <div style={S.label}>Life Stage</div>
             <select style={S.select} value={form.lifeStage} onChange={e => updateForm("lifeStage", e.target.value)}>
               {LIFE_STAGES.map(l => <option key={l} value={l}>{l}</option>)}
@@ -157,6 +217,75 @@ export default function BeauMetricsView({ authToken, setView }) {
             <div style={S.label}>Notes</div>
             <input style={S.input} value={form.notes} onChange={e => updateForm("notes", e.target.value)} placeholder="Additional clinical notes..." />
           </div>
+        </div>
+        {/* ── Age / DOB pair (bidirectional) ── */}
+        <div style={S.grid2}>
+          <div>
+            <div style={S.label}>Date of Birth</div>
+            <input style={S.input} type="date" value={form.dob} onChange={e => onDob(e.target.value)} />
+          </div>
+          <div>
+            <div style={S.label}>Age (years)</div>
+            <input style={S.input} type="number" min="0" max="30" value={form.age} onChange={e => onAge(e.target.value)} placeholder="e.g. 6" />
+            <div style={{ fontSize:10, color:C.textLight, marginTop:3, fontStyle:"italic" }}>Auto-converts to/from DOB</div>
+          </div>
+        </div>
+        {/* ── Weight lbs / kg pair (bidirectional) ── */}
+        <div style={S.grid2}>
+          <div>
+            <div style={S.label}>Weight (lbs)</div>
+            <input style={S.input} type="number" step="0.1" value={form.weightLbs} onChange={e => onLbs(e.target.value)} placeholder="0.0" />
+          </div>
+          <div>
+            <div style={S.label}>Weight (kg)</div>
+            <input style={S.input} type="number" step="0.1" value={form.weightKg} onChange={e => onKg(e.target.value)} placeholder="0.0" />
+            <div style={{ fontSize:10, color:C.textLight, marginTop:3, fontStyle:"italic" }}>Auto-converts to/from lbs</div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Purina Pro Plan BCS Reference Card ── */}
+      <div style={{ ...S.card, background: "#F0FDFB", borderLeft: "4px solid #0D9488" }}>
+        <div style={{ ...S.cardTitle, color: "#0D9488" }}>
+          {"\ud83d\udccb"} Purina Pro Plan — 9-Point Body Condition Score Reference
+        </div>
+        <div style={{ fontSize: 11, color: C.textMid, marginBottom: 12, fontStyle: "italic" }}>
+          Use this rubric when assessing patient BCS. 5/9 is ideal body condition.
+          Each point above or below 5 represents approximately 10–15% body weight deviation.
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
+          {PURINA_BCS_SCALE.map(b => (
+            <div key={b.score} style={{
+              padding: "10px 12px",
+              background: b.score === "5" ? "#DCFCE7" : "#FFFFFF",
+              border: `1px solid ${b.score === "5" ? "#16a34a" : "#E5E7EB"}`,
+              borderLeft: `3px solid ${
+                b.score === "5" ? "#16a34a" :
+                parseInt(b.score, 10) < 5 ? "#0EA5E9" :
+                "#F59E0B"
+              }`,
+              borderRadius: 6,
+            }}>
+              <div style={{ fontSize: 14, fontWeight: 800, color: C.text, marginBottom: 2 }}>
+                {b.score}/9 <span style={{ fontSize: 11, fontWeight: 600, color: "#0D9488" }}>{b.label}</span>
+              </div>
+              <div style={{ fontSize: 10, color: C.textMid, lineHeight: 1.5 }}>{b.desc}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── BCS selector ── */}
+      <div style={S.card}>
+        <div style={S.cardTitle}>{"\ud83d\udcca"} Body Condition Score &amp; Health Conditions</div>
+        <div style={S.grid2}>
+          <div>
+            <div style={S.label}>Body Condition Score (1-9) *</div>
+            <select style={S.select} value={form.bcs} onChange={e => updateForm("bcs", e.target.value)}>
+              {BCS_OPTIONS.map(b => <option key={b} value={b}>{b}/9{b === "5" ? " (Ideal)" : b <= "3" ? " (Underweight)" : b >= "7" ? " (Overweight)" : ""}</option>)}
+            </select>
+          </div>
+          <div/>
         </div>
 
         {/* Conditions */}
@@ -289,6 +418,36 @@ export default function BeauMetricsView({ authToken, setView }) {
               {result.clinical_alerts.map((a, i) => <div key={i} style={{ fontSize: 13, color: "#111", marginBottom: 6 }}>\u2022 {a}</div>)}
             </div>
           )}
+
+          {/* ── Order + AutoShip buttons ── Brand-matched from recommended product ── */}
+          {(() => {
+            const product = result.diet_protocol?.primary_product || "";
+            const brand = resolveBrandLinks(product);
+            if (!brand) return null;
+            return (
+              <div style={{ ...S.card, background: "#FFFBEB", borderLeft: "4px solid #F59E0B" }}>
+                <div style={{ ...S.cardTitle, color: "#92400E" }}>
+                  {"\ud83d\uded2"} Order {brand.name} — Recommended by B.E.A.U.
+                </div>
+                <div style={{ fontSize: 11, color: C.textMid, marginBottom: 12 }}>
+                  Place a one-time order or set up scheduled AutoShip delivery for <strong>{product}</strong>.
+                </div>
+                <div style={{ display: "flex", gap: 10 }}>
+                  <a href={brand.order} target="_blank" rel="noopener noreferrer"
+                     style={{ flex: 1, padding: "12px 16px", background: "#F59E0B", color: "#fff", textDecoration: "none", borderRadius: 6, fontSize: 13, fontWeight: 700, textAlign: "center", letterSpacing: "0.4px" }}>
+                    {"\ud83d\udecd\ufe0f"} ORDER NOW
+                  </a>
+                  <a href={brand.autoship} target="_blank" rel="noopener noreferrer"
+                     style={{ flex: 1, padding: "12px 16px", background: "#0D9488", color: "#fff", textDecoration: "none", borderRadius: 6, fontSize: 13, fontWeight: 700, textAlign: "center", letterSpacing: "0.4px" }}>
+                    {"\ud83d\udd01"} SET UP AUTOSHIP
+                  </a>
+                </div>
+                <div style={{ fontSize: 10, color: C.textLight, marginTop: 8, fontStyle: "italic" }}>
+                  Both links open in a new tab on {brand.name}'s official website.
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Disclaimer */}
           <div style={{ padding: "12px 16px", background: C.bg, borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 11, color: C.textMid, textAlign: "center", marginTop: 8 }}>
