@@ -25,11 +25,28 @@ export const BEAU_VOICES = [
 ];
 
 const VOICE_STORAGE_KEY = "beau_voice_preference";
+const SPEED_STORAGE_KEY = "beau_voice_speed";
+
+// Allowed OpenAI TTS speed range is 0.25–4.0. We expose 4 clinical presets.
+export const BEAU_SPEEDS = [
+  { value: 0.75, label: "Slow" },
+  { value: 1.0,  label: "Normal" },
+  { value: 1.25, label: "Fast" },
+  { value: 1.5,  label: "Very Fast" },
+];
+
 const getStoredVoice = () => {
   try {
     const v = localStorage.getItem(VOICE_STORAGE_KEY);
     return BEAU_VOICES.find(x => x.id === v)?.id || "onyx";
   } catch { return "onyx"; }
+};
+const getStoredSpeed = () => {
+  try {
+    const raw = parseFloat(localStorage.getItem(SPEED_STORAGE_KEY));
+    if (!isNaN(raw) && raw >= 0.25 && raw <= 4.0) return raw;
+  } catch {}
+  return 1.0;
 };
 
 export default function useBeauVoice(locale = "en") {
@@ -37,19 +54,24 @@ export default function useBeauVoice(locale = "en") {
     try { return localStorage.getItem("k9_beau_autospeak") !== "false"; } catch { return true; }
   });
   const [voicePref, setVoicePrefState] = useState(getStoredVoice);
+  const [speedPref, setSpeedPrefState] = useState(getStoredSpeed);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const [voiceName] = useState("BEAU");
   const audioRef = useRef(null);
   const abortRef = useRef(null);
   const speakingRef = useRef(false);
+  const pausedRef = useRef(false);
   const queueRef = useRef([]);          // FIFO queue of cleaned text segments
   const processingRef = useRef(false);   // True while the queue processor loop is active
   const voicePrefRef = useRef(voicePref);
+  const speedPrefRef = useRef(speedPref);
   const localeRef = useRef(locale);
 
   // Keep refs in sync so the queue processor (a long-lived async loop) always
   // reads the latest values without needing to re-create on every render.
   useEffect(() => { voicePrefRef.current = voicePref; }, [voicePref]);
+  useEffect(() => { speedPrefRef.current = speedPref; }, [speedPref]);
   useEffect(() => { localeRef.current = locale; }, [locale]);
 
   // Persist auto-speak preference
@@ -63,12 +85,20 @@ export default function useBeauVoice(locale = "en") {
     try { localStorage.setItem(VOICE_STORAGE_KEY, id); } catch {}
   }, []);
 
+  const setSpeedPref = useCallback((val) => {
+    const n = parseFloat(val);
+    if (isNaN(n) || n < 0.25 || n > 4.0) return;
+    setSpeedPrefState(n);
+    try { localStorage.setItem(SPEED_STORAGE_KEY, String(n)); } catch {}
+  }, []);
+
   // Hard stop — drain queue, abort fetch, pause audio. Used when the user
   // clicks Stop, switches patients, closes a modal, or starts a brand-new
   // generation that should replace the in-flight one.
   const stop = useCallback(() => {
     queueRef.current = [];
     processingRef.current = false;
+    pausedRef.current = false;
     if (audioRef.current) {
       try { audioRef.current.pause(); audioRef.current.currentTime = 0; } catch {}
       audioRef.current = null;
@@ -82,6 +112,30 @@ export default function useBeauVoice(locale = "en") {
     }
     speakingRef.current = false;
     setIsSpeaking(false);
+    setIsPaused(false);
+  }, []);
+
+  // PAUSE — holds current audio playback without clearing the queue.
+  // The audio element's .pause() freezes playback; because the audio's
+  // onended handler never fires while paused, the queue processor's
+  // await on playOne() stays awaited and no new segment starts.
+  const pause = useCallback(() => {
+    if (audioRef.current && !audioRef.current.paused) {
+      try { audioRef.current.pause(); } catch {}
+      pausedRef.current = true;
+      setIsPaused(true);
+    }
+  }, []);
+
+  // RESUME — un-pauses the currently-held audio. When it finishes,
+  // onended fires normally and the queue processor proceeds to the
+  // next queued segment.
+  const resume = useCallback(() => {
+    if (audioRef.current && audioRef.current.paused) {
+      try { audioRef.current.play().catch(() => {}); } catch {}
+      pausedRef.current = false;
+      setIsPaused(false);
+    }
   }, []);
 
   // Clean text for speech (strip markdown, normalize whitespace, cap at 4096)
@@ -117,6 +171,7 @@ export default function useBeauVoice(locale = "en") {
           text,
           language: localeRef.current,
           voice: voicePrefRef.current,
+          speed: speedPrefRef.current,
         }),
         signal: controller.signal,
       });
@@ -202,11 +257,16 @@ export default function useBeauVoice(locale = "en") {
     enqueue,
     stop,
     cancel: stop,
+    pause,
+    resume,
     isSpeaking,
+    isPaused,
     autoSpeak,
     setAutoSpeak,
     voicePref,
     setVoicePref,
+    speedPref,
+    setSpeedPref,
     voiceName,
     voicesLoaded: true,
   };

@@ -29,7 +29,7 @@ const LANG_NAMES = {
 };
 
 router.post("/", async (req, res) => {
-  const { text, voice, language } = req.body;
+  const { text, voice, language, speed } = req.body;
 
   if (!text?.trim()) {
     return res.status(400).json({ error: "Text is required" });
@@ -64,12 +64,16 @@ router.post("/", async (req, res) => {
 
     const selectedVoice = voice || VOICE_MAP[language] || "onyx";
 
+    // Clamp speed to OpenAI TTS allowed range [0.25, 4.0]; default 1.0
+    const rawSpeed = parseFloat(speed);
+    const selectedSpeed = (!isNaN(rawSpeed) && rawSpeed >= 0.25 && rawSpeed <= 4.0) ? rawSpeed : 1.0;
+
     const response = await openai.audio.speech.create({
       model: "tts-1",
       voice: selectedVoice,
       input: cleaned,
       response_format: "mp3",
-      speed: 1.0,
+      speed: selectedSpeed,
     });
 
     // Stream the audio back

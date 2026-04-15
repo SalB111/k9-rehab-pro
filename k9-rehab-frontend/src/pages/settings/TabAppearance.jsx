@@ -4,7 +4,7 @@ import C from "../../constants/colors";
 import S from "../../constants/styles";
 import { sty } from "./constants";
 import { SettingsSection } from "./SettingsShared";
-import { BEAU_VOICES } from "../../hooks/useBeauVoice";
+import { BEAU_VOICES, BEAU_SPEEDS } from "../../hooks/useBeauVoice";
 
 export function TabAppearance({ appearance, setAppearance, theme, setTheme, flashSave, isOpen, toggleSection }) {
   // ── B.E.A.U. Voice preference ──
@@ -15,12 +15,25 @@ export function TabAppearance({ appearance, setAppearance, theme, setTheme, flas
     try { return localStorage.getItem("beau_voice_preference") || "onyx"; }
     catch { return "onyx"; }
   });
+  const [speedPref, setSpeedPref] = useState(() => {
+    try {
+      const raw = parseFloat(localStorage.getItem("beau_voice_speed"));
+      return !isNaN(raw) ? raw : 1.0;
+    } catch { return 1.0; }
+  });
   const [previewing, setPreviewing] = useState(null);
   const previewAudioRef = useRef(null);
 
   const onPickVoice = (id) => {
     setVoicePref(id);
     try { localStorage.setItem("beau_voice_preference", id); } catch {}
+  };
+
+  const onPickSpeed = (val) => {
+    const n = parseFloat(val);
+    if (isNaN(n)) return;
+    setSpeedPref(n);
+    try { localStorage.setItem("beau_voice_speed", String(n)); } catch {}
   };
 
   const stopPreview = () => {
@@ -47,6 +60,7 @@ export function TabAppearance({ appearance, setAppearance, theme, setTheme, flas
           text: "Hello, I am B.E.A.U., the clinical AI of K9 Rehab Pro.",
           voice: voiceId,
           language: "en",
+          speed: speedPref,
         }),
       });
       if (!res.ok) throw new Error("TTS API " + res.status);
@@ -164,6 +178,35 @@ export function TabAppearance({ appearance, setAppearance, theme, setTheme, flas
           </div>
           <div style={{ fontSize: 10, color: C.muted, marginTop: 10, fontStyle: "italic" }}>
             Voice preference is stored in your browser. Selection takes effect immediately across all B.E.A.U. voice features.
+          </div>
+        </div>
+
+        {/* ── Speed Control ── */}
+        <div style={{ ...sty.fieldRow, marginTop: 18 }}>
+          <label style={sty.fieldLabel}>Speech Speed</label>
+          <div style={{ fontSize: 11, color: C.muted, marginTop: 4, marginBottom: 10 }}>
+            Playback speed for B.E.A.U.'s clinical narration. Slow is easier for note-taking; Fast is useful for long protocols.
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
+            {BEAU_SPEEDS.map(opt => {
+              const selected = Math.abs(speedPref - opt.value) < 0.01;
+              return (
+                <div key={opt.value} onClick={() => onPickSpeed(opt.value)}
+                  style={{
+                    padding: "10px 8px", borderRadius: 7, cursor: "pointer", textAlign: "center",
+                    background: selected ? C.teal : C.bg,
+                    color: selected ? "#fff" : C.text,
+                    border: selected ? `2px solid ${C.teal}` : `1px solid ${C.border}`,
+                    transition: "all 0.15s",
+                  }}>
+                  <div style={{ fontSize: 13, fontWeight: 800 }}>{opt.value.toFixed(2)}x</div>
+                  <div style={{ fontSize: 10, marginTop: 2, opacity: selected ? 0.85 : 0.65 }}>{opt.label}</div>
+                </div>
+              );
+            })}
+          </div>
+          <div style={{ fontSize: 10, color: C.muted, marginTop: 8, fontStyle: "italic" }}>
+            Speed applies to all B.E.A.U. voice output. Preview buttons above will use the selected speed.
           </div>
         </div>
       </SettingsSection>

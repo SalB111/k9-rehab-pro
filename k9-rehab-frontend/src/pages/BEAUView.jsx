@@ -291,9 +291,12 @@ useEffect(() => {
           </button>
           <BeauVoiceControl
             isSpeaking={beauVoice.isSpeaking}
+            isPaused={beauVoice.isPaused}
             autoSpeak={beauVoice.autoSpeak}
             setAutoSpeak={beauVoice.setAutoSpeak}
             onStop={beauVoice.stop}
+            onPause={beauVoice.pause}
+            onResume={beauVoice.resume}
             voiceName={beauVoice.voiceName}
             compact
           />
