@@ -31,7 +31,7 @@ function registerEngineHook(name, hook) {
  * @param {Object} res — Express response (SSE stream)
  */
 async function handleChat(req, res) {
-  const { messages, patient, language } = req.body;
+  const { messages, patient, language, system: customSystem } = req.body;
 
   if (!messages || !Array.isArray(messages) || messages.length === 0) {
     return res.status(400).json({ error: "Messages array is required" });
@@ -73,7 +73,17 @@ async function handleChat(req, res) {
     }
 
     // ── Pipeline Step 2: Build system prompt ──
-    let systemPrompt = buildSystemPrompt(patient, additionalContext);
+    // If the caller provided a custom `system` prompt in the request body,
+    // use it VERBATIM — this bypasses the default engine injection (visual,
+    // narrative, presentation) so callers like ConditioningPanel can enforce
+    // strict plain-text or custom formats. Opt-in: callers that omit `system`
+    // still get the full B.E.A.U. brain + engine stack.
+    let systemPrompt = customSystem
+      ? customSystem
+      : buildSystemPrompt(patient, additionalContext);
+    if (customSystem) {
+      console.log("[B.E.A.U.] Using caller-provided custom system prompt (engine injection bypassed)");
+    }
 
     // ── Language instruction — respond in the user's selected language ──
     const LANG_NAMES = { es:"Spanish", fr:"French", de:"German", "pt-BR":"Brazilian Portuguese", pt:"Portuguese", it:"Italian", ja:"Japanese", ko:"Korean", "zh-CN":"Mandarin Chinese", zh:"Mandarin Chinese", nl:"Dutch" };
@@ -117,16 +127,40 @@ async function handleChat(req, res) {
     });
 
     let fullText = "";
+    let clientGone = false;
+
+    // Detect client disconnect (browser navigates away, reloads, or the
+    // ReadableStream reader on the frontend is cancelled mid-response).
+    // When this fires we stop writing to the dead socket and abort the
+    // Anthropic stream so we don't burn tokens on a dead request.
+    req.on("close", () => {
+      if (!res.writableEnded) {
+        clientGone = true;
+        try { stream.abort?.(); } catch { /* noop */ }
+      }
+    });
+
+    // Safe write helper — guards against ERR_STREAM_WRITE_AFTER_END when
+    // the Anthropic SDK keeps firing events after the client has disconnected.
+    const safeWrite = (payload) => {
+      if (clientGone || res.writableEnded) return false;
+      try { res.write(payload); return true; }
+      catch (e) { clientGone = true; return false; }
+    };
+    const safeEnd = () => {
+      if (clientGone || res.writableEnded) return;
+      try { res.end(); } catch { /* noop */ }
+    };
 
     stream.on("text", (text) => {
       fullText += text;
-      res.write(`data: ${JSON.stringify({ type: "delta", text })}\n\n`);
+      safeWrite(`data: ${JSON.stringify({ type: "delta", text })}\n\n`);
     });
 
     stream.on("error", (err) => {
       console.error("[B.E.A.U.] Stream error:", err.message);
-      res.write(`data: ${JSON.stringify({ type: "error", text: err.message })}\n\n`);
-      res.end();
+      safeWrite(`data: ${JSON.stringify({ type: "error", text: err.message })}\n\n`);
+      safeEnd();
     });
 
     stream.on("end", () => {
@@ -136,8 +170,8 @@ async function handleChat(req, res) {
         console.warn(`[B.E.A.U.] Unknown exercise codes in response: ${unknown.join(", ")}`);
       }
 
-      res.write(`data: ${JSON.stringify({ type: "done" })}\n\n`);
-      res.end();
+      safeWrite(`data: ${JSON.stringify({ type: "done" })}\n\n`);
+      safeEnd();
     });
 
   } catch (err) {
