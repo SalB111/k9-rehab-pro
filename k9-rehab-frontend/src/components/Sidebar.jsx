@@ -65,37 +65,11 @@ export default function Sidebar({ view, setView, currentUser, onLogout }) {
         </button>
       </div>
 
-      {/* Nav Items */}
-      <nav className="flex-1 px-2 mt-2 space-y-0.5 overflow-y-auto">
-        {NAV.map((item) => {
-          const active = view === item.id;
-          const Icon = item.icon;
-          return (
-            <button
-              key={item.id}
-              onClick={() => setView(item.id)}
-              title={collapsed ? `${item.label} — ${item.desc}` : item.desc}
-              className={`
-                w-full flex items-center gap-3 px-3 py-2.5 rounded-lg
-                text-left text-[13px] font-medium transition-all duration-150
-                ${active
-                  ? "bg-white/10 text-white shadow-sm"
-                  : "text-[#7AAACF] hover:bg-white/5 hover:text-white"
-                }
-                ${collapsed ? "justify-center px-0" : ""}
-              `}
-            >
-              <div className="relative flex-shrink-0">
-                <Icon className={`w-[18px] h-[18px] ${active ? "text-[#1D9E75]" : ""}`} />
-                {active && (
-                  <div className="absolute -left-[14px] top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-[#1D9E75]" />
-                )}
-              </div>
-              {!collapsed && <span>{item.label}</span>}
-            </button>
-          );
-        })}
-      </nav>
+      {/* Nav Items — capsule/pill clickable buttons
+          Per Sal 2026-04-15: uses INLINE STYLES (not Tailwind) + useState
+          hover tracking to guarantee the styling applies regardless of any
+          Tailwind JIT/purge issues. Three states: inactive, hover, active. */}
+      <SidebarNav NAV={NAV} view={view} setView={setView} collapsed={collapsed} />
 
       {/* Language Selector */}
       <SidebarLanguage collapsed={collapsed} />
@@ -141,6 +115,92 @@ export default function Sidebar({ view, setView, currentUser, onLogout }) {
         </button>
       </div>
     </aside>
+  );
+}
+
+// ─── Nav item list with inline-style capsule buttons ────────────────────────
+// Uses inline styles + useState hover tracking (not Tailwind) so the styling
+// is guaranteed to apply regardless of build-tool purge behavior.
+function SidebarNav({ NAV, view, setView, collapsed }) {
+  const [hoveredId, setHoveredId] = useState(null);
+
+  return (
+    <nav
+      style={{
+        flex: 1,
+        padding: "8px 12px 0 12px",
+        marginTop: 8,
+        display: "flex",
+        flexDirection: "column",
+        gap: 6,
+        overflowY: "auto",
+      }}
+    >
+      {NAV.map((item) => {
+        const active = view === item.id;
+        const hovered = hoveredId === item.id && !active;
+        const Icon = item.icon;
+
+        // Base capsule — INACTIVE state
+        const baseStyle = {
+          borderRadius: 24,
+          padding: collapsed ? "8px 8px" : "8px 14px",
+          background: "transparent",
+          border: "1px solid rgba(255,255,255,0.08)",
+          color: "rgba(255,255,255,0.6)",
+          transition: "all 0.2s ease",
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          width: "100%",
+          justifyContent: collapsed ? "center" : "flex-start",
+          cursor: "pointer",
+          fontSize: 13,
+          fontWeight: 500,
+          textAlign: "left",
+          fontFamily: "inherit",
+          boxShadow: "none",
+        };
+
+        // HOVER overrides
+        const hoverStyle = hovered ? {
+          background: "rgba(0,229,255,0.08)",
+          border: "1px solid rgba(0,229,255,0.25)",
+          color: "#ffffff",
+          boxShadow: "0 0 8px rgba(0,229,255,0.15)",
+        } : {};
+
+        // ACTIVE overrides (takes priority over hover)
+        const activeStyle = active ? {
+          background: "rgba(0,229,255,0.15)",
+          border: "1px solid rgba(0,229,255,0.5)",
+          color: "#00e5ff",
+          boxShadow: "0 0 12px rgba(0,229,255,0.2)",
+          fontWeight: 700,
+        } : {};
+
+        const finalStyle = { ...baseStyle, ...hoverStyle, ...activeStyle };
+
+        return (
+          <button
+            key={item.id}
+            onClick={() => setView(item.id)}
+            onMouseEnter={() => setHoveredId(item.id)}
+            onMouseLeave={() => setHoveredId(null)}
+            title={collapsed ? `${item.label} — ${item.desc}` : item.desc}
+            style={finalStyle}
+          >
+            <Icon style={{
+              width: 18,
+              height: 18,
+              flexShrink: 0,
+              filter: active ? "drop-shadow(0 0 4px rgba(0,229,255,0.8))" : "none",
+            }}/>
+            {!collapsed && <span>{item.label}</span>}
+          </button>
+        );
+      })}
+    </nav>
   );
 }
 

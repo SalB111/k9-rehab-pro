@@ -8,8 +8,7 @@ import S from "../constants/styles";
 import { API } from "../api/axios";
 import { getK9Icon } from "../K9Icons";
 import StoryboardPlayer from "../components/StoryboardPlayer";
-// HolographicViewer is imported lazily inside ExerciseCard usage path
-import HolographicViewer from "../components/HolographicViewer";
+import AnatomyViewer3D from "../components/AnatomyViewer3D";
 import { useToast } from "../components/Toast";
 
 const PrintableHandout = React.lazy(() => import("../components/handout/PrintableHandout"));
@@ -369,14 +368,15 @@ function ExerciseCard({ e, onOpenStoryboard, onUseInProtocol, onPrintHandout }) 
             {showAnatomy ? "Hide Anatomy Viewer" : "View Targeted Muscles"}
           </button>
 
-          {/* â"€â"€ Inline Holographic Anatomy Viewer Panel (Phase 1D) â"€â"€
-              Replaced legacy Three.js cartoon model with the holographic
-              X-ray PNG viewer. Highlights muscle regions for THIS exercise. */}
+          {/* â"€â"€ Inline 3D Anatomy Viewer â"€â"€ Reverted to the original Three.js
+              AnatomyViewer3D component per Sal 2026-04-15. Drag to rotate,
+              scroll to zoom, muscle highlights driven by exercise code. */}
           {showAnatomy && (
             <div ref={anatomyRef} style={{ marginTop: 8 }}>
-              <HolographicViewer
+              <AnatomyViewer3D
+                exerciseCode={e.code}
+                diagnosis={null}
                 species={e.code?.startsWith("FELINE_") ? "Feline" : "Canine"}
-                selectedExercise={e}
               />
             </div>
           )}
@@ -489,9 +489,9 @@ function ExercisesView({ setView, setGenKey, setGenInitialStep }) {
   const catRefs = useRef({});
   const toast = useToast();
 
-  // Phase 1D — HolographicViewer is rendered INLINE inside ExerciseCard
-  // (only when the user clicks "View Targeted Muscles"). No permanent
-  // sidebar viewer per Sal's directive 2026-04-15.
+  // Anatomy viewer is rendered INLINE inside ExerciseCard (only when the
+  // user clicks "View Targeted Muscles"). Uses the original AnatomyViewer3D
+  // Three.js component restored from commit 2119071.
 
   const goToGenerator = () => {
     if (!setView) return;

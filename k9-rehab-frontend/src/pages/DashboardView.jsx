@@ -633,7 +633,7 @@ function ClientPanel() {
   const setSpecies = (v) => update("client::Species", v);
   const breeds = species === "Feline" ? FELINE_BREEDS : CANINE_BREEDS;
 
-  // Phase 1D — persist species to localStorage so HolographicViewer in
+  // Phase 1D — persist species to localStorage so any viewer in
   // Exercise Library (and any future species-aware component outside
   // DashFormContext) can read the current patient species without a
   // round-trip to the backend.
@@ -2371,6 +2371,147 @@ function LibraryPanel() {
   </>;
 }
 
+// ── COMING SOON — 3D Clinical Anatomy Viewer ─────────────────────────────────
+// Teaser block showcasing the upcoming holographic 3D anatomy viewer.
+// Displays the two X-ray images Sal provided (dog + cat), a professional
+// statement describing the feature, and feature preview chips.
+// No form fields — purely marketing/communication content for the Mars pitch.
+function ComingSoonPanel() {
+  return <>
+    <style dangerouslySetInnerHTML={{ __html: `
+      @keyframes k9ComingSoonFloat {
+        0%,100% { transform: translateY(0px); }
+        50%     { transform: translateY(-8px); }
+      }
+      .k9-cs-float-a { animation: k9ComingSoonFloat 5s ease-in-out infinite; }
+      .k9-cs-float-b { animation: k9ComingSoonFloat 5s ease-in-out infinite; animation-delay: 2.5s; }
+    `}}/>
+
+    {/* ── TOP SECTION — Two holographic X-ray images side by side ── */}
+    <div style={{
+      background: "#050810",
+      borderRadius: 12,
+      padding: "24px 20px",
+      marginBottom: 18,
+      border: "1px solid rgba(0,229,255,0.2)",
+      boxShadow: "0 0 30px rgba(0,229,255,0.08)",
+    }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 16, flexWrap: "wrap" }}>
+        <div style={{ width: "45%", minWidth: 180, textAlign: "center" }}>
+          <img
+            src="/assets/holographic/dog-holographic.png"
+            alt="Canine holographic anatomy preview"
+            className="k9-cs-float-a"
+            style={{
+              width: "100%",
+              height: "auto",
+              maxHeight: 220,
+              objectFit: "contain",
+              filter: "drop-shadow(0 0 15px rgba(0,229,255,0.5))",
+              willChange: "transform",
+            }}
+          />
+          <div style={{
+            fontSize: 10, fontWeight: 700, color: "#00e5ff",
+            fontFamily: "monospace", letterSpacing: 2, marginTop: 8,
+            textTransform: "uppercase",
+          }}>
+            Canine · Skeletal Model
+          </div>
+        </div>
+        <div style={{ width: "45%", minWidth: 180, textAlign: "center" }}>
+          <img
+            src="/assets/holographic/cat-holographic.png"
+            alt="Feline holographic anatomy preview"
+            className="k9-cs-float-b"
+            style={{
+              width: "100%",
+              height: "auto",
+              maxHeight: 220,
+              objectFit: "contain",
+              filter: "drop-shadow(0 0 15px rgba(0,229,255,0.5))",
+              willChange: "transform",
+            }}
+          />
+          <div style={{
+            fontSize: 10, fontWeight: 700, color: "#00e5ff",
+            fontFamily: "monospace", letterSpacing: 2, marginTop: 8,
+            textTransform: "uppercase",
+          }}>
+            Feline · Skeletal Model
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* ── MIDDLE SECTION — Professional statement ── */}
+    <Sec title="B.E.A.U. 3D Clinical Anatomy Viewer" color={C.teal} colorLt={C.tealLt}>
+      <div style={{
+        padding: "18px 22px",
+        background: "linear-gradient(135deg, #F0FDFB 0%, #FFFFFF 100%)",
+        border: `1px solid ${C.teal}33`,
+        borderLeft: `4px solid ${C.teal}`,
+        borderRadius: 8,
+        fontSize: 12, color: C.text, lineHeight: 1.75,
+      }}>
+        <div style={{
+          fontSize: 11, fontWeight: 700, color: C.teal,
+          letterSpacing: ".12em", textTransform: "uppercase",
+          marginBottom: 10,
+        }}>
+          Coming to K9 Rehab Pro&trade;
+        </div>
+        <p style={{ margin: "0 0 12px" }}>
+          The next evolution in veterinary rehabilitation intelligence. Select any exercise and watch
+          B.E.A.U. illuminate the exact muscle groups, joint structures, and anatomical regions
+          being targeted &mdash; in real-time, interactive 3D holographic visualization.
+        </p>
+        <p style={{ margin: "0 0 12px" }}>
+          Canine and feline anatomical models with precise muscle group mapping, evidence-based
+          exercise correlation, and species-specific skeletal overlay technology.
+        </p>
+        <div style={{
+          paddingTop: 10, marginTop: 10,
+          borderTop: `1px solid ${C.border}`,
+          fontSize: 10, color: C.muted, fontStyle: "italic", letterSpacing: ".02em",
+        }}>
+          Powered by B.E.A.U. AI &middot; Millis &amp; Levine Evidence-Based Protocols
+        </div>
+      </div>
+    </Sec>
+
+    {/* ── BOTTOM SECTION — Feature preview chips ── */}
+    <Sec title="Feature Preview" color={C.teal} colorLt={C.tealLt}>
+      <div style={{ fontSize: 11, color: C.muted, marginBottom: 12, lineHeight: 1.6 }}>
+        What you&apos;ll see in the full 3D Clinical Anatomy Viewer release:
+      </div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+        {[
+          "Real-time muscle highlighting",
+          "Species-aware canine & feline models",
+          "Exercise-to-anatomy correlation",
+          "Interactive 3D rotation",
+          "Evidence-based overlay system",
+        ].map(feature => (
+          <div key={feature} style={{
+            padding: "8px 16px",
+            background: "rgba(14,165,233,0.08)",
+            border: `1px solid ${C.teal}55`,
+            borderRadius: 20,
+            fontSize: 11,
+            fontWeight: 600,
+            color: C.teal,
+            letterSpacing: ".02em",
+            boxShadow: `0 0 8px rgba(14,165,233,0.12)`,
+          }}>
+            {feature}
+          </div>
+        ))}
+      </div>
+    </Sec>
+  </>;
+}
+
 // ─── SIDEBAR PANELS ───────────────────────────────────────────────────────────
 function HowToUse() {
   const steps = [
@@ -2682,6 +2823,7 @@ const BLOCKS = [
   { id:"conditioning", icon:"🐺", color:"#0D9488", colorLt:"#F0FDFB"  },
   { id:"protocol",     icon:"🐶", color:C.green,   colorLt:C.greenLt  },
   { id:"library",      icon:"🦴", color:C.navy,    colorLt:C.blueLt   },
+  { id:"coming-soon",  icon:"🫀", color:C.teal,    colorLt:C.tealLt   },
 ];
 
 const SIDEBAR_NAV = [
@@ -2693,7 +2835,7 @@ const SIDEBAR_NAV = [
   { id:"hipaa",      icon:"🔒" },
 ];
 
-const BLOCK_COMPS   = { client:ClientPanel, diagnostics:DiagnosticsPanel, assessment:AssessmentPanel, treatment:TreatmentPanel, metrics:MetricsPanel, equipment:EquipmentPanel, home:HomePanel, goals:GoalsPanel, conditioning:ConditioningPanel, protocol:ProtocolPanel, library:LibraryPanel };
+const BLOCK_COMPS   = { client:ClientPanel, diagnostics:DiagnosticsPanel, assessment:AssessmentPanel, treatment:TreatmentPanel, metrics:MetricsPanel, equipment:EquipmentPanel, home:HomePanel, goals:GoalsPanel, conditioning:ConditioningPanel, protocol:ProtocolPanel, library:LibraryPanel, "coming-soon":ComingSoonPanel };
 const SIDEBAR_COMPS = { how:HowToUse, ask:AskBeau, helsinki:HelsinkiPanel, about:AboutPanel, disclaimer:DisclaimerPanel, hipaa:HipaaPanel };
 
 // ── CONTEXTUAL B.E.A.U. PROMPTS ──────────────────────────────────────────────
@@ -2707,6 +2849,7 @@ const BEAU_BLOCK_CONTEXTS = {
   home:         "You are helping design home exercise programs — client education, exercise selection appropriate for home, frequency/duration recommendations, safety guidelines, environment assessment.",
   goals:        "You are helping set rehabilitation goals — SMART goals, phase-appropriate milestones, validated outcome measures, realistic timeline expectations based on condition and evidence.",
   conditioning: "You are helping with conditioning programs — progressive overload, sport-specific training, return-to-function criteria, fitness maintenance protocols.",
+  "coming-soon": "You are previewing the upcoming 3D Clinical Anatomy Viewer — a holographic, interactive anatomy visualization feature in development. Help clinicians understand what the feature will offer when released.",
 };
 
 export default function DashboardView({ setView, currentUser, onLogout, patient, setSelectedPatient }) {

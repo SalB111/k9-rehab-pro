@@ -300,7 +300,7 @@ export default function BeauMetricsView({ authToken, setView }) {
         <div style={{ marginTop: 20 }}>
           {error && <div style={{ padding: "10px 14px", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 6, color: "#dc2626", fontSize: 12, marginBottom: 12 }}>{error}</div>}
           <button style={S.btn(loading)} onClick={generate} disabled={loading}>
-            {loading ? <><div style={{ width: 16, height: 16, border: "2px solid #fff", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} /> Generating BEAU Protocol...</> : "\u26a1 Generate BEAU Protocol"}
+            {loading ? <><div style={{ width: 16, height: 16, border: "2px solid #fff", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} /> Generating PetCare Nutrition Diet...</> : "\u26a1 Generate PetCare Nutrition Diet"}
           </button>
         </div>
       </div>
