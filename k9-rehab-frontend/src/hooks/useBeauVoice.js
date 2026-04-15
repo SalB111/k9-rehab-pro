@@ -122,11 +122,12 @@ export default function useBeauVoice(locale = "en") {
 
     if (!cleaned) return;
 
-    // If already speaking, stop first — new speech replaces old
+    // If already speaking, stop first — new speech replaces old.
+    // 500ms pause prevents audio overlap when a new BEAU response arrives
+    // while voice is still narrating the previous response. Per Sal 2026-04-14.
     if (speakingRef.current) {
       stop();
-      // Small delay to let stop() complete
-      await new Promise(r => setTimeout(r, 100));
+      await new Promise(r => setTimeout(r, 500));
     }
 
     speakingRef.current = true;
@@ -138,5 +139,5 @@ export default function useBeauVoice(locale = "en") {
     setIsSpeaking(false);
   }, [locale, stop, playOne]);
 
-  return { speak, stop, isSpeaking, autoSpeak, setAutoSpeak, voiceName, voicesLoaded: true };
+  return { speak, stop, cancel: stop, isSpeaking, autoSpeak, setAutoSpeak, voiceName, voicesLoaded: true };
 }
