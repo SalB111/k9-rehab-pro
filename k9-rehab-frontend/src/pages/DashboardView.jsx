@@ -2467,30 +2467,14 @@ export default function DashboardView({ setView, currentUser, onLogout, patient,
     ? `${liveName}${liveBreed ? ` — ${liveBreed}` : ""}${liveSpecies ? ` · ${liveSpecies}` : ""}${visitCount > 0 ? ` · Visit #${visitCount}` : ""}`
     : null;
 
-  // ── Patient anchor lock — Phase 1A Fix 1 ──
-  // All blocks except "client" are locked until both Client Name and Patient Name are entered.
-  // Either form-field entry OR a selected patient (with client_name + name) unlocks blocks.
-  const hasClientName = !!(
-    (dashData["client::Client First Name"] && dashData["client::Client First Name"].trim()) ||
-    (dashData["client::Client Last Name"] && dashData["client::Client Last Name"].trim()) ||
-    patient?.client_name
-  );
-  const hasPatientName = !!(
-    (dashData["client::Patient Name"] && dashData["client::Patient Name"].trim()) ||
-    patient?.name
-  );
-  const isUnlocked = hasClientName && hasPatientName;
-  const [showLockToast, setShowLockToast] = useState(false);
-
-  // Gated block click handler — redirects to client block if locked
+  // ── Patient anchor lock REMOVED per Sal 2026-04-15 ──
+  // Blocks are now always accessible. Phase 1A introduced a lock that gated
+  // all non-Client blocks behind "enter Client Name + Patient Name first"
+  // — Sal wants that removed. All clinical features open freely without
+  // requiring a named patient anchor. Save/reload + search + UPDATE PATIENT
+  // RECORD button are unchanged (still require a patient name to persist).
   const handleBlockClick = (blockId) => {
-    if (blockId === "client" || isUnlocked) {
-      setOpenBlock(blockId); setBeauOpen(false); setBeauQuery(""); setBeauAnswer("");
-    } else {
-      setShowLockToast(true);
-      setTimeout(() => setShowLockToast(false), 3500);
-      setOpenBlock("client"); setBeauOpen(false); setBeauQuery(""); setBeauAnswer("");
-    }
+    setOpenBlock(blockId); setBeauOpen(false); setBeauQuery(""); setBeauAnswer("");
   };
 
   // ── Fetch patient list for search
@@ -2760,20 +2744,6 @@ export default function DashboardView({ setView, currentUser, onLogout, patient,
 
         {/* ── BLOCK GRID ── */}
         <div style={{ padding:22 }}>
-          {!isUnlocked && (
-            <div style={{ marginBottom:16, padding:"12px 18px", background:"#fffbeb", border:"1px solid #fde68a", borderLeft:"4px solid #f59e0b", borderRadius:6, display:"flex", alignItems:"center", gap:10, fontSize:12, color:"#92400e" }}>
-              <span style={{ fontSize:18 }}>⚠️</span>
-              <div>
-                <strong>Patient Anchor Required.</strong> Enter <strong>Client Name</strong> + <strong>Patient Name</strong> in the <strong>Client & Patient</strong> block to unlock all clinical features.
-              </div>
-            </div>
-          )}
-          {showLockToast && (
-            <div style={{ position:"fixed", top:80, right:24, zIndex:300, padding:"12px 18px", background:"#fef2f2", border:"1px solid #fecaca", borderLeft:"4px solid #dc2626", borderRadius:6, boxShadow:"0 8px 24px rgba(0,0,0,.15)", fontSize:12, color:"#991b1b", maxWidth:340, animation:"fadeIn .2s ease" }}>
-              <div style={{ fontWeight:700, marginBottom:4 }}>🔒 Block Locked</div>
-              Please enter Client and Patient name first. Redirecting to Client & Patient block...
-            </div>
-          )}
           {/* ── UPDATE PATIENT RECORD success/error toast ── */}
           {updateToast && (
             <div style={{
@@ -2791,24 +2761,19 @@ export default function DashboardView({ setView, currentUser, onLogout, patient,
             </div>
           )}
           <div style={{ display:"grid", gridTemplateColumns:"repeat(3, 1fr)", gap:16 }}>
-            {BLOCKS.map((b,i)=>{
-              const locked = !isUnlocked && b.id !== "client";
-              return (
+            {BLOCKS.map((b,i)=>(
               <div key={b.id} className="block-card"
                 onClick={()=>handleBlockClick(b.id)}
-                style={{ background:C.white, border:`1.5px solid ${locked ? "#cbd5e1" : C.border}`, borderRadius:9, padding:"22px 20px", position:"relative", overflow:"hidden", boxShadow:"0 1px 6px rgba(26,39,68,.06)", animationDelay:`${i*.04}s`, animation:"fadeUp .3s ease both", opacity: locked ? 0.55 : 1 }}>
-                <div style={{ position:"absolute", top:0, left:0, right:0, height:4, background: locked ? "#cbd5e1" : b.color }}/>
-                {locked && (
-                  <div style={{ position:"absolute", top:10, right:12, fontSize:16, opacity:0.7 }}>🔒</div>
-                )}
-                <div style={{ width:44, height:44, borderRadius:10, background: locked ? "#f1f5f9" : b.colorLt, border:`1px solid ${locked ? "#cbd5e1" : b.color+"33"}`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:22, marginBottom:14, boxShadow: locked ? "none" : `0 2px 8px ${b.color}22`, filter: locked ? "grayscale(0.6)" : "none" }}>
+                style={{ background:C.white, border:`1.5px solid ${C.border}`, borderRadius:9, padding:"22px 20px", position:"relative", overflow:"hidden", boxShadow:"0 1px 6px rgba(26,39,68,.06)", animationDelay:`${i*.04}s`, animation:"fadeUp .3s ease both" }}>
+                <div style={{ position:"absolute", top:0, left:0, right:0, height:4, background:b.color }}/>
+                <div style={{ width:44, height:44, borderRadius:10, background:b.colorLt, border:`1px solid ${b.color}33`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:22, marginBottom:14, boxShadow:`0 2px 8px ${b.color}22` }}>
                   {b.icon}
                 </div>
                 <div style={{ fontSize:14, fontWeight:700, color:C.navy, marginBottom:5 }}>{t(`tiles.${b.id}.label`)}</div>
                 <div style={{ fontSize:11, color:C.muted, lineHeight:1.55 }}>{t(`tiles.${b.id}.desc`)}</div>
-                <div style={{ position:"absolute", bottom:16, right:16, fontSize:16, color: locked ? "#94a3b8" : b.color, opacity:.35 }}>→</div>
+                <div style={{ position:"absolute", bottom:16, right:16, fontSize:16, color:b.color, opacity:.35 }}>→</div>
               </div>
-            );})}
+            ))}
           </div>
 
           <div style={{ marginTop:20, padding:"10px 4px", display:"flex", justifyContent:"space-between", borderTop:`1px solid ${C.border}` }}>
