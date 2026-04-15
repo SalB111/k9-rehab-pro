@@ -8,6 +8,7 @@ import S from "../constants/styles";
 import { API } from "../api/axios";
 import { getK9Icon } from "../K9Icons";
 import StoryboardPlayer from "../components/StoryboardPlayer";
+// HolographicViewer is imported lazily inside ExerciseCard usage path
 import HolographicViewer from "../components/HolographicViewer";
 import { useToast } from "../components/Toast";
 
@@ -114,7 +115,7 @@ function EvidenceSection({ grade, refs }) {
 // â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 // EXERCISE CARD (expandable)
 // â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
-function ExerciseCard({ e, onOpenStoryboard, onUseInProtocol, onPrintHandout, onSelect }) {
+function ExerciseCard({ e, onOpenStoryboard, onUseInProtocol, onPrintHandout }) {
   const [open, setOpen] = useState(false);
   const [showAnatomy, setShowAnatomy] = useState(false);
   const cardTopRef = useRef(null);
@@ -135,7 +136,7 @@ function ExerciseCard({ e, onOpenStoryboard, onUseInProtocol, onPrintHandout, on
       transition: "box-shadow 0.15s", gridColumn: open ? "1 / -1" : undefined
     }}>
       {/* Header â€" always visible */}
-      <div style={{ padding: 20, cursor: "pointer" }} onClick={() => { setOpen(o => !o); onSelect?.(e); }}>
+      <div style={{ padding: 20, cursor: "pointer" }} onClick={() => setOpen(o => !o)}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
           <div style={{ fontWeight: 700, fontSize: 14, color: C.text, flex: 1, paddingRight: 12 }}>
             {e.name}
@@ -488,37 +489,9 @@ function ExercisesView({ setView, setGenKey, setGenInitialStep }) {
   const catRefs = useRef({});
   const toast = useToast();
 
-  // ── Phase 1D: HolographicViewer integration ──
-  // Selected exercise drives muscle-region highlighting in the viewer
-  const [selectedExercise, setSelectedExercise] = useState(null);
-  // Species pulled from localStorage (set by ClientPanel useEffect when patient
-  // is loaded). Defaults to Canine. Updated cross-tab via storage event.
-  const [species, setSpecies] = useState(() => {
-    try { return localStorage.getItem("beau_species") || "Canine"; }
-    catch { return "Canine"; }
-  });
-  useEffect(() => {
-    const onStorage = (e) => {
-      if (e.key === "beau_species" && e.newValue) setSpecies(e.newValue);
-    };
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
-  }, []);
-  // Responsive — switch to single-column stack when viewport < 900px
-  const [isNarrow, setIsNarrow] = useState(() =>
-    typeof window !== "undefined" && window.innerWidth < 900
-  );
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const mq = window.matchMedia("(max-width: 900px)");
-    const onChange = (e) => setIsNarrow(e.matches);
-    if (mq.addEventListener) mq.addEventListener("change", onChange);
-    else mq.addListener(onChange); // legacy Safari
-    return () => {
-      if (mq.removeEventListener) mq.removeEventListener("change", onChange);
-      else mq.removeListener(onChange);
-    };
-  }, []);
+  // Phase 1D — HolographicViewer is rendered INLINE inside ExerciseCard
+  // (only when the user clicks "View Targeted Muscles"). No permanent
+  // sidebar viewer per Sal's directive 2026-04-15.
 
   const goToGenerator = () => {
     if (!setView) return;
@@ -571,15 +544,7 @@ function ExercisesView({ setView, setGenKey, setGenInitialStep }) {
   }
 
   return (
-    <div style={{ padding: isNarrow ? 16 : 20 }}>
-    <div style={{
-      display: "grid",
-      gridTemplateColumns: isNarrow ? "1fr" : "minmax(0, 1fr) 380px",
-      gap: 24,
-      alignItems: "start",
-    }}>
-      {/* ── LEFT COLUMN — exercise list (existing content) ── */}
-      <div style={{ minWidth: 0 }}>
+    <div>
       {/* Storyboard Player Modal */}
       {showStoryboard && <StoryboardPlayer exerciseCode={showStoryboard} onClose={() => setShowStoryboard(null)} />}
       {/* Printable Handout Modal */}
@@ -800,16 +765,14 @@ function ExercisesView({ setView, setGenKey, setGenInitialStep }) {
               <div style={{ width: "200%", height: "100%", background: `linear-gradient(90deg, transparent, #39FF7E, ${C.teal}, #39FF7E, transparent)`, animation: "neonFlatline 3s linear infinite" }} />
             </div>
 
-            {/* Exercise grid — 2 columns when viewer is visible (60/40 layout),
-                full grid on narrow screens where viewer is stacked below. */}
+            {/* Exercise grid */}
             {!isCollapsed && (
               <div style={{ padding: 16 }}>
-                <div style={isNarrow ? S.grid(3) : { display:"grid", gridTemplateColumns:"repeat(2, minmax(0, 1fr))", gap: 16 }}>
+                <div style={S.grid(3)}>
                   {exList.map(e => <ExerciseCard key={e.code} e={e}
                     onOpenStoryboard={setShowStoryboard}
                     onUseInProtocol={setView ? goToGenerator : undefined}
-                    onPrintHandout={(ex) => setHandoutExercises([ex])}
-                    onSelect={setSelectedExercise} />)}
+                    onPrintHandout={(ex) => setHandoutExercises([ex])} />)}
                 </div>
                 <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 12 }}>
                   <button onClick={() => { const el = document.querySelector('[data-content-scroll]'); if (el) el.scrollTo({ top: 0, behavior: "smooth" }); else window.scrollTo({ top: 0, behavior: "smooth" }); }} style={{
@@ -829,30 +792,6 @@ function ExercisesView({ setView, setGenKey, setGenInitialStep }) {
           </div>
         );
       })}
-      </div>
-      {/* ── RIGHT COLUMN — Holographic 3D viewer (in-flow grid track) ── */}
-      <div style={{ minWidth: 0 }}>
-        <HolographicViewer
-          species={species}
-          selectedExercise={selectedExercise}
-        />
-        <div style={{
-          marginTop: 12,
-          padding: "10px 14px",
-          background: "rgba(0,229,255,0.05)",
-          border: "1px solid rgba(0,229,255,0.15)",
-          borderRadius: 8,
-          fontSize: 11,
-          color: "#7fa8c8",
-          fontFamily: "monospace",
-          lineHeight: 1.5,
-        }}>
-          {selectedExercise
-            ? <><b style={{ color: "#00e5ff" }}>{selectedExercise.name || selectedExercise.code}</b><br/>Muscle regions highlighted above. Click another exercise to switch.</>
-            : <>Click any exercise to highlight active muscle regions on the {species.toLowerCase()} skeleton.</>}
-        </div>
-      </div>
-    </div>
     </div>
   );
 }

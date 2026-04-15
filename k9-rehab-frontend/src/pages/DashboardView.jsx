@@ -480,7 +480,7 @@ function Modal({ title, color, colorLt, icon, onClose, children, beauContext, be
 // Scope note: this only changes the UI chrome. Clinical content, AI output,
 // exercise library entries, protocol generation, and the Mars Petcare diet
 // catalog remain in English across all locales (CLAUDE.md safety rule).
-function LanguageSelector() {
+export function LanguageSelector() {
   const { t, i18n: i18nInstance } = useTranslation();
   const [open, setOpen] = useState(false);
   const ref = useRef(null);

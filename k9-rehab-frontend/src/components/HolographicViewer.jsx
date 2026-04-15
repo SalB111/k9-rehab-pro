@@ -16,31 +16,33 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 
 // ─── CANINE muscle regions (% of image w/h) ──────────────────────────────────
+// 35% smaller boxes than v1; tighter to anatomy. Keywords narrowed for
+// precision so a single exercise typically lights only its 1–2 true regions.
 const CANINE_REGIONS = {
-  cervical_spine: { label: "Cervical Spine",    x: 72, y: 18, w: 12, h: 20, color: "#00e5ff", keywords: ["cervical", "neck"] },
-  thoracic_spine: { label: "Thoracic Spine",    x: 45, y: 15, w: 20, h: 22, color: "#00e5ff", keywords: ["thoracic", "spine", "back"] },
-  lumbar_spine:   { label: "Lumbar Spine",      x: 28, y: 18, w: 15, h: 20, color: "#00e5ff", keywords: ["lumbar", "lumbosacral"] },
-  left_shoulder:  { label: "Left Shoulder",     x: 68, y: 25, w: 12, h: 18, color: "#a78bfa", keywords: ["shoulder", "scapula", "forelimb"] },
-  right_hip:      { label: "Right Hip",         x: 22, y: 25, w: 14, h: 18, color: "#a78bfa", keywords: ["hip", "coxofemoral", "pelvic"] },
-  left_elbow:     { label: "Left Elbow",        x: 72, y: 48, w: 10, h: 14, color: "#00e5ff", keywords: ["elbow", "humeroradial"] },
-  right_stifle:   { label: "Right Stifle",      x: 28, y: 50, w: 12, h: 16, color: "#ff4455", keywords: ["stifle", "knee", "tplo", "ccl", "cranial cruciate", "patell"] },
-  left_carpus:    { label: "Left Carpus",       x: 74, y: 68, w: 8,  h: 12, color: "#00e5ff", keywords: ["carpus", "carpal", "wrist"] },
-  right_hock:     { label: "Right Hock",        x: 30, y: 68, w: 8,  h: 12, color: "#00e5ff", keywords: ["hock", "tarsus", "tarsal", "achilles"] },
-  quadriceps:     { label: "Quadriceps",        x: 24, y: 38, w: 14, h: 20, color: "#00ff88", keywords: ["quad", "sit-to-stand", "sit to stand", "stand", "stair", "cavaletti", "step up"] },
-  hamstrings:     { label: "Hamstrings",        x: 20, y: 35, w: 10, h: 22, color: "#00ff88", keywords: ["hamstring", "biceps femoris", "hip extension", "hill"] },
-  core:           { label: "Core / Abdomen",    x: 38, y: 30, w: 22, h: 18, color: "#ffb700", keywords: ["core", "abdomen", "balance", "physioball", "wobble", "rocker", "trunk", "stability"] },
+  cervical_spine: { label: "Cervical Spine",    x: 75, y: 22, w: 8,  h: 12, color: "#00e5ff", keywords: ["cervical", "neck rom", "neck flex", "neck mob"] },
+  thoracic_spine: { label: "Thoracic Spine",    x: 50, y: 20, w: 14, h: 14, color: "#00e5ff", keywords: ["thoracic", "thoracic spine", "thoracic ext"] },
+  lumbar_spine:   { label: "Lumbar Spine",      x: 32, y: 22, w: 10, h: 12, color: "#00e5ff", keywords: ["lumbar", "lumbosacral", "lumbar mob"] },
+  left_shoulder:  { label: "Left Shoulder",     x: 70, y: 28, w: 8,  h: 12, color: "#a78bfa", keywords: ["shoulder flex", "shoulder ext", "shoulder rom", "scapula", "shoulder strength"] },
+  right_hip:      { label: "Right Hip",         x: 24, y: 28, w: 10, h: 12, color: "#a78bfa", keywords: ["hip flex", "hip ext", "hip extension", "hip rom", "hip strength", "coxofemoral"] },
+  left_elbow:     { label: "Left Elbow",        x: 73, y: 50, w: 7,  h: 9,  color: "#00e5ff", keywords: ["elbow flex", "elbow ext", "elbow rom", "humeroradial"] },
+  right_stifle:   { label: "Right Stifle",      x: 30, y: 52, w: 8,  h: 10, color: "#ff4455", keywords: ["stifle", "stifle flex", "stifle ext", "tplo", "ccl", "cranial cruciate", "patell", "knee"] },
+  left_carpus:    { label: "Left Carpus",       x: 75, y: 70, w: 5,  h: 8,  color: "#00e5ff", keywords: ["carpus", "carpal", "wrist"] },
+  right_hock:     { label: "Right Hock",        x: 31, y: 70, w: 5,  h: 8,  color: "#00e5ff", keywords: ["hock", "tarsus", "tarsal", "achilles"] },
+  quadriceps:     { label: "Quadriceps",        x: 26, y: 40, w: 9,  h: 13, color: "#00ff88", keywords: ["sit to stand", "sit-to-stand", "stand", "stair", "cavaletti", "step up", "quad"] },
+  hamstrings:     { label: "Hamstrings",        x: 22, y: 38, w: 7,  h: 14, color: "#00ff88", keywords: ["hamstring", "biceps femoris", "hill walk", "hindlimb strength"] },
+  core:           { label: "Core / Abdomen",    x: 42, y: 32, w: 15, h: 12, color: "#ffb700", keywords: ["core", "abdomen", "balance disc", "physioball", "wobble", "rocker", "trunk", "core stab"] },
 };
 
 // ─── FELINE muscle regions ────────────────────────────────────────────────────
 const FELINE_REGIONS = {
-  cervical_spine: { label: "Cervical Spine",    x: 70, y: 15, w: 14, h: 22, color: "#00e5ff", keywords: ["cervical", "neck"] },
-  thoracic_spine: { label: "Thoracic Spine",    x: 42, y: 8,  w: 22, h: 20, color: "#00e5ff", keywords: ["thoracic", "spine", "back"] },
-  lumbar_spine:   { label: "Lumbar Spine",      x: 22, y: 10, w: 16, h: 20, color: "#00e5ff", keywords: ["lumbar", "lumbosacral"] },
-  left_shoulder:  { label: "Left Shoulder",     x: 66, y: 22, w: 14, h: 20, color: "#a78bfa", keywords: ["shoulder", "scapula", "forelimb"] },
-  right_hip:      { label: "Right Hip",         x: 18, y: 22, w: 16, h: 22, color: "#a78bfa", keywords: ["hip", "coxofemoral", "pelvic"] },
-  right_stifle:   { label: "Right Stifle",      x: 24, y: 48, w: 14, h: 18, color: "#ff4455", keywords: ["stifle", "knee", "patell"] },
-  quadriceps:     { label: "Quadriceps",        x: 20, y: 35, w: 16, h: 22, color: "#00ff88", keywords: ["quad", "sit-to-stand", "sit to stand", "stand", "step", "climb"] },
-  core:           { label: "Core",              x: 35, y: 25, w: 24, h: 20, color: "#ffb700", keywords: ["core", "abdomen", "balance", "trunk", "stability"] },
+  cervical_spine: { label: "Cervical Spine",    x: 73, y: 18, w: 9,  h: 14, color: "#00e5ff", keywords: ["cervical", "neck"] },
+  thoracic_spine: { label: "Thoracic Spine",    x: 47, y: 12, w: 14, h: 13, color: "#00e5ff", keywords: ["thoracic", "spinal mob", "spine"] },
+  lumbar_spine:   { label: "Lumbar Spine",      x: 26, y: 14, w: 11, h: 13, color: "#00e5ff", keywords: ["lumbar", "lumbosacral"] },
+  left_shoulder:  { label: "Left Shoulder",     x: 68, y: 25, w: 9,  h: 13, color: "#a78bfa", keywords: ["shoulder", "scapula", "forelimb ext"] },
+  right_hip:      { label: "Right Hip",         x: 20, y: 25, w: 10, h: 14, color: "#a78bfa", keywords: ["hip flex", "hip ext", "hip mob", "coxofemoral"] },
+  right_stifle:   { label: "Right Stifle",      x: 26, y: 50, w: 9,  h: 12, color: "#ff4455", keywords: ["stifle", "knee", "patell"] },
+  quadriceps:     { label: "Quadriceps",        x: 22, y: 38, w: 10, h: 14, color: "#00ff88", keywords: ["sit to stand", "sit-to-stand", "step", "climb", "quad"] },
+  core:           { label: "Core",              x: 38, y: 28, w: 16, h: 13, color: "#ffb700", keywords: ["core", "abdomen", "balance", "trunk", "stability"] },
 };
 
 // Highlight color palette — keyed by the region's accent color
@@ -261,15 +263,22 @@ export default function HolographicViewer({
       boxShadow: "0 0 30px rgba(0,229,255,0.08)",
       position: "relative",
     }}>
-      {/* Holographic float animation — gentle parallax sway on the base image */}
-      <style>{`
-        @keyframes holoFloat {
-          0%, 100% { transform: translateX(0px) translateY(0px); }
-          25%      { transform: translateX(4px) translateY(-3px); }
-          50%      { transform: translateX(0px) translateY(-5px); }
-          75%      { transform: translateX(-4px) translateY(-3px); }
+      {/* Holographic float animation — parallax sway on the base image.
+          Larger amplitude (12px) so the motion is clearly visible.
+          Per Sal's directive 2026-04-15 — use raw <style> tag for reliability. */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes k9HoloFloat {
+          0%   { transform: translate3d(0px,    0px, 0); }
+          25%  { transform: translate3d(8px,   -6px, 0); }
+          50%  { transform: translate3d(0px,  -12px, 0); }
+          75%  { transform: translate3d(-8px,  -6px, 0); }
+          100% { transform: translate3d(0px,    0px, 0); }
         }
-      `}</style>
+        .k9-holo-float {
+          animation: k9HoloFloat 6s ease-in-out infinite;
+          will-change: transform;
+        }
+      `}}/>
       {/* Header */}
       <div style={{
         padding: "8px 14px",
@@ -303,17 +312,14 @@ export default function HolographicViewer({
           zIndex: 3, pointerEvents: "none",
         }}/>
 
-        {/* Base holographic image — with floating parallax sway */}
+        {/* Base holographic image — k9-holo-float class drives parallax */}
         <img
           src={imageSrc}
           alt={isFeline ? "Feline anatomy" : "Canine anatomy"}
+          className="k9-holo-float"
           onLoad={() => {
             console.log("[HolographicViewer] image loaded:", imageSrc);
             setImageLoaded(true);
-            // Sync canvas immediately now that the image (and therefore the
-            // container's intrinsic dimensions) is known. Without this, the
-            // very first draw can race the layout and end up with a 0-sized
-            // canvas, masking all highlights and the breathing pulse.
             requestAnimationFrame(() => syncCanvasSize());
           }}
           onError={(e) => {
@@ -325,8 +331,6 @@ export default function HolographicViewer({
             objectFit: "contain", display: "block",
             position: "absolute", top: 0, left: 0,
             filter: "brightness(0.9) contrast(1.1)",
-            animation: "holoFloat 6s ease-in-out infinite",
-            willChange: "transform",
           }}
         />
 

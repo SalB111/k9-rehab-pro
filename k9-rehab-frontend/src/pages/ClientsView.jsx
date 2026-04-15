@@ -16,7 +16,44 @@ import { BREEDS, FELINE_BREEDS } from "./generator/constants";
 function ClientsView({ setView, setSelectedPatient }) {
   const [clients, setClients] = useState([]);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ name: "", species: "canine", breed: "", age: "", weight: "", sex: "Male", condition: "", client_name: "", client_email: "", client_phone: "" });
+  const [form, setForm] = useState({ name: "", species: "canine", breed: "", age: "", dob: "", weight: "", weight_kg: "", sex: "Male", condition: "", client_name: "", client_email: "", client_phone: "" });
+
+  // ── Phase 1D: Weight lbs/kg + Age/DOB auto-conversion helpers ──
+  const onLbs = (val) => {
+    const next = { ...form, weight: val };
+    const n = parseFloat(val);
+    if (!isNaN(n) && n > 0) next.weight_kg = (n / 2.20462).toFixed(1);
+    else if (val === "") next.weight_kg = "";
+    setForm(next);
+  };
+  const onKg = (val) => {
+    const next = { ...form, weight_kg: val };
+    const n = parseFloat(val);
+    if (!isNaN(n) && n > 0) next.weight = (n * 2.20462).toFixed(1);
+    else if (val === "") next.weight = "";
+    setForm(next);
+  };
+  const onAge = (val) => {
+    const next = { ...form, age: val };
+    const n = parseInt(val, 10);
+    if (!isNaN(n) && n >= 0 && n < 30) {
+      const now = new Date();
+      const birthYear = now.getFullYear() - n;
+      next.dob = `${birthYear}-${String(now.getMonth()+1).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")}`;
+    }
+    setForm(next);
+  };
+  const onDob = (val) => {
+    const next = { ...form, dob: val };
+    if (val) {
+      const birth = new Date(val);
+      const now = new Date();
+      let years = now.getFullYear() - birth.getFullYear();
+      if (now.getMonth() < birth.getMonth() || (now.getMonth() === birth.getMonth() && now.getDate() < birth.getDate())) years--;
+      if (years >= 0) next.age = String(years);
+    }
+    setForm(next);
+  };
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [deleting, setDeleting] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -30,7 +67,7 @@ function ClientsView({ setView, setSelectedPatient }) {
     e.preventDefault();
     await axios.post(`${API}/patients`, { ...form, age: +form.age, weight: +form.weight });
     setShowForm(false);
-    setForm({ name: "", species: "canine", breed: "", age: "", weight: "", sex: "Male", condition: "", client_name: "", client_email: "", client_phone: "" });
+    setForm({ name: "", species: "canine", breed: "", age: "", dob: "", weight: "", weight_kg: "", sex: "Male", condition: "", client_name: "", client_email: "", client_phone: "" });
     axios.get(`${API}/patients`).then(r => setClients(r.data?.data || r.data || []));
   };
 
@@ -169,24 +206,40 @@ Register Patient
                 <input style={S.input} value={form.condition} onChange={e => setForm({ ...form, condition: e.target.value })} required placeholder="e.g. TPLO, Hip Dysplasia" />
               </div>
             </div>
-            <div style={{ ...S.grid(4), marginTop: 12 }}>
+            <div style={{ ...S.grid(2), marginTop: 12 }}>
               <div>
                 <label style={S.label}>Owner Name *</label>
                 <input style={S.input} value={form.client_name} onChange={e => setForm({ ...form, client_name: e.target.value })} required />
-              </div>
-              <div>
-                <label style={S.label}>Age (years)</label>
-                <input style={S.input} type="number" value={form.age} onChange={e => setForm({ ...form, age: e.target.value })} />
-              </div>
-              <div>
-                <label style={S.label}>Weight (lbs)</label>
-                <input style={S.input} type="number" value={form.weight} onChange={e => setForm({ ...form, weight: e.target.value })} />
               </div>
               <div>
                 <label style={S.label}>Sex</label>
                 <select style={{ ...S.select, width: "100%" }} value={form.sex} onChange={e => setForm({ ...form, sex: e.target.value })}>
                   {["Male Intact", "Male Neutered", "Female Intact", "Female Spayed"].map(s => <option key={s}>{s}</option>)}
                 </select>
+              </div>
+            </div>
+            {/* ── Phase 1D: Age/DOB pair (auto-converts both ways) ── */}
+            <div style={{ ...S.grid(2), marginTop: 12 }}>
+              <div>
+                <label style={S.label}>Date of Birth</label>
+                <input style={S.input} type="date" value={form.dob} onChange={e => onDob(e.target.value)} />
+              </div>
+              <div>
+                <label style={S.label}>Age (years)</label>
+                <input style={S.input} type="number" min="0" max="30" placeholder="e.g. 6" value={form.age} onChange={e => onAge(e.target.value)} />
+                <div style={{ fontSize: 10, color: "#888", marginTop: 4, fontStyle: "italic" }}>Auto-converts to/from DOB</div>
+              </div>
+            </div>
+            {/* ── Phase 1D: Weight lbs/kg pair (auto-converts both ways) ── */}
+            <div style={{ ...S.grid(2), marginTop: 12 }}>
+              <div>
+                <label style={S.label}>Weight (lbs)</label>
+                <input style={S.input} type="number" step="0.1" placeholder="0.0" value={form.weight} onChange={e => onLbs(e.target.value)} />
+              </div>
+              <div>
+                <label style={S.label}>Weight (kg)</label>
+                <input style={S.input} type="number" step="0.1" placeholder="0.0" value={form.weight_kg} onChange={e => onKg(e.target.value)} />
+                <div style={{ fontSize: 10, color: "#888", marginTop: 4, fontStyle: "italic" }}>Auto-converts to/from lbs</div>
               </div>
             </div>
             <div style={{ marginTop: 20, display: "flex", gap: 10 }}>

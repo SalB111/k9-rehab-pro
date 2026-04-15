@@ -10,6 +10,7 @@ import { API } from "../api/axios";
 import { useToast } from "../components/Toast";
 import useBeauVoice from "../hooks/useBeauVoice";
 import BeauVoiceControl, { SpeakButton } from "../components/BeauVoiceControl";
+import { LanguageSelector } from "./DashboardView";
 import { useTranslation } from "react-i18next";
 
 const DiagramRenderer = lazy(() => import("../components/beau/DiagramRenderer"));
@@ -307,6 +308,7 @@ useEffect(() => {
           <button onClick={() => setView?.("about")} style={{ display: "flex", alignItems: "center", gap: 5, background: `${C.teal}12`, border: `1px solid ${C.teal}40`, borderRadius: 8, color: C.teal, padding: "6px 12px", cursor: "pointer", fontSize: 11, fontWeight: 600 }} title="About B.E.A.U.">
             <FiShield size={11} /> About B.E.A.U.
           </button>
+          <LanguageSelector/>
           <BeauVoiceControl
             isSpeaking={beauVoice.isSpeaking}
             isPaused={beauVoice.isPaused}
