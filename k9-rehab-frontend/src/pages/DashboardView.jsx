@@ -1327,7 +1327,12 @@ function GoalsPanel() {
 // ── CONDITIONING ──────────────────────────────────────────────────────────────
 // NOTE: B.E.A.U. calls are routed through the backend /api/beau/chat endpoint
 // (never the Anthropic API directly — API keys must stay server-side).
-async function callBeau(systemPrompt, userMessage, language) {
+// callBeau — POSTs to /api/beau/chat and processes the SSE stream.
+// If `onDelta(textChunk, accumulatedText)` is provided, the callback fires
+// for every delta token as it arrives — enables streaming TTS playback that
+// starts within ~1s instead of waiting for the full response.
+// Always returns the full accumulated text when the stream ends.
+async function callBeau(systemPrompt, userMessage, language, onDelta) {
   const token = localStorage.getItem("token");
   const apiBase = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
   const res = await fetch(`${apiBase}/beau/chat`, {
@@ -1343,17 +1348,68 @@ async function callBeau(systemPrompt, userMessage, language) {
     }),
   });
   if (!res.ok) throw new Error(`B.E.A.U. API ${res.status}`);
-  // Handle SSE streaming response
-  const raw = await res.text();
+
+  // True SSE streaming via ReadableStream reader
+  const reader = res.body?.getReader();
+  if (!reader) {
+    // Browser doesn't support streaming reader — fall back to one-shot text
+    const raw = await res.text();
+    let result = "";
+    for (const line of raw.split("\n")) {
+      if (!line.startsWith("data: ")) continue;
+      try {
+        const parsed = JSON.parse(line.slice(6));
+        if (parsed.type === "delta" && parsed.text) {
+          result += parsed.text;
+          if (onDelta) onDelta(parsed.text, result);
+        }
+      } catch { /* skip */ }
+    }
+    return result || "No response.";
+  }
+
+  const decoder = new TextDecoder();
+  let buffer = "";
   let result = "";
-  for (const line of raw.split("\n")) {
-    if (!line.startsWith("data: ")) continue;
-    try {
-      const parsed = JSON.parse(line.slice(6));
-      if (parsed.type === "delta" && parsed.text) result += parsed.text;
-    } catch { /* skip non-JSON lines */ }
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    // SSE lines are separated by \n\n; process each complete event then
+    // keep the trailing partial in the buffer for the next chunk.
+    let nlIdx;
+    while ((nlIdx = buffer.indexOf("\n")) !== -1) {
+      const line = buffer.slice(0, nlIdx);
+      buffer = buffer.slice(nlIdx + 1);
+      if (!line.startsWith("data: ")) continue;
+      try {
+        const parsed = JSON.parse(line.slice(6));
+        if (parsed.type === "delta" && parsed.text) {
+          result += parsed.text;
+          if (onDelta) onDelta(parsed.text, result);
+        }
+      } catch { /* skip non-JSON keep-alive lines */ }
+    }
   }
   return result || "No response.";
+}
+
+// Sentence-streaming helper — given an accumulated text string and an index
+// of where we last flushed, returns { sentence, newIndex } if a new complete
+// sentence is available, or null if not yet. Used by streaming generators
+// to feed BEAU voice queue one sentence at a time as deltas arrive.
+function nextSentence(fullText, fromIndex) {
+  if (fromIndex >= fullText.length) return null;
+  const slice = fullText.slice(fromIndex);
+  // Match the first sentence terminator followed by whitespace or end.
+  // Avoids breaking on numbered lists like "1." by requiring the next char
+  // to NOT be a digit.
+  const m = slice.match(/[.!?]\s+(?=[^\d])|[.!?]$/);
+  if (!m) return null;
+  const end = m.index + m[0].length;
+  const sentence = slice.slice(0, end).trim();
+  if (sentence.length < 8) return null; // Skip stray punctuation noise
+  return { sentence, newIndex: fromIndex + end };
 }
 
 function ConditioningPanel({ patientName, patientData }) {
@@ -1415,9 +1471,26 @@ REQUIREMENTS:
 - NEVER use markdown formatting (no **, no ##, no -, no backticks)
 - Keep each line concise — no prose paragraphs`;
       const userMsg = `${ctxBits}.\n\nGenerate 5 progressive conditioning exercises tailored to this patient. Follow the EXERCISE card format exactly. No markdown.`;
-      const text = await callBeau(systemPrompt, userMsg, uiLang);
+      // Streaming TTS — cancel any prior playback, then enqueue each new
+      // sentence to the voice queue as it arrives. First sentence speaks
+      // ~1s after Generate click instead of waiting for the full response.
+      if (bv?.autoSpeak) bv.cancel?.();
+      let lastSpoken = 0;
+      const text = await callBeau(systemPrompt, userMsg, uiLang, (_chunk, accumulated) => {
+        setExercises(accumulated);
+        if (!bv?.autoSpeak || !bv?.enqueue) return;
+        let next;
+        while ((next = nextSentence(accumulated, lastSpoken)) !== null) {
+          bv.enqueue(next.sentence);
+          lastSpoken = next.newIndex;
+        }
+      });
       setExercises(text);
-      if (bv?.autoSpeak && text) bv.speak(text);
+      // Flush any trailing text after the final sentence terminator
+      if (bv?.autoSpeak && bv?.enqueue && lastSpoken < text.length) {
+        const tail = text.slice(lastSpoken).trim();
+        if (tail) bv.enqueue(tail);
+      }
     } catch (err) { setExercises(`Connection error: ${err.message}`); }
     setGenerating(false);
   };
@@ -1658,8 +1731,7 @@ function ProtocolPanel({ patientName, patientData }) {
         liveSpecies            ? `Species: ${liveSpecies}`                     : null,
         (quickCondition || patientData?.condition) ? `Condition: ${quickCondition || patientData.condition}` : null,
       ].filter(Boolean).join(" · ");
-      const text = await callBeau(
-        `You are B.E.A.U. — the Biomedical Evidence-based Analytical Unit, clinical protocol engine of K9 Rehab Pro™. Created by Sal Bonanno, Veterinary Technician and Canine Rehabilitation Nurse, 30 years experience. Generate a complete structured evidence-based rehabilitation protocol. Use exact section headers below. No markdown symbols. Write in full clinical sentences.
+      const systemPrompt = `You are B.E.A.U. — the Biomedical Evidence-based Analytical Unit, clinical protocol engine of K9 Rehab Pro™. Created by Sal Bonanno, Veterinary Technician and Canine Rehabilitation Nurse, 30 years experience. Generate a complete structured evidence-based rehabilitation protocol. Use exact section headers below. No markdown symbols. Write in full clinical sentences.
 
 CLINICAL SUMMARY
 
@@ -1675,12 +1747,25 @@ SAFETY GUARDRAILS — EVERY SESSION
 
 RED FLAGS — STOP AND CONTACT VETERINARIAN IMMEDIATELY
 
-EVIDENCE BASIS`,
-        `${ctxBits}.\n\nGenerate a comprehensive rehabilitation protocol tailored to this patient. Generate a thorough evidence-based protocol demonstrating B.E.A.U.'s full clinical capability across all phases and exercise categories.`,
-        uiLang
-      );
+EVIDENCE BASIS`;
+      const userMsg = `${ctxBits}.\n\nGenerate a comprehensive rehabilitation protocol tailored to this patient. Generate a thorough evidence-based protocol demonstrating B.E.A.U.'s full clinical capability across all phases and exercise categories.`;
+      // Streaming TTS — sentence-by-sentence playback as deltas arrive
+      if (bv?.autoSpeak) bv.cancel?.();
+      let lastSpoken = 0;
+      const text = await callBeau(systemPrompt, userMsg, uiLang, (_chunk, accumulated) => {
+        setProtocol(accumulated);
+        if (!bv?.autoSpeak || !bv?.enqueue) return;
+        let next;
+        while ((next = nextSentence(accumulated, lastSpoken)) !== null) {
+          bv.enqueue(next.sentence);
+          lastSpoken = next.newIndex;
+        }
+      });
       setProtocol(text);
-      if (bv?.autoSpeak && text) bv.speak(text);
+      if (bv?.autoSpeak && bv?.enqueue && lastSpoken < text.length) {
+        const tail = text.slice(lastSpoken).trim();
+        if (tail) bv.enqueue(tail);
+      }
     } catch (err) { setProtocol(`Connection error: ${err.message}`); }
     setGenerating(false);
   };
