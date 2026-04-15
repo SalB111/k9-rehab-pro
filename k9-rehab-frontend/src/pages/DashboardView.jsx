@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, createContext, useContext } from "react";
+import React, { useState, useRef, useEffect, useMemo, createContext, useContext } from "react";
 import { useTranslation } from "react-i18next";
 import i18n, { SUPPORTED_LOCALES } from "../i18n";
 import useBeauVoice from "../hooks/useBeauVoice";
@@ -42,6 +42,44 @@ const CANINE_BREEDS = ["Affenpinscher","Afghan Hound","Airedale Terrier","Akita"
 
 const FELINE_BREEDS = ["Abyssinian","American Shorthair","Bengal","Birman","British Shorthair","Burmese","Devon Rex","Domestic Longhair","Domestic Shorthair","Egyptian Mau","Exotic Shorthair","Himalayan","Maine Coon","Manx","Mixed Breed","Norwegian Forest Cat","Ocicat","Oriental Shorthair","Persian","Ragdoll","Russian Blue","Scottish Fold","Siamese","Siberian","Sphynx","Tonkinese","Turkish Angora","Turkish Van","Other — Specify in notes"];
 
+// ─── SPECIES-DEPENDENT CLINICAL CONSTANTS ─────────────────────────────────────
+// Canine CSU Acute Pain Scale (Colorado State University)
+const CANINE_PAIN_SCALE = [
+  "0 — Happy, comfortable, no signs of pain",
+  "1 — Minor discomfort, responds to petting",
+  "2 — Moderate pain, reacts to palpation",
+  "3 — Severe pain, vocalizes / guards",
+  "4 — Excruciating, entire body tense / rigid"
+];
+
+// Feline Grimace Scale (FGS) — Evangelista et al 2019
+// 5 facial action units, each scored 0/1/2 (total 0–10)
+const FELINE_FGS_SCORES = [
+  "0 — not present / normal",
+  "1 — partially present / moderate",
+  "2 — fully present / marked"
+];
+const FELINE_FGS_ITEMS = [
+  "FGS — Ear position",
+  "FGS — Orbital tightening",
+  "FGS — Muzzle tension",
+  "FGS — Whisker change",
+  "FGS — Head position"
+];
+
+const CANINE_CONDITIONING_PHASES = [
+  "General fitness / Maintenance","Weight loss program","Senior wellness",
+  "Return to sport — early","Return to sport — advanced",
+  "Performance / Working dog","Sport-specific conditioning"
+];
+const FELINE_CONDITIONING_PHASES = [
+  "General fitness / Maintenance","Weight loss program","Senior wellness",
+  "Indoor enrichment","Post-recovery reconditioning","Mobility maintenance"
+];
+
+const CANINE_SPORT_PLACEHOLDER = "e.g. Agility, flyball, hunting, dock diving, herding, search & rescue, companion pet…";
+const FELINE_SPORT_PLACEHOLDER = "e.g. Indoor climbing, puzzle feeders, feather wand play, cat tree navigation, companion cat…";
+
 // ─── CSS ──────────────────────────────────────────────────────────────────────
 const CSS = `
   .k9v2 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -80,19 +118,19 @@ const Lbl = ({ children, range }) => (
   </div>
 );
 
-const F = ({ label, placeholder, type="text", options, rows, range, hint }) => {
+const F = ({ label, placeholder, type="text", options, rows, range, hint, disabled }) => {
   const { data, update, blockId } = useContext(DashFormContext);
   const key = blockId ? `${blockId}::${label}` : label;
   const value = data[key] ?? "";
-  const onChange = (val) => update(key, val);
+  const onChange = (val) => { if (!disabled) update(key, val); };
   return (
     <div>
       <Lbl range={range}>{label}</Lbl>
       {options
-        ? <select value={value} onChange={e => onChange(e.target.value)}><option value="">Select…</option>{options.map(o=><option key={o} value={o}>{o}</option>)}</select>
+        ? <select value={value} disabled={disabled} onChange={e => onChange(e.target.value)}><option value="">Select…</option>{options.map(o=><option key={o} value={o}>{o}</option>)}</select>
         : rows
-          ? <textarea placeholder={placeholder} rows={rows} value={value} onChange={e => onChange(e.target.value)}/>
-          : <input type={type} placeholder={placeholder} value={value} onChange={e => onChange(e.target.value)}/>
+          ? <textarea placeholder={placeholder} rows={rows} value={value} disabled={disabled} onChange={e => onChange(e.target.value)}/>
+          : <input type={type} placeholder={placeholder} value={value} disabled={disabled} onChange={e => onChange(e.target.value)}/>
       }
       {hint && <div style={{ fontSize:10, color:C.muted, marginTop:4, fontStyle:"italic" }}>{hint}</div>}
     </div>
@@ -102,12 +140,13 @@ const F = ({ label, placeholder, type="text", options, rows, range, hint }) => {
 // Multi-select checkbox group. Stores selected options as a "||"-joined
 // string in DashFormContext so it survives save/reload without schema change.
 // Key format: <blockId>::<label>
-const MultiF = ({ label, options, hint, accent="#EC4899" }) => {
+const MultiF = ({ label, options, hint, accent="#EC4899", disabled }) => {
   const { data, update, blockId } = useContext(DashFormContext);
   const key = blockId ? `${blockId}::${label}` : label;
   const raw = data[key] ?? "";
   const selected = raw ? raw.split("||").filter(Boolean) : [];
   const toggle = (opt) => {
+    if (disabled) return;
     const next = selected.includes(opt)
       ? selected.filter(x => x !== opt)
       : [...selected, opt];
@@ -116,12 +155,12 @@ const MultiF = ({ label, options, hint, accent="#EC4899" }) => {
   return (
     <div>
       <Lbl>{label}</Lbl>
-      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:6, padding:"10px 12px", background:C.white, border:`1px solid ${C.border}`, borderRadius:5 }}>
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:6, padding:"10px 12px", background:C.white, border:`1px solid ${C.border}`, borderRadius:5, opacity: disabled ? 0.6 : 1, pointerEvents: disabled ? "none" : "auto" }}>
         {options.map(o => {
           const checked = selected.includes(o);
           return (
-            <div key={o} className={`cb-row${checked?" active":""}`} onClick={() => toggle(o)} style={{ cursor:"pointer" }}>
-              <input type="checkbox" checked={checked} readOnly style={{ width:14, height:14, accentColor:accent, flexShrink:0 }}/>
+            <div key={o} className={`cb-row${checked?" active":""}`} onClick={() => toggle(o)} style={{ cursor: disabled ? "not-allowed" : "pointer" }}>
+              <input type="checkbox" checked={checked} disabled={disabled} readOnly style={{ width:14, height:14, accentColor:accent, flexShrink:0 }}/>
               <span style={{ fontSize:11, color: checked ? accent : C.text }}>{o}</span>
             </div>
           );
@@ -134,7 +173,7 @@ const MultiF = ({ label, options, hint, accent="#EC4899" }) => {
 
 // Reusable weight pair — lbs + kg side by side with auto-conversion
 // Works in any panel. Stores values in DashFormContext keyed by fieldBase.
-const WeightPair = ({ label, fieldBase }) => {
+const WeightPair = ({ label, fieldBase, disabled }) => {
   const { data, update } = useContext(DashFormContext);
   const lbsKey = `${fieldBase} (lbs)`;
   const kgKey  = `${fieldBase} (kg)`;
@@ -142,12 +181,14 @@ const WeightPair = ({ label, fieldBase }) => {
   const kgVal  = data[kgKey] ?? "";
 
   const onLbs = (val) => {
+    if (disabled) return;
     update(lbsKey, val);
     const n = parseFloat(val);
     if (!isNaN(n) && n > 0) update(kgKey, (n / 2.20462).toFixed(1));
     else if (val === "") update(kgKey, "");
   };
   const onKg = (val) => {
+    if (disabled) return;
     update(kgKey, val);
     const n = parseFloat(val);
     if (!isNaN(n) && n > 0) update(lbsKey, (n * 2.20462).toFixed(1));
@@ -158,11 +199,11 @@ const WeightPair = ({ label, fieldBase }) => {
     <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
       <div>
         <Lbl>{label} (lbs)</Lbl>
-        <input type="number" placeholder="0.0" step="0.1" value={lbsVal} onChange={e => onLbs(e.target.value)}/>
+        <input type="number" placeholder="0.0" step="0.1" value={lbsVal} disabled={disabled} onChange={e => onLbs(e.target.value)}/>
       </div>
       <div>
         <Lbl>{label} (kg)</Lbl>
-        <input type="number" placeholder="0.0" step="0.1" value={kgVal} onChange={e => onKg(e.target.value)}/>
+        <input type="number" placeholder="0.0" step="0.1" value={kgVal} disabled={disabled} onChange={e => onKg(e.target.value)}/>
         <div style={{ fontSize:10, color:C.muted, marginTop:4, fontStyle:"italic" }}>Auto-converts to/from lbs</div>
       </div>
     </div>
@@ -173,12 +214,100 @@ const Row = ({ children, cols=2 }) => (
   <div style={{ display:"grid", gridTemplateColumns:`repeat(${cols},1fr)`, gap:12 }}>{children}</div>
 );
 
+// Reusable DOB ↔ Age pair — auto-converts in both directions.
+// Reads blockId from DashFormContext like F does, so keys are
+// `${blockId}::Date of Birth` and `${blockId}::Age (years)` — matches
+// the format previously used inline in ClientPanel so existing saved
+// data migrates with zero change.
+const AgeDobPair = ({ disabled }) => {
+  const { data, update, blockId } = useContext(DashFormContext);
+  const dobKey = `${blockId}::Date of Birth`;
+  const ageKey = `${blockId}::Age (years)`;
+  const dobVal = data[dobKey] ?? "";
+  const ageVal = data[ageKey] ?? "";
+
+  const onDob = (val) => {
+    if (disabled) return;
+    update(dobKey, val);
+    if (val) {
+      const birth = new Date(val);
+      const now = new Date();
+      let years = now.getFullYear() - birth.getFullYear();
+      if (now.getMonth() < birth.getMonth() ||
+          (now.getMonth() === birth.getMonth() && now.getDate() < birth.getDate())) years--;
+      if (years >= 0) update(ageKey, String(years));
+    }
+  };
+  const onAge = (val) => {
+    if (disabled) return;
+    update(ageKey, val);
+    const n = parseInt(val, 10);
+    if (!isNaN(n) && n >= 0 && n < 30) {
+      const now = new Date();
+      const birthYear = now.getFullYear() - n;
+      const dob = `${birthYear}-${String(now.getMonth()+1).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")}`;
+      update(dobKey, dob);
+    }
+  };
+
+  return (
+    <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+      <div>
+        <Lbl>Date of Birth</Lbl>
+        <input type="date" disabled={disabled} value={dobVal} onChange={e => onDob(e.target.value)}/>
+      </div>
+      <div>
+        <Lbl>Age (years)</Lbl>
+        <input type="number" placeholder="e.g. 6" min="0" max="30" disabled={disabled} value={ageVal} onChange={e => onAge(e.target.value)}/>
+        <div style={{ fontSize:10, color:C.muted, marginTop:4, fontStyle:"italic" }}>Auto-converts to/from DOB</div>
+      </div>
+    </div>
+  );
+};
+
+// ─── Sec filled-data walker ───────────────────────────────────────────────────
+// Recursively walks JSX children and returns DashFormContext keys that each
+// form-field component reads/writes. Used by Sec to show a filled dot.
+// Recognizes F, MultiF, WeightPair, AgeDobPair by function reference.
+const collectSecKeys = (children, blockId) => {
+  const keys = [];
+  React.Children.forEach(children, child => {
+    if (!child || typeof child !== "object" || !child.props) return;
+    if ((child.type === F || child.type === MultiF) && child.props.label) {
+      keys.push(`${blockId}::${child.props.label}`);
+    } else if (child.type === WeightPair && child.props.fieldBase) {
+      keys.push(`${child.props.fieldBase} (lbs)`, `${child.props.fieldBase} (kg)`);
+    } else if (child.type === AgeDobPair) {
+      keys.push(`${blockId}::Date of Birth`, `${blockId}::Age (years)`);
+    }
+    if (child.props.children) {
+      keys.push(...collectSecKeys(child.props.children, blockId));
+    }
+  });
+  return keys;
+};
+
 // Sec — section wrapper. When `collapsible` is truthy, header is clickable and
 // body is hidden until expanded. `defaultOpen` controls initial state.
-// Backward compatible: omitting `collapsible` renders same as before.
+// Feature 3: collapsible sections show a small teal dot next to the title
+// when any nested F/MultiF/WeightPair/AgeDobPair has truthy data.
+// Backward compatible: omitting `collapsible` renders same as before, no dot.
 const Sec = ({ title, color=C.blue, colorLt, children, noTop, collapsible, defaultOpen=false }) => {
+  const { data, blockId } = useContext(DashFormContext);
   const [open, setOpen] = useState(defaultOpen);
   const isHidden = collapsible && !open;
+
+  // Filled-data dot — only for collapsible sections (always-open sections
+  // already show their values, so a dot would be redundant).
+  const watchKeys = useMemo(
+    () => collapsible ? collectSecKeys(children, blockId) : [],
+    [collapsible, children, blockId]
+  );
+  const hasData = collapsible && watchKeys.some(k => {
+    const v = data[k];
+    return v !== undefined && v !== null && String(v).trim() !== "";
+  });
+
   return (
     <div style={{ marginBottom: isHidden ? 8 : 22 }}>
       <div
@@ -193,7 +322,12 @@ const Sec = ({ title, color=C.blue, colorLt, children, noTop, collapsible, defau
           display: "flex", alignItems: "center", justifyContent: "space-between",
           userSelect: "none",
         }}>
-        <span>{title}</span>
+        <span style={{ display:"flex", alignItems:"center", gap:8 }}>
+          <span>{title}</span>
+          {hasData && (
+            <span title="Section has data" style={{ width:8, height:8, borderRadius:"50%", background:C.teal, boxShadow:`0 0 0 2px ${C.tealLt}`, flexShrink:0 }}/>
+          )}
+        </span>
         {collapsible && (
           <span style={{ fontSize: 10, opacity: 0.8 }}>{open ? "▼" : "▶"}</span>
         )}
@@ -466,7 +600,7 @@ function SafetyText({ k, as = "span", style, className, showBadge = true }) {
 
 // ── CLIENT & PATIENT ──────────────────────────────────────────────────────────
 function ClientPanel() {
-  const { data, update, blockId, handleSave } = useContext(DashFormContext);
+  const { data, update, handleSave } = useContext(DashFormContext);
   const [updating, setUpdating] = useState(false);
   // Species defaults to Canine; use dashData value if present so breed list stays in sync
   const species = data["client::Species"] || "Canine";
@@ -478,52 +612,6 @@ function ClientPanel() {
     setUpdating(true);
     try { await handleSave?.(); }
     finally { setTimeout(() => setUpdating(false), 600); }
-  };
-
-  // ── Weight conversion helpers ──
-  const lbsKey = `${blockId}::Weight (lbs)`;
-  const kgKey  = `${blockId}::Weight (kg)`;
-  const lbsVal = data[lbsKey] ?? "";
-  const kgVal  = data[kgKey] ?? "";
-
-  const onLbsChange = (val) => {
-    update(lbsKey, val);
-    const n = parseFloat(val);
-    if (!isNaN(n) && n > 0) update(kgKey, (n / 2.20462).toFixed(1));
-    else if (val === "") update(kgKey, "");
-  };
-  const onKgChange = (val) => {
-    update(kgKey, val);
-    const n = parseFloat(val);
-    if (!isNaN(n) && n > 0) update(lbsKey, (n * 2.20462).toFixed(1));
-    else if (val === "") update(lbsKey, "");
-  };
-
-  // ── DOB ↔ Age conversion helpers ──
-  const dobKey = `${blockId}::Date of Birth`;
-  const ageKey = `${blockId}::Age (years)`;
-  const dobVal = data[dobKey] ?? "";
-  const ageVal = data[ageKey] ?? "";
-
-  const onDobChange = (val) => {
-    update(dobKey, val);
-    if (val) {
-      const birth = new Date(val);
-      const now = new Date();
-      let years = now.getFullYear() - birth.getFullYear();
-      if (now.getMonth() < birth.getMonth() || (now.getMonth() === birth.getMonth() && now.getDate() < birth.getDate())) years--;
-      if (years >= 0) update(ageKey, String(years));
-    }
-  };
-  const onAgeChange = (val) => {
-    update(ageKey, val);
-    const n = parseInt(val, 10);
-    if (!isNaN(n) && n >= 0 && n < 30) {
-      const now = new Date();
-      const birthYear = now.getFullYear() - n;
-      const dob = `${birthYear}-${String(now.getMonth()+1).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")}`;
-      update(dobKey, dob);
-    }
   };
 
   return <>
@@ -555,28 +643,12 @@ function ClientPanel() {
         </div>
         <F label="Sex" options={["Male — Intact","Male — Neutered","Female — Intact","Female — Spayed"]}/>
       </Row>
-      <Row cols={3}>
-        <div>
-          <Lbl>Date of Birth</Lbl>
-          <input type="date" value={dobVal} onChange={e => onDobChange(e.target.value)}/>
-        </div>
-        <div>
-          <Lbl>Age (years)</Lbl>
-          <input type="number" placeholder="e.g. 6" min="0" max="30" value={ageVal} onChange={e => onAgeChange(e.target.value)}/>
-          <div style={{ fontSize:10, color:C.muted, marginTop:4, fontStyle:"italic" }}>Auto-converts to/from DOB</div>
-        </div>
+      <Row cols={2}>
+        <AgeDobPair/>
         <F label="Color / Markings" placeholder="e.g. Black & tan, tricolor"/>
       </Row>
-      <Row cols={3}>
-        <div>
-          <Lbl>Weight (lbs)</Lbl>
-          <input type="number" placeholder="0.0" step="0.1" value={lbsVal} onChange={e => onLbsChange(e.target.value)}/>
-        </div>
-        <div>
-          <Lbl>Weight (kg)</Lbl>
-          <input type="number" placeholder="0.0" step="0.1" value={kgVal} onChange={e => onKgChange(e.target.value)}/>
-          <div style={{ fontSize:10, color:C.muted, marginTop:4, fontStyle:"italic" }}>Auto-converts to/from lbs</div>
-        </div>
+      <Row cols={2}>
+        <WeightPair label="Weight" fieldBase="client::Weight"/>
         <F label="Microchip #" placeholder="15-digit number"/>
       </Row>
       <F label="Specialist / Surgeon" placeholder="Referring specialist name & clinic"/>
@@ -847,6 +919,10 @@ function MedicationsSection() {
 }
 
 function AssessmentPanel() {
+  const { data } = useContext(DashFormContext);
+  const species = data["client::Species"] || "Canine";
+  const isFeline = species === "Feline";
+
   // Pain location anatomical regions (Sal's approved list)
   const PAIN_LOCATIONS = [
     "Cervical Spine","Thoracic Spine","Lumbar Spine","Pelvis",
@@ -886,10 +962,27 @@ function AssessmentPanel() {
         <b style={{color:C.red}}>CSU Acute Pain Scale (0–4)</b> — Referenced in Millis & Levine, Canine Rehabilitation & Physical Therapy 2nd Ed.
         Scores reflect behavioral and physiological indicators. For chronic patients, open the <b>Helsinki Chronic Pain Index</b> from the sidebar for the printable client questionnaire.
       </div>
-      <Row cols={2}>
-        <F label="CSU Acute Pain Score (0–4)" options={["0 — Happy, comfortable, no signs of pain","1 — Minor discomfort, responds to petting","2 — Moderate pain, reacts to palpation","3 — Severe pain, vocalizes / guards","4 — Excruciating, entire body tense / rigid"]}/>
-        <F label="Pain Assessment at" options={["Rest","Activity","Palpation","Post-exercise"]}/>
-      </Row>
+      {isFeline ? (
+        <>
+          <div style={{ fontSize:10, color:C.muted, marginBottom:8, fontStyle:"italic", padding:"6px 10px", background:C.white, border:`1px dashed ${C.border}`, borderRadius:4 }}>
+            Feline Grimace Scale (FGS) — Evangelista et al 2019. Score each of the 5 facial action units 0–2. Total 0–10.
+          </div>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:10 }}>
+            {FELINE_FGS_ITEMS.map(lbl => (
+              <F key={lbl} label={lbl} options={FELINE_FGS_SCORES}/>
+            ))}
+          </div>
+          <Row cols={2}>
+            <F label="Pain Assessment at" options={["Rest","Activity","Palpation","Post-exercise"]}/>
+            <div/>
+          </Row>
+        </>
+      ) : (
+        <Row cols={2}>
+          <F label="CSU Acute Pain Score (0–4)" options={CANINE_PAIN_SCALE}/>
+          <F label="Pain Assessment at" options={["Rest","Activity","Palpation","Post-exercise"]}/>
+        </Row>
+      )}
       <Row cols={3}>
         <F label="Numeric Rating Scale (NRS 0–10)" placeholder="0–10" hint="0 = no pain, 10 = worst possible"/>
         <F label="Pain Character" options={["Acute","Subacute","Chronic","Neuropathic","Mixed"]}/>
@@ -969,6 +1062,8 @@ function AssessmentPanel() {
 // ── B.E.A.U. METRICS ──────────────────────────────────────────────────────────
 function MetricsPanel() {
   const { data, update } = useContext(DashFormContext);
+  const species = data["client::Species"] || "Canine";
+  const isFeline = species === "Feline";
 
   const gonioJoints = [
     { name:"Shoulder — Flexion",    normal:"30–57°",  note:"Varies by breed/size" },
@@ -1020,7 +1115,9 @@ function MetricsPanel() {
               <div key={j.name} style={{ padding:"10px 12px", background:C.white, border:`1px solid ${C.border}`, borderRadius:6 }}>
                 <div style={{ fontSize:10, fontWeight:700, color:C.teal, marginBottom:6, display:"flex", alignItems:"center", gap:8 }}>
                   {j.name}
-                  <span style={{ fontSize:9, color:C.muted, background:C.tealLt, padding:"1px 6px", borderRadius:3 }}>Normal: {j.normal}</span>
+                  {!isFeline && (
+                    <span style={{ fontSize:9, color:C.muted, background:C.tealLt, padding:"1px 6px", borderRadius:3 }}>Normal: {j.normal}</span>
+                  )}
                 </div>
                 <Row cols={2}>
                   <div>
@@ -1032,7 +1129,7 @@ function MetricsPanel() {
                     <input type="number" placeholder="°" value={getVal(keyL)} onChange={e => setVal(keyL, e.target.value)}/>
                   </div>
                 </Row>
-                {j.note && <div style={{ fontSize:9, color:C.muted, marginTop:4, fontStyle:"italic" }}>{j.note}</div>}
+                {!isFeline && j.note && <div style={{ fontSize:9, color:C.muted, marginTop:4, fontStyle:"italic" }}>{j.note}</div>}
               </div>
             );
           })}
@@ -1259,63 +1356,231 @@ async function callBeau(systemPrompt, userMessage, language) {
   return result || "No response.";
 }
 
-function ConditioningPanel() {
+function ConditioningPanel({ patientName, patientData }) {
   const [generating, setGenerating] = useState(false);
   const [exercises,  setExercises]  = useState("");
-  const { beauVoice: bv, uiLang } = useContext(DashFormContext);
+  const { data, beauVoice: bv, uiLang } = useContext(DashFormContext);
+  const isFeline = data["client::Species"] === "Feline";
+
+  // Patient anchor — B.E.A.U. requires patient context to tailor a plan.
+  const anchored = !!(patientName && patientName.trim());
 
   const generateConditioning = async () => {
+    if (!anchored) return;
     setGenerating(true); setExercises("");
     try {
-      const text = await callBeau(
-        `You are B.E.A.U. — the clinical AI of K9 Rehab Pro™. Generate creative, progressive conditioning exercises for a patient who has completed rehabilitation and needs something new and more challenging. Think like a skilled rehabilitation nurse who wants to keep sessions interesting and progressive. Include exercises the clinician may not have thought of. Reference evidence from Millis & Levine, Drum, or Marcellin-Little where relevant. No markdown. Write in clinical sentences with exercise name, technique, sets/reps, and progression cue.`,
-        "Generate 5 progressive conditioning exercises that are creative, evidence-based, and more advanced than standard rehabilitation exercises. Include at least one aquatic, one proprioceptive, and one strength-focused exercise.",
-        uiLang
-      );
+      // Live values from dashData take priority over stale DB values.
+      const liveWeight = data["client::Weight (lbs)"];
+      const weightForPrompt = liveWeight || patientData?.weight;
+      const liveAge = data["client::Age (years)"];
+      const ageForPrompt = liveAge || patientData?.age;
+      const liveSpecies = data["client::Species"];
+      const speciesForPrompt = liveSpecies || patientData?.species;
+      const ctxBits = [
+        `Patient: ${patientName}`,
+        patientData?.breed     ? `Breed: ${patientData.breed}`               : null,
+        ageForPrompt           ? `Age: ${ageForPrompt}y`                     : null,
+        weightForPrompt        ? `Weight: ${weightForPrompt} lbs`            : null,
+        speciesForPrompt       ? `Species: ${speciesForPrompt}`              : null,
+        patientData?.condition ? `Primary condition: ${patientData.condition}` : null,
+      ].filter(Boolean).join(" · ");
+      const systemPrompt = `You are B.E.A.U. — the clinical AI of K9 Rehab Pro™. Generate 5 creative, progressive conditioning exercises for a canine rehabilitation patient. Reference evidence from Millis & Levine, Drum, Marcellin-Little, or ACVSMR methodology where relevant.
+
+OUTPUT FORMAT — STRICT. Plain text only. NO markdown, NO asterisks, NO hashes, NO bold, NO bullet dashes. Each exercise must follow this EXACT structure, separated by one blank line:
+
+EXERCISE 1: [Exercise Name]
+Category: [Proprioceptive / Strength / Aquatic / Endurance / Balance / Core / Plyometric]
+Difficulty: [Easy / Moderate / Advanced]
+Equipment: [items needed, or "None"]
+Instructions:
+1. [step one]
+2. [step two]
+3. [step three]
+4. [optional step four]
+Sets/Reps: [e.g. 3 sets × 10 reps OR 3 sets × 30 seconds]
+Frequency: [e.g. 3 times per week]
+Evidence: [Author Year — brief justification]
+Progression: [how to advance to a harder version]
+Red Flags: [stop signals — pain, lameness, fatigue indicators]
+
+EXERCISE 2: [...continue same structure...]
+
+(continue for all 5 exercises)
+
+REQUIREMENTS:
+- Include AT LEAST 1 aquatic exercise
+- Include AT LEAST 1 proprioceptive/balance exercise
+- Include AT LEAST 1 strength-focused exercise
+- Tailor every exercise to the patient's species, breed, weight, age, and primary condition
+- NEVER use markdown formatting (no **, no ##, no -, no backticks)
+- Keep each line concise — no prose paragraphs`;
+      const userMsg = `${ctxBits}.\n\nGenerate 5 progressive conditioning exercises tailored to this patient. Follow the EXERCISE card format exactly. No markdown.`;
+      const text = await callBeau(systemPrompt, userMsg, uiLang);
       setExercises(text);
       if (bv?.autoSpeak && text) bv.speak(text);
     } catch (err) { setExercises(`Connection error: ${err.message}`); }
     setGenerating(false);
   };
 
-  return <>
-    <Sec title="Conditioning Program Profile" color="#14B8A6" colorLt="#F0FDFB" noTop>
-      <div style={{ padding:"10px 14px", background:"#F0FDFB", border:"1px solid #14B8A633", borderRadius:6, fontSize:11, color:C.muted, marginBottom:14 }}>
-        For patients who have completed rehabilitation and are transitioning to fitness, performance, or maintenance conditioning. B.E.A.U. will generate progressive, creative conditioning exercises so you always have something new to offer.
-      </div>
-      <Row>
-        <F label="Conditioning Phase" options={["General fitness / Maintenance","Weight loss program","Senior wellness","Return to sport — early","Return to sport — advanced","Performance / Working dog","Sport-specific conditioning"]}/>
-        <F label="Current Activity Level" options={["Sedentary — house only","Low — short leash walks","Moderate — regular walks","Active — running / hiking","Performance — competition / work"]}/>
-      </Row>
-      <Row cols={3}>
-        <F label="Session Duration (min)" placeholder="e.g. 30"/>
-        <F label="Frequency (per week)" placeholder="e.g. 4"/>
-        <F label="Intensity Target" options={["Low","Moderate","Moderate-High","High"]}/>
-      </Row>
-      <F label="Sport / Activity Type" placeholder="e.g. Agility, flyball, hunting, dock diving, herding, search & rescue, companion pet…"/>
-      <F label="Preferred Activities / Equipment" placeholder="e.g. Swimming, treadmill, fetch, hiking, agility obstacles, balance work…"/>
-      <F label="Limitations / Precautions" placeholder="Ongoing restrictions — joints to protect, surfaces to avoid, intensity limits…" rows={2}/>
-      <WeightPair label="Weight Goal" fieldBase="conditioning::Weight Goal"/>
-      <F label="Target BCS" options={["4","5 — Ideal","6"]}/>
-    </Sec>
+  // Parse plain-text EXERCISE N: cards into structured objects for styled rendering.
+  // Falls back to empty array if format doesn't match — caller shows raw text as fallback.
+  const parseExerciseCards = (text) => {
+    if (!text) return [];
+    const parts = text.split(/(?=EXERCISE\s+\d+\s*:)/i).map(s => s.trim()).filter(Boolean);
+    return parts.map(chunk => {
+      const lines = chunk.split(/\r?\n/).map(l => l.trim());
+      const card = { name:"", category:"", difficulty:"", equipment:"", instructions:[], setsReps:"", frequency:"", evidence:"", progression:"", redFlags:"" };
+      let section = null;
+      for (const line of lines) {
+        if (!line) { section = null; continue; }
+        if (/^EXERCISE\s+\d+\s*:/i.test(line))    { card.name = line.replace(/^EXERCISE\s+\d+\s*:\s*/i, ""); section = null; }
+        else if (/^Category\s*:/i.test(line))     { card.category   = line.replace(/^Category\s*:\s*/i, "");   section = null; }
+        else if (/^Difficulty\s*:/i.test(line))   { card.difficulty = line.replace(/^Difficulty\s*:\s*/i, ""); section = null; }
+        else if (/^Equipment\s*:/i.test(line))    { card.equipment  = line.replace(/^Equipment\s*:\s*/i, "");  section = null; }
+        else if (/^Instructions\s*:/i.test(line)) { section = "instructions"; }
+        else if (/^Sets\s*\/?\s*Reps\s*:/i.test(line)) { card.setsReps = line.replace(/^Sets\s*\/?\s*Reps\s*:\s*/i, ""); section = null; }
+        else if (/^Frequency\s*:/i.test(line))    { card.frequency  = line.replace(/^Frequency\s*:\s*/i, "");  section = null; }
+        else if (/^Evidence\s*:/i.test(line))     { card.evidence   = line.replace(/^Evidence\s*:\s*/i, "");   section = null; }
+        else if (/^Progression\s*:/i.test(line))  { card.progression= line.replace(/^Progression\s*:\s*/i, "");section = null; }
+        else if (/^Red\s*Flags?\s*:/i.test(line)) { card.redFlags   = line.replace(/^Red\s*Flags?\s*:\s*/i, "");section = null; }
+        else if (section === "instructions")      { card.instructions.push(line.replace(/^\d+\.\s*/, "")); }
+      }
+      return card;
+    }).filter(c => c.name);
+  };
 
-    <Sec title="B.E.A.U. Conditioning Exercise Generator" color="#14B8A6" colorLt="#F0FDFB">
-      <div style={{ fontSize:11, color:C.muted, marginBottom:14, lineHeight:1.65 }}>
-        Not sure what to do today? Hit generate and B.E.A.U. will suggest creative, progressive conditioning exercises tailored to keep sessions fresh and effective — so you never have to scratch your head.
-      </div>
-      <button onClick={generateConditioning} disabled={generating}
-        style={{ width:"100%", padding:"13px", background: generating ? "#F0FDFB" : "#14B8A6", border:"none", color:C.white, borderRadius:6, cursor: generating ? "not-allowed":"pointer", fontSize:13, fontWeight:700, letterSpacing:".08em", display:"flex", alignItems:"center", gap:10, justifyContent:"center" }}>
-        {generating
-          ? <><div style={{ width:16, height:16, border:"2px solid white", borderTopColor:"transparent", borderRadius:"50%", animation:"spinK9 .8s linear infinite" }}/> GENERATING CONDITIONING PLAN…</>
-          : "💪 GENERATE PROGRESSIVE CONDITIONING EXERCISES"}
-      </button>
-      {exercises && (
-        <div style={{ marginTop:16, padding:16, background:C.white, border:`1px solid #14B8A633`, borderRadius:6, animation:"fadeIn .2s ease" }}>
-          <div style={{ fontSize:10, fontWeight:700, color:"#14B8A6", letterSpacing:".14em", marginBottom:10 }}>B.E.A.U. CONDITIONING PLAN</div>
-          <pre style={{ fontSize:12, color:C.text, whiteSpace:"pre-wrap", lineHeight:1.85, fontFamily:"Georgia, serif" }}>{exercises}</pre>
+  return <>
+    {/* ── Patient anchor warning — stays outside the fieldset so it's always visible/readable ── */}
+    {!anchored && (
+      <div style={{ padding:"14px 16px", background:"#FEF3C7", border:"1px solid #F59E0B66", borderLeft:"4px solid #F59E0B", borderRadius:6, fontSize:12, color:"#92400E", marginBottom:16, fontWeight:600, display:"flex", alignItems:"flex-start", gap:10 }}>
+        <span style={{ fontSize:18, lineHeight:1 }}>⚠</span>
+        <div>
+          <div style={{ marginBottom:4 }}>No patient loaded — Conditioning fields are locked.</div>
+          <div style={{ fontWeight:400, fontSize:11, color:"#78350F" }}>Open Client &amp; Patient, enter a patient name, then return here. All fields below will unlock and B.E.A.U. will tailor a conditioning plan to that patient.</div>
         </div>
-      )}
-    </Sec>
+      </div>
+    )}
+
+    {/* ── Disabled fieldset + explicit disabled prop on every field ──
+        Belt + suspenders: fieldset gives native cascade, pointerEvents:none
+        blocks any click-through on collapsibles/chevrons, and each F/WeightPair
+        also receives disabled={!anchored} so its inputs get the real HTML
+        disabled attribute independent of the fieldset. */}
+    <fieldset disabled={!anchored} style={{ border:"none", padding:0, margin:0, opacity: anchored ? 1 : 0.55, filter: anchored ? "none" : "grayscale(0.35)", pointerEvents: anchored ? "auto" : "none" }}>
+      <Sec title="Conditioning Program Profile" color="#14B8A6" colorLt="#F0FDFB" noTop>
+        <div style={{ padding:"10px 14px", background:"#F0FDFB", border:"1px solid #14B8A633", borderRadius:6, fontSize:11, color:C.muted, marginBottom:14 }}>
+          For patients who have completed rehabilitation and are transitioning to fitness, performance, or maintenance conditioning. B.E.A.U. will generate progressive, creative conditioning exercises so you always have something new to offer.
+        </div>
+        <Row>
+          <F label="Conditioning Phase" disabled={!anchored} options={isFeline ? FELINE_CONDITIONING_PHASES : CANINE_CONDITIONING_PHASES}/>
+          <F label="Current Activity Level" disabled={!anchored} options={["Sedentary — house only","Low — short leash walks","Moderate — regular walks","Active — running / hiking","Performance — competition / work"]}/>
+        </Row>
+        <Row cols={3}>
+          <F label="Session Duration (min)" disabled={!anchored} placeholder="e.g. 30"/>
+          <F label="Frequency (per week)" disabled={!anchored} placeholder="e.g. 4"/>
+          <F label="Intensity Target" disabled={!anchored} options={["Low","Moderate","Moderate-High","High"]}/>
+        </Row>
+        <F label="Sport / Activity Type" disabled={!anchored} placeholder={isFeline ? FELINE_SPORT_PLACEHOLDER : CANINE_SPORT_PLACEHOLDER}/>
+        <F label="Preferred Activities / Equipment" disabled={!anchored} placeholder="e.g. Swimming, treadmill, fetch, hiking, agility obstacles, balance work…"/>
+        <F label="Limitations / Precautions" disabled={!anchored} placeholder="Ongoing restrictions — joints to protect, surfaces to avoid, intensity limits…" rows={2}/>
+        <WeightPair label="Weight Goal" fieldBase="conditioning::Weight Goal" disabled={!anchored}/>
+        <F label="Target BCS" disabled={!anchored} options={["4","5 — Ideal","6"]}/>
+      </Sec>
+
+      <Sec title="B.E.A.U. Conditioning Exercise Generator" color="#14B8A6" colorLt="#F0FDFB">
+        <div style={{ fontSize:11, color:C.muted, marginBottom:14, lineHeight:1.65 }}>
+          Not sure what to do today? Hit generate and B.E.A.U. will suggest creative, progressive conditioning exercises tailored to keep sessions fresh and effective — so you never have to scratch your head.
+        </div>
+        <button onClick={generateConditioning} disabled={generating || !anchored}
+          style={{ width:"100%", padding:"13px", background: generating ? "#F0FDFB" : !anchored ? "#e2e8f0" : "#14B8A6", border:"none", color: !anchored ? C.muted : C.white, borderRadius:6, cursor: (generating || !anchored) ? "not-allowed":"pointer", fontSize:13, fontWeight:700, letterSpacing:".08em", display:"flex", alignItems:"center", gap:10, justifyContent:"center" }}>
+          {generating
+            ? <><div style={{ width:16, height:16, border:"2px solid white", borderTopColor:"transparent", borderRadius:"50%", animation:"spinK9 .8s linear infinite" }}/> GENERATING CONDITIONING PLAN…</>
+            : "💪 GENERATE PROGRESSIVE CONDITIONING EXERCISES"}
+        </button>
+
+        {/* ── Structured exercise card rendering (matches Exercise Library style) ── */}
+        {exercises && (() => {
+          const cards = parseExerciseCards(exercises);
+          if (cards.length === 0) {
+            // Fallback: B.E.A.U. did not follow the format — show raw text
+            return (
+              <div style={{ marginTop:16, padding:16, background:C.white, border:`1px solid #14B8A633`, borderRadius:6, animation:"fadeIn .2s ease" }}>
+                <div style={{ fontSize:10, fontWeight:700, color:"#14B8A6", letterSpacing:".14em", marginBottom:10 }}>B.E.A.U. CONDITIONING PLAN</div>
+                <pre style={{ fontSize:12, color:C.text, whiteSpace:"pre-wrap", lineHeight:1.85, fontFamily:"Georgia, serif" }}>{exercises}</pre>
+              </div>
+            );
+          }
+          return (
+            <div style={{ marginTop:16, animation:"fadeIn .2s ease" }}>
+              <div style={{ fontSize:10, fontWeight:700, color:"#14B8A6", letterSpacing:".14em", marginBottom:12 }}>
+                B.E.A.U. CONDITIONING PLAN — {cards.length} EXERCISE{cards.length !== 1 ? "S" : ""}
+              </div>
+              {cards.map((card, idx) => (
+                <div key={idx} style={{ background:C.white, border:`1px solid ${C.border}`, borderLeft:"4px solid #14B8A6", borderRadius:8, padding:16, marginBottom:14, boxShadow:"0 1px 3px rgba(26,39,68,.06)" }}>
+                  <div style={{ fontSize:9, fontWeight:700, color:"#14B8A6", letterSpacing:".14em", textTransform:"uppercase", marginBottom:4 }}>Exercise {idx+1}</div>
+                  <div style={{ fontSize:15, fontWeight:800, color:C.navy, marginBottom:10, lineHeight:1.3 }}>{card.name}</div>
+                  {(card.category || card.difficulty) && (
+                    <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:12 }}>
+                      {card.category && <span style={{ fontSize:10, fontWeight:700, padding:"3px 9px", background:"#F0FDFB", border:"1px solid #14B8A666", borderRadius:12, color:"#0F766E", letterSpacing:".02em" }}>{card.category}</span>}
+                      {card.difficulty && <span style={{ fontSize:10, fontWeight:700, padding:"3px 9px", background:C.blueLt, border:`1px solid ${C.blue}66`, borderRadius:12, color:C.blue, letterSpacing:".02em" }}>{card.difficulty}</span>}
+                    </div>
+                  )}
+                  {card.equipment && (
+                    <div style={{ marginBottom:10, fontSize:11, color:C.text }}>
+                      <span style={{ fontSize:9, fontWeight:700, color:C.muted, letterSpacing:".06em", textTransform:"uppercase", marginRight:6 }}>Equipment:</span>
+                      {card.equipment}
+                    </div>
+                  )}
+                  {card.instructions.length > 0 && (
+                    <div style={{ background:C.bg, borderRadius:6, padding:"10px 14px", marginBottom:10, border:`1px solid ${C.border}` }}>
+                      <div style={{ fontSize:9, fontWeight:700, color:C.muted, letterSpacing:".08em", textTransform:"uppercase", marginBottom:6 }}>Instructions</div>
+                      <ol style={{ margin:0, paddingLeft:18 }}>
+                        {card.instructions.map((step, i) => (
+                          <li key={i} style={{ fontSize:11, color:C.text, marginBottom:4, lineHeight:1.55 }}>{step}</li>
+                        ))}
+                      </ol>
+                    </div>
+                  )}
+                  {(card.setsReps || card.frequency) && (
+                    <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:10 }}>
+                      {card.setsReps && (
+                        <div style={{ background:"#ecfdf5", border:"1px solid #10b98144", borderLeft:"3px solid #10b981", borderRadius:6, padding:"8px 12px" }}>
+                          <div style={{ fontSize:9, fontWeight:700, color:"#065f46", letterSpacing:".06em", textTransform:"uppercase" }}>Sets × Reps</div>
+                          <div style={{ fontSize:12, color:C.text, marginTop:2, fontWeight:600 }}>{card.setsReps}</div>
+                        </div>
+                      )}
+                      {card.frequency && (
+                        <div style={{ background:"#ecfdf5", border:"1px solid #10b98144", borderLeft:"3px solid #10b981", borderRadius:6, padding:"8px 12px" }}>
+                          <div style={{ fontSize:9, fontWeight:700, color:"#065f46", letterSpacing:".06em", textTransform:"uppercase" }}>Frequency</div>
+                          <div style={{ fontSize:12, color:C.text, marginTop:2, fontWeight:600 }}>{card.frequency}</div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {card.evidence && (
+                    <div style={{ fontSize:10, fontStyle:"italic", color:C.muted, marginBottom:8, display:"flex", alignItems:"center", gap:6 }}>
+                      <span>📚</span><span>{card.evidence}</span>
+                    </div>
+                  )}
+                  {card.progression && (
+                    <div style={{ background:"#F0F9FF", border:"1px solid #0EA5E944", borderLeft:"3px solid #0EA5E9", borderRadius:6, padding:"8px 12px", marginBottom:8 }}>
+                      <div style={{ fontSize:9, fontWeight:700, color:"#0EA5E9", letterSpacing:".06em", textTransform:"uppercase", marginBottom:2 }}>Progression</div>
+                      <div style={{ fontSize:11, color:C.text, lineHeight:1.5 }}>{card.progression}</div>
+                    </div>
+                  )}
+                  {card.redFlags && (
+                    <div style={{ background:"#fef2f2", border:"1px solid #fecaca", borderLeft:"3px solid #dc2626", borderRadius:6, padding:"8px 12px" }}>
+                      <div style={{ fontSize:9, fontWeight:700, color:"#dc2626", letterSpacing:".06em", textTransform:"uppercase", marginBottom:2 }}>Red Flags — Stop Immediately</div>
+                      <div style={{ fontSize:11, color:"#111", lineHeight:1.5 }}>{card.redFlags}</div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          );
+        })()}
+      </Sec>
+    </fieldset>
   </>;
 }
 
@@ -1323,7 +1588,7 @@ function ConditioningPanel() {
 function ProtocolPanel({ patientName, patientData }) {
   const [generating, setGenerating]       = useState(false);
   const [protocol,   setProtocol]         = useState("");
-  const { beauVoice: bv, uiLang } = useContext(DashFormContext);
+  const { data, beauVoice: bv, uiLang } = useContext(DashFormContext);
   const [copied,     setCopied]           = useState(false);
   // Quick generate state
   const [quickCondition, setQuickCondition] = useState(patientData?.condition || "");
@@ -1349,6 +1614,10 @@ function ProtocolPanel({ patientName, patientData }) {
     try {
       const apiBase = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
       const token = localStorage.getItem("token");
+      // Live values from dashData take priority over stale DB values.
+      const liveWeight = parseFloat(data["client::Weight (lbs)"]) || 0;
+      const liveAge = parseInt(data["client::Age (years)"], 10) || 0;
+      const liveSpecies = (data["client::Species"] || "").toLowerCase();
       const res = await fetch(`${apiBase}/generate-protocol`, {
         method: "POST",
         headers: {
@@ -1361,10 +1630,10 @@ function ProtocolPanel({ patientName, patientData }) {
           clientLastName: patientData?.client_name?.split(" ").slice(1).join(" ") || "",
           diagnosis: quickCondition,
           affectedRegion: quickRegion || "Generalized",
-          species: patientData?.species || "canine",
+          species: liveSpecies || patientData?.species || "canine",
           breed: patientData?.breed || "",
-          age: patientData?.age || 0,
-          weight: patientData?.weight || 0,
+          age: liveAge || patientData?.age || 0,
+          weight: liveWeight || patientData?.weight || 0,
           protocolLength: 8,
         }),
       });
@@ -1377,6 +1646,18 @@ function ProtocolPanel({ patientName, patientData }) {
   const generate = async () => {
     setGenerating(true); setProtocol("");
     try {
+      // Live patient context — dashData values take priority over stale DB values.
+      const liveWeight = data["client::Weight (lbs)"] || patientData?.weight;
+      const liveAge = data["client::Age (years)"] || patientData?.age;
+      const liveSpecies = data["client::Species"] || patientData?.species;
+      const ctxBits = [
+        `Patient: ${patientName || "Current Patient on file"}`,
+        patientData?.breed     ? `Breed: ${patientData.breed}`                 : null,
+        liveAge                ? `Age: ${liveAge}y`                            : null,
+        liveWeight             ? `Weight: ${liveWeight} lbs`                   : null,
+        liveSpecies            ? `Species: ${liveSpecies}`                     : null,
+        (quickCondition || patientData?.condition) ? `Condition: ${quickCondition || patientData.condition}` : null,
+      ].filter(Boolean).join(" · ");
       const text = await callBeau(
         `You are B.E.A.U. — the Biomedical Evidence-based Analytical Unit, clinical protocol engine of K9 Rehab Pro™. Created by Sal Bonanno, Veterinary Technician and Canine Rehabilitation Nurse, 30 years experience. Generate a complete structured evidence-based rehabilitation protocol. Use exact section headers below. No markdown symbols. Write in full clinical sentences.
 
@@ -1395,7 +1676,7 @@ SAFETY GUARDRAILS — EVERY SESSION
 RED FLAGS — STOP AND CONTACT VETERINARIAN IMMEDIATELY
 
 EVIDENCE BASIS`,
-        `Generate a comprehensive rehabilitation protocol. Patient: ${patientName||"Current Patient on file"}. Condition: ${quickCondition || patientData?.condition || "General rehabilitation"}. Generate a thorough evidence-based protocol demonstrating B.E.A.U.'s full clinical capability across all phases and exercise categories.`,
+        `${ctxBits}.\n\nGenerate a comprehensive rehabilitation protocol tailored to this patient. Generate a thorough evidence-based protocol demonstrating B.E.A.U.'s full clinical capability across all phases and exercise categories.`,
         uiLang
       );
       setProtocol(text);
