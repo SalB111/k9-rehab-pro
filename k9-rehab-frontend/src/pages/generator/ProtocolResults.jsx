@@ -8,7 +8,7 @@ import C from "../../constants/colors";
 import S from "../../constants/styles";
 import ProtocolExCard from "../../components/ProtocolExCard";
 import StoryboardPlayer from "../../components/StoryboardPlayer";
-import AnatomyViewer3D from "../../components/AnatomyViewer3D";
+import HolographicViewer from "../../components/HolographicViewer";
 import { CLINIC_ONLY_CODES } from "./constants";
 
 const PrintableHandout = React.lazy(() => import("../../components/handout/PrintableHandout"));
@@ -251,11 +251,10 @@ export default function ProtocolResults({ protocol, setProtocol, setWizardStep, 
         </div>
       )}
 
-      {/* ── Anatomy Viewer ── */}
-      <AnatomyViewer3D
-        exerciseCode={activeAnatomyExercise}
-        diagnosis={protocol.condition || protocol.diagnosis}
+      {/* ── Anatomy Viewer (Phase 1D — replaced legacy Three.js cartoon) ── */}
+      <HolographicViewer
         species={protocol.species || "Canine"}
+        selectedExercise={activeAnatomyExercise}
       />
 
       {/* ── Protocol Summary Header ── */}

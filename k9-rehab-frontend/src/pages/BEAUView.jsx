@@ -253,15 +253,33 @@ useEffect(() => {
 
       {/* Main Chat Column */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      {/* Caduceus glow animation — pulses the drop-shadow around the logo */}
+      <style>{`
+        @keyframes caduceusGlow {
+          0%, 100% { filter: drop-shadow(0 0 12px rgba(0,229,255,0.6)); }
+          50%      { filter: drop-shadow(0 0 20px rgba(0,229,255,0.9)) drop-shadow(0 0 40px rgba(0,229,255,0.3)); }
+        }
+      `}</style>
       {/* Header Bar */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 20px", borderBottom: `1px solid ${C.border}`, background: C.surface, flexShrink: 0 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <img src="/rod-logo.png" alt="B.E.A.U." style={{ width: 38, height: 38, borderRadius: 10, objectFit: "contain", filter: "brightness(1.2) drop-shadow(0 0 8px rgba(14,165,233,0.4))" }} />
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <img
+            src="/caduceus.png"
+            alt="B.E.A.U. Clinical AI"
+            style={{
+              height: 52,
+              width: "auto",
+              filter: "drop-shadow(0 0 12px rgba(0,229,255,0.6))",
+              animation: "caduceusGlow 3s ease-in-out infinite",
+            }}
+          />
           <div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: C.text, letterSpacing: 0.5 }}>
-              B.E.A.U. <span style={{ color: C.teal, fontSize: 10, fontWeight: 600, background: `${C.teal}15`, padding: "2px 7px", borderRadius: 4, marginLeft: 6 }}>Biomedical Evidence-Based Analytical Unit</span>
+            <div style={{ fontSize: 18, fontWeight: 700, color: "#00e5ff", letterSpacing: 2, fontFamily: "monospace" }}>
+              B.E.A.U.
             </div>
-            <div style={{ fontSize: 10, color: C.textLight, marginTop: 1 }}>Evidence-Based Decision Support • ACVSMR</div>
+            <div style={{ fontSize: 10, color: "#4a6a8a", letterSpacing: 1, fontFamily: "monospace" }}>
+              BIOMEDICAL EVIDENCE-BASED ANALYTICAL UNIT
+            </div>
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -348,7 +366,7 @@ useEffect(() => {
         {welcome && (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "60vh", textAlign: "center" }}>
             <div style={{ width: 200, height: 200, marginBottom: 24, position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <img src="/rod-logo.png" alt="B.E.A.U." style={{ width: "100%", height: "100%", objectFit: "contain", filter: "brightness(1.4) contrast(1.2) drop-shadow(0 0 20px rgba(14,165,233,0.5))", mixBlendMode: "multiply" }} />
+              <img src="/caduceus.png" alt="B.E.A.U." style={{ width: "100%", height: "100%", objectFit: "contain", animation: "caduceusGlow 3s ease-in-out infinite" }} />
             </div>
             <h1 style={{ fontSize: 22, fontWeight: 700, color: C.text, margin: "0 0 6px" }}>B.E.A.U.</h1>
             <p style={{ fontSize: 13, color: C.textLight, maxWidth: 460, lineHeight: 1.6, margin: "0 0 28px" }}>

@@ -607,6 +607,14 @@ function ClientPanel() {
   const setSpecies = (v) => update("client::Species", v);
   const breeds = species === "Feline" ? FELINE_BREEDS : CANINE_BREEDS;
 
+  // Phase 1D — persist species to localStorage so HolographicViewer in
+  // Exercise Library (and any future species-aware component outside
+  // DashFormContext) can read the current patient species without a
+  // round-trip to the backend.
+  useEffect(() => {
+    try { localStorage.setItem("beau_species", species); } catch {}
+  }, [species]);
+
   const onUpdateClick = async () => {
     if (updating) return;
     setUpdating(true);
