@@ -4,6 +4,7 @@ import i18n, { SUPPORTED_LOCALES } from "../i18n";
 import { useTr, slugField } from "../i18n/useTr";
 import useBeauVoice from "../hooks/useBeauVoice";
 import BeauVoiceControl, { SpeakButton } from "../components/BeauVoiceControl";
+import ExercisesView from "./ExercisesView";
 
 // Ensure i18n is initialized (side effect — the import above runs the init)
 void i18n;
@@ -2781,7 +2782,24 @@ function mapBackendExercise(ex) {
   };
 }
 
+// ── RESTORED: Dashboard Library block now reuses the full ExercisesView ───
+// component so it matches the sidebar Exercise Library exactly — same rich
+// ExerciseCard (Equipment, Setup, Step-by-Step Instructions, Good Form,
+// Common Mistakes, Red Flags, Contraindications, Progression, Clinical
+// Parameters, Classification, Safety & Supervision), same AnatomyViewer3D
+// ("View Targeted Muscles"), same Storyboard player, same print handout.
+// Dr. Bibevski demo 7pm — unified library source-of-truth for both entry points.
 function LibraryPanel() {
+  return (
+    <div style={{ margin: -22, padding: 0 }}>
+      <ExercisesView />
+    </div>
+  );
+}
+
+// ── LEGACY — kept in source for reference only, not rendered ──────────────
+// eslint-disable-next-line no-unused-vars
+function LibraryPanelLegacy() {
   const { t } = useTranslation();
   const [species, setSpecies] = useState("canine");
   const [cat,     setCat]     = useState("ALL");
@@ -2942,15 +2960,32 @@ function LibraryPanel() {
 function PetCareNutritionPanel() {
   const { data } = useContext(DashFormContext);
 
+  // Auto-populate all patient + shipping fields from the selected patient
+  // record. Falls back gracefully across multiple key aliases so both legacy
+  // and seeded dashboard_data shapes work.
   const patientName = (data["client::Patient Name"] || "").trim();
   const species = data["client::Species"] || "Canine";
   const breed = (data["client::Breed"] || "").trim();
   const age = data["client::Age (years)"] || "";
   const weight = data["client::Weight (lbs)"] || "";
-  const bcs = data["assessment::Body Condition Score (1–9)"] || "";
-  const diagnosis = data["assessment::Primary Diagnosis"] || "";
+  const weightKg = data["client::Weight (kg)"] || "";
+  const bcs = data["metrics::BCS (1–9)"]
+           || data["assessment::Body Condition Score (1–9)"]
+           || "";
+  const diagnosis = data["assessment::Primary Diagnosis"]
+                 || data["assessment::Diagnosis"]
+                 || "";
+  const sex = data["client::Sex"] || "";
   const clientName = [data["client::Client First Name"], data["client::Client Last Name"]].filter(Boolean).join(" ");
-  const address = [data["client::Street Address"], data["client::City"], data["client::State / Province"], data["client::Zip / Postal Code"]].filter(Boolean).join(", ");
+  const addrLine1 = data["client::Street Address"] || "";
+  const addrLine2 = data["client::Apt / Suite / Unit"] || "";
+  const city = data["client::City"] || "";
+  const stateProv = data["client::State / Province"] || "";
+  const zip = data["client::Zip / Postal Code"] || "";
+  const country = data["client::Country"] || "";
+  const address = [addrLine1, addrLine2, city, stateProv, zip, country].filter(Boolean).join(", ");
+  const phone = data["client::Phone"] || "";
+  const email = data["client::Email"] || "";
 
   const DIET_RECOMMENDATIONS = [
     { brand: "Royal Canin", name: "Mobility Support", condition: "Joint / OA / Post-surgical", species: "Canine", benefits: "EPA+DHA, glucosamine, chondroitin for joint support", portion: "Based on ideal body weight" },
@@ -2974,10 +3009,10 @@ function PetCareNutritionPanel() {
         {[
           ["Patient", patientName || "—"],
           ["Species / Breed", `${species}${breed ? ` — ${breed}` : ""}`],
-          ["Age / Weight", `${age ? age+"y" : "—"} / ${weight ? weight+"lbs" : "—"}`],
-          ["BCS", bcs || "Not assessed"],
+          ["Sex / Age", `${sex || "—"}${age ? ` · ${age}y` : ""}`],
+          ["Weight", `${weight ? weight+" lbs" : "—"}${weightKg ? ` / ${weightKg} kg` : ""}`],
+          ["BCS (1–9)", bcs || "Not assessed"],
           ["Diagnosis", diagnosis || "—"],
-          ["Client", clientName || "—"],
         ].map(([l,v]) => (
           <div key={l} style={{ padding:"8px 12px", background:C.white, border:`1px solid ${C.border}`, borderRadius:5 }}>
             <div style={{ fontSize:9, fontWeight:700, color:"#059669", letterSpacing:".06em", textTransform:"uppercase", marginBottom:2 }}>{l}</div>
@@ -2987,9 +3022,33 @@ function PetCareNutritionPanel() {
       </div>
       {!patientName && (
         <div style={{ marginTop:10, padding:"10px 14px", background:C.amberLt, border:`1px solid ${C.amber}44`, borderRadius:6, fontSize:11, color:C.amber, fontWeight:600 }}>
-          For existing patients, fill in Client & Patient block first for auto-populated recommendations.
+          Select a patient from the header search to auto-populate PetCare Nutrition with their chart + shipping address.
         </div>
       )}
+    </Sec>
+
+    {/* ── Client & Shipping Details (auto-populated) ─────────────────── */}
+    <Sec title="Client & Shipping Address" color="#059669" colorLt="#ECFDF5">
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:10 }}>
+        <div style={{ padding:"10px 14px", background:C.white, border:`1px solid ${C.border}`, borderRadius:5 }}>
+          <div style={{ fontSize:9, fontWeight:700, color:"#059669", letterSpacing:".06em", textTransform:"uppercase", marginBottom:4 }}>Client</div>
+          <div style={{ fontSize:13, color:C.text, fontWeight:600 }}>{clientName || "—"}</div>
+          {phone && <div style={{ fontSize:11, color:C.muted, marginTop:3 }}>📞 {phone}</div>}
+          {email && <div style={{ fontSize:11, color:C.muted, marginTop:2 }}>✉️ {email}</div>}
+        </div>
+        <div style={{ padding:"10px 14px", background:C.white, border:`1px solid ${C.border}`, borderRadius:5 }}>
+          <div style={{ fontSize:9, fontWeight:700, color:"#059669", letterSpacing:".06em", textTransform:"uppercase", marginBottom:4 }}>Ship-to Address</div>
+          {addrLine1 ? (
+            <div style={{ fontSize:12, color:C.text, lineHeight:1.55 }}>
+              <div>{addrLine1}{addrLine2 ? `, ${addrLine2}` : ""}</div>
+              <div>{[city, stateProv, zip].filter(Boolean).join(", ")}</div>
+              {country && <div>{country}</div>}
+            </div>
+          ) : (
+            <div style={{ fontSize:12, color:C.muted, fontStyle:"italic" }}>No shipping address on file for this client.</div>
+          )}
+        </div>
+      </div>
     </Sec>
 
     {/* ── Diet Recommendations ── */}
@@ -3209,7 +3268,7 @@ function AskBeau() {
   const [q, setQ]       = useState("");
   const [ans, setAns]   = useState("");
   const [busy, setBusy] = useState(false);
-  const { uiLang } = useContext(DashFormContext);
+  const { uiLang, beauVoice } = useContext(DashFormContext);
 
   const ask = async () => {
     if (!q.trim()) return;
@@ -3221,22 +3280,45 @@ function AskBeau() {
         uiLang
       );
       setAns(text);
+      // Auto-speak the response — TTS is always-on by default (useBeauVoice
+      // autoSpeak default TRUE for the Dr. Bibevski demo).
+      if (beauVoice?.autoSpeak && text) beauVoice.speak(text);
     } catch (err) { setAns(`Connection error: ${err.message}`); }
     setBusy(false);
   };
 
+  // Hand-click speaker replay for the most recent response.
+  const replay = () => { if (ans && beauVoice?.speak) beauVoice.speak(ans); };
+
   return (
-    <div>
+    <div style={{ pointerEvents: "auto", position: "relative", zIndex: 1 }}>
       <div style={{ fontSize:12, color:C.muted, marginBottom:16, lineHeight:1.65 }}>Ask B.E.A.U. any clinical rehabilitation question — contraindications, dosing, exercise selection, evidence. Answers draw from the peer-reviewed veterinary rehabilitation literature.</div>
       <Lbl>Your Clinical Question</Lbl>
-      <textarea value={q} onChange={e=>setQ(e.target.value)} placeholder="e.g. What exercises are contraindicated for a TPLO patient at week 3? What is the evidence basis for cavaletti rails?" rows={4}/>
+      <textarea
+        value={q}
+        onChange={e=>setQ(e.target.value)}
+        onKeyDown={e => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && !busy) { e.preventDefault(); ask(); } }}
+        placeholder="e.g. What exercises are contraindicated for a TPLO patient at week 3? What is the evidence basis for cavaletti rails?"
+        rows={4}
+        autoFocus
+        style={{ pointerEvents: "auto", userSelect: "text" }}
+      />
       <button onClick={ask} disabled={busy||!q.trim()}
         style={{ marginTop:12, width:"100%", padding:"12px", background: busy||!q.trim() ? C.greenLt : C.green, border:"none", color:C.white, borderRadius:6, cursor: busy||!q.trim()?"not-allowed":"pointer", fontSize:13, fontWeight:700 }}>
         {busy ? "B.E.A.U. IS THINKING…" : "⬡ ASK B.E.A.U."}
       </button>
       {ans && (
         <div style={{ marginTop:16, padding:16, background:C.greenLt, border:`1px solid ${C.green}44`, borderRadius:6 }}>
-          <div style={{ fontSize:9, color:C.green, fontWeight:700, letterSpacing:".15em", marginBottom:8 }}>B.E.A.U. RESPONSE</div>
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:8 }}>
+            <div style={{ fontSize:9, color:C.green, fontWeight:700, letterSpacing:".15em" }}>B.E.A.U. RESPONSE</div>
+            {/* Replay speaker — user can click to hear B.E.A.U. speak again */}
+            <button
+              onClick={replay}
+              title="Hear B.E.A.U. speak this response"
+              style={{ background: C.white, border: `1px solid ${C.green}55`, color: C.green, borderRadius: 5, padding: "4px 10px", fontSize: 11, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 5 }}>
+              🔊 {beauVoice?.isSpeaking ? "Speaking…" : "Replay"}
+            </button>
+          </div>
           <div style={{ fontSize:12, color:C.text, lineHeight:1.85, fontFamily:"Georgia, serif" }}>{ans}</div>
         </div>
       )}
@@ -3594,6 +3676,25 @@ export default function DashboardView({ setView, currentUser, onLogout, patient,
     return () => document.removeEventListener("mousedown", onDoc);
   }, []);
 
+  // ── Open-block event bridge — Sidebar fires "k9-open-block" after writing
+  // the target block id into localStorage. This covers the case where the
+  // user clicks "New Client/Patient Intake" while already on the dashboard
+  // (setView is a no-op then and useState lazy-init only runs on first mount).
+  useEffect(() => {
+    const onOpen = () => {
+      try {
+        const target = localStorage.getItem("beau_open_block");
+        if (target) {
+          localStorage.removeItem("beau_open_block");
+          setOpenBlock(target);
+          setBeauOpen(false); setBeauQuery(""); setBeauAnswer("");
+        }
+      } catch {}
+    };
+    window.addEventListener("k9-open-block", onOpen);
+    return () => window.removeEventListener("k9-open-block", onOpen);
+  }, []);
+
   const filteredPatients = searchQ
     ? allPatients.filter(p => `${p.name} ${p.breed} ${p.client_name} ${p.condition}`.toLowerCase().includes(searchQ.toLowerCase()))
     : allPatients;
@@ -3643,7 +3744,14 @@ export default function DashboardView({ setView, currentUser, onLogout, patient,
     });
   }, [patient?.id]);
 
-  const updateField = (key, val) => setDashData(prev => ({ ...prev, [key]: val }));
+  // useCallback — stabilize reference so DashFormContext consumers don't
+  // thrash on every parent re-render. Keeping this stable fixes the
+  // intermittent button-not-responding bug where a stale context value
+  // would capture an old setDashData closure.
+  const updateField = React.useCallback(
+    (key, val) => setDashData(prev => ({ ...prev, [key]: val })),
+    []
+  );
 
   const handleSave = async () => {
     // Build the payload from form fields
@@ -3760,11 +3868,21 @@ export default function DashboardView({ setView, currentUser, onLogout, patient,
 
   const block     = BLOCKS.find(b=>b.id===openBlock);
 
+  // Memoize the DashFormContext value to prevent re-renders of every form
+  // field on every unrelated state change. Without this, every keystroke
+  // anywhere re-renders every Sec/F/MultiF on the page and can starve
+  // click handlers under heavy typing — the intermittent-button bug.
+  const uiLang = i18nInst.language || "en";
+  const ctxValue = React.useMemo(() => ({
+    data: dashData, update: updateField, blockId: openBlock,
+    beauVoice, uiLang, handleSave, updateToast, setUpdateToast,
+  }), [dashData, updateField, openBlock, beauVoice, uiLang, handleSave, updateToast]);
+
   // No patient gate — dashboard always shows the 11-block grid.
   // If no patient is selected, header shows a prompt to select one.
 
   return (
-    <DashFormContext.Provider value={{ data: dashData, update: updateField, blockId: openBlock, beauVoice, uiLang: i18nInst.language || "en", handleSave, updateToast, setUpdateToast }}>
+    <DashFormContext.Provider value={ctxValue}>
       <div className="k9v2" style={{ background:C.bg, minHeight:"100vh" }}>
         <style>{CSS}</style>
 

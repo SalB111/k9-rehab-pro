@@ -50,8 +50,17 @@ const getStoredSpeed = () => {
 };
 
 export default function useBeauVoice(locale = "en") {
+  // DEMO-READY DEFAULT (Dr. Bibevski 7pm): autoSpeak defaults to TRUE so
+  // B.E.A.U. speaks every response out loud without any user action. A user
+  // can still opt out via the BeauVoiceControl toggle; their preference is
+  // persisted in localStorage and respected on reload.
   const [autoSpeak, setAutoSpeak] = useState(() => {
-    try { const v = localStorage.getItem("k9_beau_autospeak"); return v === "true"; } catch { return false; }
+    try {
+      const v = localStorage.getItem("k9_beau_autospeak");
+      if (v === "false") return false;
+      if (v === "true")  return true;
+      return true; // default ON for new visitors
+    } catch { return true; }
   });
   const [voicePref, setVoicePrefState] = useState(getStoredVoice);
   const [speedPref, setSpeedPrefState] = useState(getStoredSpeed);

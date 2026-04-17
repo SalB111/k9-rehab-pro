@@ -17,11 +17,15 @@ export default function Sidebar({ view, setView, currentUser, onLogout, hospital
     try { localStorage.setItem("k9-sidebar", next ? "collapsed" : "open"); } catch {}
   };
 
-  // Exercise Library click routes to Dashboard Block 11
+  // Exercise Library click routes to Dashboard Block 11. Dispatch a window
+  // event so DashboardView re-opens the target block even if the user is
+  // already on the dashboard (setView is a no-op in that case — useState
+  // lazy-init only fires on first mount).
   const handleNavClick = (id) => {
     if (id === "exercises") {
       try { localStorage.setItem("beau_open_block", "library"); } catch {}
       setView("dashboard");
+      try { window.dispatchEvent(new Event("k9-open-block")); } catch {}
     } else {
       setView(id);
     }
@@ -64,6 +68,9 @@ export default function Sidebar({ view, setView, currentUser, onLogout, hospital
           onClick={() => {
             try { localStorage.setItem("beau_open_block", "client"); } catch {}
             setView("dashboard");
+            // Fire event so DashboardView opens the Client block even if
+            // we're already on the dashboard (setView no-op otherwise).
+            try { window.dispatchEvent(new Event("k9-open-block")); } catch {}
           }}
           className={`
             w-full flex items-center justify-center gap-2 py-2.5 rounded-lg
