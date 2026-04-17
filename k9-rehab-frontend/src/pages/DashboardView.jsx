@@ -1208,11 +1208,10 @@ function MedicationsSection() {
 }
 
 function AssessmentPanel() {
-  const { data } = useContext(DashFormContext);
+  const { data, update, beauVoice: bv, uiLang } = useContext(DashFormContext);
   const species = data["client::Species"] || "Canine";
   const isFeline = species === "Feline";
 
-  // Pain location anatomical regions (Sal's approved list)
   const PAIN_LOCATIONS = [
     "Cervical Spine","Thoracic Spine","Lumbar Spine","Pelvis",
     "Left Shoulder","Right Shoulder","Left Elbow","Right Elbow",
@@ -1220,51 +1219,205 @@ function AssessmentPanel() {
     "Left Stifle","Right Stifle","Left Tarsus","Right Tarsus",
     "Generalized","Other"
   ];
-  const PAIN_AGGRAVATING = [
-    "Exercise","Rising from rest","Stairs","Jumping",
-    "Cold weather","Palpation","Weight bearing","Prolonged sitting","Other"
-  ];
-  const PAIN_ALLEVIATING = [
-    "Rest","Medication","Heat therapy","Cold therapy",
-    "Massage","Reduced activity","Swimming","Other"
-  ];
+  const PAIN_AGGRAVATING = ["Exercise","Rising from rest","Stairs","Jumping","Cold weather","Palpation","Weight bearing","Prolonged sitting","Other"];
+  const PAIN_ALLEVIATING = ["Rest","Medication","Heat therapy","Cold therapy","Massage","Reduced activity","Swimming","Other"];
+
+  // ── Vital Signs auto-flag helper ──
+  const checkVital = (key, min, max) => {
+    const v = parseFloat(data[`assessment::${key}`]);
+    if (isNaN(v)) return null;
+    if (v < min || v > max) return { value: v, min, max, flag: "outside" };
+    return { value: v, min, max, flag: "normal" };
+  };
+
+  const tempRange = { min: 100.5, max: 102.5 };
+  const hrRange = isFeline ? { min: 140, max: 220 } : { min: 60, max: 140 };
+  const rrRange = isFeline ? { min: 20, max: 40 } : { min: 10, max: 30 };
+
+  // ── BEAU Assessment Synthesis ──
+  const [beauSynthesis, setBeauSynthesis] = useState("");
+  const [synthesizing, setSynthesizing] = useState(false);
+
+  const runBeauSynthesis = async () => {
+    setSynthesizing(true); setBeauSynthesis("");
+    try {
+      // Collect all assessment data
+      const assessKeys = Object.keys(data).filter(k => k.startsWith("assessment::"));
+      const assessData = assessKeys.map(k => `${k.replace("assessment::","")}: ${data[k]}`).join("\n");
+      const text = await callBeau(
+        `You are B.E.A.U. — clinical AI of K9 Rehab Pro™. Analyze the following assessment data and generate: 1) Clinical summary of findings, 2) Key rehabilitation implications, 3) Contraindications identified, 4) Recommended protocol adjustments, 5) Evidence references (Millis & Levine chapters). No markdown. Plain clinical text.`,
+        `Species: ${species}\n\nAssessment Data:\n${assessData}\n\nProvide comprehensive clinical analysis.`,
+        uiLang
+      );
+      setBeauSynthesis(text);
+    } catch (err) { setBeauSynthesis(`Error: ${err.message}`); }
+    setSynthesizing(false);
+  };
+
+  // ── Vital flags panel ──
+  const vitalFlags = [];
+  const tempCheck = checkVital("Temperature (°F)", tempRange.min, tempRange.max);
+  if (tempCheck?.flag === "outside") vitalFlags.push(`Temperature ${tempCheck.value}°F outside normal ${tempRange.min}–${tempRange.max}°F`);
+  const hrCheck = checkVital("Heart Rate (bpm)", hrRange.min, hrRange.max);
+  if (hrCheck?.flag === "outside") vitalFlags.push(`Heart Rate ${hrCheck.value} bpm outside normal ${hrRange.min}–${hrRange.max}`);
+  const rrCheck = checkVital("Respiration Rate (rpm)", rrRange.min, rrRange.max);
+  if (rrCheck?.flag === "outside") vitalFlags.push(`Respiration ${rrCheck.value} rpm outside normal ${rrRange.min}–${rrRange.max}`);
+  const spo2Check = checkVital("SpO2 (%)", 95, 100);
+  if (spo2Check?.flag === "outside") vitalFlags.push(`SpO2 ${spo2Check.value}% below 95%`);
 
   return <>
-    {/* ── SECTION 1 — ALWAYS OPEN ── */}
+    {/* ── SECTION A — ALWAYS OPEN: Initial Assessment ── */}
     <Sec title="Initial Clinical Assessment" color={C.amber} colorLt={C.amberLt} noTop>
       <Row>
         <F label="Assessment Date" type="date"/>
-        <F label="Clinician Name & Credentials" placeholder="e.g. Sal Bonanno, CVN"/>
+        <div>
+          <Lbl>Clinician Name & Credentials</Lbl>
+          <input
+            value={data["global::Clinician Name"] && data["global::Clinician Name"] !== "__manual__"
+              ? data["global::Clinician Name"]
+              : data["global::Clinician Name Manual"] || data["assessment::Clinician Name & Credentials"] || ""}
+            onChange={e => update("assessment::Clinician Name & Credentials", e.target.value)}
+            placeholder="e.g. Sal Bonanno, CVN"
+            readOnly={!!(data["global::Clinician Name"] && data["global::Clinician Name"] !== "__manual__")}
+            style={data["global::Clinician Name"] && data["global::Clinician Name"] !== "__manual__" ? { background:"#F9FAFB", color:C.muted, cursor:"default" } : {}}
+          />
+          {data["global::Clinician Name"] && data["global::Clinician Name"] !== "__manual__" && (
+            <div style={{ fontSize:9, color:C.muted, marginTop:3, fontStyle:"italic" }}>Auto-filled from Client & Patient block</div>
+          )}
+        </div>
       </Row>
       <F label="Chief Complaint" placeholder="Primary reason for rehabilitation referral in client's words…"/>
       <F label="Relevant Medical & Surgical History" placeholder="Previous injuries, surgeries, rehabilitation history, activity level…" rows={3}/>
       <Row>
         <F label="Current Mobility Level" options={["Non-weight bearing (NWB)","Toe-touching weight bearing (TTWB)","Partial weight bearing (PWB)","Full weight bearing with lameness (FWBL)","Weight bearing — subtle lameness","Normal — no lameness"]}/>
-        <F label="Lameness Grade" options={["Grade 0 — No lameness","Grade 1 — Intermittent, mild lameness","Grade 2 — Mild, consistent lameness","Grade 3 — Moderate lameness, always present","Grade 4 — Severe lameness, occasional NWB","Grade 5 — Non-weight bearing at all times"]}/>
+        <F label="Lameness Grade" options={["Grade 0 — No lameness","Grade 1 — Barely perceptible","Grade 2 — Mild, consistent","Grade 3 — Moderate, consistent weight bearing","Grade 4 — Severe, minimal weight bearing","Grade 5 — Non-weight bearing"]}/>
       </Row>
       <F label="Initial Assessment Narrative" placeholder="Clinical impressions, functional limitations, overall patient presentation…" rows={3}/>
     </Sec>
 
-    {/* ── SECTION 2 — PAIN ASSESSMENT (COLLAPSED) ── */}
-    <Sec title="▶ Pain Assessment — Colorado State University Scale" color={C.red} colorLt={C.redLt} collapsible defaultOpen={false}>
-      <div style={{ padding:"10px 14px", background:C.white, border:`1px solid ${C.border}`, borderRadius:6, fontSize:11, color:C.muted, marginBottom:14, lineHeight:1.7 }}>
-        <b style={{color:C.red}}>CSU Acute Pain Scale (0–4)</b> — Referenced in Millis & Levine, Canine Rehabilitation & Physical Therapy 2nd Ed.
-        Scores reflect behavioral and physiological indicators. For chronic patients, open the <b>Helsinki Chronic Pain Index</b> from the sidebar for the printable client questionnaire.
+    {/* ── SECTION A: VITAL SIGNS (TPR) ── */}
+    <Sec title="▶ Vital Signs (TPR) — Millis & Levine" color={C.red} colorLt={C.redLt} collapsible defaultOpen={false}>
+      <Row cols={3}>
+        <F label="Temperature (°F)" placeholder="e.g. 101.5" type="number" hint={`Normal: ${tempRange.min}–${tempRange.max}°F`}/>
+        <F label="Heart Rate (bpm)" placeholder="e.g. 80" type="number" hint={`Normal: ${hrRange.min}–${hrRange.max} bpm`}/>
+        <F label="Respiration Rate (rpm)" placeholder="e.g. 20" type="number" hint={`Normal: ${rrRange.min}–${rrRange.max} rpm`}/>
+      </Row>
+      <Row cols={3}>
+        <F label="Blood Pressure Systolic (mmHg)" placeholder="e.g. 130" type="number" hint={isFeline ? "Normal: 120–170" : "Normal: 110–160"}/>
+        <F label="CRT (Capillary Refill)" options={["<1 sec","<2 sec (normal)","2–3 sec","<3 sec — FLAG"]}/>
+        <F label="Mucous Membrane Color" options={["Pink/Moist (normal)","Pale","White","Blue/Cyanotic","Yellow/Icteric","Brick Red","Tacky"]}/>
+      </Row>
+      <Row cols={3}>
+        <F label="SpO2 (%)" placeholder="e.g. 98" type="number" hint="Normal: >95%"/>
+        <F label="Body Condition Score (1–9)" options={["1 — Emaciated","2 — Very thin","3 — Thin","4 — Underweight","5 — Ideal","6 — Overweight","7 — Heavy","8 — Obese","9 — Morbidly obese"]}/>
+        <F label="Muscle Condition Score" options={["Normal","Mild Wasting","Moderate Wasting","Severe Wasting"]}/>
+      </Row>
+      <F label="Location of Muscle Atrophy" placeholder="e.g. Right thigh, bilateral hindquarters"/>
+
+      {/* ── BEAU VITAL SIGNS AUTO-FLAG ── */}
+      {vitalFlags.length > 0 && (
+        <div style={{ marginTop:14, padding:"12px 16px", background:C.redLt, border:`1.5px solid ${C.red}`, borderRadius:8 }}>
+          <div style={{ fontSize:10, fontWeight:700, color:C.red, letterSpacing:".1em", marginBottom:8 }}>⚠ B.E.A.U. CLINICAL FLAGS</div>
+          {vitalFlags.map((f,i) => (
+            <div key={i} style={{ fontSize:11, color:C.red, marginBottom:4, fontWeight:600 }}>⚠ {f}</div>
+          ))}
+        </div>
+      )}
+    </Sec>
+
+    {/* ── SECTION C: ORTHOPEDIC EXAMINATION ── */}
+    <Sec title="▶ Orthopedic Examination — Joint Assessment" color={C.amber} colorLt={C.amberLt} collapsible defaultOpen={false}>
+      <div style={{ fontSize:11, color:C.muted, marginBottom:12 }}>
+        Per Millis & Levine Chapter 7 — assess each joint for pain, effusion, crepitus, and ROM.
       </div>
+      {["Shoulder","Elbow","Carpus","Hip","Stifle","Tarsus","Spine"].map(joint => (
+        <CollapsibleSub key={joint} title={`${joint} — L/R`} accentColor={C.amber}>
+          <Row cols={2}>
+            <F label={`${joint} L — Palpation Pain (0–3)`} options={["0 — None","1 — Mild","2 — Moderate","3 — Severe"]}/>
+            <F label={`${joint} R — Palpation Pain (0–3)`} options={["0 — None","1 — Mild","2 — Moderate","3 — Severe"]}/>
+          </Row>
+          <Row cols={2}>
+            <F label={`${joint} L — Effusion`} options={["None","Mild","Moderate","Severe"]}/>
+            <F label={`${joint} R — Effusion`} options={["None","Mild","Moderate","Severe"]}/>
+          </Row>
+          <Row cols={2}>
+            <F label={`${joint} L — Crepitus`} options={["Absent","Present"]}/>
+            <F label={`${joint} R — Crepitus`} options={["Absent","Present"]}/>
+          </Row>
+          <Row cols={2}>
+            <F label={`${joint} L — ROM (°)`} placeholder="°" type="number"/>
+            <F label={`${joint} R — ROM (°)`} placeholder="°" type="number"/>
+          </Row>
+          <F label={`${joint} Notes`} placeholder="Clinical observations…"/>
+        </CollapsibleSub>
+      ))}
+    </Sec>
+
+    {/* ── SECTION D: NEUROLOGICAL ── */}
+    <Sec title="▶ Neurological Examination — Millis & Levine Ch.8" color={C.amber} colorLt={C.amberLt} collapsible defaultOpen={false}>
+      <Row cols={2}>
+        <F label="Mentation" options={["Alert / BAR","QAR","Obtunded","Stuporous","Comatose"]}/>
+        <F label="Neurological Grade (Frankel Modified)" options={["Grade 0 — No pain, no deficits","Grade 1 — Pain only","Grade 2 — Paresis, ambulatory","Grade 3 — Paresis, non-ambulatory","Grade 4 — Plegia with deep pain","Grade 5 — Plegia without deep pain"]}/>
+      </Row>
+      <div style={{ fontSize:10, fontWeight:700, color:C.amber, letterSpacing:".08em", marginTop:12, marginBottom:6 }}>PROPRIOCEPTION (PER LIMB)</div>
+      <Row cols={4}>
+        <F label="FL Proprioception" options={["Normal","Delayed","Absent"]}/>
+        <F label="FR Proprioception" options={["Normal","Delayed","Absent"]}/>
+        <F label="HL Proprioception" options={["Normal","Delayed","Absent"]}/>
+        <F label="HR Proprioception" options={["Normal","Delayed","Absent"]}/>
+      </Row>
+      <div style={{ fontSize:10, fontWeight:700, color:C.amber, letterSpacing:".08em", marginTop:12, marginBottom:6 }}>SPINAL REFLEXES</div>
+      <Row cols={2}>
+        <F label="Patellar Reflex" options={["Normal","Reduced","Absent","Exaggerated"]}/>
+        <F label="Withdrawal FL" options={["Normal","Reduced","Absent"]}/>
+      </Row>
+      <Row cols={2}>
+        <F label="Withdrawal HL" options={["Normal","Reduced","Absent"]}/>
+        <F label="Perineal Reflex" options={["Normal","Reduced","Absent"]}/>
+      </Row>
+      <div style={{ fontSize:10, fontWeight:700, color:C.amber, letterSpacing:".08em", marginTop:12, marginBottom:6 }}>POSTURAL REACTIONS & FUNCTION</div>
+      <Row cols={2}>
+        <F label="Hopping" options={["Normal — all limbs","Abnormal FL","Abnormal FR","Abnormal HL","Abnormal HR","Abnormal multiple"]}/>
+        <F label="Wheelbarrowing" options={["Normal","Abnormal"]}/>
+      </Row>
+      <Row cols={2}>
+        <F label="Schiff-Sherrington" options={["Absent","Present"]}/>
+        <F label="Bladder Function" options={["Normal","Reduced","Absent","Incontinent"]}/>
+      </Row>
+      <Row cols={2}>
+        <F label="Bowel Function" options={["Normal","Abnormal"]}/>
+        <F label="Deep Pain Perception" options={["Present — bilateral","Present — right only","Present — left only","Absent — bilateral","Not tested"]}/>
+      </Row>
+      <F label="Neurological Notes" placeholder="Additional neurological findings — cranial nerves, lesion localization…" rows={2}/>
+    </Sec>
+
+    {/* ── SECTION E: GAIT ANALYSIS — Millis & Levine Ch.9 ── */}
+    <Sec title="▶ Gait Analysis — Millis & Levine Ch.9" color={C.amber} colorLt={C.amberLt} collapsible defaultOpen={false}>
+      <Row cols={2}>
+        <F label="Gait Assessment Method" options={["Visual observation — Subjective","Force plate analysis","Pressure walkway","Video slow-motion","Treadmill analysis","Kinematic analysis"]}/>
+        <F label="Weight Bearing Status" options={["NWB","Toe-touching","Partial","Full"]}/>
+      </Row>
+      <Row cols={2}>
+        <F label="Gait Pattern" options={["Normal","Antalgic — pain-avoiding","Ataxic — incoordinated","Paretic — weakness-based","Spastic — increased tone","Compensatory — shifting load","Mixed"]}/>
+        <F label="Symmetry" options={["Symmetric","Asymmetric"]}/>
+      </Row>
+      <Row cols={2}>
+        <F label="Antalgic Posture" options={["None","Mild","Moderate","Severe"]}/>
+        <F label="Affected Limb(s)" options={["Right forelimb (RF)","Left forelimb (LF)","Right hindlimb (RH)","Left hindlimb (LH)","Both hindlimbs","Both forelimbs","All four limbs","Spinal / truncal"]}/>
+      </Row>
+      <F label="Gait Analysis Notes" placeholder="Cadence, symmetry, toe clearance, head bob, hip hike…" rows={3}/>
+    </Sec>
+
+    {/* ── SECTION F: PAIN ASSESSMENT ── */}
+    <Sec title="▶ Pain Assessment — CSU / Helsinki / LOAD / FGS" color={C.red} colorLt={C.redLt} collapsible defaultOpen={false}>
       {isFeline ? (
         <>
           <div style={{ fontSize:10, color:C.muted, marginBottom:8, fontStyle:"italic", padding:"6px 10px", background:C.white, border:`1px dashed ${C.border}`, borderRadius:4 }}>
-            Feline Grimace Scale (FGS) — Evangelista et al 2019. Score each of the 5 facial action units 0–2. Total 0–10.
+            Feline Grimace Scale (FGS) — Evangelista et al 2019. Score each facial action unit 0–2. Total 0–10.
           </div>
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:10 }}>
-            {FELINE_FGS_ITEMS.map(lbl => (
-              <F key={lbl} label={lbl} options={FELINE_FGS_SCORES}/>
-            ))}
+            {FELINE_FGS_ITEMS.map(lbl => <F key={lbl} label={lbl} options={FELINE_FGS_SCORES}/>)}
           </div>
-          <Row cols={2}>
-            <F label="Pain Assessment at" options={["Rest","Activity","Palpation","Post-exercise"]}/>
-            <div/>
-          </Row>
         </>
       ) : (
         <Row cols={2}>
@@ -1277,74 +1430,77 @@ function AssessmentPanel() {
         <F label="Pain Character" options={["Acute","Subacute","Chronic","Neuropathic","Mixed"]}/>
         <F label="Pain Onset" options={["Sudden","Gradual","Post-surgical","Unknown"]}/>
       </Row>
-      <Row>
-        <F label="Pain Location — Primary" options={PAIN_LOCATIONS}/>
-        <F label="Pain Location — Secondary" options={PAIN_LOCATIONS}/>
-      </Row>
-      <Row>
-        <F label="Pain Aggravating Factors" options={PAIN_AGGRAVATING}/>
-        <F label="Pain Alleviating Factors" options={PAIN_ALLEVIATING}/>
-      </Row>
-      <Row>
-        <F label="Current Pain Medications" placeholder="Drug, dose, frequency"/>
-        <F label="Response to Analgesia" options={["Excellent — Full relief","Good — Significant relief","Partial — Some improvement","Poor — Minimal response","None"]}/>
-      </Row>
+      <Row><F label="Pain Location — Primary" options={PAIN_LOCATIONS}/><F label="Pain Location — Secondary" options={PAIN_LOCATIONS}/></Row>
+      <Row><F label="Pain Aggravating Factors" options={PAIN_AGGRAVATING}/><F label="Pain Alleviating Factors" options={PAIN_ALLEVIATING}/></Row>
     </Sec>
 
-    {/* ── SECTION 3 — CURRENT MEDICATIONS & SUPPLEMENTS (COLLAPSED) ── */}
+    {/* ── SECTION 3 — MEDICATIONS (COLLAPSED) ── */}
     <Sec title="▶ Current Medications & Supplements" color={C.amber} colorLt={C.amberLt} collapsible defaultOpen={false}>
       <MedicationsSection/>
     </Sec>
 
-    {/* ── SECTION 4 — DIAGNOSIS & PROBLEM LIST (COLLAPSED) ── */}
+    {/* ── SECTION 4 — DIAGNOSIS (COLLAPSED) ── */}
     <Sec title="▶ Clinical Diagnosis & Problem List" color={C.amber} colorLt={C.amberLt} collapsible defaultOpen={false}>
-      <div style={{ fontSize:11, color:C.muted, marginBottom:12 }}>
-        Primary diagnosis, comorbidities, and active problem list — as per Millis & Levine structured assessment format.
-      </div>
       <F label="Primary Diagnosis" placeholder="e.g. Right caudal cruciate ligament rupture — post TPLO week 4"/>
-      <Row>
-        <F label="ICD / VeNom Code" placeholder="Diagnostic code if applicable"/>
-        <F label="Date of Diagnosis / Surgery" type="date"/>
-      </Row>
+      <Row><F label="ICD / VeNom Code" placeholder="Diagnostic code"/><F label="Date of Diagnosis / Surgery" type="date"/></Row>
       <F label="Surgical Procedure" placeholder="e.g. TPLO right stifle — implant type and surgeon"/>
-      <F label="Comorbidities / Secondary Diagnoses" placeholder="e.g. Bilateral hip dysplasia, obesity, osteoarthritis…" rows={2}/>
-      <F label="Active Problem List" placeholder="List all active clinical problems in priority order…" rows={3}/>
-      <Row>
-        <F label="Prognosis" options={["Excellent","Good","Fair","Guarded","Poor"]}/>
-        <F label="Rehabilitation Indication" options={["Post-surgical orthopedic","Post-surgical neurological","Non-surgical orthopedic","Neurological","Chronic pain management","Conditioning / Fitness","Palliative care","Other"]}/>
+      <F label="Comorbidities / Secondary Diagnoses" placeholder="e.g. Bilateral hip dysplasia, obesity…" rows={2}/>
+      <F label="Active Problem List" placeholder="All active clinical problems in priority order…" rows={3}/>
+      <Row><F label="Prognosis" options={["Excellent","Good","Fair","Guarded","Poor"]}/><F label="Rehabilitation Indication" options={["Post-surgical orthopedic","Post-surgical neurological","Non-surgical orthopedic","Neurological","Chronic pain management","Conditioning / Fitness","Palliative care","Other"]}/></Row>
+    </Sec>
+
+    {/* ── SECTION G: FUNCTIONAL ASSESSMENT ── */}
+    <Sec title="▶ Functional Assessment" color={C.amber} colorLt={C.amberLt} collapsible defaultOpen={false}>
+      <Row cols={3}>
+        <F label="Sit-to-Stand" options={["Easy","Moderate difficulty","Cannot"]}/>
+        <F label="Stair Climbing" options={["Normal","Assisted","Cannot"]}/>
+        <F label="Jump Ability" options={["Normal","Reduced","Cannot"]}/>
+      </Row>
+      <Row cols={2}>
+        <F label="Activity Level (1–5)" options={["1 — Sedentary","2 — Low","3 — Moderate","4 — Active","5 — Very active"]}/>
+        <F label="Exercise Tolerance" options={["Good","Fair","Poor"]}/>
       </Row>
     </Sec>
 
-    {/* ── SECTION 5 — GAIT ANALYSIS (COLLAPSED) ── */}
-    <Sec title="▶ Gait Analysis" color={C.amber} colorLt={C.amberLt} collapsible defaultOpen={false}>
-      <Row>
-        <F label="Gait Assessment Method" options={["Visual observation — Subjective","Force plate analysis","Pressure walkway (e.g. Tekscan)","Video slow-motion analysis","Treadmill analysis","Kinematic analysis"]}/>
-        <F label="Surface Assessed On" options={["Non-slip flooring","Grass / Outdoor","Treadmill","Walkway / Corridor","Mixed surfaces"]}/>
+    {/* ── SECTION H: SPECIAL ORTHOPEDIC TESTS ── */}
+    <Sec title="▶ Special Orthopedic Tests" color={C.amber} colorLt={C.amberLt} collapsible defaultOpen={false}>
+      <Row cols={2}>
+        <F label="Cranial Drawer Test" options={["Not performed","Negative","Positive — Grade 1","Positive — Grade 2","Positive — Grade 3"]}/>
+        <F label="Tibial Compression Test" options={["Not performed","Negative","Positive"]}/>
       </Row>
-      <Row>
-        <F label="Gait Pattern" options={["Normal","Antalgic — pain-avoiding","Ataxic — incoordinated","Paretic — weakness-based","Spastic — increased tone","Compensatory — shifting load","Mixed"]}/>
-        <F label="Affected Limb(s)" options={["Right forelimb (RF)","Left forelimb (LF)","Right hindlimb (RH)","Left hindlimb (LH)","Both hindlimbs","Both forelimbs","All four limbs","Spinal / truncal"]}/>
+      <Row cols={2}>
+        <F label="Ortolani Sign" options={["Not performed","Negative","Positive"]}/>
+        <F label="Shoulder Abduction Angle (°)" placeholder="degrees" type="number"/>
       </Row>
-      <Row>
-        <F label="Stride Length" options={["Normal bilaterally","Shortened — ipsilateral","Shortened — contralateral","Bilateral reduction","Unable to assess"]}/>
-        <F label="Weight Distribution" options={["Even — all four limbs","Shifting to forelimbs","Shifting to hindlimbs","Shifting to left","Shifting to right","Severely asymmetric"]}/>
+      <Row cols={2}>
+        <F label="Elbow Flexion Test" options={["Not performed","Negative","Positive"]}/>
+        <F label="Patella Luxation Grade" options={["Not performed","Grade 0","Grade 1","Grade 2","Grade 3","Grade 4"]}/>
       </Row>
-      <F label="Proprioceptive Deficits" options={["None detected","Mild — delayed replacement","Moderate — consistent knuckling","Severe — dragging","Unable to assess"]}/>
-      <F label="Gait Analysis Notes" placeholder="Detailed observations — cadence, symmetry, toe clearance, head bob, hip hike…" rows={3}/>
     </Sec>
 
-    {/* ── SECTION 6 — NEUROLOGICAL (COLLAPSED) ── */}
-    <Sec title="▶ Neurological Assessment" color={C.amber} colorLt={C.amberLt} collapsible defaultOpen={false}>
-      <Row>
-        <F label="Neurological Grade (Frankel / ASIA Modified)" options={["Grade I — Pain only, no deficits","Grade II — Ambulatory paresis","Grade III — Non-ambulatory paresis","Grade IV — Plegia with deep pain","Grade V — Plegia without deep pain"]}/>
-        <F label="Lesion Localization" options={["N/A — No neurological signs","C1–C5 (Cervical)","C6–T2 (Cervical enlargement)","T3–L3 (Thoracolumbar)","L4–S3 (Lumbosacral enlargement)","Peripheral nerve","Neuromuscular junction","Muscle"]}/>
-      </Row>
-      <Row>
-        <F label="Deep Pain Perception" options={["Present — bilateral","Present — right only","Present — left only","Absent — bilateral","Absent — right","Absent — left","Not tested"]}/>
-        <F label="Patellar Reflex" options={["Normal","Hyporeflexia","Areflexia","Hyperreflexia","Not tested"]}/>
-      </Row>
-      <F label="Neurological Notes" placeholder="Additional neurological findings — cranial nerves, postural reactions, spinal reflexes…" rows={2}/>
+    {/* ── BEAU ASSESSMENT SYNTHESIS ── */}
+    <Sec title="B.E.A.U. Assessment Synthesis" color={C.green} colorLt={C.greenLt}>
+      <div style={{ fontSize:11, color:C.muted, marginBottom:12, lineHeight:1.65 }}>
+        B.E.A.U. will analyze all entered assessment data and generate a clinical summary, rehabilitation implications, contraindications, and evidence references.
+      </div>
+      <button onClick={runBeauSynthesis} disabled={synthesizing}
+        style={{
+          width:"100%", padding:"14px", background: synthesizing ? C.greenLt : C.green,
+          border:"none", color:C.white, borderRadius:6, cursor: synthesizing?"not-allowed":"pointer",
+          fontSize:13, fontWeight:700, letterSpacing:".08em", display:"flex", alignItems:"center", gap:10, justifyContent:"center",
+        }}>
+        {synthesizing
+          ? <><div style={{ width:16, height:16, border:"2px solid white", borderTopColor:"transparent", borderRadius:"50%", animation:"spinK9 .8s linear infinite" }}/> ANALYZING ASSESSMENT…</>
+          : "🧠 B.E.A.U. ANALYZE ASSESSMENT"}
+      </button>
+      {beauSynthesis && (
+        <div style={{ marginTop:14, padding:16, background:C.white, border:`1px solid ${C.green}44`, borderRadius:6 }}>
+          <div style={{ fontSize:9, fontWeight:700, color:C.green, letterSpacing:".15em", marginBottom:8 }}>B.E.A.U. CLINICAL SYNTHESIS</div>
+          <pre style={{ fontSize:12, color:C.text, whiteSpace:"pre-wrap", lineHeight:1.85, fontFamily:"Georgia, serif" }}>{beauSynthesis}</pre>
+        </div>
+      )}
     </Sec>
+
     <ClinicalNotes/>
   </>;
 }
@@ -3535,19 +3691,54 @@ export default function DashboardView({ setView, currentUser, onLogout, patient,
             </div>
           )}
           <div style={{ display:"grid", gridTemplateColumns:"repeat(3, 1fr)", gap:16 }}>
-            {BLOCKS.map((b,i)=>(
+            {BLOCKS.map((b,i)=>{
+              // ── Block data indicator ──
+              const blockKeys = Object.keys(dashData).filter(k => k.startsWith(b.id + "::") && dashData[k] && String(dashData[k]).trim());
+              const hasData = blockKeys.length > 0;
+              // Count expected fields (rough estimate: 3+ = complete, 1-2 = partial)
+              const dataStatus = blockKeys.length >= 3 ? "complete" : blockKeys.length > 0 ? "partial" : "empty";
+              const dotColor = dataStatus === "complete" ? C.green : dataStatus === "partial" ? C.amber : null;
+
+              return (
               <div key={b.id} className="block-card"
                 onClick={()=>handleBlockClick(b.id)}
-                style={{ background:C.white, border:`1.5px solid ${C.border}`, borderRadius:9, padding:"22px 20px", position:"relative", overflow:"hidden", boxShadow:"0 1px 6px rgba(26,39,68,.06)", animationDelay:`${i*.04}s`, animation:"fadeUp .3s ease both" }}>
+                title={hasData ? "Block contains data — click to review" : ""}
+                style={{
+                  background:C.white,
+                  border: hasData ? `1.5px solid ${dotColor}55` : `1.5px solid ${C.border}`,
+                  borderRadius:9, padding:"22px 20px", position:"relative", overflow:"hidden",
+                  boxShadow: hasData ? `0 1px 6px rgba(26,39,68,.06), 0 0 8px ${dotColor}20` : "0 1px 6px rgba(26,39,68,.06)",
+                  animationDelay:`${i*.04}s`, animation:"fadeUp .3s ease both",
+                }}>
                 <div style={{ position:"absolute", top:0, left:0, right:0, height:4, background:b.color }}/>
-                <div style={{ width:44, height:44, borderRadius:10, background:b.colorLt, border:`1px solid ${b.color}33`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:22, marginBottom:14, boxShadow:`0 2px 8px ${b.color}22` }}>
+                {/* ── Data indicator dot — top right ── */}
+                {hasData && (
+                  <div style={{
+                    position:"absolute", top:10, right:10,
+                    width:10, height:10, borderRadius:"50%",
+                    background:dotColor, border:`1.5px solid ${C.white}`,
+                    boxShadow:`0 0 6px ${dotColor}55`,
+                  }}/>
+                )}
+                <div style={{ width:44, height:44, borderRadius:10, background:b.colorLt, border:`1px solid ${b.color}33`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:22, marginBottom:14, boxShadow:`0 2px 8px ${b.color}22`, position:"relative" }}>
                   {b.icon}
+                  {/* ── Checkmark badge on icon ── */}
+                  {dataStatus === "complete" && (
+                    <div style={{
+                      position:"absolute", bottom:-3, right:-3,
+                      width:16, height:16, borderRadius:"50%",
+                      background:C.green, border:`2px solid ${C.white}`,
+                      display:"flex", alignItems:"center", justifyContent:"center",
+                      fontSize:9, color:C.white, fontWeight:900,
+                    }}>✓</div>
+                  )}
                 </div>
                 <div style={{ fontSize:14, fontWeight:700, color:C.navy, marginBottom:5 }}>{t(`tiles.${b.id}.label`)}</div>
                 <div style={{ fontSize:11, color:C.muted, lineHeight:1.55 }}>{t(`tiles.${b.id}.desc`)}</div>
                 <div style={{ position:"absolute", bottom:16, right:16, fontSize:16, color:b.color, opacity:.35 }}>→</div>
               </div>
-            ))}
+              );
+            })}
           </div>
 
           <div style={{ marginTop:20, padding:"10px 4px", display:"flex", justifyContent:"space-between", borderTop:`1px solid ${C.border}` }}>
