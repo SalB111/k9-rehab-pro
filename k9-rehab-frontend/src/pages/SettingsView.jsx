@@ -15,6 +15,7 @@ import { TabNotifications } from "./settings/TabNotifications";
 import { TabSecurity } from "./settings/TabSecurity";
 import { TabAppearance } from "./settings/TabAppearance";
 import { TabDataManagement } from "./settings/TabDataManagement";
+import { TabClinicConfig } from "./settings/TabClinicConfig";
 
 function SettingsView({ setBrand }) {
   const toast = useToast();
@@ -92,6 +93,9 @@ function SettingsView({ setBrand }) {
       )}
       {state.activeTab === "data" && (
         <TabDataManagement {...shared} />
+      )}
+      {state.activeTab === "clinic-config" && (
+        <TabClinicConfig {...shared} />
       )}
 
       {/* ── Platform version footer ── */}

@@ -38,7 +38,7 @@ const C = {
 };
 
 // ─── CURATED BREED LISTS ──────────────────────────────────────────────────────
-const CANINE_BREEDS = ["Affenpinscher","Afghan Hound","Airedale Terrier","Akita","Alaskan Malamute","American Bulldog","American Cocker Spaniel","American Eskimo Dog","American Pit Bull Terrier","American Staffordshire Terrier","Australian Cattle Dog","Australian Shepherd","Basenji","Basset Hound","Beagle","Belgian Malinois","Belgian Tervuren","Bernese Mountain Dog","Bichon Frise","Border Collie","Border Terrier","Boston Terrier","Boxer","Boykin Spaniel","Brittany","Brussels Griffon","Bulldog (English)","Bullmastiff","Cairn Terrier","Cane Corso","Cavalier King Charles Spaniel","Chesapeake Bay Retriever","Chihuahua","Chinese Shar-Pei","Chow Chow","Clumber Spaniel","Cocker Spaniel","Collie (Rough)","Dachshund (Miniature)","Dachshund (Standard)","Dalmatian","Doberman Pinscher","Dogue de Bordeaux","English Setter","English Springer Spaniel","Field Spaniel","Flat-Coated Retriever","Fox Terrier","French Bulldog","German Shepherd Dog","German Shorthaired Pointer","Giant Schnauzer","Golden Retriever","Great Dane","Great Pyrenees","Greyhound","Irish Setter","Irish Wolfhound","Italian Greyhound","Jack Russell Terrier","Labrador Retriever","Leonberger","Lhasa Apso","Maltese","Manchester Terrier","Mastiff","Miniature Pinscher","Miniature Schnauzer","Mixed Breed","Newfoundland","Norfolk Terrier","Norwegian Elkhound","Nova Scotia Duck Tolling Retriever","Old English Sheepdog","Papillon","Pekingese","Pembroke Welsh Corgi","Plott Hound","Pointer","Pomeranian","Poodle (Miniature)","Poodle (Standard)","Poodle (Toy)","Portuguese Water Dog","Pug","Rat Terrier","Rhodesian Ridgeback","Rottweiler","Saint Bernard","Samoyed","Scottish Terrier","Shetland Sheepdog","Shiba Inu","Shih Tzu","Siberian Husky","Soft Coated Wheaten Terrier","Staffordshire Bull Terrier","Standard Schnauzer","Tibetan Mastiff","Vizsla","Weimaraner","Welsh Corgi (Cardigan)","West Highland White Terrier","Whippet","Wire Fox Terrier","Xoloitzcuintli","Yorkshire Terrier","Other — Specify in notes"];
+const CANINE_BREEDS = ["Affenpinscher","Afghan Hound","Airedale Terrier","Akita","Alaskan Malamute","American Bulldog","American Cocker Spaniel","American Eskimo Dog","American Pit Bull Terrier","American Staffordshire Terrier","Australian Cattle Dog","Australian Shepherd","Australian Shepherd (Miniature)","Basenji","Basset Hound","Beagle","Belgian Malinois","Belgian Tervuren","Bernese Mountain Dog","Bichon Frise","Border Collie","Border Terrier","Boston Terrier","Boxer","Boykin Spaniel","Brittany","Brussels Griffon","Bulldog (English)","Bullmastiff","Cairn Terrier","Cane Corso","Cavalier King Charles Spaniel","Chesapeake Bay Retriever","Chihuahua","Chinese Shar-Pei","Chow Chow","Clumber Spaniel","Cocker Spaniel","Collie (Rough)","Dachshund (Miniature)","Dachshund (Standard)","Dalmatian","Doberman Pinscher","Dogue de Bordeaux","English Setter","English Springer Spaniel","Field Spaniel","Flat-Coated Retriever","Fox Terrier","French Bulldog","German Shepherd Dog","German Shorthaired Pointer","Giant Schnauzer","Golden Retriever","Great Dane","Great Pyrenees","Greyhound","Irish Setter","Irish Wolfhound","Italian Greyhound","Jack Russell Terrier","Labrador Retriever","Leonberger","Lhasa Apso","Maltese","Manchester Terrier","Mastiff","Miniature Australian Shepherd","Miniature Pinscher","Miniature Schnauzer","Mixed Breed","Newfoundland","Norfolk Terrier","Norwegian Elkhound","Nova Scotia Duck Tolling Retriever","Old English Sheepdog","Papillon","Pekingese","Pembroke Welsh Corgi","Plott Hound","Pointer","Pomeranian","Poodle (Miniature)","Poodle (Standard)","Poodle (Toy)","Portuguese Water Dog","Pug","Rat Terrier","Rhodesian Ridgeback","Rottweiler","Saint Bernard","Samoyed","Scottish Terrier","Shetland Sheepdog","Shiba Inu","Shih Tzu","Siberian Husky","Soft Coated Wheaten Terrier","Staffordshire Bull Terrier","Standard Schnauzer","Tibetan Mastiff","Vizsla","Weimaraner","Welsh Corgi (Cardigan)","West Highland White Terrier","Whippet","Wire Fox Terrier","Xoloitzcuintli","Yorkshire Terrier","Other — Specify in notes"];
 
 const FELINE_BREEDS = ["Abyssinian","American Shorthair","Bengal","Birman","British Shorthair","Burmese","Devon Rex","Domestic Longhair","Domestic Shorthair","Egyptian Mau","Exotic Shorthair","Himalayan","Maine Coon","Manx","Mixed Breed","Norwegian Forest Cat","Ocicat","Oriental Shorthair","Persian","Ragdoll","Russian Blue","Scottish Fold","Siamese","Siberian","Sphynx","Tonkinese","Turkish Angora","Turkish Van","Other — Specify in notes"];
 
@@ -758,36 +758,125 @@ function SafetyText({ k, as = "span", style, className, showBadge = true }) {
 // BLOCK PANELS
 // ══════════════════════════════════════════════════════════════════════════════
 
+// ── PET INSURANCE OPTIONS ─────────────────────────────────────────────────────
+const PET_INSURANCE_OPTIONS = [
+  "Trupanion","Nationwide Pet Insurance","Healthy Paws","ASPCA Pet Health Insurance",
+  "Embrace Pet Insurance","Figo Pet Insurance","Other — specify below",
+];
+
+// ── COLOR / MARKINGS OPTIONS ─────────────────────────────────────────────────
+const COLOR_OPTIONS = [
+  "Black","White","Brown","Tan","Red","Golden","Cream","Grey","Blue","Liver","Brindle",
+];
+const PATTERN_OPTIONS = [
+  "Tricolor","Bicolor","Merle","Spotted","Ticked","Roan","Sable","Harlequin","Parti",
+];
+
 // ── CLIENT & PATIENT ──────────────────────────────────────────────────────────
 function ClientPanel() {
   const { data, update } = useContext(DashFormContext);
-  // Species defaults to Canine; use dashData value if present so breed list stays in sync
   const species = data["client::Species"] || "Canine";
   const setSpecies = (v) => update("client::Species", v);
   const breeds = species === "Feline" ? FELINE_BREEDS : CANINE_BREEDS;
 
-  // Phase 1D — persist species to localStorage so any viewer in
-  // Exercise Library (and any future species-aware component outside
-  // DashFormContext) can read the current patient species without a
-  // round-trip to the backend.
   useEffect(() => {
     try { localStorage.setItem("beau_species", species); } catch {}
   }, [species]);
+
+  // ── Zip code auto-lookup ──
+  const onZipChange = async (val) => {
+    update("client::Zip / Postal Code", val);
+    if (val.length === 5 && /^\d{5}$/.test(val)) {
+      try {
+        const res = await fetch(`https://api.zippopotam.us/us/${val}`);
+        if (res.ok) {
+          const json = await res.json();
+          const place = json.places?.[0];
+          if (place) {
+            update("client::City", place["place name"] || "");
+            update("client::State / Province", place["state abbreviation"] || "");
+          }
+        }
+      } catch { /* silent — manual entry fallback */ }
+    }
+  };
+
+  // ── Insurance ──
+  const insuranceVal = data["client::Pet Insurance Provider"] || "";
+  const isOtherInsurance = insuranceVal === "Other — specify below";
+
+  // ── Color/Markings multi-select ──
+  const colorRaw = data["client::Color / Markings"] || "";
+  const selectedColors = colorRaw ? colorRaw.split("||").filter(Boolean) : [];
+  const toggleColor = (opt) => {
+    const next = selectedColors.includes(opt)
+      ? selectedColors.filter(x => x !== opt)
+      : [...selectedColors, opt];
+    update("client::Color / Markings", next.join("||"));
+  };
+
+  // ── Clinician/Staff roster from Settings ──
+  const [clinicianRoster, setClinicianRoster] = useState([]);
+  const [staffRoster, setStaffRoster] = useState([]);
+  useEffect(() => {
+    try {
+      const cr = localStorage.getItem("k9_clinician_roster");
+      if (cr) setClinicianRoster(JSON.parse(cr));
+      const sr = localStorage.getItem("k9_staff_roster");
+      if (sr) setStaffRoster(JSON.parse(sr));
+    } catch {}
+  }, []);
 
   return <>
     <Sec title="Client Information" color={C.blue} colorLt={C.blueLt} noTop>
       <Row><F label="Client First Name" placeholder="First name"/><F label="Client Last Name" placeholder="Last name"/></Row>
       <Row><F label="Phone" placeholder="(555) 000-0000" type="tel"/><F label="Email" placeholder="email@example.com" type="email"/></Row>
-      <F label="Address" placeholder="Street, city, state, zip"/>
+
+      {/* ── Structured Address Fields ── */}
+      <Sec title="Address" color={C.blue} colorLt={C.blueLt} collapsible defaultOpen={true}>
+        <F label="Street Address" placeholder="123 Main Street"/>
+        <Row>
+          <F label="Apt / Suite / Unit" placeholder="Apt 4B"/>
+          <div>
+            <Lbl>Zip / Postal Code</Lbl>
+            <input type="text" placeholder="e.g. 33301"
+              value={data["client::Zip / Postal Code"] || ""}
+              onChange={e => onZipChange(e.target.value)}/>
+            <div style={{ fontSize:10, color:C.muted, marginTop:4, fontStyle:"italic" }}>Auto-fills city & state from zip</div>
+          </div>
+        </Row>
+        <Row>
+          <F label="City" placeholder="Fort Lauderdale"/>
+          <F label="State / Province" placeholder="FL"/>
+        </Row>
+        <F label="Country" placeholder="United States"/>
+      </Sec>
+
       <Row><F label="Emergency Contact" placeholder="Name & phone"/><F label="Referred By" placeholder="Referring veterinarian & clinic"/></Row>
-      <Row><F label="Pet Insurance Provider" placeholder="Provider & policy number"/><F label="Primary Veterinarian" placeholder="Name & clinic"/></Row>
+
+      {/* ── Pet Insurance Provider dropdown ── */}
+      <Row>
+        <div>
+          <Lbl>Pet Insurance Provider</Lbl>
+          <select value={insuranceVal} onChange={e => update("client::Pet Insurance Provider", e.target.value)}>
+            <option value="">Select provider…</option>
+            {PET_INSURANCE_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
+          </select>
+          {isOtherInsurance && (
+            <div style={{ marginTop:6 }}>
+              <F label="Other Insurance Provider" placeholder="Provider name & policy number"/>
+            </div>
+          )}
+        </div>
+        <F label="Primary Veterinarian" placeholder="Name & clinic"/>
+      </Row>
     </Sec>
+
     <Sec title="Patient Information" color={C.blue} colorLt={C.blueLt}>
       <Row><F label="Patient Name" placeholder="Pet's name"/>
         <div>
           <Lbl>Species</Lbl>
-          <select value={species}
-            onChange={e => setSpecies(e.target.value)}>
+          <select value={species} onChange={e => setSpecies(e.target.value)}>
             {["Canine","Feline"].map(s=><option key={s} value={s}>{s}</option>)}
           </select>
         </div>
@@ -795,8 +884,7 @@ function ClientPanel() {
       <Row>
         <div>
           <Lbl>Breed</Lbl>
-          <select value={data["client::Breed"] || ""}
-            onChange={e => update("client::Breed", e.target.value)}>
+          <select value={data["client::Breed"] || ""} onChange={e => update("client::Breed", e.target.value)}>
             <option value="">Select breed…</option>
             {breeds.map(b=><option key={b} value={b}>{b}</option>)}
           </select>
@@ -805,13 +893,86 @@ function ClientPanel() {
       </Row>
       <Row cols={2}>
         <AgeDobPair/>
-        <F label="Color / Markings" placeholder="e.g. Black & tan, tricolor"/>
+        {/* ── Color / Markings multi-select ── */}
+        <div>
+          <Lbl>Color / Markings</Lbl>
+          <div style={{ display:"flex", flexWrap:"wrap", gap:4, padding:"8px 10px", background:C.white, border:`1px solid ${C.border}`, borderRadius:5, minHeight:38, marginBottom:4 }}>
+            {selectedColors.length === 0 && <span style={{ fontSize:11, color:C.gray }}>Select colors & patterns…</span>}
+            {selectedColors.map(c => (
+              <span key={c} onClick={() => toggleColor(c)} style={{
+                fontSize:10, fontWeight:600, padding:"2px 8px", borderRadius:10,
+                background:C.blueLt, border:`1px solid ${C.blue}44`, color:C.blue,
+                cursor:"pointer", display:"inline-flex", alignItems:"center", gap:3,
+              }}>{c} ✕</span>
+            ))}
+          </div>
+          <div style={{ display:"flex", flexWrap:"wrap", gap:3 }}>
+            {[...COLOR_OPTIONS, ...PATTERN_OPTIONS].map(opt => {
+              const sel = selectedColors.includes(opt);
+              return (
+                <span key={opt} onClick={() => toggleColor(opt)} style={{
+                  fontSize:9, padding:"2px 7px", borderRadius:3, cursor:"pointer",
+                  background: sel ? C.blue : C.bg, color: sel ? C.white : C.muted,
+                  border: `1px solid ${sel ? C.blue : C.border}`, fontWeight:sel?700:400,
+                }}>{opt}</span>
+              );
+            })}
+          </div>
+          <div style={{ marginTop:6 }}>
+            <F label="Additional Markings" placeholder="e.g. white chest patch, ticking on legs"/>
+          </div>
+        </div>
       </Row>
       <Row cols={2}>
         <WeightPair label="Weight" fieldBase="client::Weight"/>
         <F label="Microchip #" placeholder="15-digit number"/>
       </Row>
-      <F label="Specialist / Surgeon" placeholder="Referring specialist name & clinic"/>
+    </Sec>
+
+    {/* ── Attending Clinician & Rehab Nurse ── */}
+    <Sec title="Attending Clinical Team" color={C.blue} colorLt={C.blueLt} collapsible defaultOpen={true}>
+      <Row>
+        <div>
+          <Lbl>Attending Clinician / Specialist</Lbl>
+          <select
+            value={data["global::Clinician Name"] || ""}
+            onChange={e => update("global::Clinician Name", e.target.value)}>
+            <option value="">Select attending clinician…</option>
+            {clinicianRoster.map(c => <option key={c.id} value={c.name}>{c.name}{c.title ? ` — ${c.title}` : ""}</option>)}
+            <option value="__manual__">Enter manually…</option>
+          </select>
+          {data["global::Clinician Name"] === "__manual__" && (
+            <div style={{ marginTop:6 }}>
+              <input placeholder="Clinician name & credentials"
+                value={data["global::Clinician Name Manual"] || ""}
+                onChange={e => update("global::Clinician Name Manual", e.target.value)}/>
+            </div>
+          )}
+          <div style={{ fontSize:10, color:C.muted, marginTop:4, fontStyle:"italic" }}>
+            Populated from Settings → Clinician Roster. Propagates to all blocks.
+          </div>
+        </div>
+        <div>
+          <Lbl>Rehabilitation Nurse / Assistant</Lbl>
+          <select
+            value={data["global::Nurse Assistant"] || ""}
+            onChange={e => update("global::Nurse Assistant", e.target.value)}>
+            <option value="">Select nurse or assistant…</option>
+            {staffRoster.map(s => <option key={s.id} value={s.name}>{s.name}{s.role ? ` — ${s.role}` : ""}</option>)}
+            <option value="__manual__">Enter manually…</option>
+          </select>
+          {data["global::Nurse Assistant"] === "__manual__" && (
+            <div style={{ marginTop:6 }}>
+              <input placeholder="Nurse / assistant name"
+                value={data["global::Nurse Assistant Manual"] || ""}
+                onChange={e => update("global::Nurse Assistant Manual", e.target.value)}/>
+            </div>
+          )}
+          <div style={{ fontSize:10, color:C.muted, marginTop:4, fontStyle:"italic" }}>
+            Populated from Settings → Staff Roster. Propagates to all blocks.
+          </div>
+        </div>
+      </Row>
     </Sec>
 
     <ClinicalNotes/>

@@ -1,6 +1,6 @@
 import {
   FiHome, FiAward, FiTool, FiActivity, FiFileText,
-  FiBell, FiShield, FiMonitor, FiDatabase,
+  FiBell, FiShield, FiMonitor, FiDatabase, FiGlobe, FiUsers,
 } from "react-icons/fi";
 import C from "../../constants/colors";
 
@@ -103,6 +103,7 @@ export const TABS = [
   { id: "clinic",       label: "Clinic Profile",       icon: FiHome,     group: "practice" },
   { id: "clinician",    label: "Clinician",             icon: FiAward,    group: "practice" },
   { id: "equipment",    label: "Equipment & Facility",  icon: FiTool,     group: "practice" },
+  { id: "clinic-config",label: "Clinic Configuration",  icon: FiGlobe,    group: "practice" },
   { id: "protocols",    label: "Protocol Defaults",     icon: FiActivity, group: "clinical" },
   { id: "documentation",label: "Documentation",         icon: FiFileText, group: "clinical" },
   { id: "notifications",label: "Notifications",         icon: FiBell,     group: "system" },

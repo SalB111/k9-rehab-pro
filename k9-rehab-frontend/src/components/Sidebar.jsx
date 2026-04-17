@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import NAV from "../constants/navigation";
 import { FiPlus, FiLogOut, FiChevronLeft, FiChevronRight, FiGlobe } from "react-icons/fi";
 import { useTranslation } from "react-i18next";
 import { SUPPORTED_LOCALES } from "../i18n";
 
-export default function Sidebar({ view, setView, currentUser, onLogout }) {
+export default function Sidebar({ view, setView, currentUser, onLogout, hospitalLanguageLocked }) {
   const [collapsed, setCollapsed] = useState(() => {
     try { return localStorage.getItem("k9-sidebar") === "collapsed"; } catch { return false; }
   });
@@ -13,6 +13,16 @@ export default function Sidebar({ view, setView, currentUser, onLogout }) {
     const next = !collapsed;
     setCollapsed(next);
     try { localStorage.setItem("k9-sidebar", next ? "collapsed" : "open"); } catch {}
+  };
+
+  // Exercise Library click routes to Dashboard Block 11
+  const handleNavClick = (id) => {
+    if (id === "exercises") {
+      try { localStorage.setItem("beau_open_block", "library"); } catch {}
+      setView("dashboard");
+    } else {
+      setView(id);
+    }
   };
 
   return (
@@ -41,12 +51,13 @@ export default function Sidebar({ view, setView, currentUser, onLogout }) {
         )}
       </div>
 
-      {/* New Patient Intake — routes to Dashboard Client & Patient block.
-          Per Sal 2026-04-15: the old generator wizard is disabled (files
-          remain on disk but navigation is rerouted). DashboardView reads
-          "beau_open_block" from localStorage on mount and auto-opens the
-          named block. */}
-      <div className="px-3 mt-4 mb-2">
+      {/* Language Selector — FIRST item, above New Client/Patient Intake */}
+      {!hospitalLanguageLocked && (
+        <SidebarLanguage collapsed={collapsed} />
+      )}
+
+      {/* New Patient Intake */}
+      <div className="px-3 mt-2 mb-2">
         <button
           onClick={() => {
             try { localStorage.setItem("beau_open_block", "client"); } catch {}
@@ -65,14 +76,8 @@ export default function Sidebar({ view, setView, currentUser, onLogout }) {
         </button>
       </div>
 
-      {/* Nav Items — capsule/pill clickable buttons
-          Per Sal 2026-04-15: uses INLINE STYLES (not Tailwind) + useState
-          hover tracking to guarantee the styling applies regardless of any
-          Tailwind JIT/purge issues. Three states: inactive, hover, active. */}
-      <SidebarNav NAV={NAV} view={view} setView={setView} collapsed={collapsed} />
-
-      {/* Language Selector */}
-      <SidebarLanguage collapsed={collapsed} />
+      {/* Nav Items */}
+      <SidebarNav NAV={NAV} view={view} setView={handleNavClick} collapsed={collapsed} />
 
       {/* Bottom Section */}
       <div className="mt-auto border-t border-white/10">
@@ -119,8 +124,6 @@ export default function Sidebar({ view, setView, currentUser, onLogout }) {
 }
 
 // ─── Nav item list with inline-style capsule buttons ────────────────────────
-// Uses inline styles + useState hover tracking (not Tailwind) so the styling
-// is guaranteed to apply regardless of build-tool purge behavior.
 function SidebarNav({ NAV, view, setView, collapsed }) {
   const [hoveredId, setHoveredId] = useState(null);
 
@@ -141,7 +144,6 @@ function SidebarNav({ NAV, view, setView, collapsed }) {
         const hovered = hoveredId === item.id && !active;
         const Icon = item.icon;
 
-        // Base capsule — INACTIVE state
         const baseStyle = {
           borderRadius: 24,
           padding: collapsed ? "8px 8px" : "8px 14px",
@@ -162,7 +164,6 @@ function SidebarNav({ NAV, view, setView, collapsed }) {
           boxShadow: "none",
         };
 
-        // HOVER overrides
         const hoverStyle = hovered ? {
           background: "rgba(0,229,255,0.08)",
           border: "1px solid rgba(0,229,255,0.25)",
@@ -170,7 +171,6 @@ function SidebarNav({ NAV, view, setView, collapsed }) {
           boxShadow: "0 0 8px rgba(0,229,255,0.15)",
         } : {};
 
-        // ACTIVE overrides (takes priority over hover)
         const activeStyle = active ? {
           background: "rgba(0,229,255,0.15)",
           border: "1px solid rgba(0,229,255,0.5)",
@@ -204,40 +204,105 @@ function SidebarNav({ NAV, view, setView, collapsed }) {
   );
 }
 
+// ─── Language Selector — Prominent capsule at top of sidebar ─────────────────
 function SidebarLanguage({ collapsed }) {
-  const { i18n: i18nInst } = useTranslation();
+  const { t, i18n: i18nInst } = useTranslation();
   const [open, setOpen] = useState(false);
+  const ref = useRef(null);
   const current = SUPPORTED_LOCALES.find(l => l.code === i18nInst.language)
     || SUPPORTED_LOCALES.find(l => i18nInst.language?.startsWith(l.code))
     || SUPPORTED_LOCALES[0];
 
+  // Close on outside click
+  useEffect(() => {
+    const onDoc = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, []);
+
   return (
-    <div className="px-2 mb-1">
+    <div ref={ref} style={{ padding: "10px 12px 4px 12px" }}>
       <button
         onClick={() => setOpen(!open)}
-        className={`
-          w-full flex items-center gap-3 px-3 py-2 rounded-lg
-          text-[12px] font-medium transition-all duration-150
-          text-[#7AAACF] hover:bg-white/5 hover:text-white
-          ${collapsed ? "justify-center px-0" : ""}
-        `}
+        title={collapsed ? `${t("languageSelector.label")}: ${current.name}` : t("languageSelector.selectPlatformLanguage")}
+        style={{
+          width: "100%",
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          padding: collapsed ? "8px 6px" : "9px 14px",
+          borderRadius: 24,
+          background: open ? "rgba(0,229,255,0.12)" : "rgba(255,255,255,0.06)",
+          border: `1px solid ${open ? "rgba(0,229,255,0.4)" : "rgba(255,255,255,0.15)"}`,
+          color: open ? "#00e5ff" : "rgba(255,255,255,0.85)",
+          cursor: "pointer",
+          transition: "all 0.2s ease",
+          fontFamily: "inherit",
+          fontSize: 12,
+          fontWeight: 600,
+          justifyContent: collapsed ? "center" : "flex-start",
+          boxShadow: open ? "0 0 10px rgba(0,229,255,0.15)" : "none",
+        }}
       >
-        <FiGlobe className="w-[16px] h-[16px] flex-shrink-0" />
-        {!collapsed && <span>{current.flag} {current.name}</span>}
+        <FiGlobe style={{ width: 16, height: 16, flexShrink: 0 }} />
+        {!collapsed && (
+          <>
+            <span style={{ fontSize: 15, lineHeight: 1 }}>{current.flag}</span>
+            <span style={{ flex: 1, textAlign: "left" }}>{current.name}</span>
+            <span style={{ fontSize: 9, opacity: 0.6 }}>▾</span>
+          </>
+        )}
       </button>
+
+      {!collapsed && (
+        <div style={{
+          fontSize: 9,
+          color: "rgba(122,170,207,0.7)",
+          letterSpacing: "0.08em",
+          textTransform: "uppercase",
+          textAlign: "center",
+          marginTop: 3,
+          fontWeight: 600,
+        }}>
+          {t("languageSelector.selectPlatformLanguage")}
+        </div>
+      )}
+
       {open && !collapsed && (
-        <div className="mt-1 mx-1 rounded-lg bg-white/5 border border-white/10 max-h-[200px] overflow-y-auto">
+        <div style={{
+          marginTop: 6,
+          borderRadius: 8,
+          background: "rgba(255,255,255,0.05)",
+          border: "1px solid rgba(255,255,255,0.1)",
+          maxHeight: 240,
+          overflowY: "auto",
+        }}>
           {SUPPORTED_LOCALES.map(l => (
             <button
               key={l.code}
               onClick={() => { i18nInst.changeLanguage(l.code); setOpen(false); }}
-              className={`
-                w-full flex items-center gap-2 px-3 py-1.5 text-[11px]
-                transition-colors duration-100
-                ${l.code === current.code ? "text-white bg-white/10 font-semibold" : "text-[#7AAACF] hover:text-white hover:bg-white/5"}
-              `}
+              style={{
+                width: "100%",
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "7px 12px",
+                fontSize: 11,
+                fontWeight: l.code === current.code ? 700 : 400,
+                color: l.code === current.code ? "#00e5ff" : "rgba(255,255,255,0.7)",
+                background: l.code === current.code ? "rgba(0,229,255,0.1)" : "transparent",
+                border: "none",
+                cursor: "pointer",
+                fontFamily: "inherit",
+                textAlign: "left",
+                transition: "background 0.1s",
+              }}
+              onMouseEnter={e => { if (l.code !== current.code) e.currentTarget.style.background = "rgba(255,255,255,0.05)"; }}
+              onMouseLeave={e => { if (l.code !== current.code) e.currentTarget.style.background = "transparent"; }}
             >
-              <span>{l.flag}</span> <span>{l.name}</span>
+              <span style={{ fontSize: 14 }}>{l.flag}</span>
+              <span>{l.name}</span>
+              {l.code === current.code && <span style={{ marginLeft: "auto", fontSize: 10 }}>✓</span>}
             </button>
           ))}
         </div>

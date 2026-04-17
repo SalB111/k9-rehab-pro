@@ -1,6 +1,7 @@
 {
   "languageSelector": {
-    "label": "Language"
+    "label": "Language",
+    "selectPlatformLanguage": "Select Platform Language"
   },
   "dashboard": {
     "title": "Clinical Dashboard",
