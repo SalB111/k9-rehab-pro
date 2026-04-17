@@ -163,10 +163,16 @@ K9 Rehab Pro is a veterinary rehabilitation intelligence platform. Clinician FIR
 - Evidence-based: ACVSMR diplomate methodology, Millis & Levine textbook standards
 - 4 Protocols: TPLO (16wk), IVDD (12wk), OA (16wk), Geriatric (16wk)
 - 4 Phases per protocol with gated progression (16 total phases)
-- 52 unique exercise codes mapped to protocol phases, 223 total in exercise database
+- 52 unique exercise codes mapped to protocol phases, 260 total in exercise database
 - Equipment gating: aquatic (flag), modalities (individual flags)
 - Phase 4 for chronic conditions = lifelong maintenance
-- Protocol generator header: `4 Conditions | 16 Phases | 52 Protocol Exercises | 223 Exercise Library | Full Modality Integration`
+- Protocol generator header: `4 Conditions | 16 Phases | 52 Protocol Exercises | 260 Exercise Library | Full Modality Integration`
+- Full Millis & Levine assessment framework (TPR, orthopedic, neuro, gait, pain, functional, special tests)
+- 13 dashboard blocks (Client, Diagnostics, Assessment, Treatment, Metrics, Equipment, Home, Goals, Conditioning, Protocol, Library, Nutrition, 3D Viewer)
+- Full multilingual support: 10 locales (en, es, fr, de, pt-BR, it, ja, ko, zh-CN, nl)
+- PetCare Nutrition dashboard block with Mars PetCare diet recommendations
+- Clinician roster + staff roster management in Settings → Clinic Configuration
+- Hospital language lock system (admin-controlled)
 
 ## Implementation Tiers
 
@@ -236,7 +242,14 @@ k9-rehab-pro/
 │   ├── src/App.jsx             # Main app — all views including B.E.A.U.
 │   ├── src/K9Icons.jsx         # Icon system v2
 │   ├── src/index.jsx           # Entry point
+│   ├── src/i18n/               # Multilingual system (10 locales)
+│   │   ├── index.js            # i18next config
+│   │   └── locales/            # en, es, fr, de, pt-BR, it, ja, ko, zh-CN, nl
+│   ├── src/pages/DashboardView.jsx  # 13-block clinical intake system
+│   ├── src/pages/settings/     # Settings tabs including Clinic Configuration
+│   │   └── TabClinicConfig.jsx # Hospital language, clinician & staff rosters
 │   ├── src/components/ui/      # shadcn/ui components
+│   ├── src/hooks/useBeauVoice.js # TTS with rewind/FF/playText
 │   ├── src/lib/                # Utility functions (cn, etc.)
 │   ├── vite.config.js          # Vite configuration
 │   ├── tailwind.config.js      # Tailwind CSS configuration
@@ -372,6 +385,11 @@ Auto-initializes with seed data on first run.
 - Protocol generation: ACVSMR-aligned 4-condition × 4-phase system with gated progression
 - Phase progression: Acute Protection → Early Mobilization → Controlled Strengthening → Return to Function
 - Frontend (`k9-rehab-frontend`): Single-page app with view state management in `App.js`
+- Dashboard: 13 clinical blocks — Client, Diagnostics, Assessment (full Millis & Levine), Treatment, Metrics, Equipment, Home, Goals, Conditioning, Protocol Summary, Exercise Library, PetCare Nutrition, 3D Anatomy Viewer
+- Multilingual: 10 locales with i18next, hospital language lock, safety strings English-locked
+- Assessment: Full Millis & Levine framework — TPR vitals with auto-flagging, orthopedic exam (7 joints), neurological exam, gait analysis (Ch.9), pain scales (CSU/Helsinki/LOAD/FGS), functional assessment, special orthopedic tests, B.E.A.U. synthesis
+- Block data indicators: dashboard cards show colored dots (green=complete, amber=partial) and checkmark badges when blocks contain data
+- Clinician auto-fill: `global::Clinician Name` and `global::Nurse Assistant` propagate across all blocks
 - B.E.A.U.: Streaming chat using Anthropic Claude API with clinical system prompt and patient context injection
 - Auth: JWT with role-based access (clinician, admin). Public routes: health, login, register, auth status
 - Security: Helmet headers, CORS restricted to localhost:3001, rate limiting (100 req/15min general, 5 req/15min auth)
