@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+// Auth-aware axios instance — attaches JWT on every request. Previously this
+// file imported raw `axios` which bypassed the interceptor, causing the
+// Measures-save flow and the B.E.A.U.-sessions-by-patient fetch to 401.
+import api from "../api/axios";
 import { FiArrowLeft, FiUser, FiMessageSquare, FiActivity, FiSave, FiChevronDown } from "react-icons/fi";
 import C from "../constants/colors";
 import S from "../constants/styles";
@@ -33,7 +36,7 @@ function PatientDetailView({ patient, setView }) {
   useEffect(() => {
     if (activeTab === "beau" && patient?.id) {
       setSessionsLoading(true);
-      axios.get(`${API}/beau/sessions/patient/${patient.id}`)
+      api.get(`/beau/sessions/patient/${patient.id}`)
         .then(r => setBeauSessions(r.data?.data || []))
         .catch(() => toast(tr("Failed to load B.E.A.U. sessions")))
         .finally(() => setSessionsLoading(false));
@@ -45,7 +48,7 @@ function PatientDetailView({ patient, setView }) {
   const saveMeasures = async () => {
     setMeasuresSaving(true);
     try {
-      await axios.patch(`${API}/patients/${patient.id}/measures`, measures);
+      await api.patch(`/patients/${patient.id}/measures`, measures);
       toast(tr("Clinical measures saved — B.E.A.U. will use these on next session"));
     } catch (e) {
       toast(tr("Save failed") + ": " + (e.response?.data?.error || e.message));

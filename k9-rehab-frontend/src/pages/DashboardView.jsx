@@ -3700,16 +3700,37 @@ export default function DashboardView({ setView, currentUser, onLogout, patient,
     : allPatients;
 
   // ── Select patient from search → load their full record + dashboard data
+  // Explicit 8s timeout + in-flight loading state. On Railway cold-start
+  // the prior code appeared frozen for 15+ seconds with no feedback, and
+  // on a transient error it silently fell back to the lightweight search
+  // row (missing dashboard_data) — dashboard appeared empty even when the
+  // seeded patient HAD full data.
+  const [selectLoading, setSelectLoading] = useState(false);
   const selectPatient = async (p) => {
     setSearchOpen(false);
     setSearchQ("");
+    setSelectLoading(true);
+    const controller = new AbortController();
+    const tmo = setTimeout(() => controller.abort(), 8000);
     try {
-      const res = await fetch(`${apiBase}/patients/${p.id}`, { headers: authHeaders });
+      const res = await fetch(`${apiBase}/patients/${p.id}`, {
+        headers: authHeaders, signal: controller.signal,
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
       const fullPatient = json.data || json;
       if (setSelectedPatient) setSelectedPatient(fullPatient);
-    } catch {
+    } catch (err) {
+      console.warn("[selectPatient] fetch failed — falling back to list row", err?.message);
       if (setSelectedPatient) setSelectedPatient(p);
+      setUpdateToast({
+        type: "error",
+        message: `Patient loaded with partial data${err?.name === "AbortError" ? " (backend slow to respond)" : ""}. Retry from the search if the dashboard appears empty.`,
+      });
+      setTimeout(() => setUpdateToast(null), 5000);
+    } finally {
+      clearTimeout(tmo);
+      setSelectLoading(false);
     }
   };
 
@@ -3723,7 +3744,13 @@ export default function DashboardView({ setView, currentUser, onLogout, patient,
     if (patient.dashboard_data) {
       try {
         savedDash = typeof patient.dashboard_data === "string" ? JSON.parse(patient.dashboard_data) : patient.dashboard_data;
-      } catch { savedDash = {}; }
+      } catch (e) {
+        // Log loudly so we can distinguish "bad JSON" from "empty panel" when
+        // diagnosing post-demo. End-user still sees an empty dashboard, which
+        // is correct fail-soft behavior.
+        console.error("[DashboardView] dashboard_data JSON parse failed for patient", patient.id, e);
+        savedDash = {};
+      }
     }
     // REPLACE (not merge with prev). Seed ALL patient-table columns into their
     // DashFormContext keys so the dropdowns/inputs show current values on load.
@@ -3775,14 +3802,20 @@ export default function DashboardView({ setView, currentUser, onLogout, patient,
       // This is the fix for the silent save bug. When user types names into the
       // form WITHOUT selecting an existing patient, we POST first to create.
       if (!patient?.id) {
+        // Honor the species the clinician actually selected on the Client
+        // block (Canine or Feline) instead of hardcoding canine. Previously
+        // every new Feline record was persisted as canine, causing the
+        // header label to flip back to Canine on reload.
+        const speciesFromForm = (dashData["client::Species"] || "Canine").toLowerCase();
+        const speciesNormalized = speciesFromForm === "feline" ? "feline" : "canine";
         const createRes = await fetch(`${apiBase}/patients`, {
           method: "POST",
           headers: authHeaders,
           body: JSON.stringify({
             name: patientName,
-            species: "canine",
+            species: speciesNormalized,
             breed,
-            age: 0,
+            age: parseInt(dashData["client::Age (years)"], 10) || 0,
             weight,
             sex: dashData["client::Sex"] || null,
             condition: dashData["client::Diagnosis"] || dashData["assessment::Primary Diagnosis"] || "Rehabilitation",

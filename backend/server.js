@@ -135,8 +135,52 @@ app.get("/api/patients/:id", requireAuth, async (req, res) => {
   }
 });
 
+// ─── Patient payload validation ────────────────────────────────────────────
+// Lightweight validator: caps string lengths (DoS via DB-bloat) and rejects
+// garbage types up front. Keeps schemas in one place so POST and PUT stay
+// in sync. Returns null on success or an error-message string on failure.
+const STR_CAPS = {
+  name: 200, breed: 200, sex: 64, condition: 500, affected_region: 200,
+  surgery_date: 32, mobility_level: 100,
+  current_medications: 4000, medical_history: 10000,
+  special_instructions: 4000,
+  client_name: 200, client_email: 200, client_phone: 64, referring_vet: 500,
+};
+const DASHBOARD_DATA_MAX_BYTES = 64 * 1024; // 64 KB per patient blob
+
+function validatePatientPayload(body, { requireName = false } = {}) {
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return "Request body must be an object";
+  }
+  if (requireName && (!body.name || typeof body.name !== "string" || !body.name.trim())) {
+    return "name is required";
+  }
+  for (const [k, cap] of Object.entries(STR_CAPS)) {
+    const v = body[k];
+    if (v === undefined || v === null) continue;
+    if (typeof v !== "string") return `${k} must be a string`;
+    if (v.length > cap) return `${k} exceeds max length (${cap})`;
+  }
+  for (const k of ["age", "weight", "lameness_grade", "body_condition_score", "pain_level"]) {
+    const v = body[k];
+    if (v === undefined || v === null || v === "") continue;
+    const n = Number(v);
+    if (!Number.isFinite(n)) return `${k} must be a number`;
+    if (n < 0 || n > 1000) return `${k} out of range`;
+  }
+  const dd = body.dashboard_data;
+  if (dd !== undefined) {
+    const asString = typeof dd === "string" ? dd : (() => { try { return JSON.stringify(dd); } catch { return null; } })();
+    if (asString === null) return "dashboard_data is not serializable";
+    if (asString.length > DASHBOARD_DATA_MAX_BYTES) return "dashboard_data exceeds 64KB";
+  }
+  return null;
+}
+
 app.post("/api/patients", requireAuth, async (req, res) => {
   try {
+    const err = validatePatientPayload(req.body, { requireName: true });
+    if (err) return res.status(400).json({ success: false, error: err });
     const {
       name, species, breed, age, weight, sex, condition, affected_region,
       surgery_date, lameness_grade, body_condition_score, pain_level,
@@ -167,6 +211,8 @@ app.post("/api/patients", requireAuth, async (req, res) => {
 
 app.put("/api/patients/:id", requireAuth, async (req, res) => {
   try {
+    const err = validatePatientPayload(req.body);
+    if (err) return res.status(400).json({ success: false, error: err });
     const {
       name, species, breed, age, weight, sex, condition, affected_region,
       surgery_date, lameness_grade, body_condition_score, pain_level,
@@ -580,6 +626,36 @@ app.post("/api/pipeline/home-session", requireAuth, async (req, res) => {
     res.json({ success: true, data: result });
   } catch (err) {
     console.error("[Pipeline] Error:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// ADMIN SEED ROUTE — protected by SEED_ADMIN_TOKEN env var
+// ---------------------------------------------------------------------------
+// One-shot endpoint to populate the 5 demo patients on prod (Railway) without
+// requiring Railway CLI / shell access. Call once:
+//
+//   curl -X POST https://<host>/api/admin/seed-demo -H "X-Seed-Token: $TOKEN"
+//
+// Idempotent — re-running updates dashboard_data in-place rather than
+// duplicating rows. Token must be set as SEED_ADMIN_TOKEN env var; if the
+// env var is missing or the header doesn't match, we 404 (not 401) to avoid
+// advertising the endpoint's existence.
+app.post("/api/admin/seed-demo", async (req, res) => {
+  const expected = (process.env.SEED_ADMIN_TOKEN || "").trim();
+  const provided = (req.headers["x-seed-token"] || "").toString().trim();
+  if (!expected || !provided || provided !== expected) {
+    return res.status(404).json({ error: "Not found" });
+  }
+  try {
+    const { seed } = require("./seed-demo-patients");
+    // DB already initialized at server boot — don't reopen from the handler.
+    await seed({ init: false });
+    const rows = await db.all("SELECT id, name, breed FROM patients ORDER BY id");
+    res.json({ success: true, total: rows.length, patients: rows });
+  } catch (err) {
+    console.error("[Admin Seed] error:", err);
     res.status(500).json({ success: false, error: err.message });
   }
 });
