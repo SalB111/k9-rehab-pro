@@ -843,7 +843,7 @@ xl: '1280px'  // Desktops
 
 Before I start building, please confirm:
 
-1. **Branding:** Keep "K9-REHAB-PRO" or use "The Doggy Style Gym"?
+1. **Branding:** ✅ Confirmed: "K9 Rehab Pro™" — owned by Salvatore Bonanno
 2. **Color Scheme:** Teal (#008B8B) or Blue (#0284c7)?
 3. **User Modes:** Do you want HOME vs PROFESSIONAL modes?
 4. **Exercise Count:** Start with 50 or prioritize specific categories?
