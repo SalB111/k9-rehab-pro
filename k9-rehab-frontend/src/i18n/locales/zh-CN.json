@@ -1,6 +1,6 @@
 {
   "_machine_translation_note": "TODO: professional review — machine-quality draft. Safety strings (safety.*) INTENTIONALLY ABSENT — fall back to English with visible EN badge per product owner decision 2026-04-11.",
-  "languageSelector": { "label": "语言" },
+  "languageSelector": { "label": "语言", "selectPlatformLanguage": "选择平台语言" },
   "dashboard": {
     "title": "临床仪表板",
     "subtitle": "选择任意模块 · 所有字段独立 · 无需特定顺序",
@@ -23,6 +23,7 @@
   "nav": {
     "how": "如何使用 K9 Rehab Pro",
     "ask": "向 B.E.A.U. 提问",
+    "helsinki": "赫尔辛基疼痛指数",
     "about": "关于",
     "disclaimer": "免责声明",
     "hipaa": "兽医 HIPAA"
@@ -38,7 +39,10 @@
     "goals":        { "label": "目标",              "desc": "短期 · 长期 · 进展" },
     "conditioning": { "label": "体能训练",          "desc": "健身 · 表现 · 维持" },
     "protocol":     { "label": "方案摘要",          "desc": "生成 · 导出 · 电子邮件 · QR" },
-    "library":      { "label": "运动库",            "desc": "260 项运动 · 犬 · 猫" }
+    "treatment":    { "label": "治疗与手术状态",      "desc": "方案 · 状态 · 限制" },
+    "library":      { "label": "运动库",            "desc": "260 项运动 · 犬 · 猫" },
+    "nutrition":    { "label": "PetCare营养",        "desc": "治疗饮食建议 · Mars PetCare" },
+    "coming-soon":  { "label": "3D临床解剖查看器",    "desc": "全息 · 交互式 · 即将推出" }
   },
   "modal": {
     "close": "关闭",
@@ -97,5 +101,39 @@
       "specialty":  "专科(肝脏 / 心脏 / 过敏)",
       "other":      "其他 / 多种"
     }
+  },
+  "library": {
+    "searchPlaceholder": "按名称或ID搜索运动…",
+    "sets": "组数",
+    "reps": "次数",
+    "freq": "频率",
+    "contraindications": "禁忌症",
+    "formCue": "动作提示",
+    "evidenceBasis": "证据基础",
+    "loadFailed": "库加载失败",
+    "apiHint": "请确认Vercel环境变量中的VITE_API_URL指向您的Railway后端。",
+    "noMatch": "没有运动匹配当前筛选条件。",
+    "loadingFrom": "正在从后端加载{{species}}运动…"
+  },
+  "protocol": {
+    "generate": "生成完整方案",
+    "generating": "正在生成B.E.A.U.方案…",
+    "output": "方案输出 — B.E.A.U. 生成",
+    "copy": "复制",
+    "copied": "已复制",
+    "emailClient": "邮件客户端",
+    "print": "打印",
+    "qrCode": "二维码",
+    "connectionError": "连接错误: {{message}}",
+    "conditioningHeading": "B.E.A.U. 体能训练计划",
+    "generateConditioning": "生成渐进式体能训练运动",
+    "generatingConditioning": "正在生成体能训练计划…"
+  },
+  "beau": {
+    "askTitle": "向 B.E.A.U. 提问",
+    "askPlaceholder": "例如: TPLO患者第3周哪些运动是禁忌的？骑士栏杆的证据基础是什么？",
+    "askButton": "向 B.E.A.U. 提问",
+    "thinking": "B.E.A.U. 正在思考…",
+    "response": "B.E.A.U. 回复"
   }
 }

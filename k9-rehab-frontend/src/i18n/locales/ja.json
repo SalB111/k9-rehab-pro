@@ -1,6 +1,6 @@
 {
   "_machine_translation_note": "TODO: professional review — machine-quality draft. Safety strings (safety.*) INTENTIONALLY ABSENT — fall back to English with visible EN badge per product owner decision 2026-04-11.",
-  "languageSelector": { "label": "言語" },
+  "languageSelector": { "label": "言語", "selectPlatformLanguage": "プラットフォーム言語を選択" },
   "dashboard": {
     "title": "臨床ダッシュボード",
     "subtitle": "任意のブロックを選択 · すべてのフィールドは独立 · 順序は任意",
@@ -23,6 +23,7 @@
   "nav": {
     "how": "K9 Rehab Pro の使い方",
     "ask": "B.E.A.U. に質問",
+    "helsinki": "ヘルシンキ疼痛指数",
     "about": "概要",
     "disclaimer": "免責事項",
     "hipaa": "獣医 HIPAA"
@@ -38,7 +39,10 @@
     "goals":        { "label": "目標",                   "desc": "短期 · 長期 · 進捗" },
     "conditioning": { "label": "コンディショニング",      "desc": "フィットネス · パフォーマンス · メンテナンス" },
     "protocol":     { "label": "プロトコル概要",          "desc": "生成 · エクスポート · メール · QR" },
-    "library":      { "label": "運動ライブラリ",          "desc": "260 運動 · 犬 · 猫" }
+    "treatment":    { "label": "治療・手術状態",          "desc": "アプローチ · 状態 · 制限事項" },
+    "library":      { "label": "運動ライブラリ",          "desc": "260 運動 · 犬 · 猫" },
+    "nutrition":    { "label": "PetCareニュートリション",  "desc": "治療食推奨 · Mars PetCare" },
+    "coming-soon":  { "label": "3D臨床解剖ビューアー",     "desc": "ホログラフィック · インタラクティブ · 近日公開" }
   },
   "modal": {
     "close": "閉じる",
@@ -97,5 +101,39 @@
       "specialty":  "専門(肝臓・心臓・アレルギー)",
       "other":      "その他・複数"
     }
+  },
+  "library": {
+    "searchPlaceholder": "名前またはIDで運動を検索…",
+    "sets": "セット",
+    "reps": "回数",
+    "freq": "頻度",
+    "contraindications": "禁忌事項",
+    "formCue": "フォームの注意点",
+    "evidenceBasis": "エビデンス基盤",
+    "loadFailed": "ライブラリの読み込みに失敗しました",
+    "apiHint": "Vercel環境変数のVITE_API_URLがRailwayバックエンドを指していることを確認してください。",
+    "noMatch": "現在のフィルターに一致する運動はありません。",
+    "loadingFrom": "バックエンドから{{species}}の運動を読み込み中…"
+  },
+  "protocol": {
+    "generate": "完全なプロトコルを生成",
+    "generating": "B.E.A.U. プロトコルを生成中…",
+    "output": "プロトコル出力 — B.E.A.U. 生成",
+    "copy": "コピー",
+    "copied": "コピー済み",
+    "emailClient": "メールクライアント",
+    "print": "印刷",
+    "qrCode": "QRコード",
+    "connectionError": "接続エラー: {{message}}",
+    "conditioningHeading": "B.E.A.U. コンディショニングプラン",
+    "generateConditioning": "段階的コンディショニング運動を生成",
+    "generatingConditioning": "コンディショニングプランを生成中…"
+  },
+  "beau": {
+    "askTitle": "B.E.A.U. に質問",
+    "askPlaceholder": "例: TPLO患者の3週目に禁忌となる運動は？カバレッティレールのエビデンス基盤は？",
+    "askButton": "B.E.A.U. に質問",
+    "thinking": "B.E.A.U. が考え中…",
+    "response": "B.E.A.U. の回答"
   }
 }

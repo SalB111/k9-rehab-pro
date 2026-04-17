@@ -1,6 +1,6 @@
 {
   "_machine_translation_note": "TODO: professional review — machine-quality draft. Safety strings (safety.*) INTENTIONALLY ABSENT — fall back to English with visible EN badge per product owner decision 2026-04-11.",
-  "languageSelector": { "label": "언어" },
+  "languageSelector": { "label": "언어", "selectPlatformLanguage": "플랫폼 언어 선택" },
   "dashboard": {
     "title": "임상 대시보드",
     "subtitle": "아무 블록이나 선택 · 모든 필드 독립 · 순서 무관",
@@ -23,6 +23,7 @@
   "nav": {
     "how": "K9 Rehab Pro 사용법",
     "ask": "B.E.A.U.에게 질문",
+    "helsinki": "헬싱키 통증 지수",
     "about": "정보",
     "disclaimer": "면책조항",
     "hipaa": "수의 HIPAA"
@@ -38,7 +39,10 @@
     "goals":        { "label": "목표",                 "desc": "단기 · 장기 · 진행" },
     "conditioning": { "label": "컨디셔닝",             "desc": "피트니스 · 퍼포먼스 · 유지" },
     "protocol":     { "label": "프로토콜 요약",         "desc": "생성 · 내보내기 · 이메일 · QR" },
-    "library":      { "label": "운동 라이브러리",       "desc": "260 운동 · 개 · 고양이" }
+    "treatment":    { "label": "치료 및 수술 상태",      "desc": "접근법 · 상태 · 제한사항" },
+    "library":      { "label": "운동 라이브러리",       "desc": "260 운동 · 개 · 고양이" },
+    "nutrition":    { "label": "PetCare 영양",          "desc": "치료식 추천 · Mars PetCare" },
+    "coming-soon":  { "label": "3D 임상 해부학 뷰어",    "desc": "홀로그래픽 · 인터랙티브 · 곧 출시" }
   },
   "modal": {
     "close": "닫기",
@@ -97,5 +101,39 @@
       "specialty":  "전문(간 / 심장 / 알레르기)",
       "other":      "기타 / 복수"
     }
+  },
+  "library": {
+    "searchPlaceholder": "이름 또는 ID로 운동 검색…",
+    "sets": "세트",
+    "reps": "반복",
+    "freq": "빈도",
+    "contraindications": "금기사항",
+    "formCue": "자세 안내",
+    "evidenceBasis": "근거 기반",
+    "loadFailed": "라이브러리 로드 실패",
+    "apiHint": "Vercel 환경 변수의 VITE_API_URL이 Railway 백엔드를 가리키는지 확인하세요.",
+    "noMatch": "현재 필터에 일치하는 운동이 없습니다.",
+    "loadingFrom": "백엔드에서 {{species}} 운동을 로딩 중…"
+  },
+  "protocol": {
+    "generate": "전체 프로토콜 생성",
+    "generating": "B.E.A.U. 프로토콜 생성 중…",
+    "output": "프로토콜 출력 — B.E.A.U. 생성",
+    "copy": "복사",
+    "copied": "복사됨",
+    "emailClient": "이메일 클라이언트",
+    "print": "인쇄",
+    "qrCode": "QR 코드",
+    "connectionError": "연결 오류: {{message}}",
+    "conditioningHeading": "B.E.A.U. 컨디셔닝 계획",
+    "generateConditioning": "단계적 컨디셔닝 운동 생성",
+    "generatingConditioning": "컨디셔닝 계획 생성 중…"
+  },
+  "beau": {
+    "askTitle": "B.E.A.U.에게 질문",
+    "askPlaceholder": "예: TPLO 환자의 3주차에 금기인 운동은? 카발레티 레일의 근거 기반은?",
+    "askButton": "B.E.A.U.에게 질문",
+    "thinking": "B.E.A.U.가 생각 중…",
+    "response": "B.E.A.U. 응답"
   }
 }

@@ -1,6 +1,6 @@
 {
   "_machine_translation_note": "TODO: professional review — machine-quality draft. Safety strings (safety.*) INTENTIONALLY ABSENT — fall back to English with visible EN badge per product owner decision 2026-04-11.",
-  "languageSelector": { "label": "Langue" },
+  "languageSelector": { "label": "Langue", "selectPlatformLanguage": "Sélectionner la langue de la plateforme" },
   "dashboard": {
     "title": "Tableau de Bord Clinique",
     "subtitle": "Sélectionnez n'importe quel bloc · Tous les champs indépendants · Aucun ordre requis",
@@ -23,6 +23,7 @@
   "nav": {
     "how": "Comment utiliser K9 Rehab Pro",
     "ask": "Demander à B.E.A.U.",
+    "helsinki": "Indice de Douleur Helsinki",
     "about": "À propos",
     "disclaimer": "Avis Légal",
     "hipaa": "HIPAA Vétérinaire"
@@ -38,7 +39,10 @@
     "goals":        { "label": "Objectifs",                           "desc": "Court terme · Long terme · Progrès" },
     "conditioning": { "label": "Conditionnement",                     "desc": "Fitness · Performance · Entretien" },
     "protocol":     { "label": "Résumé du Protocole",                 "desc": "Générer · Exporter · Email · QR" },
-    "library":      { "label": "Bibliothèque d'Exercices",            "desc": "260 exercices · Canin · Félin" }
+    "treatment":    { "label": "Traitement et Statut Chirurgical",     "desc": "Approche · Statut · Restrictions" },
+    "library":      { "label": "Bibliothèque d'Exercices",            "desc": "260 exercices · Canin · Félin" },
+    "nutrition":    { "label": "Nutrition PetCare",                    "desc": "Recommandations diététiques thérapeutiques · Mars PetCare" },
+    "coming-soon":  { "label": "Visualiseur d'Anatomie Clinique 3D",  "desc": "Holographique · Interactif · Bientôt" }
   },
   "modal": {
     "close": "Fermer",
@@ -97,5 +101,39 @@
       "specialty":  "Spécialité (Hépatique / Cardiaque / Allergie)",
       "other":      "Autre / Multiple"
     }
+  },
+  "library": {
+    "searchPlaceholder": "Rechercher des exercices par nom ou ID…",
+    "sets": "Séries",
+    "reps": "Répétitions",
+    "freq": "Fréquence",
+    "contraindications": "Contre-indications",
+    "formCue": "Consigne de Forme",
+    "evidenceBasis": "Base de Preuves",
+    "loadFailed": "Échec du chargement de la bibliothèque",
+    "apiHint": "Vérifiez que VITE_API_URL dans les variables d'environnement Vercel pointe vers votre backend Railway.",
+    "noMatch": "Aucun exercice ne correspond au filtre actuel.",
+    "loadingFrom": "Chargement des exercices {{species}} depuis le backend…"
+  },
+  "protocol": {
+    "generate": "Générer le Protocole Complet",
+    "generating": "Génération du protocole B.E.A.U.…",
+    "output": "Sortie du Protocole — Généré par B.E.A.U.",
+    "copy": "Copier",
+    "copied": "Copié",
+    "emailClient": "Client Email",
+    "print": "Imprimer",
+    "qrCode": "Code QR",
+    "connectionError": "Erreur de connexion : {{message}}",
+    "conditioningHeading": "Plan de Conditionnement B.E.A.U.",
+    "generateConditioning": "Générer des Exercices de Conditionnement Progressif",
+    "generatingConditioning": "Génération du plan de conditionnement…"
+  },
+  "beau": {
+    "askTitle": "Demander à B.E.A.U.",
+    "askPlaceholder": "p. ex. Quels exercices sont contre-indiqués pour un patient TPLO à la semaine 3 ? Quelle est la base de preuves pour les barres cavaletti ?",
+    "askButton": "Demander à B.E.A.U.",
+    "thinking": "B.E.A.U. réfléchit…",
+    "response": "Réponse de B.E.A.U."
   }
 }

@@ -1,6 +1,6 @@
 {
   "_machine_translation_note": "TODO: professional review — machine-quality draft. Safety strings (safety.*) INTENTIONALLY ABSENT — fall back to English with visible EN badge per product owner decision 2026-04-11.",
-  "languageSelector": { "label": "Taal" },
+  "languageSelector": { "label": "Taal", "selectPlatformLanguage": "Platformtaal selecteren" },
   "dashboard": {
     "title": "Klinisch Dashboard",
     "subtitle": "Selecteer een willekeurig blok · Alle velden onafhankelijk · Geen verplichte volgorde",
@@ -23,6 +23,7 @@
   "nav": {
     "how": "K9 Rehab Pro gebruiken",
     "ask": "Vraag B.E.A.U.",
+    "helsinki": "Helsinki Pijnindex",
     "about": "Over",
     "disclaimer": "Disclaimer",
     "hipaa": "Veterinaire HIPAA"
@@ -38,7 +39,10 @@
     "goals":        { "label": "Doelen",                      "desc": "Korte termijn · Lange termijn · Voortgang" },
     "conditioning": { "label": "Conditionering",              "desc": "Fitness · Prestaties · Onderhoud" },
     "protocol":     { "label": "Protocol Overzicht",          "desc": "Genereren · Exporteren · E-mail · QR" },
-    "library":      { "label": "Oefenbibliotheek",            "desc": "260 oefeningen · Hond · Kat" }
+    "treatment":    { "label": "Behandeling & Chirurgische Status", "desc": "Aanpak · Status · Beperkingen" },
+    "library":      { "label": "Oefenbibliotheek",            "desc": "260 oefeningen · Hond · Kat" },
+    "nutrition":    { "label": "PetCare Voeding",              "desc": "Therapeutische dieetaanbevelingen · Mars PetCare" },
+    "coming-soon":  { "label": "3D Klinische Anatomie Viewer", "desc": "Holografisch · Interactief · Binnenkort" }
   },
   "modal": {
     "close": "Sluiten",
@@ -97,5 +101,39 @@
       "specialty":  "Specialiteit (Lever / Hart / Allergie)",
       "other":      "Andere / Meerdere"
     }
+  },
+  "library": {
+    "searchPlaceholder": "Zoek oefeningen op naam of ID…",
+    "sets": "Sets",
+    "reps": "Herhalingen",
+    "freq": "Frequentie",
+    "contraindications": "Contra-indicaties",
+    "formCue": "Vormadvies",
+    "evidenceBasis": "Bewijsbasis",
+    "loadFailed": "Laden van bibliotheek mislukt",
+    "apiHint": "Controleer of VITE_API_URL in de Vercel-omgevingsvariabelen naar uw Railway-backend verwijst.",
+    "noMatch": "Geen oefeningen komen overeen met het huidige filter.",
+    "loadingFrom": "{{species}}-oefeningen laden vanuit backend…"
+  },
+  "protocol": {
+    "generate": "Volledig Protocol Genereren",
+    "generating": "B.E.A.U.-protocol wordt gegenereerd…",
+    "output": "Protocoluitvoer — Gegenereerd door B.E.A.U.",
+    "copy": "Kopiëren",
+    "copied": "Gekopieerd",
+    "emailClient": "E-mailclient",
+    "print": "Afdrukken",
+    "qrCode": "QR-code",
+    "connectionError": "Verbindingsfout: {{message}}",
+    "conditioningHeading": "B.E.A.U. Conditioneringsplan",
+    "generateConditioning": "Progressieve Conditioneringsoefeningen Genereren",
+    "generatingConditioning": "Conditioneringsplan wordt gegenereerd…"
+  },
+  "beau": {
+    "askTitle": "Vraag B.E.A.U.",
+    "askPlaceholder": "bijv. Welke oefeningen zijn gecontra-indiceerd voor een TPLO-patiënt in week 3? Wat is de bewijsbasis voor cavaletti-balken?",
+    "askButton": "Vraag B.E.A.U.",
+    "thinking": "B.E.A.U. denkt na…",
+    "response": "B.E.A.U. Antwoord"
   }
 }
