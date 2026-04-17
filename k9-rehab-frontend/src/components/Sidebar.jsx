@@ -3,8 +3,10 @@ import NAV from "../constants/navigation";
 import { FiPlus, FiLogOut, FiChevronLeft, FiChevronRight, FiGlobe } from "react-icons/fi";
 import { useTranslation } from "react-i18next";
 import { SUPPORTED_LOCALES } from "../i18n";
+import { useTr } from "../i18n/useTr";
 
 export default function Sidebar({ view, setView, currentUser, onLogout, hospitalLanguageLocked }) {
+  const tr = useTr();
   const [collapsed, setCollapsed] = useState(() => {
     try { return localStorage.getItem("k9-sidebar") === "collapsed"; } catch { return false; }
   });
@@ -45,7 +47,7 @@ export default function Sidebar({ view, setView, currentUser, onLogout, hospital
               K9 REHAB PRO
             </h1>
             <p className="text-[9px] tracking-[1.5px] text-[#7AAACF] mt-0.5 font-medium">
-              CLINICAL PLATFORM
+              {tr("CLINICAL PLATFORM")}
             </p>
           </div>
         )}
@@ -72,7 +74,7 @@ export default function Sidebar({ view, setView, currentUser, onLogout, hospital
           `}
         >
           <FiPlus className="w-4 h-4 flex-shrink-0" />
-          {!collapsed && <span>New Client/Patient Intake</span>}
+          {!collapsed && <span>{tr("New Client/Patient Intake")}</span>}
         </button>
       </div>
 
@@ -86,16 +88,16 @@ export default function Sidebar({ view, setView, currentUser, onLogout, hospital
             {!collapsed && (
               <>
                 <p className="text-xs font-semibold text-white truncate">
-                  {currentUser.username || "Clinician"}
+                  {currentUser.username || tr("Clinician")}
                 </p>
                 <p className="text-[10px] text-[#7AAACF] capitalize">
-                  {currentUser.role || "clinician"}
+                  {tr(currentUser.role || "clinician")}
                 </p>
               </>
             )}
             <button
               onClick={onLogout}
-              title="Save session & return to login — another clinician can sign in"
+              title={tr("Save session & return to login — another clinician can sign in")}
               className={`
                 flex items-center gap-2 text-[11px] font-semibold
                 px-3 py-2 rounded-lg w-full
@@ -107,7 +109,7 @@ export default function Sidebar({ view, setView, currentUser, onLogout, hospital
               `}
             >
               <FiLogOut className="w-3.5 h-3.5" />
-              {!collapsed && <span>Save & Exit</span>}
+              {!collapsed && <span>{tr("Save & Exit")}</span>}
             </button>
           </div>
         )}
@@ -125,6 +127,7 @@ export default function Sidebar({ view, setView, currentUser, onLogout, hospital
 
 // ─── Nav item list with inline-style capsule buttons ────────────────────────
 function SidebarNav({ NAV, view, setView, collapsed }) {
+  const tr = useTr();
   const [hoveredId, setHoveredId] = useState(null);
 
   return (
@@ -187,7 +190,7 @@ function SidebarNav({ NAV, view, setView, collapsed }) {
             onClick={() => setView(item.id)}
             onMouseEnter={() => setHoveredId(item.id)}
             onMouseLeave={() => setHoveredId(null)}
-            title={collapsed ? `${item.label} — ${item.desc}` : item.desc}
+            title={collapsed ? `${tr(item.label)} — ${tr(item.desc)}` : tr(item.desc)}
             style={finalStyle}
           >
             <Icon style={{
@@ -196,7 +199,7 @@ function SidebarNav({ NAV, view, setView, collapsed }) {
               flexShrink: 0,
               filter: active ? "drop-shadow(0 0 4px rgba(0,229,255,0.8))" : "none",
             }}/>
-            {!collapsed && <span>{item.label}</span>}
+            {!collapsed && <span>{tr(item.label)}</span>}
           </button>
         );
       })}

@@ -2,8 +2,10 @@ import React from "react";
 import { FiChevronRight } from "react-icons/fi";
 import C from "../../constants/colors";
 import S from "../../constants/styles";
+import { useTr } from "../../i18n/useTr";
 
 export default function StepNavButtons({ onBack, backLabel, onNext, nextLabel }) {
+  const tr = useTr();
   return (
     <div style={{ display: "flex", justifyContent: onBack ? "space-between" : "flex-end", padding: "8px 0" }}>
       {onBack && (
@@ -16,7 +18,7 @@ export default function StepNavButtons({ onBack, backLabel, onNext, nextLabel })
           onMouseLeave={e => e.currentTarget.style.boxShadow = `0 0 8px ${C.tealLight}`}
           onClick={onBack}
         >
-          {backLabel}
+          {tr(backLabel)}
         </button>
       )}
       {onNext && (
@@ -31,7 +33,7 @@ export default function StepNavButtons({ onBack, backLabel, onNext, nextLabel })
           onMouseLeave={e => e.currentTarget.style.boxShadow = `0 0 14px ${C.tealLight}, 0 0 28px ${C.tealLight}`}
           onClick={onNext}
         >
-          {nextLabel} <FiChevronRight size={16} />
+          {tr(nextLabel)} <FiChevronRight size={16} />
         </button>
       )}
     </div>

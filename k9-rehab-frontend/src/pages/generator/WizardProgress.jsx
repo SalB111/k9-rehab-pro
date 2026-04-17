@@ -2,8 +2,10 @@ import React from "react";
 import { FiCheckCircle } from "react-icons/fi";
 import S from "../../constants/styles";
 import { WIZARD_STEPS } from "./constants";
+import { useTr } from "../../i18n/useTr";
 
 export default function WizardProgress({ wizardStep, goToStep }) {
+  const tr = useTr();
   return (
     <>
       <style>{`
@@ -27,7 +29,7 @@ export default function WizardProgress({ wizardStep, goToStep }) {
                 <div style={S.wizardDot(state)}>
                   {state === "done" ? <FiCheckCircle size={16} /> : s.num}
                 </div>
-                <span>{s.label}</span>
+                <span>{tr(s.label)}</span>
               </div>
             </React.Fragment>
           );

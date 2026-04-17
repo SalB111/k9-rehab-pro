@@ -2,8 +2,10 @@ import React from "react";
 import { FiX, FiSearch } from "react-icons/fi";
 import C from "../../constants/colors";
 import S from "../../constants/styles";
+import { useTr } from "../../i18n/useTr";
 
 export default function AddExerciseModal({ addingToWeek, filteredEx, addExercise, exSearch, setExSearch, setShowAddModal }) {
+  const tr = useTr();
   return (
     <div style={{
       position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)",
@@ -16,7 +18,7 @@ export default function AddExerciseModal({ addingToWeek, filteredEx, addExercise
       }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <h3 style={{ margin: 0, color: C.text, fontSize: 16 }}>
-            Add Exercise to Week {typeof addingToWeek === "number" ? addingToWeek + 1 : addingToWeek}
+            {tr("Add Exercise to Week")} {typeof addingToWeek === "number" ? addingToWeek + 1 : addingToWeek}
           </h3>
           <button onClick={() => { setShowAddModal(false); setExSearch(""); }}
             style={{ background: "none", border: "none", cursor: "pointer", color: C.textLight }}>
@@ -27,7 +29,7 @@ export default function AddExerciseModal({ addingToWeek, filteredEx, addExercise
         <div style={{ position: "relative", marginBottom: 12 }}>
           <FiSearch size={14} style={{ position: "absolute", left: 10, top: 10, color: C.textLight }} />
           <input style={{ ...S.input, paddingLeft: 32 }}
-            placeholder="Search exercises by name or category…"
+            placeholder={tr("Search exercises by name or category…")}
             value={exSearch} onChange={e => setExSearch(e.target.value)}
             autoFocus />
         </div>
@@ -46,15 +48,15 @@ export default function AddExerciseModal({ addingToWeek, filteredEx, addExercise
             >
               <div style={{ fontWeight: 600, fontSize: 13, color: C.text }}>{ex.name}</div>
               <div style={{ display: "flex", gap: 5, marginTop: 4 }}>
-                <span style={S.badge("blue")}>{ex.category}</span>
+                <span style={S.badge("blue")}>{tr(ex.category)}</span>
                 <span style={S.badge(ex.difficulty_level === "Easy" ? "green" : ex.difficulty_level === "Advanced" ? "orange" : "blue")}>
-                  {ex.difficulty_level}
+                  {tr(ex.difficulty_level)}
                 </span>
               </div>
             </div>
           ))}
           {filteredEx.length === 0 && (
-            <div style={{ textAlign: "center", color: C.textLight, padding: 24 }}>No exercises found</div>
+            <div style={{ textAlign: "center", color: C.textLight, padding: 24 }}>{tr("No exercises found")}</div>
           )}
         </div>
       </div>

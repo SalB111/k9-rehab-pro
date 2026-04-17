@@ -1,7 +1,9 @@
 import React, { useState } from "react";
+import { useTr } from "../i18n/useTr";
 // Rod of Asclepius logo at /rod-logo.png
 
 export default function LoginView({ onLogin, onRegister }) {
+  const tr = useTr();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -11,8 +13,8 @@ export default function LoginView({ onLogin, onRegister }) {
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
-    if (!username.trim() || !password.trim()) { setError("Username and password required"); return; }
-    if (mode === "register" && password.length < 6) { setError("Password must be at least 6 characters"); return; }
+    if (!username.trim() || !password.trim()) { setError(tr("Username and password required")); return; }
+    if (mode === "register" && password.length < 6) { setError(tr("Password must be at least 6 characters")); return; }
     setLoading(true);
     const res = mode === "register" ? await onRegister(username, password) : await onLogin(username, password);
     if (!res.success) {
@@ -51,12 +53,13 @@ export default function LoginView({ onLogin, onRegister }) {
 
           {/* Headline */}
           <h2 className="text-3xl font-bold text-white leading-tight mb-4 font-sans text-center">
-            Evidence-Based<br />
-            <span className="text-[#1D9E75]">Rehabilitation Intelligence</span>
+            {tr("Evidence-Based")}<br />
+            <span className="text-[#1D9E75]">{tr("Rehabilitation Intelligence")}</span>
           </h2>
           <p className="text-[#7AAACF] text-base leading-relaxed max-w-md text-center mx-auto">
-            Clinical decision-support for veterinary rehabilitation professionals.
-            Canine &amp; feline protocols powered by B.E.A.U.
+            {tr("Clinical decision-support for veterinary rehabilitation professionals.")}
+            {" "}
+            {tr("Canine & feline protocols powered by")} B.E.A.U.
           </p>
         </div>
 
@@ -64,11 +67,10 @@ export default function LoginView({ onLogin, onRegister }) {
         <div className="relative z-10">
           <div className="h-px w-full bg-gradient-to-r from-transparent via-[#1D9E75]/40 to-transparent mb-6" />
           <p className="text-[10px] text-[#7AAACF]/60 leading-relaxed max-w-md">
-            Clinical Decision-Support System (CDSS). Does not establish VCPR, provide diagnosis,
-            or prescribe medication. All protocols require licensed veterinarian review.
+            {tr("Clinical Decision-Support System (CDSS). Does not establish VCPR, provide diagnosis, or prescribe medication. All protocols require licensed veterinarian review.")}
           </p>
           <p className="text-[10px] text-[#7AAACF]/40 mt-2">
-            &copy; 2025-2026 Salvatore Bonanno &middot; K9 Rehab Pro&trade; &middot; All rights reserved
+            &copy; 2025-2026 Salvatore Bonanno &middot; K9 Rehab Pro&trade; &middot; {tr("All rights reserved")}
           </p>
         </div>
       </div>
@@ -82,8 +84,8 @@ export default function LoginView({ onLogin, onRegister }) {
         </div>
 
         <div className="w-full max-w-sm">
-          <h2 className="text-2xl font-bold text-[#0C2340] mb-1">{mode === "register" ? "Create Account" : "Welcome back"}</h2>
-          <p className="text-sm text-[#7AAACF] mb-8">{mode === "register" ? "Register for clinical access" : "Sign in to your clinical workspace"}</p>
+          <h2 className="text-2xl font-bold text-[#0C2340] mb-1">{mode === "register" ? tr("Create Account") : tr("Welcome back")}</h2>
+          <p className="text-sm text-[#7AAACF] mb-8">{mode === "register" ? tr("Register for clinical access") : tr("Sign in to your clinical workspace")}</p>
 
           {error && (
             <div className="mb-4 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
@@ -94,7 +96,7 @@ export default function LoginView({ onLogin, onRegister }) {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-[11px] font-semibold text-[#2E5F8A] tracking-wider uppercase mb-1.5">
-                Username
+                {tr("Username")}
               </label>
               <input
                 type="text"
@@ -107,13 +109,13 @@ export default function LoginView({ onLogin, onRegister }) {
                   placeholder:text-[#B0B8C4] placeholder:font-normal
                   focus:outline-none focus:ring-2 focus:ring-[#1D9E75]/30 focus:border-[#1D9E75]
                   transition-all"
-                placeholder="Enter username"
+                placeholder={tr("Enter username")}
               />
             </div>
 
             <div>
               <label className="block text-[11px] font-semibold text-[#2E5F8A] tracking-wider uppercase mb-1.5">
-                Password
+                {tr("Password")}
               </label>
               <input
                 type="password"
@@ -125,7 +127,7 @@ export default function LoginView({ onLogin, onRegister }) {
                   placeholder:text-[#B0B8C4] placeholder:font-normal
                   focus:outline-none focus:ring-2 focus:ring-[#1D9E75]/30 focus:border-[#1D9E75]
                   transition-all"
-                placeholder="Enter password"
+                placeholder={tr("Enter password")}
               />
             </div>
 
@@ -144,10 +146,10 @@ export default function LoginView({ onLogin, onRegister }) {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                   </svg>
-                  Authenticating...
+                  {tr("Authenticating...")}
                 </span>
               ) : (
-                mode === "register" ? "Create Account" : "Sign In"
+                mode === "register" ? tr("Create Account") : tr("Sign In")
               )}
             </button>
           </form>
@@ -155,16 +157,16 @@ export default function LoginView({ onLogin, onRegister }) {
           <div className="mt-6 text-center">
             {mode === "login" ? (
               <>
-                <span className="text-sm text-[#7AAACF]">Need an account? </span>
+                <span className="text-sm text-[#7AAACF]">{tr("Need an account?")} </span>
                 <button onClick={() => { setMode("register"); setError(""); }} className="text-sm font-semibold text-[#1D9E75] hover:text-[#0F6E56] transition-colors">
-                  Create Account
+                  {tr("Create Account")}
                 </button>
               </>
             ) : (
               <>
-                <span className="text-sm text-[#7AAACF]">Already have an account? </span>
+                <span className="text-sm text-[#7AAACF]">{tr("Already have an account?")} </span>
                 <button onClick={() => { setMode("login"); setError(""); }} className="text-sm font-semibold text-[#0EA5E9] hover:text-[#0B8ACB] transition-colors">
-                  Sign In
+                  {tr("Sign In")}
                 </button>
               </>
             )}
@@ -172,9 +174,9 @@ export default function LoginView({ onLogin, onRegister }) {
 
           {/* B.E.A.U. badge */}
           <div className="mt-10 flex items-center justify-center gap-2 text-[10px] text-[#7AAACF]/60">
-            <span>Powered by</span>
+            <span>{tr("Powered by")}</span>
             <span className="font-brand font-bold tracking-wider text-[#2E5F8A]">B.E.A.U.</span>
-            <span>&middot; Biomedical Evidence-Based Analytical Unit</span>
+            <span>&middot; {tr("Biomedical Evidence-Based Analytical Unit")}</span>
           </div>
         </div>
       </div>

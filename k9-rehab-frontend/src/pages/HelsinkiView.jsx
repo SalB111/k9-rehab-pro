@@ -7,6 +7,7 @@
 
 import React, { useState, useEffect } from "react";
 import C from "../constants/colors";
+import { useTr } from "../i18n/useTr";
 
 const HELSINKI_QUESTIONS = [
   { n: 1,  text: "General mood / vitality" },
@@ -33,6 +34,7 @@ const HELSINKI_OPTIONS = [
 const STORAGE_KEY = "k9rp_helsinki_last";
 
 export default function HelsinkiView({ setView }) {
+  const tr = useTr();
   // Local state — loaded from localStorage so clinician can resume between pages
   const [data, setData] = useState(() => {
     try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}"); }
@@ -59,16 +61,16 @@ export default function HelsinkiView({ setView }) {
   }, [total]);
 
   const interpretation =
-    total === 0 ? { label: "Not scored", color: "#64748b", bg: "#f1f5f9" } :
-    total <= 11 ? { label: "Minimal pain — routine monitoring", color: "#16a34a", bg: "#f0fdf4" } :
-    total <= 22 ? { label: "Mild pain — consider NSAIDs + rehab", color: "#b45309", bg: "#fef3c7" } :
-    total <= 33 ? { label: "Moderate pain — multimodal analgesia indicated", color: "#ea580c", bg: "#fff7ed" } :
-                  { label: "Severe pain — aggressive multimodal therapy + reassessment", color: "#dc2626", bg: "#fef2f2" };
+    total === 0 ? { label: tr("Not scored"), color: "#64748b", bg: "#f1f5f9" } :
+    total <= 11 ? { label: tr("Minimal pain — routine monitoring"), color: "#16a34a", bg: "#f0fdf4" } :
+    total <= 22 ? { label: tr("Mild pain — consider NSAIDs + rehab"), color: "#b45309", bg: "#fef3c7" } :
+    total <= 33 ? { label: tr("Moderate pain — multimodal analgesia indicated"), color: "#ea580c", bg: "#fff7ed" } :
+                  { label: tr("Severe pain — aggressive multimodal therapy + reassessment"), color: "#dc2626", bg: "#fef2f2" };
 
   const handlePrint = () => window.print();
 
   const clearForm = () => {
-    if (!confirm("Clear all Helsinki answers and start over?")) return;
+    if (!confirm(tr("Clear all Helsinki answers and start over?"))) return;
     setData({});
     try { localStorage.removeItem(STORAGE_KEY); } catch {}
   };
@@ -107,25 +109,23 @@ export default function HelsinkiView({ setView }) {
       <div style={S.header}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 6 }}>
           <span style={{ fontSize: 28 }}>📝</span>
-          <h1 style={S.title}>Helsinki Chronic Pain Index</h1>
+          <h1 style={S.title}>{tr("Helsinki Chronic Pain Index")}</h1>
         </div>
         <p style={S.subtitle}>
-          Validated 11-item owner-completed questionnaire for canine chronic musculoskeletal pain.
-          Reference: <em>Hielm-Björkman AK et al (2003), Am J Vet Res</em>. Each item scored 0–4;
-          total score 0–44. Print this page for the client to complete at home, then enter results
-          when they return.
+          {tr("Validated 11-item owner-completed questionnaire for canine chronic musculoskeletal pain.")}
+          {" "}{tr("Reference")}: <em>Hielm-Björkman AK et al (2003), Am J Vet Res</em>. {tr("Each item scored 0–4; total score 0–44. Print this page for the client to complete at home, then enter results when they return.")}
         </p>
 
         <div style={S.btnRow}>
           <button onClick={handlePrint} style={S.btn("#0c4a6e", "#fff")}>
-            🖨️ PRINT FOR CLIENT
+            🖨️ {tr("PRINT FOR CLIENT")}
           </button>
           <button onClick={clearForm} style={S.btn("#fff", "#dc2626")}>
-            ✕ CLEAR FORM
+            ✕ {tr("CLEAR FORM")}
           </button>
           {setView && (
             <button onClick={() => setView("dashboard")} style={S.btn("#fff", "#64748b")}>
-              ← BACK TO DASHBOARD
+              ← {tr("BACK TO DASHBOARD")}
             </button>
           )}
         </div>
@@ -134,13 +134,13 @@ export default function HelsinkiView({ setView }) {
       {/* Patient + Date */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20, padding: "14px 16px", border: "1px dashed #cbd5e1", borderRadius: 6, background: "#fafbfc" }}>
         <div>
-          <label style={S.label}>Patient Name</label>
-          <input style={S.field} placeholder="Patient"
+          <label style={S.label}>{tr("Patient Name")}</label>
+          <input style={S.field} placeholder={tr("Patient")}
             value={data["Patient Name"] || ""}
             onChange={e => update("Patient Name", e.target.value)}/>
         </div>
         <div>
-          <label style={S.label}>Assessment Date</label>
+          <label style={S.label}>{tr("Assessment Date")}</label>
           <input style={S.field} type="date"
             value={data["Date"] || ""}
             onChange={e => update("Date", e.target.value)}/>
@@ -152,13 +152,13 @@ export default function HelsinkiView({ setView }) {
         const val = data[`Q${q.n}`] || "";
         return (
           <div key={q.n} style={val ? S.cardActive : S.card}>
-            <div style={S.qText}>{q.n}. {q.text}</div>
+            <div style={S.qText}>{q.n}. {tr(q.text)}</div>
             <div style={S.optGrid}>
               {HELSINKI_OPTIONS.map(opt => (
                 <div key={opt.v}
                   onClick={() => update(`Q${q.n}`, opt.v)}
                   style={S.opt(val === opt.v)}>
-                  {opt.label}
+                  {tr(opt.label)}
                 </div>
               ))}
             </div>
@@ -175,7 +175,7 @@ export default function HelsinkiView({ setView }) {
       }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
           <span style={{ fontSize: 11, fontWeight: 700, color: interpretation.color, letterSpacing: ".08em", textTransform: "uppercase" }}>
-            Total Score
+            {tr("Total Score")}
           </span>
           <span style={{ fontSize: 32, fontWeight: 900, color: interpretation.color }}>
             {total} <span style={{ fontSize: 16, fontWeight: 600 }}>/ 44</span>
@@ -188,18 +188,18 @@ export default function HelsinkiView({ setView }) {
 
       {/* Clinician notes */}
       <div style={{ marginTop: 16 }}>
-        <label style={S.label}>Clinician Notes</label>
+        <label style={S.label}>{tr("Clinician Notes")}</label>
         <textarea style={{ ...S.field, minHeight: 80, resize: "vertical" }} rows={3}
-          placeholder="Clinical interpretation, treatment plan, reassessment interval…"
+          placeholder={tr("Clinical interpretation, treatment plan, reassessment interval…")}
           value={data["Clinician Notes"] || ""}
           onChange={e => update("Clinician Notes", e.target.value)}/>
       </div>
 
       {/* Footer guide */}
       <div style={{ marginTop: 18, padding: "12px 16px", background: "#f1f5f9", border: "1px dashed #cbd5e1", borderRadius: 6, fontSize: 11, color: "#64748b", lineHeight: 1.7 }}>
-        <b>Clinical scoring guide:</b> 0–11 Minimal · 12–22 Mild · 23–33 Moderate · 34–44 Severe.
-        HCPI responsiveness validated against force-plate analysis (Hielm-Björkman 2009).
-        Reassess at 4–6 week intervals or after therapy changes.
+        <b>{tr("Clinical scoring guide")}:</b> 0–11 {tr("Minimal")} · 12–22 {tr("Mild")} · 23–33 {tr("Moderate")} · 34–44 {tr("Severe")}.
+        {" "}{tr("HCPI responsiveness validated against force-plate analysis (Hielm-Björkman 2009).")}
+        {" "}{tr("Reassess at 4–6 week intervals or after therapy changes.")}
       </div>
 
       {/* Print-only styles */}

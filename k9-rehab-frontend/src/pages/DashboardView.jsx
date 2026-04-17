@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo, createContext, useContext } from "react";
 import { useTranslation } from "react-i18next";
 import i18n, { SUPPORTED_LOCALES } from "../i18n";
+import { useTr, slugField } from "../i18n/useTr";
 import useBeauVoice from "../hooks/useBeauVoice";
 import BeauVoiceControl, { SpeakButton } from "../components/BeauVoiceControl";
 
@@ -10,33 +11,8 @@ void i18n;
 // ─── FORM CONTEXT ─── auto-wires all F fields without modifying each call
 const DashFormContext = createContext({ data: {}, update: () => {}, blockId: null, beauVoice: null });
 
-// ─── AUTO-TRANSLATION HELPER ──────────────────────────────────────────────────
-// Storage keys stay English (e.g. "client::Patient Name") — display is translated
-// by slugifying the English label and looking it up in the `fields` namespace
-// of the active locale, falling back to the original English string if the key
-// is missing. This lets us wrap every label/placeholder/title/option with one
-// helper call without migrating any stored data.
-const slugField = (s) => {
-  if (s == null) return "";
-  return String(s).toLowerCase()
-    .replace(/[’'`]/g, "")
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_+|_+$/g, "")
-    .slice(0, 80);
-};
-
-// React hook: translate an English string via the `fields` namespace.
-// Usage: const tr = useTr(); <div>{tr("Phone")}</div>
-const useTr = () => {
-  const { t } = useTranslation();
-  return (text) => {
-    if (text == null || text === "") return text;
-    if (typeof text !== "string") return text;
-    const slug = slugField(text);
-    if (!slug) return text;
-    return t(`fields.${slug}`, { defaultValue: text });
-  };
-};
+// Auto-translation helpers (slugField, useTr) are imported from ../i18n/useTr
+// so other views across the platform can share the same mechanism.
 
 // ─── THEME — WHITE CLINICAL ───────────────────────────────────────────────────
 const C = {

@@ -5,9 +5,11 @@ import S from "../../constants/styles";
 import SectionHead from "./SectionHead";
 import StepNavButtons from "./StepNavButtons";
 import { CONDITIONS, FELINE_DIAGNOSES } from "./constants";
+import { useTr } from "../../i18n/useTr";
 
 // ── Summary card ──
 function SummaryCard({ title, icon: Icon, color, children }) {
+  const tr = useTr();
   return (
     <div style={{
       background: C.surface, borderRadius: 12, padding: "16px 20px",
@@ -16,7 +18,7 @@ function SummaryCard({ title, icon: Icon, color, children }) {
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
         <Icon size={15} style={{ color }} />
-        <div style={{ fontSize: 11, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: 1 }}>{title}</div>
+        <div style={{ fontSize: 11, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: 1 }}>{tr(title)}</div>
       </div>
       {children}
     </div>
@@ -25,15 +27,17 @@ function SummaryCard({ title, icon: Icon, color, children }) {
 
 // ── Data row ──
 function DataRow({ label, value, color }) {
+  const tr = useTr();
   return (
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "5px 0", borderBottom: `1px solid ${C.border}20` }}>
-      <span style={{ fontSize: 11, color: C.textLight, fontWeight: 500 }}>{label}</span>
+      <span style={{ fontSize: 11, color: C.textLight, fontWeight: 500 }}>{tr(label)}</span>
       <span style={{ fontSize: 12, fontWeight: 600, color: color || C.text }}>{value || "—"}</span>
     </div>
   );
 }
 
 export default function Step6PreProtocolSummary({ form, allExercises, complianceAgreed, setComplianceAgreed, complianceOpen, setComplianceOpen, generate, error, goToStep, loading }) {
+  const tr = useTr();
 
   // Resolve diagnosis label
   const diagLabel = (() => {
@@ -74,7 +78,7 @@ export default function Step6PreProtocolSummary({ form, allExercises, compliance
     <>
       <div style={{ marginBottom: 20 }}>
         <SectionHead icon={FiCheckCircle} title="Pre-Protocol Summary — Review & Generate" />
-        <p style={{ fontSize: 12, color: C.textLight, marginTop: 4 }}>Review all selections before generating the exercise protocol. Verify accuracy — this information drives the protocol engine.</p>
+        <p style={{ fontSize: 12, color: C.textLight, marginTop: 4 }}>{tr("Review all selections before generating the exercise protocol. Verify accuracy — this information drives the protocol engine.")}</p>
       </div>
 
       {/* Missing fields warning */}
@@ -82,8 +86,8 @@ export default function Step6PreProtocolSummary({ form, allExercises, compliance
         <div style={{ padding: "12px 16px", borderRadius: 10, background: `${C.red}08`, border: `2px solid ${C.red}40`, display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
           <FiAlertTriangle size={18} style={{ color: C.red, flexShrink: 0 }} />
           <div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: C.red }}>Required Fields Missing</div>
-            <div style={{ fontSize: 12, color: C.red }}>{missing.join(" · ")}</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: C.red }}>{tr("Required Fields Missing")}</div>
+            <div style={{ fontSize: 12, color: C.red }}>{missing.map(m => tr(m)).join(" · ")}</div>
           </div>
         </div>
       )}
@@ -95,7 +99,7 @@ export default function Step6PreProtocolSummary({ form, allExercises, compliance
           <DataRow label="Name" value={form.patientName} />
           <DataRow label="Species" value={form.species || "Canine"} />
           <DataRow label="Breed" value={form.breed} />
-          <DataRow label="Age" value={form.age ? `${form.age} years` : null} />
+          <DataRow label="Age" value={form.age ? `${form.age} ${tr("years")}` : null} />
           <DataRow label="Weight" value={form.weightLbs ? `${form.weightLbs} lbs` : form.weightKg ? `${form.weightKg} kg` : null} />
           <DataRow label="Sex" value={form.sex} />
           <DataRow label="Temperament" value={form.temperament} color={form.temperament === "Aggressive" || form.temperament === "Reactive" ? C.red : undefined} />
@@ -114,14 +118,14 @@ export default function Step6PreProtocolSummary({ form, allExercises, compliance
 
         {/* Treatment Plan */}
         <SummaryCard title="Treatment Plan" icon={FiHeart} color="#8B5CF6">
-          <DataRow label="Approach" value={form.treatmentApproach ? form.treatmentApproach.charAt(0).toUpperCase() + form.treatmentApproach.slice(1) : null} />
+          <DataRow label="Approach" value={form.treatmentApproach ? tr(form.treatmentApproach.charAt(0).toUpperCase() + form.treatmentApproach.slice(1)) : null} />
           <DataRow label="Vet Recommendation" value={form.vetRecommendation} />
           <DataRow label="Owner Decision" value={form.ownerElection} />
           {form.treatmentApproach === "surgical" && (
             <>
               <DataRow label="Surgery Type" value={form.surgeryType} />
               <DataRow label="Surgery Date" value={form.surgeryDate} />
-              <DataRow label="POD" value={form.postOpDay ? `Day ${form.postOpDay}` : null} />
+              <DataRow label="POD" value={form.postOpDay ? `${tr("Day")} ${form.postOpDay}` : null} />
               <DataRow label="Incision" value={form.incisionStatus} color={form.incisionStatus?.includes("Infection") || form.incisionStatus?.includes("Dehiscence") ? C.red : undefined} />
             </>
           )}
@@ -133,22 +137,22 @@ export default function Step6PreProtocolSummary({ form, allExercises, compliance
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginBottom: 16 }}>
         {/* Protocol Config */}
         <SummaryCard title="Protocol Configuration" icon={FiSettings} color="#BA7517">
-          <DataRow label="Duration" value={form.protocolLength ? `${form.protocolLength} weeks` : null} />
-          <DataRow label="Frequency" value={form.sessionFrequency ? `${form.sessionFrequency}x/week` : null} />
+          <DataRow label="Duration" value={form.protocolLength ? `${form.protocolLength} ${tr("weeks")}` : null} />
+          <DataRow label="Frequency" value={form.sessionFrequency ? `${form.sessionFrequency}x/${tr("week")}` : null} />
           <DataRow label="Compliance" value={form.ownerCompliance} />
-          <DataRow label="HEP" value={form.homeExerciseProgram ? "Included" : "Not included"} color={form.homeExerciseProgram ? C.green : C.textLight} />
-          <DataRow label="Aquatic" value={form.aquaticAccess ? "Available" : "Not available"} color={form.aquaticAccess ? C.teal : C.textLight} />
-          <DataRow label="Modalities" value={`${modalities.length} selected`} />
+          <DataRow label="HEP" value={form.homeExerciseProgram ? tr("Included") : tr("Not included")} color={form.homeExerciseProgram ? C.green : C.textLight} />
+          <DataRow label="Aquatic" value={form.aquaticAccess ? tr("Available") : tr("Not available")} color={form.aquaticAccess ? C.teal : C.textLight} />
+          <DataRow label="Modalities" value={`${modalities.length} ${tr("selected")}`} />
         </SummaryCard>
 
         {/* Rehab Goals */}
         <SummaryCard title="Rehabilitation Goals" icon={FiTarget} color="#0EA5E9">
-          <DataRow label="Problems" value={`${(form.problems || []).length} identified`} />
-          <DataRow label="Short-Term Goals" value={`${(form.stGoals || []).length} set`} />
-          <DataRow label="Long-Term Goals" value={`${(form.ltGoals || []).length} set`} />
-          <DataRow label="Outcome Measures" value={`${(form.outcomeMeasures || []).length} selected`} />
+          <DataRow label="Problems" value={`${(form.problems || []).length} ${tr("identified")}`} />
+          <DataRow label="Short-Term Goals" value={`${(form.stGoals || []).length} ${tr("set")}`} />
+          <DataRow label="Long-Term Goals" value={`${(form.ltGoals || []).length} ${tr("set")}`} />
+          <DataRow label="Outcome Measures" value={`${(form.outcomeMeasures || []).length} ${tr("selected")}`} />
           <DataRow label="Prognosis" value={form.prognosisRating} color={form.prognosisRating === "Poor" ? C.red : form.prognosisRating === "Guarded" ? C.amber : C.green} />
-          <DataRow label="Discharge Criteria" value={`${(form.dischargeCriteria || []).length} defined`} />
+          <DataRow label="Discharge Criteria" value={`${(form.dischargeCriteria || []).length} ${tr("defined")}`} />
         </SummaryCard>
 
         {/* Safety Flags */}
@@ -156,7 +160,7 @@ export default function Step6PreProtocolSummary({ form, allExercises, compliance
           {flags.length === 0 ? (
             <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 0" }}>
               <FiCheckCircle size={16} style={{ color: C.green }} />
-              <span style={{ fontSize: 12, fontWeight: 600, color: C.green }}>No active safety flags</span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: C.green }}>{tr("No active safety flags")}</span>
             </div>
           ) : (
             flags.map((f, i) => (
@@ -171,8 +175,8 @@ export default function Step6PreProtocolSummary({ form, allExercises, compliance
 
       {/* Exercise Library count */}
       <div style={{ background: C.surface, borderRadius: 10, padding: "12px 20px", marginBottom: 16, border: `1px solid ${C.border}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <span style={{ fontSize: 12, color: C.textLight }}>Exercise Library Available</span>
-        <span style={{ fontSize: 14, fontWeight: 700, color: C.teal }}>{allExercises.length} exercises</span>
+        <span style={{ fontSize: 12, color: C.textLight }}>{tr("Exercise Library Available")}</span>
+        <span style={{ fontSize: 14, fontWeight: 700, color: C.teal }}>{allExercises.length} {tr("exercises")}</span>
       </div>
 
       {/* ═══ Compliance & Generate ═══ */}
@@ -182,14 +186,14 @@ export default function Step6PreProtocolSummary({ form, allExercises, compliance
             style={{ accentColor: C.teal, width: 20, height: 20, cursor: "pointer", marginTop: 2, flexShrink: 0 }} />
           <div>
             <span style={{ fontSize: 14, fontWeight: 700, color: C.text }}>
-              I acknowledge the{" "}
+              {tr("I acknowledge the")}{" "}
               <span onClick={e => { e.preventDefault(); setComplianceOpen(o => !o); }}
                 style={{ color: C.teal, textDecoration: "underline", cursor: "pointer" }}>
-                K9 Rehab Pro — Compliance & Data Protection Notice
+                {tr("K9 Rehab Pro — Compliance & Data Protection Notice")}
               </span>
             </span>
             <div style={{ fontSize: 11, color: C.textLight, marginTop: 6, lineHeight: 1.6 }}>
-              This is a Clinical Decision-Support System (CDSS). All generated protocols must be reviewed and approved by a licensed veterinarian before clinical application. The platform does not diagnose, prescribe, or replace veterinary judgment.
+              {tr("This is a Clinical Decision-Support System (CDSS). All generated protocols must be reviewed and approved by a licensed veterinarian before clinical application. The platform does not diagnose, prescribe, or replace veterinary judgment.")}
             </div>
           </div>
         </label>
@@ -238,7 +242,7 @@ export default function Step6PreProtocolSummary({ form, allExercises, compliance
           disabled={loading || !complianceAgreed || missing.length > 0}
         >
           <FiActivity size={20} />
-          {loading ? "GENERATING PROTOCOL..." : "GENERATE EXERCISE PROTOCOL"}
+          {loading ? tr("GENERATING PROTOCOL...") : tr("GENERATE EXERCISE PROTOCOL")}
         </button>
       </div>
 
@@ -252,7 +256,7 @@ export default function Step6PreProtocolSummary({ form, allExercises, compliance
 
       {/* Back */}
       <div style={{ display: "flex", justifyContent: "flex-start", padding: "10px 0" }}>
-        <button style={S.btn("ghost")} onClick={() => goToStep(5)}>← Back to Protocol Parameters</button>
+        <button style={S.btn("ghost")} onClick={() => goToStep(5)}>{tr("← Back to Protocol Parameters")}</button>
       </div>
     </>
   );

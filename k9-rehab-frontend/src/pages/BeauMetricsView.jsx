@@ -4,6 +4,7 @@
 
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useTr } from "../i18n/useTr";
 import C from "../constants/colors";
 import { generateBeauProtocol } from "../services/beauService";
 import useBeauVoice from "../hooks/useBeauVoice";
@@ -51,6 +52,7 @@ const CONDITIONS = [
 
 export default function BeauMetricsView({ authToken, setView }) {
   const { i18n: i18nInst } = useTranslation();
+  const tr = useTr();
   const beauVoice = useBeauVoice(i18nInst.language || "en");
 
   // Patient form
@@ -172,8 +174,8 @@ export default function BeauMetricsView({ authToken, setView }) {
       {/* Header */}
       <div style={S.header}>
         <div>
-          <div style={S.title}>PetCare Nutrition</div>
-          <div style={S.subtitle}>AI Nutrition + Rehabilitation Protocol Engine \u2014 Mars PetCare / Waltham Science</div>
+          <div style={S.title}>{tr("PetCare Nutrition")}</div>
+          <div style={S.subtitle}>{tr("AI Nutrition + Rehabilitation Protocol Engine")} \u2014 {tr("Mars PetCare / Waltham Science")}</div>
         </div>
         <BeauVoiceControl
           isSpeaking={beauVoice.isSpeaking}
@@ -189,57 +191,57 @@ export default function BeauMetricsView({ authToken, setView }) {
 
       {/* Patient Form */}
       <div style={S.card}>
-        <div style={S.cardTitle}>{"\ud83d\udc3e"} Patient Information</div>
+        <div style={S.cardTitle}>{"\ud83d\udc3e"} {tr("Patient Information")}</div>
         <div style={S.grid2}>
           <div>
-            <div style={S.label}>Patient Name *</div>
-            <input style={S.input} value={form.name} onChange={e => updateForm("name", e.target.value)} placeholder="e.g. Bella" />
+            <div style={S.label}>{tr("Patient Name")} *</div>
+            <input style={S.input} value={form.name} onChange={e => updateForm("name", e.target.value)} placeholder={tr("e.g. Bella")} />
           </div>
           <div>
-            <div style={S.label}>Species</div>
+            <div style={S.label}>{tr("Species")}</div>
             <select style={S.select} value={form.species} onChange={e => updateForm("species", e.target.value)}>
-              {SPECIES.map(s => <option key={s} value={s}>{s}</option>)}
+              {SPECIES.map(s => <option key={s} value={s}>{tr(s)}</option>)}
             </select>
           </div>
         </div>
         <div style={S.grid3}>
           <div>
-            <div style={S.label}>Breed</div>
-            <input style={S.input} value={form.breed} onChange={e => updateForm("breed", e.target.value)} placeholder="e.g. Labrador Retriever" />
+            <div style={S.label}>{tr("Breed")}</div>
+            <input style={S.input} value={form.breed} onChange={e => updateForm("breed", e.target.value)} placeholder={tr("e.g. Labrador Retriever")} />
           </div>
           <div>
-            <div style={S.label}>Life Stage</div>
+            <div style={S.label}>{tr("Life Stage")}</div>
             <select style={S.select} value={form.lifeStage} onChange={e => updateForm("lifeStage", e.target.value)}>
-              {LIFE_STAGES.map(l => <option key={l} value={l}>{l}</option>)}
+              {LIFE_STAGES.map(l => <option key={l} value={l}>{tr(l)}</option>)}
             </select>
           </div>
           <div>
-            <div style={S.label}>Notes</div>
-            <input style={S.input} value={form.notes} onChange={e => updateForm("notes", e.target.value)} placeholder="Additional clinical notes..." />
+            <div style={S.label}>{tr("Notes")}</div>
+            <input style={S.input} value={form.notes} onChange={e => updateForm("notes", e.target.value)} placeholder={tr("Additional clinical notes...")} />
           </div>
         </div>
         {/* ── Age / DOB pair (bidirectional) ── */}
         <div style={S.grid2}>
           <div>
-            <div style={S.label}>Date of Birth</div>
+            <div style={S.label}>{tr("Date of Birth")}</div>
             <input style={S.input} type="date" value={form.dob} onChange={e => onDob(e.target.value)} />
           </div>
           <div>
-            <div style={S.label}>Age (years)</div>
-            <input style={S.input} type="number" min="0" max="30" value={form.age} onChange={e => onAge(e.target.value)} placeholder="e.g. 6" />
-            <div style={{ fontSize:10, color:C.textLight, marginTop:3, fontStyle:"italic" }}>Auto-converts to/from DOB</div>
+            <div style={S.label}>{tr("Age (years)")}</div>
+            <input style={S.input} type="number" min="0" max="30" value={form.age} onChange={e => onAge(e.target.value)} placeholder={tr("e.g. 6")} />
+            <div style={{ fontSize:10, color:C.textLight, marginTop:3, fontStyle:"italic" }}>{tr("Auto-converts to/from DOB")}</div>
           </div>
         </div>
         {/* ── Weight lbs / kg pair (bidirectional) ── */}
         <div style={S.grid2}>
           <div>
-            <div style={S.label}>Weight (lbs)</div>
+            <div style={S.label}>{tr("Weight (lbs)")}</div>
             <input style={S.input} type="number" step="0.1" value={form.weightLbs} onChange={e => onLbs(e.target.value)} placeholder="0.0" />
           </div>
           <div>
-            <div style={S.label}>Weight (kg)</div>
+            <div style={S.label}>{tr("Weight (kg)")}</div>
             <input style={S.input} type="number" step="0.1" value={form.weightKg} onChange={e => onKg(e.target.value)} placeholder="0.0" />
-            <div style={{ fontSize:10, color:C.textLight, marginTop:3, fontStyle:"italic" }}>Auto-converts to/from lbs</div>
+            <div style={{ fontSize:10, color:C.textLight, marginTop:3, fontStyle:"italic" }}>{tr("Auto-converts to/from lbs")}</div>
           </div>
         </div>
       </div>
@@ -247,11 +249,10 @@ export default function BeauMetricsView({ authToken, setView }) {
       {/* ── Purina Pro Plan BCS Reference Card ── */}
       <div style={{ ...S.card, background: "#F0FDFB", borderLeft: "4px solid #0D9488" }}>
         <div style={{ ...S.cardTitle, color: "#0D9488" }}>
-          {"\ud83d\udccb"} Purina Pro Plan — 9-Point Body Condition Score Reference
+          {"\ud83d\udccb"} {tr("Purina Pro Plan — 9-Point Body Condition Score Reference")}
         </div>
         <div style={{ fontSize: 11, color: C.textMid, marginBottom: 12, fontStyle: "italic" }}>
-          Use this rubric when assessing patient BCS. 5/9 is ideal body condition.
-          Each point above or below 5 represents approximately 10–15% body weight deviation.
+          {tr("Use this rubric when assessing patient BCS. 5/9 is ideal body condition. Each point above or below 5 represents approximately 10–15% body weight deviation.")}
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
           {PURINA_BCS_SCALE.map(b => (
@@ -267,9 +268,9 @@ export default function BeauMetricsView({ authToken, setView }) {
               borderRadius: 6,
             }}>
               <div style={{ fontSize: 14, fontWeight: 800, color: C.text, marginBottom: 2 }}>
-                {b.score}/9 <span style={{ fontSize: 11, fontWeight: 600, color: "#0D9488" }}>{b.label}</span>
+                {b.score}/9 <span style={{ fontSize: 11, fontWeight: 600, color: "#0D9488" }}>{tr(b.label)}</span>
               </div>
-              <div style={{ fontSize: 10, color: C.textMid, lineHeight: 1.5 }}>{b.desc}</div>
+              <div style={{ fontSize: 10, color: C.textMid, lineHeight: 1.5 }}>{tr(b.desc)}</div>
             </div>
           ))}
         </div>
@@ -277,30 +278,30 @@ export default function BeauMetricsView({ authToken, setView }) {
 
       {/* ── BCS selector ── */}
       <div style={S.card}>
-        <div style={S.cardTitle}>{"\ud83d\udcca"} Body Condition Score &amp; Health Conditions</div>
+        <div style={S.cardTitle}>{"\ud83d\udcca"} {tr("Body Condition Score & Health Conditions")}</div>
         <div style={S.grid2}>
           <div>
-            <div style={S.label}>Body Condition Score (1-9) *</div>
+            <div style={S.label}>{tr("Body Condition Score (1-9)")} *</div>
             <select style={S.select} value={form.bcs} onChange={e => updateForm("bcs", e.target.value)}>
-              {BCS_OPTIONS.map(b => <option key={b} value={b}>{b}/9{b === "5" ? " (Ideal)" : b <= "3" ? " (Underweight)" : b >= "7" ? " (Overweight)" : ""}</option>)}
+              {BCS_OPTIONS.map(b => <option key={b} value={b}>{b}/9{b === "5" ? ` (${tr("Ideal")})` : b <= "3" ? ` (${tr("Underweight")})` : b >= "7" ? ` (${tr("Overweight")})` : ""}</option>)}
             </select>
           </div>
           <div/>
         </div>
 
         {/* Conditions */}
-        <div style={S.label}>Health Conditions *</div>
+        <div style={S.label}>{tr("Health Conditions")} *</div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 4 }}>
           {CONDITIONS.map(c => (
-            <span key={c} style={S.chip(form.conditions.includes(c))} onClick={() => toggleCondition(c)}>{c}</span>
+            <span key={c} style={S.chip(form.conditions.includes(c))} onClick={() => toggleCondition(c)}>{tr(c)}</span>
           ))}
         </div>
 
         {/* Generate */}
         <div style={{ marginTop: 20 }}>
-          {error && <div style={{ padding: "10px 14px", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 6, color: "#dc2626", fontSize: 12, marginBottom: 12 }}>{error}</div>}
+          {error && <div style={{ padding: "10px 14px", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 6, color: "#dc2626", fontSize: 12, marginBottom: 12 }}>{tr(error)}</div>}
           <button style={S.btn(loading)} onClick={generate} disabled={loading}>
-            {loading ? <><div style={{ width: 16, height: 16, border: "2px solid #fff", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} /> Generating PetCare Nutrition Diet...</> : "\u26a1 Generate PetCare Nutrition Diet"}
+            {loading ? <><div style={{ width: 16, height: 16, border: "2px solid #fff", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} /> {tr("Generating PetCare Nutrition Diet...")}</> : <>{"\u26a1"} {tr("Generate PetCare Nutrition Diet")}</>}
           </button>
         </div>
       </div>
@@ -310,48 +311,48 @@ export default function BeauMetricsView({ authToken, setView }) {
         <>
           {/* Patient Summary */}
           <div style={{ ...S.card, borderLeft: `4px solid ${C.teal}` }}>
-            <div style={S.cardTitle}>{"\ud83d\udccb"} Patient Summary</div>
+            <div style={S.cardTitle}>{"\ud83d\udccb"} {tr("Patient Summary")}</div>
             <p style={{ fontSize: 14, color: C.text, lineHeight: 1.7, margin: 0 }}>{result.patient_summary}</p>
           </div>
 
           {/* Diet Protocol */}
           {result.diet_protocol && (
             <div style={{ ...S.card, borderLeft: "4px solid #16a34a" }}>
-              <div style={S.cardTitle}>{"\ud83c\udf56"} Diet Protocol \u2014 {result.diet_protocol.tier}</div>
+              <div style={S.cardTitle}>{"\ud83c\udf56"} {tr("Diet Protocol")} \u2014 {result.diet_protocol.tier}</div>
               <div style={S.grid2}>
                 <div>
-                  <div style={S.label}>Primary Product</div>
+                  <div style={S.label}>{tr("Primary Product")}</div>
                   <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{result.diet_protocol.primary_product}</div>
                 </div>
                 <div>
-                  <div style={S.label}>Feeding Format</div>
+                  <div style={S.label}>{tr("Feeding Format")}</div>
                   <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{result.diet_protocol.feeding_format}</div>
                 </div>
               </div>
               {result.diet_protocol.secondary_product && (
                 <div style={{ marginTop: 8 }}>
-                  <div style={S.label}>Secondary Product</div>
+                  <div style={S.label}>{tr("Secondary Product")}</div>
                   <div style={{ fontSize: 13, color: C.text }}>{result.diet_protocol.secondary_product}</div>
                 </div>
               )}
-              <div style={S.label}>Daily Calories</div>
+              <div style={S.label}>{tr("Daily Calories")}</div>
               <div style={{ fontSize: 13, color: C.text }}>{result.diet_protocol.daily_calories_note}</div>
-              <div style={S.label}>Key Nutrients</div>
+              <div style={S.label}>{tr("Key Nutrients")}</div>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 {result.diet_protocol.key_nutrients?.map((n, i) => <span key={i} style={{ padding: "3px 10px", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 20, fontSize: 11, color: "#16a34a", fontWeight: 600 }}>{n}</span>)}
               </div>
-              <div style={S.label}>Feeding Schedule</div>
+              <div style={S.label}>{tr("Feeding Schedule")}</div>
               {result.diet_protocol.feeding_schedule?.map((m, i) => <div key={i} style={{ fontSize: 13, color: C.text, marginBottom: 4 }}>{m}</div>)}
-              <div style={S.label}>Hydration</div>
+              <div style={S.label}>{tr("Hydration")}</div>
               <div style={{ fontSize: 13, color: C.text }}>{result.diet_protocol.hydration_note}</div>
               {result.diet_protocol.supplements?.length > 0 && result.diet_protocol.supplements[0] !== "none" && (
-                <><div style={S.label}>Supplements</div>
+                <><div style={S.label}>{tr("Supplements")}</div>
                 <div style={{ fontSize: 13, color: C.text }}>{result.diet_protocol.supplements.join(", ")}</div></>
               )}
               {result.diet_protocol.vet_consult_required && (
-                <div style={{ marginTop: 12, padding: "8px 12px", background: "#fff7ed", border: "1px solid #fed7aa", borderRadius: 6, fontSize: 11, color: "#ea580c", fontWeight: 600 }}>{"\u26a0\ufe0f"} Veterinary consultation required for this diet protocol</div>
+                <div style={{ marginTop: 12, padding: "8px 12px", background: "#fff7ed", border: "1px solid #fed7aa", borderRadius: 6, fontSize: 11, color: "#ea580c", fontWeight: 600 }}>{"\u26a0\ufe0f"} {tr("Veterinary consultation required for this diet protocol")}</div>
               )}
-              <div style={S.label}>Evidence Basis</div>
+              <div style={S.label}>{tr("Evidence Basis")}</div>
               <div style={{ fontSize: 12, color: C.textMid, fontStyle: "italic", lineHeight: 1.6 }}>{result.diet_protocol.reasoning}</div>
             </div>
           )}
@@ -359,32 +360,32 @@ export default function BeauMetricsView({ authToken, setView }) {
           {/* Rehab Protocol */}
           {result.rehab_protocol && (
             <div style={{ ...S.card, borderLeft: "4px solid #0ea5e9" }}>
-              <div style={S.cardTitle}>{"\ud83c\udfcb\ufe0f"} Rehab Protocol \u2014 {result.rehab_protocol.phase}</div>
+              <div style={S.cardTitle}>{"\ud83c\udfcb\ufe0f"} {tr("Rehab Protocol")} \u2014 {result.rehab_protocol.phase}</div>
               <div style={S.grid3}>
-                <div><div style={S.label}>Frequency</div><div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{result.rehab_protocol.frequency}</div></div>
-                <div><div style={S.label}>Session Duration</div><div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{result.rehab_protocol.session_duration}</div></div>
-                <div><div style={S.label}>Reassessment</div><div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{result.rehab_protocol.reassessment_interval}</div></div>
+                <div><div style={S.label}>{tr("Frequency")}</div><div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{result.rehab_protocol.frequency}</div></div>
+                <div><div style={S.label}>{tr("Session Duration")}</div><div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{result.rehab_protocol.session_duration}</div></div>
+                <div><div style={S.label}>{tr("Reassessment")}</div><div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{result.rehab_protocol.reassessment_interval}</div></div>
               </div>
-              <div style={S.label}>Exercises</div>
+              <div style={S.label}>{tr("Exercises")}</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {result.rehab_protocol.exercises?.map((ex, i) => (
                   <div key={i} style={{ padding: "10px 14px", background: C.bg, borderRadius: 8, border: `1px solid ${C.borderLight}` }}>
                     <div style={{ fontWeight: 600, fontSize: 13, color: C.text }}>{ex.name}</div>
                     <div style={{ fontSize: 12, color: C.textMid, marginTop: 4 }}>
-                      {ex.sets} sets \u00d7 {ex.reps_or_duration} \u2014 Goal: {ex.goal}
+                      {ex.sets} {tr("sets")} \u00d7 {ex.reps_or_duration} \u2014 {tr("Goal:")} {ex.goal}
                     </div>
-                    {ex.progression_note && <div style={{ fontSize: 11, color: C.teal, marginTop: 2 }}>Progression: {ex.progression_note}</div>}
+                    {ex.progression_note && <div style={{ fontSize: 11, color: C.teal, marginTop: 2 }}>{tr("Progression:")} {ex.progression_note}</div>}
                   </div>
                 ))}
               </div>
               {result.rehab_protocol.cognitive_enrichment?.length > 0 && (
-                <><div style={S.label}>Cognitive Enrichment</div>
+                <><div style={S.label}>{tr("Cognitive Enrichment")}</div>
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                   {result.rehab_protocol.cognitive_enrichment.map((a, i) => <span key={i} style={{ padding: "3px 10px", background: "#ede9fe", border: "1px solid #c4b5fd", borderRadius: 20, fontSize: 11, color: "#7c3aed", fontWeight: 600 }}>{a}</span>)}
                 </div></>
               )}
               {result.rehab_protocol.contraindications?.length > 0 && (
-                <><div style={S.label}>Contraindications</div>
+                <><div style={S.label}>{tr("Contraindications")}</div>
                 <div style={{ padding: "8px 12px", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 6, fontSize: 12, color: "#dc2626" }}>
                   {result.rehab_protocol.contraindications.join(" \u2022 ")}
                 </div></>
@@ -395,14 +396,14 @@ export default function BeauMetricsView({ authToken, setView }) {
           {/* Active Flags */}
           {result.active_flags && (
             <div style={S.card}>
-              <div style={S.cardTitle}>{"\u26a0\ufe0f"} Active Clinical Flags</div>
+              <div style={S.cardTitle}>{"\u26a0\ufe0f"} {tr("Active Clinical Flags")}</div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
                 {Object.entries(result.active_flags).map(([key, val]) => {
                   const level = typeof val === "string" && (val.toLowerCase().includes("high") || val.toLowerCase().includes("deficient")) ? "high"
                     : typeof val === "string" && val.toLowerCase().includes("moderate") ? "moderate" : "low";
                   return (
                     <div key={key} style={S.flag(level)}>
-                      <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 4 }}>{key.replace(/_/g, " ")}</div>
+                      <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 4 }}>{tr(key.replace(/_/g, " "))}</div>
                       <div style={{ fontSize: 12 }}>{val}</div>
                     </div>
                   );
@@ -414,7 +415,7 @@ export default function BeauMetricsView({ authToken, setView }) {
           {/* Clinical Alerts */}
           {result.clinical_alerts?.length > 0 && (
             <div style={{ ...S.card, background: "#fef2f2", borderLeft: "4px solid #dc2626" }}>
-              <div style={{ ...S.cardTitle, color: "#dc2626" }}>{"\ud83d\udea8"} Clinical Alerts</div>
+              <div style={{ ...S.cardTitle, color: "#dc2626" }}>{"\ud83d\udea8"} {tr("Clinical Alerts")}</div>
               {result.clinical_alerts.map((a, i) => <div key={i} style={{ fontSize: 13, color: "#111", marginBottom: 6 }}>\u2022 {a}</div>)}
             </div>
           )}
@@ -427,23 +428,23 @@ export default function BeauMetricsView({ authToken, setView }) {
             return (
               <div style={{ ...S.card, background: "#FFFBEB", borderLeft: "4px solid #F59E0B" }}>
                 <div style={{ ...S.cardTitle, color: "#92400E" }}>
-                  {"\ud83d\uded2"} Order {brand.name} — Recommended by B.E.A.U.
+                  {"\ud83d\uded2"} {tr("Order")} {brand.name} — {tr("Recommended by B.E.A.U.")}
                 </div>
                 <div style={{ fontSize: 11, color: C.textMid, marginBottom: 12 }}>
-                  Place a one-time order or set up scheduled AutoShip delivery for <strong>{product}</strong>.
+                  {tr("Place a one-time order or set up scheduled AutoShip delivery for")} <strong>{product}</strong>.
                 </div>
                 <div style={{ display: "flex", gap: 10 }}>
                   <a href={brand.order} target="_blank" rel="noopener noreferrer"
                      style={{ flex: 1, padding: "12px 16px", background: "#F59E0B", color: "#fff", textDecoration: "none", borderRadius: 6, fontSize: 13, fontWeight: 700, textAlign: "center", letterSpacing: "0.4px" }}>
-                    {"\ud83d\udecd\ufe0f"} ORDER NOW
+                    {"\ud83d\udecd\ufe0f"} {tr("ORDER NOW")}
                   </a>
                   <a href={brand.autoship} target="_blank" rel="noopener noreferrer"
                      style={{ flex: 1, padding: "12px 16px", background: "#0D9488", color: "#fff", textDecoration: "none", borderRadius: 6, fontSize: 13, fontWeight: 700, textAlign: "center", letterSpacing: "0.4px" }}>
-                    {"\ud83d\udd01"} SET UP AUTOSHIP
+                    {"\ud83d\udd01"} {tr("SET UP AUTOSHIP")}
                   </a>
                 </div>
                 <div style={{ fontSize: 10, color: C.textLight, marginTop: 8, fontStyle: "italic" }}>
-                  Both links open in a new tab on {brand.name}'s official website.
+                  {tr("Both links open in a new tab on")} {brand.name}{tr("'s official website.")}
                 </div>
               </div>
             );
@@ -451,8 +452,8 @@ export default function BeauMetricsView({ authToken, setView }) {
 
           {/* Disclaimer */}
           <div style={{ padding: "12px 16px", background: C.bg, borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 11, color: C.textMid, textAlign: "center", marginTop: 8 }}>
-            {result.disclaimer || "Always consult your veterinarian before implementing any dietary or rehabilitation changes."}
-            <br /><span style={{ fontSize: 10, color: C.textLight }}>CDSS \u2014 Clinical Decision-Support System. Does not diagnose, prescribe, or replace licensed veterinary judgment.</span>
+            {result.disclaimer || tr("Always consult your veterinarian before implementing any dietary or rehabilitation changes.")}
+            <br /><span style={{ fontSize: 10, color: C.textLight }}>{tr("CDSS — Clinical Decision-Support System. Does not diagnose, prescribe, or replace licensed veterinary judgment.")}</span>
           </div>
         </>
       )}

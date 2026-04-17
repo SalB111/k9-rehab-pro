@@ -12,6 +12,7 @@ import useBeauVoice from "../hooks/useBeauVoice";
 import BeauVoiceControl, { SpeakButton } from "../components/BeauVoiceControl";
 import { LanguageSelector } from "./DashboardView";
 import { useTranslation } from "react-i18next";
+import { useTr } from "../i18n/useTr";
 
 const DiagramRenderer = lazy(() => import("../components/beau/DiagramRenderer"));
 const NarrativePanel = lazy(() => import("../components/beau/NarrativePanel"));
@@ -33,6 +34,7 @@ function BEAUView({ authToken, setView }) {
   const [aiStatus, setAiStatus] = useState(null);
   const [sessionId, setSessionId] = useState(null);
   const { i18n: i18nInst } = useTranslation();
+  const tr = useTr();
   const beauVoice = useBeauVoice(i18nInst.language || "en");
   const [sessionHistory, setSessionHistory] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -48,7 +50,7 @@ useEffect(() => {
   axios
     .get(`${API}/patients`)
     .then(r => setPatients(r.data?.data || r.data || []))
-    .catch(() => toast("Failed to load patients"));
+    .catch(() => toast(tr("Failed to load patients")));
 
   axios
     .get(`${API}/beau/status`)
@@ -69,19 +71,19 @@ useEffect(() => {
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs, stream]);
 
   const QUICK = [
-    { icon: <FiClipboard size={11} />, label: "Protocol", prompt: "Generate a rehabilitation protocol for this patient's current stage." },
-    { icon: <FiAlertTriangle size={11} />, label: "Contraindications", prompt: "What exercises are contraindicated for this patient?" },
-    { icon: <FiCheckCircle size={11} />, label: "Progress Check", prompt: "Is this patient ready to progress? What gate criteria should I evaluate?" },
-    { icon: <FiHome size={11} />, label: "Home Program", prompt: "Design a safe owner-friendly home exercise program for this patient." },
-    { icon: <FiBarChart2 size={11} />, label: "Outcomes", prompt: "What outcome measures should I track and what values indicate readiness to progress?" },
-    { icon: <FiSearch size={11} />, label: "Alternatives", prompt: "Suggest alternative exercises that work around this patient's limitations." },
+    { icon: <FiClipboard size={11} />, label: tr("Protocol"), prompt: tr("Generate a rehabilitation protocol for this patient's current stage.") },
+    { icon: <FiAlertTriangle size={11} />, label: tr("Contraindications"), prompt: tr("What exercises are contraindicated for this patient?") },
+    { icon: <FiCheckCircle size={11} />, label: tr("Progress Check"), prompt: tr("Is this patient ready to progress? What gate criteria should I evaluate?") },
+    { icon: <FiHome size={11} />, label: tr("Home Program"), prompt: tr("Design a safe owner-friendly home exercise program for this patient.") },
+    { icon: <FiBarChart2 size={11} />, label: tr("Outcomes"), prompt: tr("What outcome measures should I track and what values indicate readiness to progress?") },
+    { icon: <FiSearch size={11} />, label: tr("Alternatives"), prompt: tr("Suggest alternative exercises that work around this patient's limitations.") },
   ];
 
   const STARTERS = [
-    { icon: <FiActivity size={11} />, q: "What exercises are safe for early TPLO recovery?" },
-    { icon: <FiBookOpen size={11} />, q: "How should I approach IVDD Grade III rehabilitation?" },
-    { icon: <FiHeart size={11} />, q: "Design a geriatric mobility program for a 13-year-old Golden with bilateral hip OA." },
-    { icon: <FiBarChart2 size={11} />, q: "What outcome measures track CCL conservative management progress?" },
+    { icon: <FiActivity size={11} />, q: tr("What exercises are safe for early TPLO recovery?") },
+    { icon: <FiBookOpen size={11} />, q: tr("How should I approach IVDD Grade III rehabilitation?") },
+    { icon: <FiHeart size={11} />, q: tr("Design a geriatric mobility program for a 13-year-old Golden with bilateral hip OA.") },
+    { icon: <FiBarChart2 size={11} />, q: tr("What outcome measures track CCL conservative management progress?") },
   ];
 
   // Escape raw HTML to prevent XSS from AI responses
@@ -150,7 +152,7 @@ useEffect(() => {
                 full += d.text;
                 setStream(full);
               } else if (d.type === "error") {
-                full += `\n\n**Error:** ${d.text}`;
+                full += `\n\n**${tr("Error")}:** ${d.text}`;
                 setStream(full);
               }
             } catch {}
@@ -165,7 +167,7 @@ useEffect(() => {
       if (beauVoice.autoSpeak && full) beauVoice.speak(full);
     } catch (err) {
       setStream("");
-      setMsgs(p => [...p, { role: "assistant", content: `**B.E.A.U. is temporarily unavailable.**\n\nPlease check that the server is running. If the issue persists, contact your system administrator.` }]);
+      setMsgs(p => [...p, { role: "assistant", content: `**${tr("B.E.A.U. is temporarily unavailable.")}**\n\n${tr("Please check that the server is running. If the issue persists, contact your system administrator.")}` }]);
       console.error('BEAU connection error:', err);
     }
     setLoading(false);
@@ -197,7 +199,7 @@ useEffect(() => {
   const pickPatient = (pt) => {
     setPatient(pt);
     setShowPatientPanel(false);
-    setMsgs(p => [...p, { role: "assistant", content: `**Patient Loaded: ${pt.name}**\n\n**Breed:** ${pt.breed || "Unknown"} \u2022 **Age:** ${pt.age || "?"} \u2022 **Weight:** ${pt.weight || "?"}lbs\n**Diagnosis:** ${pt.diagnosis || pt.condition || "Not specified"}\n**Notes:** ${pt.notes || "None"}\n\n---\nAll recommendations now tailored to ${pt.name}. What would you like to evaluate?` }]);
+    setMsgs(p => [...p, { role: "assistant", content: `**${tr("Patient Loaded")}: ${pt.name}**\n\n**${tr("Breed")}:** ${pt.breed || tr("Unknown")} \u2022 **${tr("Age")}:** ${pt.age || "?"} \u2022 **${tr("Weight")}:** ${pt.weight || "?"}lbs\n**${tr("Diagnosis")}:** ${pt.diagnosis || pt.condition || tr("Not specified")}\n**${tr("Notes")}:** ${pt.notes || tr("None")}\n\n---\n${tr("All recommendations now tailored to")} ${pt.name}. ${tr("What would you like to evaluate?")}` }]);
   };
 
   const welcome = msgs.length === 0;
@@ -223,12 +225,12 @@ useEffect(() => {
       }}>
         <div style={{ padding: "12px 14px", borderBottom: `1px solid ${C.border}`, minWidth: 260 }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: C.textLight, letterSpacing: "0.5px", textTransform: "uppercase" }}>
-            Session History
+            {tr("Session History")}
           </div>
         </div>
         <div style={{ flex: 1, overflowY: "auto", minWidth: 260 }}>
           {sessionHistory.length === 0 && (
-            <div style={{ padding: 14, fontSize: 11, color: C.textLight }}>No saved sessions yet.</div>
+            <div style={{ padding: 14, fontSize: 11, color: C.textLight }}>{tr("No saved sessions yet.")}</div>
           )}
           {sessionHistory.map(s => (
             <div key={s.id} onClick={() => loadSession(s)} style={{
@@ -239,10 +241,10 @@ useEffect(() => {
               onMouseLeave={e => { if (sessionId !== s.id) e.currentTarget.style.background = "transparent"; }}
             >
               <div style={{ fontSize: 11, fontWeight: 600, color: C.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                {s.title || "Untitled"}
+                {s.title || tr("Untitled")}
               </div>
               <div style={{ fontSize: 10, color: C.teal, marginTop: 2 }}>
-                {s.patient_name || "Standalone"}
+                {s.patient_name || tr("Standalone")}
               </div>
               <div style={{ fontSize: 10, color: C.textLight, marginTop: 1 }}>
                 {s.updated_at ? new Date(s.updated_at).toLocaleDateString() + " " + new Date(s.updated_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : ""}
@@ -266,7 +268,7 @@ useEffect(() => {
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <img
             src="/caduceus.png"
-            alt="B.E.A.U. Clinical AI"
+            alt={tr("B.E.A.U. Clinical AI")}
             style={{
               height: 52,
               width: "auto",
@@ -279,7 +281,7 @@ useEffect(() => {
               B.E.A.U.
             </div>
             <div style={{ fontSize: 10, color: "#4a6a8a", letterSpacing: 1, fontFamily: "monospace" }}>
-              BIOMEDICAL EVIDENCE-BASED ANALYTICAL UNIT
+              {tr("BIOMEDICAL EVIDENCE-BASED ANALYTICAL UNIT")}
             </div>
           </div>
         </div>
@@ -291,30 +293,30 @@ useEffect(() => {
             </div>
           )}
           <button onClick={() => setShowPatientPanel(!showPatientPanel)} style={{ background: `${C.navy}08`, border: `1px solid ${C.border}`, borderRadius: 8, color: C.text, padding: "6px 14px", cursor: "pointer", fontSize: 11, fontWeight: 600 }}>
-            {patient ? "Switch Patient" : "Load Patient"}
+            {patient ? tr("Switch Patient") : tr("Load Patient")}
           </button>
           {intelligence && intelligence.total_cases > 0 && (
-            <div style={{ display: "flex", alignItems: "center", gap: 4, background: `${C.green}12`, border: `1px solid ${C.green}30`, borderRadius: 8, padding: "5px 10px" }} title={`Aggregate intelligence from ${intelligence.total_cases} prior sessions`}>
+            <div style={{ display: "flex", alignItems: "center", gap: 4, background: `${C.green}12`, border: `1px solid ${C.green}30`, borderRadius: 8, padding: "5px 10px" }} title={`${tr("Aggregate intelligence from")} ${intelligence.total_cases} ${tr("prior sessions")}`}>
               <FiDatabase size={10} style={{ color: C.green }} />
-              <span style={{ fontSize: 10, fontWeight: 600, color: C.green }}>{intelligence.total_cases} Cases</span>
+              <span style={{ fontSize: 10, fontWeight: 600, color: C.green }}>{intelligence.total_cases} {tr("Cases")}</span>
             </div>
           )}
           <button onClick={() => setView?.("about")} style={{ display: "flex", alignItems: "center", gap: 5, background: `${C.teal}10`, border: `1px solid ${C.teal}30`, borderRadius: 8, color: C.teal, padding: "6px 12px", cursor: "pointer", fontSize: 11, fontWeight: 600 }} title="K9 Rehab Pro Platform">
-            <FiBookOpen size={11} /> Platform
+            <FiBookOpen size={11} /> {tr("Platform")}
           </button>
-          <button onClick={() => setView?.("docs")} style={{ display: "flex", alignItems: "center", gap: 5, background: `${C.teal}10`, border: `1px solid ${C.teal}30`, borderRadius: 8, color: C.teal, padding: "6px 12px", cursor: "pointer", fontSize: 11, fontWeight: 600 }} title="B.E.A.U. Documentation">
-            <FiActivity size={11} /> Documentation
+          <button onClick={() => setView?.("docs")} style={{ display: "flex", alignItems: "center", gap: 5, background: `${C.teal}10`, border: `1px solid ${C.teal}30`, borderRadius: 8, color: C.teal, padding: "6px 12px", cursor: "pointer", fontSize: 11, fontWeight: 600 }} title={tr("B.E.A.U. Documentation")}>
+            <FiActivity size={11} /> {tr("Documentation")}
           </button>
-          <button onClick={() => setView?.("about")} style={{ display: "flex", alignItems: "center", gap: 5, background: `${C.teal}12`, border: `1px solid ${C.teal}40`, borderRadius: 8, color: C.teal, padding: "6px 12px", cursor: "pointer", fontSize: 11, fontWeight: 600 }} title="About B.E.A.U.">
-            <FiShield size={11} /> About B.E.A.U.
+          <button onClick={() => setView?.("about")} style={{ display: "flex", alignItems: "center", gap: 5, background: `${C.teal}12`, border: `1px solid ${C.teal}40`, borderRadius: 8, color: C.teal, padding: "6px 12px", cursor: "pointer", fontSize: 11, fontWeight: 600 }} title={tr("About B.E.A.U.")}>
+            <FiShield size={11} /> {tr("About B.E.A.U.")}
           </button>
           <LanguageSelector/>
           <button onClick={() => setSidebarOpen(o => !o)} style={{ background: sidebarOpen ? `${C.teal}15` : `${C.navy}08`, border: `1px solid ${C.border}`, borderRadius: 8, color: sidebarOpen ? C.teal : C.text, padding: "6px 10px", cursor: "pointer", fontSize: 11, fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>
-            <FiClock size={11} /> {sidebarOpen ? "Hide" : "History"}
+            <FiClock size={11} /> {sidebarOpen ? tr("Hide") : tr("History")}
           </button>
           {msgs.length > 0 && (
             <button onClick={() => { setMsgs([]); setStream(""); setPatient(null); setSessionId(null); }} style={{ background: "transparent", border: `1px solid ${C.border}`, borderRadius: 8, color: C.textLight, padding: "6px 10px", cursor: "pointer", fontSize: 11 }}>
-              Clear
+              {tr("Clear")}
             </button>
           )}
         </div>
@@ -323,8 +325,8 @@ useEffect(() => {
       {/* Patient Selection Panel */}
       {showPatientPanel && (
         <div style={{ position: "absolute", top: 58, right: 12, zIndex: 100, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, padding: 14, width: 320, boxShadow: "0 12px 40px rgba(0,0,0,0.12)" }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: C.text, marginBottom: 10, letterSpacing: 0.5 }}>Select Patient</div>
-          {patients.length === 0 && <div style={{ fontSize: 12, color: C.textLight, padding: 12 }}>No patients found. Add patients in Patient Records first.</div>}
+          <div style={{ fontSize: 12, fontWeight: 700, color: C.text, marginBottom: 10, letterSpacing: 0.5 }}>{tr("Select Patient")}</div>
+          {patients.length === 0 && <div style={{ fontSize: 12, color: C.textLight, padding: 12 }}>{tr("No patients found. Add patients in Patient Records first.")}</div>}
           <div style={{ maxHeight: 300, overflowY: "auto" }}>
             {patients.map(pt => (
               <div key={pt.id} onClick={() => pickPatient(pt)} style={{ padding: "10px 12px", borderRadius: 8, marginBottom: 4, background: patient?.id === pt.id ? `${C.teal}10` : C.bg, border: patient?.id === pt.id ? `1px solid ${C.teal}40` : "1px solid transparent", cursor: "pointer", transition: "all 0.15s" }}>
@@ -332,12 +334,12 @@ useEffect(() => {
                   <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{pt.name}</span>
                   <span style={{ fontSize: 10, color: C.textLight }}>{pt.breed || ""}</span>
                 </div>
-                <div style={{ fontSize: 10, color: C.textLight, marginTop: 2 }}>{pt.species || "Canine"} • {pt.age || "?"} • {pt.weight || "?"}lbs</div>
+                <div style={{ fontSize: 10, color: C.textLight, marginTop: 2 }}>{pt.species || tr("Canine")} • {pt.age || "?"} • {pt.weight || "?"}lbs</div>
                 {(pt.diagnosis || pt.condition) && <div style={{ fontSize: 10, color: C.teal, marginTop: 2, fontWeight: 500 }}>{pt.diagnosis || pt.condition}</div>}
               </div>
             ))}
           </div>
-          <div onClick={() => setShowPatientPanel(false)} style={{ fontSize: 10, color: C.textLight, marginTop: 8, textAlign: "center", cursor: "pointer" }}>Close</div>
+          <div onClick={() => setShowPatientPanel(false)} style={{ fontSize: 10, color: C.textLight, marginTop: 8, textAlign: "center", cursor: "pointer" }}>{tr("Close")}</div>
         </div>
       )}
 
@@ -348,7 +350,7 @@ useEffect(() => {
           <div style={{ background: C.amberBg, border: `1px solid ${C.amber}`, borderRadius: 10, padding: "12px 16px", marginBottom: 16, display: "flex", alignItems: "center", gap: 10 }}>
             <FiAlertTriangle size={16} style={{ color: C.amber, flexShrink: 0 }} />
             <div style={{ fontSize: 12, color: C.text }}>
-              <strong>B.E.A.U. is not configured.</strong> Contact your system administrator to complete the AI setup.
+              <strong>{tr("B.E.A.U. is not configured.")}</strong> {tr("Contact your system administrator to complete the AI setup.")}
             </div>
           </div>
         )}
@@ -361,7 +363,7 @@ useEffect(() => {
             </div>
             <h1 style={{ fontSize: 22, fontWeight: 700, color: C.text, margin: "0 0 6px" }}>B.E.A.U.</h1>
             <p style={{ fontSize: 13, color: C.textLight, maxWidth: 460, lineHeight: 1.6, margin: "0 0 28px" }}>
-              Evidence-based canine and feline rehabilitation intelligence. Load a patient for personalized protocols, or ask general clinical questions.
+              {tr("Evidence-based canine and feline rehabilitation intelligence. Load a patient for personalized protocols, or ask general clinical questions.")}
             </p>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, maxWidth: 500, width: "100%" }}>
               {STARTERS.map((s, i) => (
@@ -372,7 +374,7 @@ useEffect(() => {
               ))}
             </div>
             <div style={{ marginTop: 24, fontSize: 10, color: C.textLight, display: "flex", alignItems: "center", gap: 4 }}>
-              <FiShield size={10} /> CDSS — Does not replace licensed veterinary judgment
+              <FiShield size={10} /> {tr("CDSS — Does not replace licensed veterinary judgment")}
             </div>
           </div>
         )}
@@ -420,7 +422,7 @@ useEffect(() => {
               <div style={{ display: "flex", gap: 4 }}>
                 {[0, 1, 2].map(i => <div key={i} style={{ width: 6, height: 6, borderRadius: "50%", background: C.teal, animation: `pulse 1.4s ease-in-out ${i * 0.2}s infinite` }} />)}
               </div>
-              <span style={{ fontSize: 11, color: C.textLight }}>Analyzing clinical data...</span>
+              <span style={{ fontSize: 11, color: C.textLight }}>{tr("Analyzing clinical data...")}</span>
             </div>
           </div>
         )}
@@ -447,7 +449,7 @@ useEffect(() => {
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
             onInput={e => { e.target.style.height = "auto"; e.target.style.height = Math.min(e.target.scrollHeight, 100) + "px"; }}
-            placeholder={patient ? `Ask about ${patient.name}'s rehab...` : "Ask a clinical rehabilitation question..."}
+            placeholder={patient ? `${tr("Ask about")} ${patient.name}${tr("'s rehab...")}` : tr("Ask a clinical rehabilitation question...")}
             rows={1}
             style={{ flex: 1, background: "transparent", border: "none", color: C.text, fontSize: 13, lineHeight: 1.5, resize: "none", outline: "none", padding: "7px 0", fontFamily: "inherit", maxHeight: 100 }}
           />
@@ -499,6 +501,7 @@ useEffect(() => {
  * Text parts render as HTML via renderMd, engine blocks render as React components.
  */
 function MessageContent({ content, renderMd, onPresentation }) {
+  const tr = useTr();
   if (!content) return null;
 
   const parts = [];
@@ -532,14 +535,14 @@ function MessageContent({ content, renderMd, onPresentation }) {
       {parts.map((part, i) => {
         if (part.type === "diagram") {
           return (
-            <Suspense key={i} fallback={<div style={{ padding: 12, fontSize: 12, color: "#6a737d" }}>Loading diagram...</div>}>
+            <Suspense key={i} fallback={<div style={{ padding: 12, fontSize: 12, color: "#6a737d" }}>{tr("Loading diagram...")}</div>}>
               <DiagramRenderer diagram={part.content} />
             </Suspense>
           );
         }
         if (part.type === "document") {
           return (
-            <Suspense key={i} fallback={<div style={{ padding: 12, fontSize: 12, color: "#6a737d" }}>Loading document...</div>}>
+            <Suspense key={i} fallback={<div style={{ padding: 12, fontSize: 12, color: "#6a737d" }}>{tr("Loading document...")}</div>}>
               <NarrativePanel document={part.content} />
             </Suspense>
           );
@@ -553,21 +556,21 @@ function MessageContent({ content, renderMd, onPresentation }) {
               border: "1px solid var(--k9-teal)", display: "flex", alignItems: "center", justifyContent: "space-between",
             }}>
               <div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "var(--k9-text)" }}>{deck.title || "Presentation"}</div>
-                <div style={{ fontSize: 11, color: "var(--k9-text-light)" }}>{deck.slides?.length || 0} slides</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "var(--k9-text)" }}>{deck.title || tr("Presentation")}</div>
+                <div style={{ fontSize: 11, color: "var(--k9-text-light)" }}>{deck.slides?.length || 0} {tr("slides")}</div>
               </div>
               <button onClick={() => onPresentation?.(deck)} style={{
                 padding: "6px 14px", borderRadius: 6, border: "none", cursor: "pointer",
                 background: "var(--k9-teal)", color: "#fff", fontSize: 12, fontWeight: 600,
               }}>
-                View Presentation
+                {tr("View Presentation")}
               </button>
             </div>
           );
         }
         if (part.type === "visual") {
           return (
-            <Suspense key={i} fallback={<div style={{ padding: 12, fontSize: 12, color: "#6a737d" }}>Loading visual...</div>}>
+            <Suspense key={i} fallback={<div style={{ padding: 12, fontSize: 12, color: "#6a737d" }}>{tr("Loading visual...")}</div>}>
               <VisualCardRenderer card={part.content} />
             </Suspense>
           );

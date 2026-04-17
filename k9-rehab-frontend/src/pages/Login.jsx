@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import { login } from "../services/authService";
+import { useTr } from "../i18n/useTr";
 
 export default function Login() {
+  const tr = useTr();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -17,13 +19,13 @@ export default function Login() {
       window.location.href = "/dashboard";
     } catch (err) {
       console.error("Login failed:", err);
-      setError("Invalid username or password");
+      setError(tr("Invalid username or password"));
     }
   };
 
   return (
     <div className="login-container">
-      <h2>Sign In</h2>
+      <h2>{tr("Sign In")}</h2>
 
       {error && <div className="error-box">{error}</div>}
 
@@ -32,7 +34,7 @@ export default function Login() {
           type="text"
           name="username"
           id="username"
-          placeholder="USERNAME"
+          placeholder={tr("USERNAME")}
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           required
@@ -42,16 +44,16 @@ export default function Login() {
           type="password"
           name="password"
           id="password"
-          placeholder="PASSWORD"
+          placeholder={tr("PASSWORD")}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
         />
 
-        <button type="submit">SIGN IN</button>
+        <button type="submit">{tr("SIGN IN")}</button>
       </form>
 
-      <a href="/register">Need an account? Create Account</a>
+      <a href="/register">{tr("Need an account? Create Account")}</a>
     </div>
   );
 }

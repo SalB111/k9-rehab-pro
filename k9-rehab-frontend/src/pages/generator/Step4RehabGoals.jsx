@@ -4,9 +4,11 @@ import C from "../../constants/colors";
 import S from "../../constants/styles";
 import SectionHead from "./SectionHead";
 import StepNavButtons from "./StepNavButtons";
+import { useTr } from "../../i18n/useTr";
 
 // Reusable checkbox group with column layout
 function CheckGroup({ items, selected, onChange, columns = 2 }) {
+  const tr = useTr();
   return (
     <div style={{ display: "grid", gridTemplateColumns: `repeat(${columns}, 1fr)`, gap: 8 }}>
       {items.map(item => {
@@ -26,7 +28,7 @@ function CheckGroup({ items, selected, onChange, columns = 2 }) {
                 onChange(arr);
               }}
               style={{ accentColor: C.teal, width: 15, height: 15, cursor: "pointer", flexShrink: 0 }} />
-            {item}
+            {tr(item)}
           </label>
         );
       })}
@@ -36,6 +38,7 @@ function CheckGroup({ items, selected, onChange, columns = 2 }) {
 
 // Section wrapper with colored left border
 function Section({ title, subtitle, icon: Icon, color, children }) {
+  const tr = useTr();
   return (
     <div style={{
       background: C.surface, borderRadius: 12, padding: "20px 24px", marginBottom: 16,
@@ -44,15 +47,16 @@ function Section({ title, subtitle, icon: Icon, color, children }) {
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
         <Icon size={18} style={{ color, flexShrink: 0 }} />
-        <div style={{ fontSize: 15, fontWeight: 800, color: C.text, letterSpacing: 0.3 }}>{title}</div>
+        <div style={{ fontSize: 15, fontWeight: 800, color: C.text, letterSpacing: 0.3 }}>{tr(title)}</div>
       </div>
-      {subtitle && <div style={{ fontSize: 11, color: C.textLight, marginBottom: 14, paddingLeft: 28 }}>{subtitle}</div>}
+      {subtitle && <div style={{ fontSize: 11, color: C.textLight, marginBottom: 14, paddingLeft: 28 }}>{tr(subtitle)}</div>}
       <div style={{ paddingLeft: 0 }}>{children}</div>
     </div>
   );
 }
 
 export default function Step4RehabGoals({ form, setField, goToStep }) {
+  const tr = useTr();
   return (
     <>
       {/* Page header */}
@@ -115,17 +119,17 @@ export default function Step4RehabGoals({ form, setField, goToStep }) {
         <Section title="Prognosis" subtitle="Expected recovery outcome based on clinical findings" icon={FiAward} color="#BA7517">
           <select style={{ ...S.select, width: "100%", padding: "10px 12px", fontSize: 13, borderRadius: 8, border: `1.5px solid ${C.border}`, marginBottom: 16 }}
             value={form.prognosisRating} onChange={e => setField("prognosisRating", e.target.value)}>
-            <option value="">--- Select Prognosis ---</option>
-            <option value="Excellent">Excellent — Full return to prior function</option>
-            <option value="Good">Good — Significant improvement, minor deficits</option>
-            <option value="Fair">Fair — Moderate improvement, limitations likely</option>
-            <option value="Guarded">Guarded — Uncertain, depends on therapy response</option>
-            <option value="Poor">Poor — Limited improvement, comfort/QoL focus</option>
+            <option value="">{tr("--- Select Prognosis ---")}</option>
+            <option value="Excellent">{tr("Excellent — Full return to prior function")}</option>
+            <option value="Good">{tr("Good — Significant improvement, minor deficits")}</option>
+            <option value="Fair">{tr("Fair — Moderate improvement, limitations likely")}</option>
+            <option value="Guarded">{tr("Guarded — Uncertain, depends on therapy response")}</option>
+            <option value="Poor">{tr("Poor — Limited improvement, comfort/QoL focus")}</option>
           </select>
-          <label style={{ ...S.label, fontSize: 12, fontWeight: 600, marginBottom: 6 }}>Estimated Timeline to Discharge</label>
+          <label style={{ ...S.label, fontSize: 12, fontWeight: 600, marginBottom: 6 }}>{tr("Estimated Timeline to Discharge")}</label>
           <input style={{ ...S.input, padding: "10px 12px", fontSize: 13, borderRadius: 8, border: `1.5px solid ${C.border}` }}
             value={form.estimatedTimeline} onChange={e => setField("estimatedTimeline", e.target.value)}
-            placeholder="e.g. 12-16 weeks with good compliance" />
+            placeholder={tr("e.g. 12-16 weeks with good compliance")} />
         </Section>
       </div>
 

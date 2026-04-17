@@ -7,6 +7,7 @@
 
 const fs = require("fs");
 const path = require("path");
+const T2 = require("./translations-extra.cjs");
 
 const LOCALES_DIR = path.join(__dirname, "..", "src", "i18n", "locales");
 const LANGS = ["en", "es", "fr", "de", "it", "pt-BR", "nl", "zh-CN", "ja", "ko"];
@@ -141,11 +142,16 @@ const T = {
   hint_staff_roster:         { en: "Populated from Settings → Staff Roster. Propagates to all blocks.", es: "Se completa desde Configuración → Lista de Personal. Se propaga a todos los bloques.", fr: "Rempli depuis Paramètres → Liste du Personnel. Se propage à tous les blocs.", de: "Aus Einstellungen → Personalliste übernommen. Wird auf alle Blöcke übertragen.", it: "Popolato da Impostazioni → Elenco Personale. Si propaga a tutti i blocchi.", "pt-BR": "Preenchido em Configurações → Lista de Pessoal. Propaga para todos os blocos.", nl: "Ingevuld vanuit Instellingen → Personeelslijst. Wordt overgebracht naar alle blokken.", "zh-CN": "从设置 → 员工名单填充。传播到所有模块。", ja: "設定 → スタッフリストから入力。すべてのブロックに伝播します。", ko: "설정 → 직원 명단에서 채워집니다. 모든 블록에 전파됩니다." },
 };
 
-// Build per-locale fields objects
+// Build per-locale fields objects — merge both T (inline) and T2 (imported
+// from translations-extra.cjs) so the `fields.*` namespace covers every
+// slug we define across the platform.
 const out = {};
 for (const lang of LANGS) {
   out[lang] = {};
   for (const [slug, trans] of Object.entries(T)) {
+    out[lang][slug] = trans[lang] || trans.en;
+  }
+  for (const [slug, trans] of Object.entries(T2)) {
     out[lang][slug] = trans[lang] || trans.en;
   }
 }

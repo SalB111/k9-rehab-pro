@@ -5,11 +5,13 @@ import C from "../constants/colors";
 import S from "../constants/styles";
 import { API } from "../api/axios";
 import { useToast } from "../components/Toast";
+import { useTr } from "../i18n/useTr";
 
 // ─────────────────────────────────────────────
 // PATIENT DETAIL VIEW — Overview + B.E.A.U. Sessions
 // ─────────────────────────────────────────────
 function PatientDetailView({ patient, setView }) {
+  const tr = useTr();
   const [activeTab, setActiveTab] = useState("overview");
   const [beauSessions, setBeauSessions] = useState([]);
   const [sessionsLoading, setSessionsLoading] = useState(false);
@@ -33,7 +35,7 @@ function PatientDetailView({ patient, setView }) {
       setSessionsLoading(true);
       axios.get(`${API}/beau/sessions/patient/${patient.id}`)
         .then(r => setBeauSessions(r.data?.data || []))
-        .catch(() => toast("Failed to load B.E.A.U. sessions"))
+        .catch(() => toast(tr("Failed to load B.E.A.U. sessions")))
         .finally(() => setSessionsLoading(false));
     }
   }, [activeTab, patient?.id]);
@@ -44,18 +46,18 @@ function PatientDetailView({ patient, setView }) {
     setMeasuresSaving(true);
     try {
       await axios.patch(`${API}/patients/${patient.id}/measures`, measures);
-      toast("Clinical measures saved — B.E.A.U. will use these on next session");
+      toast(tr("Clinical measures saved — B.E.A.U. will use these on next session"));
     } catch (e) {
-      toast("Save failed: " + (e.response?.data?.error || e.message));
+      toast(tr("Save failed") + ": " + (e.response?.data?.error || e.message));
     } finally {
       setMeasuresSaving(false);
     }
   };
 
   const TABS = [
-    { id: "overview",  label: "Overview",          icon: <FiUser size={12} /> },
-    { id: "measures",  label: "Clinical Measures",  icon: <FiActivity size={12} /> },
-    { id: "beau",      label: "B.E.A.U. Sessions",  icon: <FiMessageSquare size={12} /> },
+    { id: "overview",  label: tr("Overview"),          icon: <FiUser size={12} /> },
+    { id: "measures",  label: tr("Clinical Measures"),  icon: <FiActivity size={12} /> },
+    { id: "beau",      label: tr("B.E.A.U. Sessions"),  icon: <FiMessageSquare size={12} /> },
   ];
 
   return (
@@ -67,7 +69,7 @@ function PatientDetailView({ patient, setView }) {
           padding: "6px 12px", cursor: "pointer", display: "flex", alignItems: "center",
           gap: 6, fontSize: 12, color: C.textLight,
         }}>
-          <FiArrowLeft size={12} /> Back to Patients
+          <FiArrowLeft size={12} /> {tr("Back to Patients")}
         </button>
       </div>
 
@@ -77,15 +79,15 @@ function PatientDetailView({ patient, setView }) {
           <div>
             <div style={{ fontSize: 20, fontWeight: 800, color: C.navy }}>{patient.name}</div>
             <div style={{ fontSize: 12, color: C.textLight, marginTop: 4 }}>
-              {patient.breed || "Unknown breed"} &bull; {patient.age ? `${patient.age}yr` : "Age unknown"} &bull; {patient.weight ? `${patient.weight}lbs` : "Weight unknown"}
-              {patient.sex ? ` \u2022 ${patient.sex}` : ""}
+              {patient.breed || tr("Unknown breed")} &bull; {patient.age ? `${patient.age}${tr("yr")}` : tr("Age unknown")} &bull; {patient.weight ? `${patient.weight}${tr("lbs")}` : tr("Weight unknown")}
+              {patient.sex ? ` \u2022 ${tr(patient.sex)}` : ""}
             </div>
             {patient.condition && (
               <span style={{ ...S.badge("blue"), marginTop: 8, display: "inline-block" }}>{patient.condition}</span>
             )}
           </div>
           <div style={{ textAlign: "right" }}>
-            <div style={{ fontSize: 11, color: C.textLight }}>Owner</div>
+            <div style={{ fontSize: 11, color: C.textLight }}>{tr("Owner")}</div>
             <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{patient.client_name || "\u2014"}</div>
             {patient.client_email && <div style={{ fontSize: 11, color: C.textLight }}>{patient.client_email}</div>}
             {patient.client_phone && <div style={{ fontSize: 11, color: C.textLight }}>{patient.client_phone}</div>}
@@ -116,22 +118,22 @@ function PatientDetailView({ patient, setView }) {
         {activeTab === "overview" && (
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
             <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: C.textLight, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 8 }}>Clinical Details</div>
-              <DetailRow label="Condition" value={patient.condition} />
-              <DetailRow label="Affected Region" value={patient.affected_region} />
-              <DetailRow label="Referring Vet" value={patient.referring_vet} />
-              <DetailRow label="Lameness Grade" value={patient.lameness_grade != null ? `${patient.lameness_grade}/5` : null} />
-              <DetailRow label="Pain Level" value={patient.pain_level != null ? `${patient.pain_level}/10` : null} />
-              <DetailRow label="Mobility Level" value={patient.mobility_level} />
-              <DetailRow label="Body Condition" value={patient.body_condition_score != null ? `${patient.body_condition_score}/9` : null} />
-              <DetailRow label="Surgery Date" value={patient.surgery_date ? new Date(patient.surgery_date).toLocaleDateString() : null} />
-              <DetailRow label="Medications" value={patient.current_medications} />
+              <div style={{ fontSize: 11, fontWeight: 700, color: C.textLight, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 8 }}>{tr("Clinical Details")}</div>
+              <DetailRow label={tr("Condition")} value={patient.condition} />
+              <DetailRow label={tr("Affected Region")} value={patient.affected_region} />
+              <DetailRow label={tr("Referring Vet")} value={patient.referring_vet} />
+              <DetailRow label={tr("Lameness Grade")} value={patient.lameness_grade != null ? `${patient.lameness_grade}/5` : null} />
+              <DetailRow label={tr("Pain Level")} value={patient.pain_level != null ? `${patient.pain_level}/10` : null} />
+              <DetailRow label={tr("Mobility Level")} value={patient.mobility_level} />
+              <DetailRow label={tr("Body Condition")} value={patient.body_condition_score != null ? `${patient.body_condition_score}/9` : null} />
+              <DetailRow label={tr("Surgery Date")} value={patient.surgery_date ? new Date(patient.surgery_date).toLocaleDateString() : null} />
+              <DetailRow label={tr("Medications")} value={patient.current_medications} />
             </div>
             <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: C.textLight, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 8 }}>Notes & History</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: C.textLight, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 8 }}>{tr("Notes & History")}</div>
               {patient.medical_history && (
                 <div style={{ marginBottom: 12 }}>
-                  <div style={{ fontSize: 10, fontWeight: 600, color: C.textLight, marginBottom: 4 }}>Medical History</div>
+                  <div style={{ fontSize: 10, fontWeight: 600, color: C.textLight, marginBottom: 4 }}>{tr("Medical History")}</div>
                   <div style={{ fontSize: 12, color: C.text, lineHeight: 1.6, background: C.bg, borderRadius: 8, padding: "10px 14px" }}>
                     {patient.medical_history}
                   </div>
@@ -139,14 +141,14 @@ function PatientDetailView({ patient, setView }) {
               )}
               {patient.special_instructions && (
                 <div>
-                  <div style={{ fontSize: 10, fontWeight: 600, color: C.textLight, marginBottom: 4 }}>Special Instructions</div>
+                  <div style={{ fontSize: 10, fontWeight: 600, color: C.textLight, marginBottom: 4 }}>{tr("Special Instructions")}</div>
                   <div style={{ fontSize: 12, color: C.text, lineHeight: 1.6, background: C.bg, borderRadius: 8, padding: "10px 14px" }}>
                     {patient.special_instructions}
                   </div>
                 </div>
               )}
               {!patient.medical_history && !patient.special_instructions && (
-                <div style={{ fontSize: 12, color: C.textLight }}>No notes or history recorded.</div>
+                <div style={{ fontSize: 12, color: C.textLight }}>{tr("No notes or history recorded.")}</div>
               )}
             </div>
           </div>
@@ -157,8 +159,8 @@ function PatientDetailView({ patient, setView }) {
           <div>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
               <div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>Clinical Measures</div>
-                <div style={{ fontSize: 11, color: C.textLight, marginTop: 2 }}>These values are injected into every B.E.A.U. session for this patient.</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{tr("Clinical Measures")}</div>
+                <div style={{ fontSize: 11, color: C.textLight, marginTop: 2 }}>{tr("These values are injected into every B.E.A.U. session for this patient.")}</div>
               </div>
               <button onClick={saveMeasures} disabled={measuresSaving} style={{
                 display: "flex", alignItems: "center", gap: 6,
@@ -166,46 +168,45 @@ function PatientDetailView({ patient, setView }) {
                 padding: "8px 18px", borderRadius: 8, cursor: "pointer",
                 fontSize: 12, fontWeight: 700, opacity: measuresSaving ? 0.6 : 1,
               }}>
-                <FiSave size={12} /> {measuresSaving ? "Saving…" : "Save to B.E.A.U."}
+                <FiSave size={12} /> {measuresSaving ? tr("Saving…") : tr("Save to B.E.A.U.")}
               </button>
             </div>
 
             {/* ROM Section */}
-            <div style={{ fontSize: 11, fontWeight: 700, color: C.teal, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10, paddingBottom: 4, borderBottom: `1px solid rgba(14,165,233,0.2)` }}>Goniometry — Range of Motion</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: C.teal, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10, paddingBottom: 4, borderBottom: `1px solid rgba(14,165,233,0.2)` }}>{tr("Goniometry — Range of Motion")}</div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12, marginBottom: 16 }}>
               <div>
-                <label style={{ fontSize: 10, fontWeight: 600, color: C.textLight, display: "block", marginBottom: 4 }}>Joint Measured</label>
+                <label style={{ fontSize: 10, fontWeight: 600, color: C.textLight, display: "block", marginBottom: 4 }}>{tr("Joint Measured")}</label>
                 <select style={{ width: "100%", padding: "7px 10px", borderRadius: 6, border: `1px solid ${C.border}`, background: C.bg, color: C.text, fontSize: 12 }}
                   value={measures.rom_joint} onChange={e => setMeasures(p => ({ ...p, rom_joint: e.target.value }))}>
-                  <option value="">— Select —</option>
-                  <option>Stifle</option><option>Hip</option><option>Elbow</option>
-                  <option>Shoulder</option><option>Hock/Tarsus</option><option>Carpus</option>
+                  <option value="">{tr("— Select —")}</option>
+                  {["Stifle","Hip","Elbow","Shoulder","Hock/Tarsus","Carpus"].map(j => <option key={j} value={j}>{tr(j)}</option>)}
                 </select>
               </div>
               <div>
-                <label style={{ fontSize: 10, fontWeight: 600, color: C.textLight, display: "block", marginBottom: 4 }}>Affected Flexion (°)</label>
-                <input type="number" min="0" max="180" placeholder="e.g. 95" style={{ width: "100%", padding: "7px 10px", borderRadius: 6, border: `1px solid ${C.border}`, background: C.bg, color: C.text, fontSize: 12 }}
+                <label style={{ fontSize: 10, fontWeight: 600, color: C.textLight, display: "block", marginBottom: 4 }}>{tr("Affected Flexion (°)")}</label>
+                <input type="number" min="0" max="180" placeholder={tr("e.g. 95")} style={{ width: "100%", padding: "7px 10px", borderRadius: 6, border: `1px solid ${C.border}`, background: C.bg, color: C.text, fontSize: 12 }}
                   value={measures.rom_flexion} onChange={e => setMeasures(p => ({ ...p, rom_flexion: e.target.value }))} />
               </div>
               <div>
-                <label style={{ fontSize: 10, fontWeight: 600, color: C.textLight, display: "block", marginBottom: 4 }}>Affected Extension (°)</label>
-                <input type="number" min="0" max="180" placeholder="e.g. 130" style={{ width: "100%", padding: "7px 10px", borderRadius: 6, border: `1px solid ${C.border}`, background: C.bg, color: C.text, fontSize: 12 }}
+                <label style={{ fontSize: 10, fontWeight: 600, color: C.textLight, display: "block", marginBottom: 4 }}>{tr("Affected Extension (°)")}</label>
+                <input type="number" min="0" max="180" placeholder={tr("e.g. 130")} style={{ width: "100%", padding: "7px 10px", borderRadius: 6, border: `1px solid ${C.border}`, background: C.bg, color: C.text, fontSize: 12 }}
                   value={measures.rom_extension} onChange={e => setMeasures(p => ({ ...p, rom_extension: e.target.value }))} />
               </div>
               <div>
                 <label style={{ fontSize: 10, fontWeight: 600, color: C.textLight, display: "block", marginBottom: 4 }}>
-                  Normal Ref ({measures.rom_joint === "Stifle" ? "Flex 42° / Ext 162°" : measures.rom_joint === "Hip" ? "Flex 50° / Ext 162°" : measures.rom_joint === "Elbow" ? "Flex 36° / Ext 165°" : measures.rom_joint === "Shoulder" ? "Flex 57° / Ext 165°" : measures.rom_joint === "Hock/Tarsus" ? "Flex 39° / Ext 164°" : measures.rom_joint === "Carpus" ? "Flex 32° / Ext 196°" : "select joint"})
+                  {tr("Normal Ref")} ({measures.rom_joint === "Stifle" ? "Flex 42° / Ext 162°" : measures.rom_joint === "Hip" ? "Flex 50° / Ext 162°" : measures.rom_joint === "Elbow" ? "Flex 36° / Ext 165°" : measures.rom_joint === "Shoulder" ? "Flex 57° / Ext 165°" : measures.rom_joint === "Hock/Tarsus" ? "Flex 39° / Ext 164°" : measures.rom_joint === "Carpus" ? "Flex 32° / Ext 196°" : tr("select joint")})
                 </label>
-                <div style={{ padding: "7px 10px", borderRadius: 6, background: "rgba(14,165,233,0.06)", border: `1px solid rgba(14,165,233,0.15)`, fontSize: 11, color: C.textLight }}>Millis &amp; Levine standard values</div>
+                <div style={{ padding: "7px 10px", borderRadius: 6, background: "rgba(14,165,233,0.06)", border: `1px solid rgba(14,165,233,0.15)`, fontSize: 11, color: C.textLight }}>{tr("Millis & Levine standard values")}</div>
               </div>
               <div>
-                <label style={{ fontSize: 10, fontWeight: 600, color: C.textLight, display: "block", marginBottom: 4 }}>Contralateral Flexion (°)</label>
-                <input type="number" min="0" max="180" placeholder="e.g. 42" style={{ width: "100%", padding: "7px 10px", borderRadius: 6, border: `1px solid ${C.border}`, background: C.bg, color: C.text, fontSize: 12 }}
+                <label style={{ fontSize: 10, fontWeight: 600, color: C.textLight, display: "block", marginBottom: 4 }}>{tr("Contralateral Flexion (°)")}</label>
+                <input type="number" min="0" max="180" placeholder={tr("e.g. 42")} style={{ width: "100%", padding: "7px 10px", borderRadius: 6, border: `1px solid ${C.border}`, background: C.bg, color: C.text, fontSize: 12 }}
                   value={measures.rom_flexion_contralateral} onChange={e => setMeasures(p => ({ ...p, rom_flexion_contralateral: e.target.value }))} />
               </div>
               <div>
-                <label style={{ fontSize: 10, fontWeight: 600, color: C.textLight, display: "block", marginBottom: 4 }}>Contralateral Extension (°)</label>
-                <input type="number" min="0" max="180" placeholder="e.g. 162" style={{ width: "100%", padding: "7px 10px", borderRadius: 6, border: `1px solid ${C.border}`, background: C.bg, color: C.text, fontSize: 12 }}
+                <label style={{ fontSize: 10, fontWeight: 600, color: C.textLight, display: "block", marginBottom: 4 }}>{tr("Contralateral Extension (°)")}</label>
+                <input type="number" min="0" max="180" placeholder={tr("e.g. 162")} style={{ width: "100%", padding: "7px 10px", borderRadius: 6, border: `1px solid ${C.border}`, background: C.bg, color: C.text, fontSize: 12 }}
                   value={measures.rom_extension_contralateral} onChange={e => setMeasures(p => ({ ...p, rom_extension_contralateral: e.target.value }))} />
               </div>
             </div>
@@ -217,14 +218,14 @@ function PatientDetailView({ patient, setView }) {
               const bg  = sev === "severe" ? "rgba(220,38,38,0.1)" : sev === "moderate" ? "rgba(217,119,6,0.1)" : "rgba(16,185,129,0.1)";
               return (
                 <div style={{ marginBottom: 16, padding: "8px 14px", borderRadius: 6, background: bg, border: `1px solid ${col}30`, fontSize: 11, fontWeight: 600, color: col }}>
-                  Flexion deficit: {fd.toFixed(1)}° ({sev}){ed != null ? `  |  Extension deficit: ${ed.toFixed(1)}°` : ""}
-                  {sev === "severe" && <div style={{ marginTop: 3, fontWeight: 500, fontSize: 10 }}>Phase III criteria not met — &gt;20° deficit requires manual therapy focus before progression.</div>}
+                  {tr("Flexion deficit")}: {fd.toFixed(1)}° ({tr(sev)}){ed != null ? `  |  ${tr("Extension deficit")}: ${ed.toFixed(1)}°` : ""}
+                  {sev === "severe" && <div style={{ marginTop: 3, fontWeight: 500, fontSize: 10 }}>{tr("Phase III criteria not met — >20° deficit requires manual therapy focus before progression.")}</div>}
                 </div>
               );
             })()}
 
             {/* Outcome Scores Section */}
-            <div style={{ fontSize: 11, fontWeight: 700, color: C.teal, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10, paddingBottom: 4, borderBottom: `1px solid rgba(14,165,233,0.2)` }}>Validated Outcome Measures</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: C.teal, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10, paddingBottom: 4, borderBottom: `1px solid rgba(14,165,233,0.2)` }}>{tr("Validated Outcome Measures")}</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               {[
                 { key: "hcpi_score", label: "HCPI Total Score (0–44)", ph: "0–44", ref: "≥12 = chronic pain threshold", max: 44, thresholds: [[12,"Below threshold","green"],[24,"Mild–Moderate","amber"],[44,"Significant pain","red"]] },
@@ -238,14 +239,14 @@ function PatientDetailView({ patient, setView }) {
                 const bgMap  = { green: "rgba(16,185,129,0.1)", amber: "rgba(217,119,6,0.1)", red: "rgba(220,38,38,0.1)" };
                 return (
                   <div key={key}>
-                    <label style={{ fontSize: 10, fontWeight: 600, color: C.textLight, display: "block", marginBottom: 4 }}>{label}</label>
+                    <label style={{ fontSize: 10, fontWeight: 600, color: C.textLight, display: "block", marginBottom: 4 }}>{tr(label)}</label>
                     <input type="number" min="0" max={max} step={step || 1} placeholder={ph}
                       style={{ width: "100%", padding: "7px 10px", borderRadius: 6, border: `1px solid ${C.border}`, background: C.bg, color: C.text, fontSize: 12 }}
                       value={measures[key]} onChange={e => setMeasures(p => ({ ...p, [key]: e.target.value }))} />
-                    <div style={{ fontSize: 9, color: C.textLight, marginTop: 2 }}>{ref}</div>
+                    <div style={{ fontSize: 9, color: C.textLight, marginTop: 2 }}>{tr(ref)}</div>
                     {tier && (
                       <div style={{ marginTop: 5, padding: "5px 10px", borderRadius: 5, background: bgMap[tier[2]], border: `1px solid ${colMap[tier[2]]}30`, fontSize: 10, fontWeight: 600, color: colMap[tier[2]] }}>
-                        {measures[key]}/{max} — {tier[1]}
+                        {measures[key]}/{max} — {tr(tier[1])}
                       </div>
                     )}
                   </div>
@@ -259,14 +260,14 @@ function PatientDetailView({ patient, setView }) {
         {activeTab === "beau" && (
           <div>
             <div style={{ fontSize: 11, fontWeight: 700, color: C.textLight, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 14 }}>
-              B.E.A.U. Consultation History for {patient.name}
+              {tr("B.E.A.U. Consultation History for")} {patient.name}
             </div>
             {sessionsLoading && (
-              <div style={{ padding: 24, textAlign: "center", color: C.textLight, fontSize: 12 }}>Loading sessions...</div>
+              <div style={{ padding: 24, textAlign: "center", color: C.textLight, fontSize: 12 }}>{tr("Loading sessions...")}</div>
             )}
             {!sessionsLoading && beauSessions.length === 0 && (
               <div style={{ padding: 24, textAlign: "center", color: C.textLight, fontSize: 12 }}>
-                No B.E.A.U. sessions recorded for this patient yet.
+                {tr("No B.E.A.U. sessions recorded for this patient yet.")}
               </div>
             )}
             {!sessionsLoading && beauSessions.map(session => {
@@ -282,9 +283,9 @@ function PatientDetailView({ patient, setView }) {
                     }}
                   >
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{session.title || "Untitled Session"}</div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{session.title || tr("Untitled Session")}</div>
                       <div style={{ fontSize: 10, color: C.textLight, marginTop: 2 }}>
-                        {session.messages?.length || 0} messages &bull; {session.updated_at ? new Date(session.updated_at).toLocaleDateString() + " " + new Date(session.updated_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : ""}
+                        {session.messages?.length || 0} {tr("messages")} &bull; {session.updated_at ? new Date(session.updated_at).toLocaleDateString() + " " + new Date(session.updated_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : ""}
                       </div>
                     </div>
                     <FiChevronDown size={14} style={{

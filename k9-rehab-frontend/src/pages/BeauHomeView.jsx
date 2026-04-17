@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import { useTr } from "../i18n/useTr";
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 const API_URL = `${import.meta.env.VITE_API_URL || "http://localhost:3000/api"}/beau/chat`;
@@ -110,6 +111,7 @@ If this is the first message, introduce yourself warmly, acknowledge the patient
 
 // ─── Auth Modal ─────────────────────────────────────────────────────────────
 function AuthModal({ mode, onClose, onSwitch, onAuth }) {
+  const tr = useTr();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -136,39 +138,39 @@ function AuthModal({ mode, onClose, onSwitch, onAuth }) {
           &times;
         </button>
         <h2 className="text-2xl font-bold text-[#0F4C81] mb-1">
-          {mode === "login" ? "Welcome Back" : "Create Account"}
+          {mode === "login" ? tr("Welcome Back") : tr("Create Account")}
         </h2>
         <p className="text-sm text-gray-500 mb-6">
           {mode === "login"
-            ? "Sign in to save your pet's progress"
-            : "Join B.E.A.U. Home to track your pet's recovery"}
+            ? tr("Sign in to save your pet's progress")
+            : tr("Join B.E.A.U. Home to track your pet's recovery")}
         </p>
-        {error && <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm">{error}</div>}
+        {error && <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm">{tr(error)}</div>}
         <form onSubmit={handleSubmit} className="space-y-4">
           {mode === "signup" && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Your Name</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{tr("Your Name")}</label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-[#0EA5E9] focus:border-transparent outline-none"
-                placeholder="Your name"
+                placeholder={tr("Your name")}
               />
             </div>
           )}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{tr("Email")}</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-[#0EA5E9] focus:border-transparent outline-none"
-              placeholder="you@example.com"
+              placeholder={tr("you@example.com")}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{tr("Password")}</label>
             <input
               type="password"
               value={password}
@@ -181,13 +183,13 @@ function AuthModal({ mode, onClose, onSwitch, onAuth }) {
             type="submit"
             className="w-full bg-[#0F4C81] text-white font-semibold py-2.5 rounded-lg hover:bg-[#0d3f6b] transition-colors"
           >
-            {mode === "login" ? "Sign In" : "Create Account"}
+            {mode === "login" ? tr("Sign In") : tr("Create Account")}
           </button>
         </form>
         <p className="text-center text-sm text-gray-500 mt-4">
-          {mode === "login" ? "Don't have an account? " : "Already have an account? "}
+          {mode === "login" ? tr("Don't have an account?") + " " : tr("Already have an account?") + " "}
           <button onClick={onSwitch} className="text-[#0EA5E9] font-medium hover:underline">
-            {mode === "login" ? "Sign Up" : "Sign In"}
+            {mode === "login" ? tr("Sign Up") : tr("Sign In")}
           </button>
         </p>
       </div>
@@ -197,6 +199,7 @@ function AuthModal({ mode, onClose, onSwitch, onAuth }) {
 
 // ─── Intake Form ────────────────────────────────────────────────────────────
 function IntakeForm({ onSubmit }) {
+  const tr = useTr();
   const [form, setForm] = useState({
     petName: "",
     species: "Dog",
@@ -247,58 +250,58 @@ function IntakeForm({ onSubmit }) {
         <div className="text-5xl mb-3">🐾</div>
         <h1 className="text-3xl font-bold text-[#0F4C81]">B.E.A.U. Home</h1>
         <p className="text-gray-500 mt-2">
-          Your pet's personalized rehabilitation guide — powered by 30 years of clinical expertise.
+          {tr("Your pet's personalized rehabilitation guide — powered by 30 years of clinical expertise.")}
         </p>
       </div>
       <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8 space-y-6">
-        <h2 className="text-lg font-semibold text-[#0F4C81] border-b pb-3">Patient Intake</h2>
+        <h2 className="text-lg font-semibold text-[#0F4C81] border-b pb-3">{tr("Patient Intake")}</h2>
 
         {/* Row 1: Name, Species, Breed */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className={labelCls}>Pet Name *</label>
-            <input className={inputCls} value={form.petName} onChange={(e) => update("petName", e.target.value)} placeholder="e.g. Beau" required />
+            <label className={labelCls}>{tr("Pet Name")} *</label>
+            <input className={inputCls} value={form.petName} onChange={(e) => update("petName", e.target.value)} placeholder={tr("e.g. Beau")} required />
           </div>
           <div>
-            <label className={labelCls}>Species</label>
+            <label className={labelCls}>{tr("Species")}</label>
             <select className={inputCls} value={form.species} onChange={(e) => update("species", e.target.value)}>
-              {SPECIES_OPTIONS.map((s) => <option key={s}>{s}</option>)}
+              {SPECIES_OPTIONS.map((s) => <option key={s} value={s}>{tr(s)}</option>)}
             </select>
           </div>
           <div>
-            <label className={labelCls}>Breed</label>
-            <input className={inputCls} value={form.breed} onChange={(e) => update("breed", e.target.value)} placeholder="e.g. Golden Retriever" />
+            <label className={labelCls}>{tr("Breed")}</label>
+            <input className={inputCls} value={form.breed} onChange={(e) => update("breed", e.target.value)} placeholder={tr("e.g. Golden Retriever")} />
           </div>
         </div>
 
         {/* Row 2: Age, Weight, Size */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className={labelCls}>Age</label>
-            <input className={inputCls} value={form.age} onChange={(e) => update("age", e.target.value)} placeholder="e.g. 7 years" />
+            <label className={labelCls}>{tr("Age")}</label>
+            <input className={inputCls} value={form.age} onChange={(e) => update("age", e.target.value)} placeholder={tr("e.g. 7 years")} />
           </div>
           <div>
-            <label className={labelCls}>Weight</label>
-            <input className={inputCls} value={form.weight} onChange={(e) => update("weight", e.target.value)} placeholder="e.g. 65 lbs" />
+            <label className={labelCls}>{tr("Weight")}</label>
+            <input className={inputCls} value={form.weight} onChange={(e) => update("weight", e.target.value)} placeholder={tr("e.g. 65 lbs")} />
           </div>
           <div>
-            <label className={labelCls}>Size</label>
+            <label className={labelCls}>{tr("Size")}</label>
             <select className={inputCls} value={form.size} onChange={(e) => update("size", e.target.value)}>
-              <option value="">Select size...</option>
-              {SIZE_OPTIONS.map((s) => <option key={s}>{s}</option>)}
+              <option value="">{tr("Select size...")}</option>
+              {SIZE_OPTIONS.map((s) => <option key={s} value={s}>{tr(s)}</option>)}
             </select>
           </div>
         </div>
 
         {/* Condition */}
         <div>
-          <label className={labelCls}>Primary Condition</label>
+          <label className={labelCls}>{tr("Primary Condition")}</label>
           <select className={inputCls} value={form.condition} onChange={(e) => update("condition", e.target.value)}>
-            <option value="">Select condition...</option>
-            {CONDITION_OPTIONS.map((c) => <option key={c}>{c}</option>)}
+            <option value="">{tr("Select condition...")}</option>
+            {CONDITION_OPTIONS.map((c) => <option key={c} value={c}>{tr(c)}</option>)}
           </select>
           {form.condition === "Other" && (
-            <input className={`${inputCls} mt-2`} value={form.conditionOther} onChange={(e) => update("conditionOther", e.target.value)} placeholder="Describe the condition..." />
+            <input className={`${inputCls} mt-2`} value={form.conditionOther} onChange={(e) => update("conditionOther", e.target.value)} placeholder={tr("Describe the condition...")} />
           )}
         </div>
 
@@ -306,17 +309,17 @@ function IntakeForm({ onSubmit }) {
         <div className="space-y-3">
           <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
             <input type="checkbox" checked={form.surgery} onChange={(e) => update("surgery", e.target.checked)} className="rounded border-gray-300 text-[#0EA5E9] focus:ring-[#0EA5E9]" />
-            Recent surgery
+            {tr("Recent surgery")}
           </label>
           {form.surgery && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-6">
               <div>
-                <label className={labelCls}>Surgery Date</label>
+                <label className={labelCls}>{tr("Surgery Date")}</label>
                 <input type="date" className={inputCls} value={form.surgeryDate} onChange={(e) => update("surgeryDate", e.target.value)} />
               </div>
               <div>
-                <label className={labelCls}>Weeks Since Surgery</label>
-                <input type="number" className={inputCls} value={form.surgeryWeeksAgo} onChange={(e) => update("surgeryWeeksAgo", e.target.value)} placeholder="e.g. 4" />
+                <label className={labelCls}>{tr("Weeks Since Surgery")}</label>
+                <input type="number" className={inputCls} value={form.surgeryWeeksAgo} onChange={(e) => update("surgeryWeeksAgo", e.target.value)} placeholder={tr("e.g. 4")} />
               </div>
             </div>
           )}
@@ -325,17 +328,17 @@ function IntakeForm({ onSubmit }) {
         {/* Mobility & Pain */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className={labelCls}>Current Mobility</label>
+            <label className={labelCls}>{tr("Current Mobility")}</label>
             <select className={inputCls} value={form.mobility} onChange={(e) => update("mobility", e.target.value)}>
-              <option value="">Select...</option>
-              {MOBILITY_OPTIONS.map((m) => <option key={m}>{m}</option>)}
+              <option value="">{tr("Select...")}</option>
+              {MOBILITY_OPTIONS.map((m) => <option key={m} value={m}>{tr(m)}</option>)}
             </select>
           </div>
           <div>
-            <label className={labelCls}>Pain Level</label>
+            <label className={labelCls}>{tr("Pain Level")}</label>
             <select className={inputCls} value={form.painLevel} onChange={(e) => update("painLevel", e.target.value)}>
-              <option value="">Select...</option>
-              {PAIN_OPTIONS.map((p) => <option key={p}>{p}</option>)}
+              <option value="">{tr("Select...")}</option>
+              {PAIN_OPTIONS.map((p) => <option key={p} value={p}>{tr(p)}</option>)}
             </select>
           </div>
         </div>
@@ -343,18 +346,18 @@ function IntakeForm({ onSubmit }) {
         {/* Vet & Meds */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className={labelCls}>Veterinarian Name</label>
-            <input className={inputCls} value={form.vetName} onChange={(e) => update("vetName", e.target.value)} placeholder="e.g. Dr. Smith" />
+            <label className={labelCls}>{tr("Veterinarian Name")}</label>
+            <input className={inputCls} value={form.vetName} onChange={(e) => update("vetName", e.target.value)} placeholder={tr("e.g. Dr. Smith")} />
           </div>
           <div>
-            <label className={labelCls}>Current Medications</label>
-            <input className={inputCls} value={form.medications} onChange={(e) => update("medications", e.target.value)} placeholder="e.g. Carprofen, Gabapentin" />
+            <label className={labelCls}>{tr("Current Medications")}</label>
+            <input className={inputCls} value={form.medications} onChange={(e) => update("medications", e.target.value)} placeholder={tr("e.g. Carprofen, Gabapentin")} />
           </div>
         </div>
 
         {/* Equipment */}
         <div>
-          <label className={labelCls}>Available Equipment</label>
+          <label className={labelCls}>{tr("Available Equipment")}</label>
           <div className="flex flex-wrap gap-2 mt-1">
             {EQUIPMENT_OPTIONS.map((eq) => (
               <button
@@ -367,7 +370,7 @@ function IntakeForm({ onSubmit }) {
                     : "bg-gray-50 text-gray-600 border-gray-200 hover:border-[#0EA5E9]"
                 }`}
               >
-                {eq}
+                {tr(eq)}
               </button>
             ))}
           </div>
@@ -375,24 +378,23 @@ function IntakeForm({ onSubmit }) {
 
         {/* Goals & Notes */}
         <div>
-          <label className={labelCls}>Recovery Goals</label>
-          <textarea className={`${inputCls} h-20 resize-none`} value={form.goals} onChange={(e) => update("goals", e.target.value)} placeholder="e.g. Return to walking 30 minutes daily, climb stairs again..." />
+          <label className={labelCls}>{tr("Recovery Goals")}</label>
+          <textarea className={`${inputCls} h-20 resize-none`} value={form.goals} onChange={(e) => update("goals", e.target.value)} placeholder={tr("e.g. Return to walking 30 minutes daily, climb stairs again...")} />
         </div>
         <div>
-          <label className={labelCls}>Additional Notes</label>
-          <textarea className={`${inputCls} h-20 resize-none`} value={form.additionalNotes} onChange={(e) => update("additionalNotes", e.target.value)} placeholder="Anything else B.E.A.U. should know..." />
+          <label className={labelCls}>{tr("Additional Notes")}</label>
+          <textarea className={`${inputCls} h-20 resize-none`} value={form.additionalNotes} onChange={(e) => update("additionalNotes", e.target.value)} placeholder={tr("Anything else B.E.A.U. should know...")} />
         </div>
 
         <button
           type="submit"
           className="w-full bg-[#0F4C81] text-white font-semibold py-3 rounded-xl hover:bg-[#0d3f6b] transition-colors text-base"
         >
-          Start B.E.A.U. Home Session
+          {tr("Start B.E.A.U. Home Session")}
         </button>
 
         <p className="text-xs text-center text-gray-400 mt-2">
-          B.E.A.U. Home is a rehabilitation guide — not a substitute for veterinary care.
-          Always consult your veterinarian before starting any exercise program.
+          {tr("B.E.A.U. Home is a rehabilitation guide — not a substitute for veterinary care. Always consult your veterinarian before starting any exercise program.")}
         </p>
       </form>
     </div>
@@ -420,30 +422,31 @@ function ChatMessage({ role, text }) {
 
 // ─── Sidebar Panel ──────────────────────────────────────────────────────────
 function SidebarPanel({ activeTab, intake, messages }) {
-  const petName = intake?.petName || "your pet";
+  const tr = useTr();
+  const petName = intake?.petName || tr("your pet");
 
   if (activeTab === "plan") {
     return (
       <div className="p-4 space-y-4">
-        <h3 className="font-semibold text-[#0F4C81]">Recovery Plan</h3>
+        <h3 className="font-semibold text-[#0F4C81]">{tr("Recovery Plan")}</h3>
         <p className="text-sm text-gray-600">
           {intake?.condition
-            ? `Active plan for ${petName} — ${intake.condition === "Other" ? intake.conditionOther : intake.condition}`
-            : "Complete the intake form to generate a plan."}
+            ? `${tr("Active plan for")} ${petName} — ${tr(intake.condition === "Other" ? intake.conditionOther : intake.condition)}`
+            : tr("Complete the intake form to generate a plan.")}
         </p>
         {intake?.condition && (
           <div className="space-y-3">
             <div className="bg-blue-50 border border-blue-100 rounded-lg p-3">
-              <p className="text-xs font-medium text-blue-800 mb-1">Phase</p>
-              <p className="text-sm text-blue-700">Home Recovery — Active</p>
+              <p className="text-xs font-medium text-blue-800 mb-1">{tr("Phase")}</p>
+              <p className="text-sm text-blue-700">{tr("Home Recovery — Active")}</p>
             </div>
             <div className="bg-green-50 border border-green-100 rounded-lg p-3">
-              <p className="text-xs font-medium text-green-800 mb-1">Focus</p>
-              <p className="text-sm text-green-700">Gentle mobilization & comfort</p>
+              <p className="text-xs font-medium text-green-800 mb-1">{tr("Focus")}</p>
+              <p className="text-sm text-green-700">{tr("Gentle mobilization & comfort")}</p>
             </div>
             <div className="bg-amber-50 border border-amber-100 rounded-lg p-3">
-              <p className="text-xs font-medium text-amber-800 mb-1">Frequency</p>
-              <p className="text-sm text-amber-700">Ask B.E.A.U. for your schedule</p>
+              <p className="text-xs font-medium text-amber-800 mb-1">{tr("Frequency")}</p>
+              <p className="text-sm text-amber-700">{tr("Ask B.E.A.U. for your schedule")}</p>
             </div>
           </div>
         )}
@@ -455,19 +458,19 @@ function SidebarPanel({ activeTab, intake, messages }) {
     const sessionCount = messages.filter((m) => m.role === "user").length;
     return (
       <div className="p-4 space-y-4">
-        <h3 className="font-semibold text-[#0F4C81]">Progress Tracker</h3>
+        <h3 className="font-semibold text-[#0F4C81]">{tr("Progress Tracker")}</h3>
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-gray-50 rounded-lg p-3 text-center">
             <p className="text-2xl font-bold text-[#0F4C81]">{sessionCount}</p>
-            <p className="text-xs text-gray-500">Questions Asked</p>
+            <p className="text-xs text-gray-500">{tr("Questions Asked")}</p>
           </div>
           <div className="bg-gray-50 rounded-lg p-3 text-center">
             <p className="text-2xl font-bold text-[#10B981]">1</p>
-            <p className="text-xs text-gray-500">Sessions</p>
+            <p className="text-xs text-gray-500">{tr("Sessions")}</p>
           </div>
         </div>
         <p className="text-xs text-gray-400">
-          Sign in to save progress across sessions and track {petName}'s recovery over time.
+          {tr("Sign in to save progress across sessions and track")} {petName}{tr("'s recovery over time.")}
         </p>
       </div>
     );
@@ -476,34 +479,34 @@ function SidebarPanel({ activeTab, intake, messages }) {
   if (activeTab === "guide") {
     return (
       <div className="p-4 space-y-4">
-        <h3 className="font-semibold text-[#0F4C81]">Quick Guide</h3>
+        <h3 className="font-semibold text-[#0F4C81]">{tr("Quick Guide")}</h3>
         <div className="space-y-3 text-sm">
           <div className="flex gap-2">
             <span className="text-lg">🐾</span>
             <div>
-              <p className="font-medium text-gray-700">Getting Started</p>
-              <p className="text-gray-500 text-xs">Ask B.E.A.U. for a daily exercise plan based on your pet's condition.</p>
+              <p className="font-medium text-gray-700">{tr("Getting Started")}</p>
+              <p className="text-gray-500 text-xs">{tr("Ask B.E.A.U. for a daily exercise plan based on your pet's condition.")}</p>
             </div>
           </div>
           <div className="flex gap-2">
             <span className="text-lg">⚡</span>
             <div>
-              <p className="font-medium text-gray-700">Exercise Tips</p>
-              <p className="text-gray-500 text-xs">Ask about proper form, duration, or modifications for specific exercises.</p>
+              <p className="font-medium text-gray-700">{tr("Exercise Tips")}</p>
+              <p className="text-gray-500 text-xs">{tr("Ask about proper form, duration, or modifications for specific exercises.")}</p>
             </div>
           </div>
           <div className="flex gap-2">
             <span className="text-lg">🚨</span>
             <div>
-              <p className="font-medium text-gray-700">When to Stop</p>
-              <p className="text-gray-500 text-xs">If your pet shows signs of pain, limping, or reluctance — stop and rest.</p>
+              <p className="font-medium text-gray-700">{tr("When to Stop")}</p>
+              <p className="text-gray-500 text-xs">{tr("If your pet shows signs of pain, limping, or reluctance — stop and rest.")}</p>
             </div>
           </div>
           <div className="flex gap-2">
             <span className="text-lg">📞</span>
             <div>
-              <p className="font-medium text-gray-700">Call Your Vet</p>
-              <p className="text-gray-500 text-xs">For sudden changes, worsening symptoms, or any concerns — always consult your vet.</p>
+              <p className="font-medium text-gray-700">{tr("Call Your Vet")}</p>
+              <p className="text-gray-500 text-xs">{tr("For sudden changes, worsening symptoms, or any concerns — always consult your vet.")}</p>
             </div>
           </div>
         </div>
@@ -513,16 +516,16 @@ function SidebarPanel({ activeTab, intake, messages }) {
 
   if (activeTab === "suggest") {
     const suggestions = [
-      `What gentle exercises can I do with ${petName} today?`,
-      `How do I know if ${petName} is in too much pain to exercise?`,
-      `Can you give me a weekly schedule for ${petName}?`,
-      `What signs of improvement should I look for?`,
-      `How should I modify exercises if ${petName} seems tired?`,
-      `What warm-up should I do before exercises?`,
+      `${tr("What gentle exercises can I do with")} ${petName} ${tr("today?")}`,
+      `${tr("How do I know if")} ${petName} ${tr("is in too much pain to exercise?")}`,
+      `${tr("Can you give me a weekly schedule for")} ${petName}?`,
+      tr("What signs of improvement should I look for?"),
+      `${tr("How should I modify exercises if")} ${petName} ${tr("seems tired?")}`,
+      tr("What warm-up should I do before exercises?"),
     ];
     return (
       <div className="p-4 space-y-4">
-        <h3 className="font-semibold text-[#0F4C81]">Suggested Questions</h3>
+        <h3 className="font-semibold text-[#0F4C81]">{tr("Suggested Questions")}</h3>
         <div className="space-y-2">
           {suggestions.map((s, i) => (
             <button
@@ -543,6 +546,7 @@ function SidebarPanel({ activeTab, intake, messages }) {
 // ─── Main Component ─────────────────────────────────────────────────────────
 export default function BeauHomeView({ setView }) {
   const { i18n: i18nInst } = useTranslation();
+  const tr = useTr();
   const [intake, setIntake] = useState(null);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
@@ -589,12 +593,12 @@ export default function BeauHomeView({ setView }) {
     } catch (err) {
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", text: "I'm sorry — I'm having trouble connecting right now. Please try again in a moment." },
+        { role: "assistant", text: tr("I'm sorry — I'm having trouble connecting right now. Please try again in a moment.") },
       ]);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [tr]);
 
   // Send a chat message
   async function handleSend(e) {
@@ -635,7 +639,7 @@ export default function BeauHomeView({ setView }) {
     } catch (err) {
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", text: "I'm sorry — something went wrong. Please try again." },
+        { role: "assistant", text: tr("I'm sorry — something went wrong. Please try again.") },
       ]);
     } finally {
       setLoading(false);
@@ -654,23 +658,23 @@ export default function BeauHomeView({ setView }) {
         {/* Top bar */}
         <div className="flex items-center justify-between px-6 py-3 border-b bg-white/80 backdrop-blur-sm">
           <button onClick={() => setView("dashboard")} className="text-sm text-gray-500 hover:text-[#0F4C81] transition-colors">
-            &larr; Back to K9 Rehab Pro
+            &larr; {tr("Back to K9 Rehab Pro")}
           </button>
           <div className="flex items-center gap-3">
             {user ? (
               <span className="text-sm text-gray-600">
-                Hi, <strong>{user.name}</strong>
+                {tr("Hi,")} <strong>{user.name}</strong>
               </span>
             ) : (
               <>
                 <button onClick={() => setShowAuth("login")} className="text-sm text-[#0EA5E9] font-medium hover:underline">
-                  Sign In
+                  {tr("Sign In")}
                 </button>
                 <button
                   onClick={() => setShowAuth("signup")}
                   className="text-sm bg-[#0F4C81] text-white px-4 py-1.5 rounded-lg hover:bg-[#0d3f6b] transition-colors"
                 >
-                  Sign Up
+                  {tr("Sign Up")}
                 </button>
               </>
             )}
@@ -704,7 +708,7 @@ export default function BeauHomeView({ setView }) {
             <div>
               <h1 className="font-semibold text-[#0F4C81] text-sm">B.E.A.U. Home</h1>
               <p className="text-xs text-gray-400">
-                Helping {intake.petName} recover{intake.condition ? ` — ${intake.condition === "Other" ? intake.conditionOther : intake.condition}` : ""}
+                {tr("Helping")} {intake.petName} {tr("recover")}{intake.condition ? ` — ${tr(intake.condition === "Other" ? intake.conditionOther : intake.condition)}` : ""}
               </p>
             </div>
           </div>
@@ -713,7 +717,7 @@ export default function BeauHomeView({ setView }) {
               onClick={() => { setIntake(null); setMessages([]); }}
               className="text-xs text-gray-400 hover:text-red-500 transition-colors"
             >
-              New Session
+              {tr("New Session")}
             </button>
             {user ? (
               <span className="text-xs text-gray-500">
@@ -721,7 +725,7 @@ export default function BeauHomeView({ setView }) {
               </span>
             ) : (
               <button onClick={() => setShowAuth("login")} className="text-xs text-[#0EA5E9] font-medium hover:underline">
-                Sign In
+                {tr("Sign In")}
               </button>
             )}
           </div>
@@ -754,7 +758,7 @@ export default function BeauHomeView({ setView }) {
               ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder={`Ask B.E.A.U. about ${intake.petName}'s recovery...`}
+              placeholder={`${tr("Ask B.E.A.U. about")} ${intake.petName}${tr("'s recovery...")}`}
               className="flex-1 border border-gray-300 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#0EA5E9] focus:border-transparent outline-none"
               disabled={loading}
             />
@@ -763,11 +767,11 @@ export default function BeauHomeView({ setView }) {
               disabled={loading || !input.trim()}
               className="bg-[#0F4C81] text-white px-5 py-3 rounded-xl font-medium text-sm hover:bg-[#0d3f6b] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
-              Send
+              {tr("Send")}
             </button>
           </div>
           <p className="text-xs text-gray-400 text-center mt-2">
-            B.E.A.U. Home is a guide, not a veterinarian. Always confirm recommendations with your vet.
+            {tr("B.E.A.U. Home is a guide, not a veterinarian. Always confirm recommendations with your vet.")}
           </p>
         </form>
       </div>
@@ -787,7 +791,7 @@ export default function BeauHomeView({ setView }) {
               }`}
             >
               <span className="block text-base mb-0.5">{tab.icon}</span>
-              {tab.label}
+              {tr(tab.label)}
             </button>
           ))}
         </div>

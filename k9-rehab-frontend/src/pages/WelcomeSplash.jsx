@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useTr } from "../i18n/useTr";
 // Logo image at /beau-logo.jpg
 
 /**
@@ -28,6 +29,7 @@ function useTypewriter(text, startDelay = 0, speed = 60, active = false) {
 }
 
 export default function WelcomeSplash({ onEnter }) {
+  const tr = useTr();
   const [phase, setPhase] = useState("zoom"); // zoom → hold → text → ready
   const canvasRef = useRef(null);
   const sparksRef = useRef([]);
@@ -132,8 +134,8 @@ export default function WelcomeSplash({ onEnter }) {
 
   // Typewriter text
   const textActive = phase === "text" || phase === "ready";
-  const tw1 = useTypewriter("WELCOME", 0, 120, textActive);
-  const tw3 = useTypewriter("ENTER", 1200, 150, textActive);
+  const tw1 = useTypewriter(tr("WELCOME"), 0, 120, textActive);
+  const tw3 = useTypewriter(tr("ENTER"), 1200, 150, textActive);
 
   // Phase timing — faster but still dramatic
   useEffect(() => {
@@ -209,7 +211,7 @@ export default function WelcomeSplash({ onEnter }) {
             {/* Rod of Asclepius image — centered above REHAB */}
             <img
               src="/rod-logo.png"
-              alt="Rod of Asclepius"
+              alt={tr("Rod of Asclepius")}
               style={{
                 width: 270,
                 height: "auto",
@@ -267,7 +269,7 @@ export default function WelcomeSplash({ onEnter }) {
             opacity: textActive ? 0.7 : 0,
             transition: "opacity 0.8s ease 0.6s",
           }}>
-            AI Biomedical Evidence-Based Analytical Unit
+            {tr("AI Biomedical Evidence-Based Analytical Unit")}
           </div>
 
           {/* ENTER button */}
@@ -305,7 +307,7 @@ export default function WelcomeSplash({ onEnter }) {
               }
             }}
           >
-            {phase === "ready" ? "ENTER" : ""}
+            {phase === "ready" ? tr("ENTER") : ""}
           </div>
         </div>
       </div>
@@ -317,7 +319,7 @@ export default function WelcomeSplash({ onEnter }) {
         opacity: phase === "ready" ? 1 : 0,
         transition: "opacity 0.6s ease 0.8s",
       }}>
-        &copy; 2025-2026 Salvatore Bonanno &middot; All Rights Reserved
+        &copy; 2025-2026 Salvatore Bonanno &middot; {tr("All Rights Reserved")}
       </div>
 
       <style>{`

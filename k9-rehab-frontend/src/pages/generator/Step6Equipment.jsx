@@ -5,11 +5,13 @@ import C from "../../constants/colors";
 import S from "../../constants/styles";
 import SectionHead from "./SectionHead";
 import StepNavButtons from "./StepNavButtons";
+import { useTr } from "../../i18n/useTr";
 
 const navyCard = { background: C.navy, border: `1px solid ${C.navy}`, borderRadius: 10, padding: "16px 20px", marginBottom: 12, color: "#fff" };
 
 /* Reusable multi-checkbox list */
 function CheckboxGroup({ items, formKey, form, setField, accentColor }) {
+  const tr = useTr();
   const accent = accentColor || C.teal;
   return (
     <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -28,7 +30,7 @@ function CheckboxGroup({ items, formKey, form, setField, accentColor }) {
               setField(formKey, arr);
             }}
             style={{ accentColor: accent, width: 13, height: 13, cursor: "pointer" }} />
-          {item}
+          {tr(item)}
         </label>
       ))}
     </div>
@@ -36,6 +38,7 @@ function CheckboxGroup({ items, formKey, form, setField, accentColor }) {
 }
 
 export default function Step6Equipment({ form, setField, goToStep }) {
+  const tr = useTr();
   return (
     <>
       {/* ═══════════ SECTION: AVAILABLE THERAPEUTIC MODALITIES ═══════════ */}
@@ -43,10 +46,10 @@ export default function Step6Equipment({ form, setField, goToStep }) {
         <SectionHead icon={FiTool} title="In-Hospital Equipment & Modalities" />
 
         <div style={{ fontSize: 11, fontWeight: 700, color: C.teal, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10, paddingBottom: 4, borderBottom: "1px solid rgba(14,165,233,0.25)" }}>
-          Available Therapeutic Modalities
+          {tr("Available Therapeutic Modalities")}
         </div>
         <div style={{ fontSize: 10, color: "rgba(255,255,255,0.7)", marginBottom: 10 }}>
-          Select all modalities available at your facility (determines which interventions can be prescribed)
+          {tr("Select all modalities available at your facility (determines which interventions can be prescribed)")}
         </div>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           {[
@@ -70,7 +73,7 @@ export default function Step6Equipment({ form, setField, goToStep }) {
             }}>
               <input type="checkbox" checked={!!form[mod.key]} onChange={e => setField(mod.key, e.target.checked)}
                 style={{ accentColor: C.teal, width: 14, height: 14, cursor: "pointer" }} />
-              <span>{mod.icon}</span> {mod.label}
+              <span>{mod.icon}</span> {tr(mod.label)}
             </label>
           ))}
         </div>
@@ -80,11 +83,11 @@ export default function Step6Equipment({ form, setField, goToStep }) {
       <div style={navyCard}>
         <div style={{ fontSize: 11, fontWeight: 700, color: C.teal, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10, paddingBottom: 4, borderBottom: "1px solid rgba(14,165,233,0.25)" }}>
           <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-            <TbActivityHeartbeat size={12} style={{ color: C.teal }} /> Functional Assessment Tools
+            <TbActivityHeartbeat size={12} style={{ color: C.teal }} /> {tr("Functional Assessment Tools")}
           </span>
         </div>
         <div style={{ fontSize: 10, color: "rgba(255,255,255,0.7)", marginBottom: 10 }}>
-          Assessment equipment available at your facility for baseline and progress evaluation
+          {tr("Assessment equipment available at your facility for baseline and progress evaluation")}
         </div>
         <CheckboxGroup
           items={[
@@ -101,17 +104,17 @@ export default function Step6Equipment({ form, setField, goToStep }) {
       <div style={navyCard}>
         <div style={{ fontSize: 11, fontWeight: 700, color: C.teal, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10, paddingBottom: 4, borderBottom: "1px solid rgba(14,165,233,0.25)" }}>
           <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-            <FiCheckSquare size={12} style={{ color: C.teal }} /> Discharge Planning
+            <FiCheckSquare size={12} style={{ color: C.teal }} /> {tr("Discharge Planning")}
           </span>
         </div>
 
         {/* Discharge Criteria */}
         <div style={{ marginBottom: 14 }}>
           <div style={{ fontSize: 10, fontWeight: 700, color: "#fff", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 8 }}>
-            Discharge Criteria
+            {tr("Discharge Criteria")}
           </div>
           <div style={{ fontSize: 10, color: "rgba(255,255,255,0.7)", marginBottom: 10 }}>
-            Objective benchmarks for protocol completion (select all that apply)
+            {tr("Objective benchmarks for protocol completion (select all that apply)")}
           </div>
           <CheckboxGroup
             items={[
@@ -133,7 +136,7 @@ export default function Step6Equipment({ form, setField, goToStep }) {
           <div>
             <label style={S.label}>
               <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-                <FiCalendar size={11} /> Estimated Discharge Date
+                <FiCalendar size={11} /> {tr("Estimated Discharge Date")}
               </span>
             </label>
             <input type="date"
@@ -142,11 +145,11 @@ export default function Step6Equipment({ form, setField, goToStep }) {
             />
           </div>
           <div>
-            <label style={S.label}>Discharge Summary / Notes</label>
+            <label style={S.label}>{tr("Discharge Summary / Notes")}</label>
             <textarea
               style={{ ...S.input, border: `1.5px solid ${C.border}`, minHeight: 52, resize: "vertical", fontFamily: "inherit" }}
               value={form.dischargeNotes || ""} onChange={e => setField("dischargeNotes", e.target.value)}
-              placeholder="e.g. Target discharge at 12 weeks if criteria met, transition to maintenance HEP, re-eval at 6 months"
+              placeholder={tr("e.g. Target discharge at 12 weeks if criteria met, transition to maintenance HEP, re-eval at 6 months")}
             />
           </div>
         </div>

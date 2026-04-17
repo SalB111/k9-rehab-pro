@@ -3,6 +3,7 @@ import axios from "axios";
 import C from "../constants/colors";
 import { API } from "../api/axios";
 import { useToast } from "../components/Toast";
+import { useTr } from "../i18n/useTr";
 
 // ── Decomposed sub-components ──
 import useIntakeForm from "./generator/useIntakeForm";
@@ -19,6 +20,7 @@ import AddExerciseModal from "./generator/AddExerciseModal";
 
 export default function GeneratorView({ initialStep }) {
   const toast = useToast();
+  const tr = useTr();
 
   // ── Orchestration state ──
   const [protocol, setProtocol] = useState(null);
@@ -186,8 +188,8 @@ export default function GeneratorView({ initialStep }) {
           animation: "spin 0.8s linear infinite",
         }} />
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-        <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>Generating Protocol...</div>
-        <div style={{ fontSize: 11, color: C.textMid }}>Building your evidence-based exercise program</div>
+        <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{tr("Generating Protocol...")}</div>
+        <div style={{ fontSize: 11, color: C.textMid }}>{tr("Building your evidence-based exercise program")}</div>
       </div>
     );
   }
@@ -209,9 +211,9 @@ export default function GeneratorView({ initialStep }) {
             }}
             onMouseEnter={e => { e.target.style.transform = "scale(1.04)"; e.target.style.boxShadow = "0 4px 14px rgba(5,150,105,0.45)"; }}
             onMouseLeave={e => { e.target.style.transform = "scale(1)"; e.target.style.boxShadow = "0 2px 8px rgba(5,150,105,0.3)"; }}
-            title="Pre-fill a complete demo patient for presentations"
+            title={tr("Pre-fill a complete demo patient for presentations")}
           >
-            🐾 Demo Mode
+            🐾 {tr("Demo Mode")}
           </button>
         </div>
       )}

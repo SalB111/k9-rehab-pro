@@ -4,6 +4,7 @@ import C from "../constants/colors";
 import ClinicalFooter from "../components/ClinicalFooter";
 import { useToast } from "../components/Toast";
 import { useTheme } from "../components/ThemeProvider";
+import { useTr } from "../i18n/useTr";
 import { TABS, TAB_GROUPS, sty } from "./settings/constants";
 import { useSettingsState } from "./settings/useSettingsState";
 import { TabClinicProfile } from "./settings/TabClinicProfile";
@@ -19,6 +20,7 @@ import { TabClinicConfig } from "./settings/TabClinicConfig";
 
 function SettingsView({ setBrand }) {
   const toast = useToast();
+  const tr = useTr();
   const { theme, setTheme } = useTheme();
   const state = useSettingsState(setBrand, toast);
 
@@ -36,7 +38,7 @@ function SettingsView({ setBrand }) {
               textTransform: "uppercase", letterSpacing: "1px",
               padding: "8px 6px 8px 2px", whiteSpace: "nowrap",
             }}>
-              {g.label}
+              {tr(g.label)}
             </span>
             {TABS.filter(t => t.group === g.key).map(t => (
               <div key={t.id} style={sty.tab(state.activeTab === t.id)} onClick={() => {
@@ -45,7 +47,7 @@ function SettingsView({ setBrand }) {
                 if (el) el.scrollTop = 0;
               }}>
                 <t.icon size={13} />
-                {t.label}
+                {tr(t.label)}
               </div>
             ))}
           </React.Fragment>
@@ -60,7 +62,7 @@ function SettingsView({ setBrand }) {
           display: "flex", alignItems: "center", gap: 8,
           fontSize: 13, fontWeight: 600, color: C.green,
         }}>
-          <FiCheckCircle size={16} /> Settings saved successfully
+          <FiCheckCircle size={16} /> {tr("Settings saved successfully")}
         </div>
       )}
 

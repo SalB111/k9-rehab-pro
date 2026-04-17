@@ -8,6 +8,7 @@ import C from "../constants/colors";
 import S from "../constants/styles";
 import { API } from "../api/axios";
 import { useToast } from "../components/Toast";
+import { useTr } from "../i18n/useTr";
 
 // ── Phase names and progression criteria ──
 const PHASE_NAMES = [
@@ -27,6 +28,7 @@ const PHASE_CRITERIA = [
 // SESSIONS VIEW — SOAP + CBPI OUTCOME MEASURES
 // ─────────────────────────────────────────────
 function SessionsView() {
+  const tr = useTr();
   const [patients, setPatients] = useState([]);
   const [loadingPatients, setLoadingPatients] = useState(true);
   const [selectedPatient, setSelectedPatient] = useState("");
@@ -57,7 +59,7 @@ function SessionsView() {
   const [cbpiHistory, setCbpiHistory] = useState([]);
 
   useEffect(() => {
-    axios.get(`${API}/patients`).then(r => setPatients(r.data?.data || r.data || [])).catch(() => toast("Failed to load patients")).finally(() => setLoadingPatients(false));
+    axios.get(`${API}/patients`).then(r => setPatients(r.data?.data || r.data || [])).catch(() => toast(tr("Failed to load patients"))).finally(() => setLoadingPatients(false));
   }, []);
 
   // Fetch protocols when patient is selected
@@ -111,7 +113,7 @@ function SessionsView() {
     <div style={{ marginBottom: 14 }}>
       <label style={{ fontSize: 12, fontWeight: 600, color: C.text, marginBottom: 8, display: "block" }}>{label}</label>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <span style={{ fontSize: 10, color: C.green, fontWeight: 600, minWidth: 48 }}>No Pain</span>
+        <span style={{ fontSize: 10, color: C.green, fontWeight: 600, minWidth: 48 }}>{tr("No Pain")}</span>
         <div style={{ flex: 1, display: "flex", gap: 3 }}>
           {[0,1,2,3,4,5,6,7,8,9,10].map(n => (
             <button key={n} onClick={() => onChange(n)} type="button" style={{
@@ -126,15 +128,15 @@ function SessionsView() {
             </button>
           ))}
         </div>
-        <span style={{ fontSize: 10, color: C.red, fontWeight: 600, minWidth: 60, textAlign: "right" }}>Worst</span>
+        <span style={{ fontSize: 10, color: C.red, fontWeight: 600, minWidth: 60, textAlign: "right" }}>{tr("Worst")}</span>
       </div>
     </div>
   );
 
   const tabs = [
-    { id: "soap", label: "SOAP Notes", icon: FiClipboard },
-    { id: "cbpi", label: "CBPI Assessment", icon: FiActivity },
-    { id: "history", label: "Session History", icon: FiClock },
+    { id: "soap", label: tr("SOAP Notes"), icon: FiClipboard },
+    { id: "cbpi", label: tr("CBPI Assessment"), icon: FiActivity },
+    { id: "history", label: tr("Session History"), icon: FiClock },
   ];
 
   return (
@@ -163,12 +165,12 @@ function SessionsView() {
 
       {/* Patient Selector — shared */}
       <div style={{ ...S.card, padding: "12px 20px", display: "flex", gap: 12, alignItems: "center", background: C.surface, border: `1.5px solid ${C.border}` }}>
-        <label style={{ ...S.label, margin: 0, whiteSpace: "nowrap", color: C.teal }}>Patient</label>
+        <label style={{ ...S.label, margin: 0, whiteSpace: "nowrap", color: C.teal }}>{tr("Patient")}</label>
         <select style={{ ...S.select, flex: 1, border: `1.5px solid ${C.border}` }} value={selectedPatient}
           onChange={e => setSelectedPatient(e.target.value)} disabled={loadingPatients}>
-          <option value="">{loadingPatients ? "Loading patients..." : "--- Select ---"}</option>
+          <option value="">{loadingPatients ? tr("Loading patients...") : tr("--- Select ---")}</option>
           {patients.map(p => (
-            <option key={p.id} value={p.id}>{p.name} — {p.condition || "N/A"} ({p.client_name || "N/A"})</option>
+            <option key={p.id} value={p.id}>{p.name} — {p.condition || tr("N/A")} ({p.client_name || tr("N/A")})</option>
           ))}
         </select>
       </div>
@@ -200,17 +202,17 @@ function SessionsView() {
               <FiFileText size={14} style={{ color: C.teal, flexShrink: 0 }} />
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: C.teal, textTransform: "uppercase", letterSpacing: "0.8px" }}>
-                  Active Protocol
+                  {tr("Active Protocol")}
                 </div>
                 <div style={{ fontSize: 12, fontWeight: 600, color: C.text, marginTop: 2 }}>
-                  {pd.protocol_name || pd.protocol_type || "Rehabilitation Protocol"} — {pd.protocol_length_weeks} weeks
+                  {pd.protocol_name || pd.protocol_type || tr("Rehabilitation Protocol")} — {pd.protocol_length_weeks} {tr("weeks")}
                 </div>
               </div>
               <span style={{
                 fontSize: 10, fontWeight: 700, color: C.text,
                 background: C.tealLight, padding: "3px 10px", borderRadius: 10,
               }}>
-                Week {phase.currentWeek} · Phase {phase.currentPhase}
+                {tr("Week")} {phase.currentWeek} · {tr("Phase")} {phase.currentPhase}
               </span>
               {protocolExpanded ? <FiChevronUp size={14} style={{ color: C.textLight }} /> : <FiChevronDown size={14} style={{ color: C.textLight }} />}
             </div>
@@ -236,7 +238,7 @@ function SessionsView() {
                         fontSize: 10, color: p === phase.currentPhase ? C.text : C.textLight,
                         marginTop: 2,
                       }}>
-                        {PHASE_NAMES[p - 1]}
+                        {tr(PHASE_NAMES[p - 1])}
                       </div>
                     </div>
                   ))}
@@ -248,10 +250,10 @@ function SessionsView() {
                   background: "rgba(14,165,233,0.06)", border: `1px solid ${C.teal}22`,
                 }}>
                   <div style={{ fontSize: 11, fontWeight: 700, color: C.teal, marginBottom: 4 }}>
-                    Phase {phase.currentPhase}: {PHASE_NAMES[phaseIdx]}
+                    {tr("Phase")} {phase.currentPhase}: {tr(PHASE_NAMES[phaseIdx])}
                   </div>
                   <div style={{ fontSize: 11, color: C.text, lineHeight: 1.5 }}>
-                    <strong style={{ color: C.text }}>Progression criteria:</strong> {PHASE_CRITERIA[phaseIdx]}
+                    <strong style={{ color: C.text }}>{tr("Progression criteria")}:</strong> {tr(PHASE_CRITERIA[phaseIdx])}
                   </div>
                 </div>
 
@@ -259,7 +261,7 @@ function SessionsView() {
                 {exercises.length > 0 && (
                   <div>
                     <div style={{ fontSize: 10, fontWeight: 700, color: C.textLight, textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 8 }}>
-                      Week {phase.currentWeek} Exercises ({exercises.length})
+                      {tr("Week")} {phase.currentWeek} {tr("Exercises")} ({exercises.length})
                     </div>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                       {exercises.map((ex, i) => (
@@ -284,9 +286,9 @@ function SessionsView() {
                 }}>
                   <FiClipboard size={12} style={{ color: C.green, flexShrink: 0, marginTop: 2 }} />
                   <div style={{ fontSize: 10, color: C.text, lineHeight: 1.5 }}>
-                    <strong style={{ color: C.green }}>Assessment hint:</strong> Document progress toward Phase {phase.currentPhase} criteria.
+                    <strong style={{ color: C.green }}>{tr("Assessment hint")}:</strong> {tr("Document progress toward Phase")} {phase.currentPhase} {tr("criteria")}.
                     {phase.currentPhase < 4 && (
-                      <span> Next phase ({PHASE_NAMES[phase.currentPhase]}) requires: {PHASE_CRITERIA[phase.currentPhase]}.</span>
+                      <span> {tr("Next phase")} ({tr(PHASE_NAMES[phase.currentPhase])}) {tr("requires")}: {tr(PHASE_CRITERIA[phase.currentPhase])}.</span>
                     )}
                   </div>
                 </div>
@@ -301,7 +303,7 @@ function SessionsView() {
         <div style={{ ...S.card, background: C.surface, border: `2px solid ${C.border}` }}>
           <div>
             <div style={S.sectionHeader()}>
-              <FiClipboard size={13} style={{ color: C.teal }} /> SOAP Note Entry
+              <FiClipboard size={13} style={{ color: C.teal }} /> {tr("SOAP Note Entry")}
             </div>
             <div style={{ height: 2, width: "100%", overflow: "hidden", borderRadius: 1 }}>
               <div style={{ width: "200%", height: "100%", background: "linear-gradient(90deg, transparent, #39FF7E, #0EA5E9, #39FF7E, transparent)", animation: "neonFlatline 3s linear infinite" }} />
@@ -310,17 +312,17 @@ function SessionsView() {
 
           {/* S - Subjective */}
           <div style={{ marginBottom: 14 }}>
-            <label style={S.label}>S — Subjective (Owner Report)</label>
+            <label style={S.label}>{tr("S — Subjective (Owner Report)")}</label>
             <textarea style={{ ...S.input, border: `1.5px solid ${C.border}`, minHeight: 60, resize: "vertical", fontFamily: "inherit" }}
-              placeholder="Owner observations: appetite, activity level, willingness to bear weight, behavior changes..."
+              placeholder={tr("Owner observations: appetite, activity level, willingness to bear weight, behavior changes...")}
               value={soapForm.subjective} onChange={e => setSoapForm(f => ({ ...f, subjective: e.target.value }))} />
           </div>
 
           {/* O - Objective */}
           <div style={{ marginBottom: 14 }}>
-            <label style={S.label}>O — Objective (Clinical Findings)</label>
+            <label style={S.label}>{tr("O — Objective (Clinical Findings)")}</label>
             <textarea style={{ ...S.input, border: `1.5px solid ${C.border}`, minHeight: 60, resize: "vertical", fontFamily: "inherit" }}
-              placeholder="ROM (goniometry), limb circumference, weight bearing status, gait analysis, palpation findings..."
+              placeholder={tr("ROM (goniometry), limb circumference, weight bearing status, gait analysis, palpation findings...")}
               value={soapForm.objective} onChange={e => setSoapForm(f => ({ ...f, objective: e.target.value }))} />
           </div>
 
@@ -333,7 +335,7 @@ function SessionsView() {
               ["lamenessPost", "Lameness (Post)", 5],
             ].map(([key, label, max]) => (
               <div key={key}>
-                <label style={S.label}>{label}</label>
+                <label style={S.label}>{tr(label)}</label>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <input type="range" min="0" max={max} value={soapForm[key]}
                     onChange={e => setSoapForm(f => ({ ...f, [key]: +e.target.value }))}
@@ -350,26 +352,26 @@ function SessionsView() {
 
           {/* A - Assessment */}
           <div style={{ marginTop: 14, marginBottom: 14 }}>
-            <label style={S.label}>A — Assessment</label>
+            <label style={S.label}>{tr("A — Assessment")}</label>
             <textarea style={{ ...S.input, border: `1.5px solid ${C.border}`, minHeight: 56, resize: "vertical", fontFamily: "inherit" }}
-              placeholder="Clinical assessment: progress toward goals, phase advancement readiness, response to therapy..."
+              placeholder={tr("Clinical assessment: progress toward goals, phase advancement readiness, response to therapy...")}
               value={soapForm.assessment} onChange={e => setSoapForm(f => ({ ...f, assessment: e.target.value }))} />
           </div>
 
           {/* P - Plan */}
           <div style={{ marginBottom: 16 }}>
-            <label style={S.label}>P — Plan</label>
+            <label style={S.label}>{tr("P — Plan")}</label>
             <textarea style={{ ...S.input, border: `1.5px solid ${C.border}`, minHeight: 56, resize: "vertical", fontFamily: "inherit" }}
-              placeholder="Next session plan, frequency changes, phase progression, HEP modifications, referral needs..."
+              placeholder={tr("Next session plan, frequency changes, phase progression, HEP modifications, referral needs...")}
               value={soapForm.plan} onChange={e => setSoapForm(f => ({ ...f, plan: e.target.value }))} />
           </div>
 
           <button style={{ ...S.btn("success"), boxShadow: "0 0 12px rgba(16,185,129,0.3)" }} onClick={() => {
-            const patientName = patients.find(p => String(p.id) === selectedPatient)?.name || "Unknown";
+            const patientName = patients.find(p => String(p.id) === selectedPatient)?.name || tr("Unknown");
             setSoapHistory(prev => [{ ...soapForm, id: Date.now(), patientId: selectedPatient, patientName, timestamp: new Date().toISOString() }, ...prev]);
             setSoapForm({ subjective: "", objective: "", assessment: "", plan: "", painPre: 0, painPost: 0, lamenessPre: 0, lamenessPost: 0, sessionDate: new Date().toISOString().split("T")[0] });
           }}>
-            <FiCheckCircle size={14} /> Save Session Record
+            <FiCheckCircle size={14} /> {tr("Save Session Record")}
           </button>
         </div>
       )}
@@ -381,22 +383,22 @@ function SessionsView() {
           <div style={{ ...S.card, background: "rgba(14,165,233,0.08)", border: `1px solid ${C.teal}33`, padding: "12px 20px", display: "flex", alignItems: "center", gap: 8 }}>
             <FiBook size={13} style={{ color: C.teal, flexShrink: 0 }} />
             <span style={{ fontSize: 11, color: C.teal }}>
-              <strong>Canine Brief Pain Inventory (CBPI)</strong> — Brown DC, Boston RC, Coyne JC, Farrar JT. 2008. Development and psychometric testing of an instrument designed to measure chronic pain in dogs with osteoarthritis. <em>Am J Vet Res</em> 69:1034-1041.
+              <strong>{tr("Canine Brief Pain Inventory (CBPI)")}</strong> — Brown DC, Boston RC, Coyne JC, Farrar JT. 2008. {tr("Development and psychometric testing of an instrument designed to measure chronic pain in dogs with osteoarthritis.")} <em>Am J Vet Res</em> 69:1034-1041.
             </span>
           </div>
 
           {/* Pain Severity Scale (PSS) — 4 items */}
           <div style={{ ...S.card, background: C.surface, border: `2px solid ${C.border}` }}>
             <div style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: 12, fontWeight: 800, color: C.text, textTransform: "uppercase", letterSpacing: "0.8px", paddingBottom: 8 }}>Pain Severity Scale (PSS)</div>
+              <div style={{ fontSize: 12, fontWeight: 800, color: C.text, textTransform: "uppercase", letterSpacing: "0.8px", paddingBottom: 8 }}>{tr("Pain Severity Scale (PSS)")}</div>
               <div style={{ height: 2, width: "100%", overflow: "hidden", borderRadius: 1 }}><div style={{ width: "200%", height: "100%", background: "linear-gradient(90deg, transparent, #39FF7E, #0EA5E9, #39FF7E, transparent)", animation: "neonFlatline 3s linear infinite" }} /></div>
             </div>
-            <ScoreRow label="1. Rate your dog's pain at its WORST in the last 7 days" value={cbpi.pss_worst} onChange={v => setCbpi(f => ({ ...f, pss_worst: v }))} />
-            <ScoreRow label="2. Rate your dog's pain at its LEAST in the last 7 days" value={cbpi.pss_least} onChange={v => setCbpi(f => ({ ...f, pss_least: v }))} />
-            <ScoreRow label="3. Rate your dog's pain on AVERAGE" value={cbpi.pss_average} onChange={v => setCbpi(f => ({ ...f, pss_average: v }))} />
-            <ScoreRow label="4. Rate your dog's pain RIGHT NOW" value={cbpi.pss_now} onChange={v => setCbpi(f => ({ ...f, pss_now: v }))} />
+            <ScoreRow label={tr("1. Rate your dog's pain at its WORST in the last 7 days")} value={cbpi.pss_worst} onChange={v => setCbpi(f => ({ ...f, pss_worst: v }))} />
+            <ScoreRow label={tr("2. Rate your dog's pain at its LEAST in the last 7 days")} value={cbpi.pss_least} onChange={v => setCbpi(f => ({ ...f, pss_least: v }))} />
+            <ScoreRow label={tr("3. Rate your dog's pain on AVERAGE")} value={cbpi.pss_average} onChange={v => setCbpi(f => ({ ...f, pss_average: v }))} />
+            <ScoreRow label={tr("4. Rate your dog's pain RIGHT NOW")} value={cbpi.pss_now} onChange={v => setCbpi(f => ({ ...f, pss_now: v }))} />
             <div style={{ padding: "12px 16px", background: C.bg, borderRadius: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontSize: 12, fontWeight: 700, color: C.text }}>PSS Score (Mean of 4 items)</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: C.text }}>{tr("PSS Score (Mean of 4 items)")}</span>
               <span style={{ fontSize: 22, fontWeight: 800, color: scoreColor(pssScore) }}>{pssScore}/10</span>
             </div>
           </div>
@@ -404,20 +406,20 @@ function SessionsView() {
           {/* Pain Interference Scale (PIS) — 6 items */}
           <div style={{ ...S.card, background: C.surface, border: `2px solid ${C.border}` }}>
             <div style={{ marginBottom: 8 }}>
-              <div style={{ fontSize: 12, fontWeight: 800, color: C.text, textTransform: "uppercase", letterSpacing: "0.8px", paddingBottom: 8 }}>Pain Interference Scale (PIS)</div>
+              <div style={{ fontSize: 12, fontWeight: 800, color: C.text, textTransform: "uppercase", letterSpacing: "0.8px", paddingBottom: 8 }}>{tr("Pain Interference Scale (PIS)")}</div>
               <div style={{ height: 2, width: "100%", overflow: "hidden", borderRadius: 1 }}><div style={{ width: "200%", height: "100%", background: "linear-gradient(90deg, transparent, #39FF7E, #0EA5E9, #39FF7E, transparent)", animation: "neonFlatline 3s linear infinite" }} /></div>
             </div>
             <div style={{ fontSize: 10, color: C.text, marginBottom: 14 }}>
-              During the past 7 days, how much has pain interfered with your dog's:
+              {tr("During the past 7 days, how much has pain interfered with your dog's:")}
             </div>
-            <ScoreRow label="1. General activity" value={cbpi.pis_activity} onChange={v => setCbpi(f => ({ ...f, pis_activity: v }))} />
-            <ScoreRow label="2. Enjoyment of life" value={cbpi.pis_enjoyment} onChange={v => setCbpi(f => ({ ...f, pis_enjoyment: v }))} />
-            <ScoreRow label="3. Ability to rise to standing from lying down" value={cbpi.pis_rising} onChange={v => setCbpi(f => ({ ...f, pis_rising: v }))} />
-            <ScoreRow label="4. Ability to walk" value={cbpi.pis_walking} onChange={v => setCbpi(f => ({ ...f, pis_walking: v }))} />
-            <ScoreRow label="5. Ability to run" value={cbpi.pis_running} onChange={v => setCbpi(f => ({ ...f, pis_running: v }))} />
-            <ScoreRow label="6. Ability to climb (stairs, curbs, bed)" value={cbpi.pis_climbing} onChange={v => setCbpi(f => ({ ...f, pis_climbing: v }))} />
+            <ScoreRow label={tr("1. General activity")} value={cbpi.pis_activity} onChange={v => setCbpi(f => ({ ...f, pis_activity: v }))} />
+            <ScoreRow label={tr("2. Enjoyment of life")} value={cbpi.pis_enjoyment} onChange={v => setCbpi(f => ({ ...f, pis_enjoyment: v }))} />
+            <ScoreRow label={tr("3. Ability to rise to standing from lying down")} value={cbpi.pis_rising} onChange={v => setCbpi(f => ({ ...f, pis_rising: v }))} />
+            <ScoreRow label={tr("4. Ability to walk")} value={cbpi.pis_walking} onChange={v => setCbpi(f => ({ ...f, pis_walking: v }))} />
+            <ScoreRow label={tr("5. Ability to run")} value={cbpi.pis_running} onChange={v => setCbpi(f => ({ ...f, pis_running: v }))} />
+            <ScoreRow label={tr("6. Ability to climb (stairs, curbs, bed)")} value={cbpi.pis_climbing} onChange={v => setCbpi(f => ({ ...f, pis_climbing: v }))} />
             <div style={{ padding: "12px 16px", background: C.bg, borderRadius: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontSize: 12, fontWeight: 700, color: C.text }}>PIS Score (Mean of 6 items)</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: C.text }}>{tr("PIS Score (Mean of 6 items)")}</span>
               <span style={{ fontSize: 22, fontWeight: 800, color: scoreColor(pisScore) }}>{pisScore}/10</span>
             </div>
           </div>
@@ -428,7 +430,7 @@ function SessionsView() {
             border: `1.5px solid ${C.teal}44`,
           }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: C.teal, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 16 }}>
-              CBPI Assessment Summary
+              {tr("CBPI Assessment Summary")}
             </div>
             <div style={S.grid(3)}>
               {[
@@ -438,23 +440,23 @@ function SessionsView() {
               ].map((item, i) => (
                 <div key={i} style={{ textAlign: "center", padding: "16px 12px", background: C.bg, borderRadius: 8 }}>
                   <div style={{ fontSize: 36, fontWeight: 800, color: scoreColor(item.value) }}>{item.value}</div>
-                  <div style={{ fontSize: 10, color: C.textLight, textTransform: "uppercase", letterSpacing: "0.5px", marginTop: 4 }}>{item.label}</div>
+                  <div style={{ fontSize: 10, color: C.textLight, textTransform: "uppercase", letterSpacing: "0.5px", marginTop: 4 }}>{tr(item.label)}</div>
                 </div>
               ))}
             </div>
             <div style={{ marginTop: 16 }}>
-              <label style={{ ...S.label, color: C.textLight }}>Assessor Notes</label>
+              <label style={{ ...S.label, color: C.textLight }}>{tr("Assessor Notes")}</label>
               <textarea style={{ ...S.input, border: `1px solid ${C.border}`, minHeight: 48, resize: "vertical", fontFamily: "inherit" }}
-                placeholder="Clinical observations during CBPI assessment..."
+                placeholder={tr("Clinical observations during CBPI assessment...")}
                 value={cbpi.notes} onChange={e => setCbpi(f => ({ ...f, notes: e.target.value }))} />
             </div>
             <button style={{ ...S.btn("success"), marginTop: 16, width: "100%", justifyContent: "center", boxShadow: "0 0 16px rgba(16,185,129,0.3)" }}
               onClick={() => {
-                const patientName = patients.find(p => String(p.id) === selectedPatient)?.name || "Unknown";
+                const patientName = patients.find(p => String(p.id) === selectedPatient)?.name || tr("Unknown");
                 setCbpiHistory(prev => [{ ...cbpi, pssScore, pisScore, combinedScore, id: Date.now(), patientId: selectedPatient, patientName, timestamp: new Date().toISOString() }, ...prev]);
                 setCbpi({ pss_worst: 0, pss_least: 0, pss_average: 0, pss_now: 0, pis_activity: 0, pis_enjoyment: 0, pis_rising: 0, pis_walking: 0, pis_running: 0, pis_climbing: 0, notes: "" });
               }}>
-              <FiCheckCircle size={14} /> Save CBPI Assessment
+              <FiCheckCircle size={14} /> {tr("Save CBPI Assessment")}
             </button>
           </div>
         </div>
@@ -468,13 +470,13 @@ function SessionsView() {
             <div style={{ ...S.card, padding: 0, overflow: "hidden" }}>
               <div style={{ padding: "14px 20px", borderBottom: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div style={{ fontSize: 12, fontWeight: 700, color: C.text, textTransform: "uppercase", letterSpacing: "0.5px" }}>
-                  CBPI Assessments — {cbpiHistory.length} record{cbpiHistory.length !== 1 ? "s" : ""}
+                  {tr("CBPI Assessments")} — {cbpiHistory.length} {cbpiHistory.length !== 1 ? tr("records") : tr("record")}
                 </div>
               </div>
               <table style={S.table}>
                 <thead>
                   <tr>{["Patient", "PSS", "PIS", "Combined", "Date", "Notes"].map(h =>
-                    <th key={h} style={S.th}>{h}</th>)}</tr>
+                    <th key={h} style={S.th}>{tr(h)}</th>)}</tr>
                 </thead>
                 <tbody>
                   {cbpiHistory.map(r => (
@@ -497,13 +499,13 @@ function SessionsView() {
             <div style={{ ...S.card, padding: 0, overflow: "hidden" }}>
               <div style={{ padding: "14px 20px", borderBottom: `1px solid ${C.border}` }}>
                 <div style={{ fontSize: 12, fontWeight: 700, color: C.text, textTransform: "uppercase", letterSpacing: "0.5px" }}>
-                  Session SOAP Notes — {soapHistory.length} record{soapHistory.length !== 1 ? "s" : ""}
+                  {tr("Session SOAP Notes")} — {soapHistory.length} {soapHistory.length !== 1 ? tr("records") : tr("record")}
                 </div>
               </div>
               <table style={S.table}>
                 <thead>
                   <tr>{["Patient", "Pain Pre", "Pain Post", "Lameness Pre", "Lameness Post", "Date"].map(h =>
-                    <th key={h} style={S.th}>{h}</th>)}</tr>
+                    <th key={h} style={S.th}>{tr(h)}</th>)}</tr>
                 </thead>
                 <tbody>
                   {soapHistory.map(r => (
@@ -525,8 +527,8 @@ function SessionsView() {
           {soapHistory.length === 0 && cbpiHistory.length === 0 && (
             <div style={{ ...S.card, textAlign: "center", padding: "48px 24px", color: C.textLight }}>
               <FiClock size={32} style={{ marginBottom: 12, opacity: 0.3 }} />
-              <div style={{ fontSize: 14, fontWeight: 600 }}>No session records yet</div>
-              <div style={{ fontSize: 12, marginTop: 4 }}>Complete a SOAP note or CBPI assessment to see history here</div>
+              <div style={{ fontSize: 14, fontWeight: 600 }}>{tr("No session records yet")}</div>
+              <div style={{ fontSize: 12, marginTop: 4 }}>{tr("Complete a SOAP note or CBPI assessment to see history here")}</div>
             </div>
           )}
         </div>

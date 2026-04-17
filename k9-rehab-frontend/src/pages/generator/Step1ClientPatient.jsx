@@ -6,6 +6,7 @@ import S from "../../constants/styles";
 import SectionHead from "./SectionHead";
 import StepNavButtons from "./StepNavButtons";
 import { BREEDS, FELINE_BREEDS, FELINE_HCM_BREEDS, HOSPITALS } from "./constants";
+import { useTr } from "../../i18n/useTr";
 
 // ── Phone auto-format ──
 function formatPhone(raw) {
@@ -17,6 +18,7 @@ function formatPhone(raw) {
 
 // ── Reusable Section ──
 function Section({ title, subtitle, icon: Icon, color, children }) {
+  const tr = useTr();
   return (
     <div style={{
       background: C.surface, borderRadius: 12, padding: "20px 24px", marginBottom: 16,
@@ -25,9 +27,9 @@ function Section({ title, subtitle, icon: Icon, color, children }) {
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: subtitle ? 4 : 10 }}>
         <Icon size={18} style={{ color, flexShrink: 0 }} />
-        <div style={{ fontSize: 15, fontWeight: 800, color: C.text }}>{title}</div>
+        <div style={{ fontSize: 15, fontWeight: 800, color: C.text }}>{tr(title)}</div>
       </div>
-      {subtitle && <div style={{ fontSize: 11, color: C.textLight, marginBottom: 14, paddingLeft: 28 }}>{subtitle}</div>}
+      {subtitle && <div style={{ fontSize: 11, color: C.textLight, marginBottom: 14, paddingLeft: 28 }}>{tr(subtitle)}</div>}
       {children}
     </div>
   );
@@ -37,6 +39,7 @@ function Section({ title, subtitle, icon: Icon, color, children }) {
 const inp = { padding: "10px 12px", borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13 };
 
 export default function Step1ClientPatient({ form, setField, goToStep, handleWeightKg, handleWeightLbs, handleDob, handleAge, handleZip, weightWarning }) {
+  const tr = useTr();
   const phoneHandler = (field) => (e) => setField(field, formatPhone(e.target.value));
   const isFeline = form.species === "Feline";
 
@@ -50,62 +53,62 @@ export default function Step1ClientPatient({ form, setField, goToStep, handleWei
       <Section title="Client / Owner Information" subtitle="Contact details and billing information" icon={FiUsers} color="#0EA5E9">
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 12 }}>
           <div>
-            <label style={{ ...S.label, fontWeight: 700 }}>Last Name</label>
-            <input style={{ ...S.input, ...inp }} value={form.clientLastName} onChange={e => setField("clientLastName", e.target.value)} placeholder="Last Name" />
+            <label style={{ ...S.label, fontWeight: 700 }}>{tr("Last Name")}</label>
+            <input style={{ ...S.input, ...inp }} value={form.clientLastName} onChange={e => setField("clientLastName", e.target.value)} placeholder={tr("Last Name")} />
           </div>
           <div>
-            <label style={{ ...S.label, fontWeight: 700 }}>First Name</label>
-            <input style={{ ...S.input, ...inp }} value={form.clientFirstName} onChange={e => setField("clientFirstName", e.target.value)} placeholder="First Name" />
+            <label style={{ ...S.label, fontWeight: 700 }}>{tr("First Name")}</label>
+            <input style={{ ...S.input, ...inp }} value={form.clientFirstName} onChange={e => setField("clientFirstName", e.target.value)} placeholder={tr("First Name")} />
           </div>
           <div>
-            <label style={S.label}>Email Address</label>
+            <label style={S.label}>{tr("Email Address")}</label>
             <input style={{ ...S.input, ...inp }} type="email" value={form.clientEmail} onChange={e => setField("clientEmail", e.target.value)} placeholder="client@email.com" />
           </div>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 2fr", gap: 12, marginBottom: 12 }}>
           <div>
-            <label style={S.label}>Phone</label>
+            <label style={S.label}>{tr("Phone")}</label>
             <input style={{ ...S.input, ...inp }} value={form.clientPhone} onChange={phoneHandler("clientPhone")} placeholder="(555) 000-0000" maxLength={14} />
           </div>
           <div>
-            <label style={S.label}>Secondary Phone</label>
+            <label style={S.label}>{tr("Secondary Phone")}</label>
             <input style={{ ...S.input, ...inp }} value={form.clientPhone2} onChange={phoneHandler("clientPhone2")} placeholder="(555) 000-0000" maxLength={14} />
           </div>
           <div>
-            <label style={S.label}>Mailing Address</label>
-            <input style={{ ...S.input, ...inp }} value={form.mailingAddress} onChange={e => setField("mailingAddress", e.target.value)} placeholder="Street Address" />
+            <label style={S.label}>{tr("Mailing Address")}</label>
+            <input style={{ ...S.input, ...inp }} value={form.mailingAddress} onChange={e => setField("mailingAddress", e.target.value)} placeholder={tr("Street Address")} />
           </div>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "100px 1fr 80px 1fr 1fr 1fr", gap: 12 }}>
           <div>
-            <label style={S.label}>ZIP</label>
+            <label style={S.label}>{tr("ZIP")}</label>
             <input style={{ ...S.input, ...inp }} value={form.zipCode} onChange={e => handleZip(e.target.value)} placeholder="00000" maxLength={5} />
           </div>
           <div>
-            <label style={S.label}>City</label>
-            <input style={{ ...S.input, ...inp, background: form.city ? `${C.green}08` : undefined }} value={form.city} onChange={e => setField("city", e.target.value)} placeholder="Auto-filled" />
+            <label style={S.label}>{tr("City")}</label>
+            <input style={{ ...S.input, ...inp, background: form.city ? `${C.green}08` : undefined }} value={form.city} onChange={e => setField("city", e.target.value)} placeholder={tr("Auto-filled")} />
           </div>
           <div>
-            <label style={S.label}>State</label>
-            <input style={{ ...S.input, ...inp, background: form.state ? `${C.green}08` : undefined }} value={form.state} onChange={e => setField("state", e.target.value)} placeholder="ST" />
+            <label style={S.label}>{tr("State")}</label>
+            <input style={{ ...S.input, ...inp, background: form.state ? `${C.green}08` : undefined }} value={form.state} onChange={e => setField("state", e.target.value)} placeholder={tr("ST")} />
           </div>
           <div>
-            <label style={S.label}>Insurance</label>
-            <input style={{ ...S.input, ...inp }} value={form.insuranceProvider} onChange={e => setField("insuranceProvider", e.target.value)} placeholder="Trupanion, etc." />
+            <label style={S.label}>{tr("Insurance")}</label>
+            <input style={{ ...S.input, ...inp }} value={form.insuranceProvider} onChange={e => setField("insuranceProvider", e.target.value)} placeholder={tr("Trupanion, etc.")} />
           </div>
           <div>
-            <label style={S.label}>Policy #</label>
-            <input style={{ ...S.input, ...inp }} value={form.insurancePolicyNumber} onChange={e => setField("insurancePolicyNumber", e.target.value)} placeholder="Policy #" />
+            <label style={S.label}>{tr("Policy #")}</label>
+            <input style={{ ...S.input, ...inp }} value={form.insurancePolicyNumber} onChange={e => setField("insurancePolicyNumber", e.target.value)} placeholder={tr("Policy #")} />
           </div>
           <div>
-            <label style={S.label}>Payment</label>
+            <label style={S.label}>{tr("Payment")}</label>
             <select style={{ ...S.select, ...inp, width: "100%" }} value={form.paymentMethod} onChange={e => setField("paymentMethod", e.target.value)}>
               <option value="">---</option>
-              <option value="Insurance">Insurance</option>
-              <option value="Self-Pay">Self-Pay</option>
-              <option value="Payment Plan">Payment Plan</option>
-              <option value="University/Teaching Hospital">University</option>
-              <option value="Corporate Account">Corporate</option>
+              <option value="Insurance">{tr("Insurance")}</option>
+              <option value="Self-Pay">{tr("Self-Pay")}</option>
+              <option value="Payment Plan">{tr("Payment Plan")}</option>
+              <option value="University/Teaching Hospital">{tr("University")}</option>
+              <option value="Corporate Account">{tr("Corporate")}</option>
             </select>
           </div>
         </div>
@@ -125,7 +128,7 @@ export default function Step1ClientPatient({ form, setField, goToStep, handleWei
                   color: form.species === sp ? "#fff" : C.textLight,
                   display: "flex", alignItems: "center", gap: 6, transition: "all 0.15s",
                 }}>
-                {sp === "Canine" ? <TbDog size={16} /> : <TbCat size={16} />} {sp}
+                {sp === "Canine" ? <TbDog size={16} /> : <TbCat size={16} />} {tr(sp)}
               </button>
             ))}
           </div>
@@ -133,14 +136,14 @@ export default function Step1ClientPatient({ form, setField, goToStep, handleWei
           {isFeline && form.breed && FELINE_HCM_BREEDS.has(form.breed) && (
             <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 6, background: "#8B5CF610", border: "1px solid #8B5CF630" }}>
               <FiAlertTriangle size={13} style={{ color: "#8B5CF6" }} />
-              <span style={{ fontSize: 11, color: "#8B5CF6", fontWeight: 600 }}>HCM-risk breed — confirm cardiac clearance</span>
+              <span style={{ fontSize: 11, color: "#8B5CF6", fontWeight: 600 }}>{tr("HCM-risk breed — confirm cardiac clearance")}</span>
             </div>
           )}
           {/* Geriatric cat flag */}
           {isFeline && parseFloat(form.age) >= 10 && (
             <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 6, background: `${C.amber}08`, border: `1px solid ${C.amber}30` }}>
               <FiAlertTriangle size={13} style={{ color: C.amber }} />
-              <span style={{ fontSize: 11, color: C.amber, fontWeight: 600 }}>Geriatric cat — OA screening recommended</span>
+              <span style={{ fontSize: 11, color: C.amber, fontWeight: 600 }}>{tr("Geriatric cat — OA screening recommended")}</span>
             </div>
           )}
         </div>
@@ -148,24 +151,24 @@ export default function Step1ClientPatient({ form, setField, goToStep, handleWei
         {/* Name, Sex, Breed */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 12 }}>
           <div>
-            <label style={{ ...S.label, fontWeight: 700 }}>Patient Name *</label>
-            <input style={{ ...S.input, ...inp, border: `2px solid ${C.border}` }} value={form.patientName} onChange={e => setField("patientName", e.target.value)} placeholder="Patient Name" />
+            <label style={{ ...S.label, fontWeight: 700 }}>{tr("Patient Name *")}</label>
+            <input style={{ ...S.input, ...inp, border: `2px solid ${C.border}` }} value={form.patientName} onChange={e => setField("patientName", e.target.value)} placeholder={tr("Patient Name")} />
           </div>
           <div>
-            <label style={{ ...S.label, fontWeight: 700 }}>Sex</label>
+            <label style={{ ...S.label, fontWeight: 700 }}>{tr("Sex")}</label>
             <select style={{ ...S.select, ...inp, width: "100%" }} value={form.sex} onChange={e => setField("sex", e.target.value)}>
               <option value="">---</option>
-              <option value="Male Intact">♂ Male Intact</option>
-              <option value="Male Neutered">♂ Male Neutered</option>
-              <option value="Female Intact">♀ Female Intact</option>
-              <option value="Female Spayed">♀ Female Spayed</option>
+              <option value="Male Intact">♂ {tr("Male Intact")}</option>
+              <option value="Male Neutered">♂ {tr("Male Neutered")}</option>
+              <option value="Female Intact">♀ {tr("Female Intact")}</option>
+              <option value="Female Spayed">♀ {tr("Female Spayed")}</option>
             </select>
           </div>
           <div>
-            <label style={{ ...S.label, fontWeight: 700 }}>Breed</label>
+            <label style={{ ...S.label, fontWeight: 700 }}>{tr("Breed")}</label>
             <select style={{ ...S.select, ...inp, width: "100%" }} value={form.breed} onChange={e => setField("breed", e.target.value)}>
-              <option value="">--- Select ---</option>
-              {(isFeline ? FELINE_BREEDS : BREEDS).map(b => <option key={b} value={b}>{b}</option>)}
+              <option value="">{tr("--- Select ---")}</option>
+              {(isFeline ? FELINE_BREEDS : BREEDS).map(b => <option key={b} value={b}>{tr(b)}</option>)}
             </select>
           </div>
         </div>
@@ -173,19 +176,19 @@ export default function Step1ClientPatient({ form, setField, goToStep, handleWei
         {/* DOB, Age, Weight */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 80px 100px 100px", gap: 12, marginBottom: 12 }}>
           <div>
-            <label style={S.label}>Date of Birth</label>
+            <label style={S.label}>{tr("Date of Birth")}</label>
             <input style={{ ...S.input, ...inp }} type="date" value={form.dob} onChange={e => handleDob(e.target.value)} />
           </div>
           <div>
-            <label style={S.label}>Age (yr)</label>
+            <label style={S.label}>{tr("Age (yr)")}</label>
             <input style={{ ...S.input, ...inp }} type="number" min="0" max="25" value={form.age} onChange={e => handleAge(e.target.value)} placeholder="0" />
           </div>
           <div>
-            <label style={S.label}>Weight (KG)</label>
+            <label style={S.label}>{tr("Weight (KG)")}</label>
             <input style={{ ...S.input, ...inp }} type="number" min="0" step="0.5" value={form.weightKg} onChange={e => handleWeightKg(e.target.value)} placeholder="0.0" />
           </div>
           <div>
-            <label style={S.label}>Weight (LBS)</label>
+            <label style={S.label}>{tr("Weight (LBS)")}</label>
             <input style={{ ...S.input, ...inp }} type="number" min="0" step="1" value={form.weightLbs} onChange={e => handleWeightLbs(e.target.value)} placeholder="0.0" />
           </div>
         </div>
@@ -198,7 +201,7 @@ export default function Step1ClientPatient({ form, setField, goToStep, handleWei
             <FiAlertTriangle size={16} style={{ color: weightWarning.includes("CRITICAL") ? C.red : C.amber, flexShrink: 0, marginTop: 2 }} />
             <div>
               <div style={{ fontSize: 12, fontWeight: 700, color: weightWarning.includes("CRITICAL") ? C.red : C.amber }}>
-                {weightWarning.includes("CRITICAL") ? "DOSING SAFETY ALERT" : "Weight Verification"}
+                {weightWarning.includes("CRITICAL") ? tr("DOSING SAFETY ALERT") : tr("Weight Verification")}
               </div>
               <span style={{ fontSize: 11, color: weightWarning.includes("CRITICAL") ? C.red : C.amber }}>{weightWarning}</span>
             </div>
@@ -208,29 +211,29 @@ export default function Step1ClientPatient({ form, setField, goToStep, handleWei
         {/* Medications, Allergies, Temperament */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
           <div>
-            <label style={S.label}>Current Medications</label>
-            <input style={{ ...S.input, ...inp }} value={form.currentMedications} onChange={e => setField("currentMedications", e.target.value)} placeholder="e.g. Carprofen 75mg BID, Gabapentin 100mg TID" />
+            <label style={S.label}>{tr("Current Medications")}</label>
+            <input style={{ ...S.input, ...inp }} value={form.currentMedications} onChange={e => setField("currentMedications", e.target.value)} placeholder={tr("e.g. Carprofen 75mg BID, Gabapentin 100mg TID")} />
           </div>
           <div>
-            <label style={S.label}>Medications Last Given</label>
-            <input style={{ ...S.input, ...inp }} value={form.medsLastGiven} onChange={e => setField("medsLastGiven", e.target.value)} placeholder="e.g. Today 8:00 AM" />
+            <label style={S.label}>{tr("Medications Last Given")}</label>
+            <input style={{ ...S.input, ...inp }} value={form.medsLastGiven} onChange={e => setField("medsLastGiven", e.target.value)} placeholder={tr("e.g. Today 8:00 AM")} />
           </div>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           <div>
-            <label style={S.label}>Allergies / Sensitivities</label>
-            <input style={{ ...S.input, ...inp }} value={form.allergies} onChange={e => setField("allergies", e.target.value)} placeholder="e.g. NSAID sensitivity, latex" />
+            <label style={S.label}>{tr("Allergies / Sensitivities")}</label>
+            <input style={{ ...S.input, ...inp }} value={form.allergies} onChange={e => setField("allergies", e.target.value)} placeholder={tr("e.g. NSAID sensitivity, latex")} />
           </div>
           <div>
-            <label style={S.label}>Patient Temperament</label>
+            <label style={S.label}>{tr("Patient Temperament")}</label>
             <select style={{ ...S.select, ...inp, width: "100%" }} value={form.temperament} onChange={e => setField("temperament", e.target.value)}>
               <option value="">---</option>
-              <option value="Cooperative">Cooperative — Tolerates handling</option>
-              <option value="Anxious">Anxious — Needs slow approach</option>
-              <option value="Fearful">Fearful — May require desensitization</option>
-              <option value="Reactive">Reactive — May snap under stress</option>
-              <option value="Aggressive">Aggressive — Muzzle required</option>
-              <option value="Sedation Required">Sedation Required</option>
+              <option value="Cooperative">{tr("Cooperative — Tolerates handling")}</option>
+              <option value="Anxious">{tr("Anxious — Needs slow approach")}</option>
+              <option value="Fearful">{tr("Fearful — May require desensitization")}</option>
+              <option value="Reactive">{tr("Reactive — May snap under stress")}</option>
+              <option value="Aggressive">{tr("Aggressive — Muzzle required")}</option>
+              <option value="Sedation Required">{tr("Sedation Required")}</option>
             </select>
           </div>
         </div>
@@ -240,35 +243,35 @@ export default function Step1ClientPatient({ form, setField, goToStep, handleWei
       <Section title="Referral & Clinical Team" subtitle="Referring veterinarian and treating clinician" icon={TbStethoscope} color="#BA7517">
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 12 }}>
           <div>
-            <label style={S.label}>Referring Veterinarian</label>
-            <input style={{ ...S.input, ...inp }} value={form.referringVet} onChange={e => setField("referringVet", e.target.value)} placeholder="DVM Name, Practice" />
+            <label style={S.label}>{tr("Referring Veterinarian")}</label>
+            <input style={{ ...S.input, ...inp }} value={form.referringVet} onChange={e => setField("referringVet", e.target.value)} placeholder={tr("DVM Name, Practice")} />
           </div>
           <div>
-            <label style={S.label}>Referring Clinic Phone</label>
+            <label style={S.label}>{tr("Referring Clinic Phone")}</label>
             <input style={{ ...S.input, ...inp }} value={form.referringClinicPhone} onChange={phoneHandler("referringClinicPhone")} placeholder="(555) 000-0000" maxLength={14} />
           </div>
           <div>
-            <label style={S.label}>Referring Clinic Email</label>
+            <label style={S.label}>{tr("Referring Clinic Email")}</label>
             <input style={{ ...S.input, ...inp }} type="email" value={form.referringClinicEmail} onChange={e => setField("referringClinicEmail", e.target.value)} placeholder="clinic@email.com" />
           </div>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
           <div>
-            <label style={{ ...S.label, fontWeight: 700 }}>Treating Rehabilitation Nurse / Professional *</label>
-            <input style={{ ...S.input, ...inp, border: `2px solid ${C.border}` }} value={form.treatingClinician} onChange={e => setField("treatingClinician", e.target.value)} placeholder="e.g. Jane Smith, RVT" />
+            <label style={{ ...S.label, fontWeight: 700 }}>{tr("Treating Rehabilitation Nurse / Professional *")}</label>
+            <input style={{ ...S.input, ...inp, border: `2px solid ${C.border}` }} value={form.treatingClinician} onChange={e => setField("treatingClinician", e.target.value)} placeholder={tr("e.g. Jane Smith, RVT")} />
           </div>
           <div>
-            <label style={S.label}>Credentials</label>
+            <label style={S.label}>{tr("Credentials")}</label>
             <select style={{ ...S.select, ...inp, width: "100%" }} value={form.clinicianCredentials} onChange={e => setField("clinicianCredentials", e.target.value)}>
               <option value="">---</option>
               {["DVM, CCRP", "DVM, CCRT", "DVM, DACVSMR", "DVM", "PT, CCRT", "VTS (Physical Rehabilitation)", "CVT, CCRP", "RVT, CCRT"].map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
           <div>
-            <label style={S.label}>Nearby Hospital</label>
+            <label style={S.label}>{tr("Nearby Hospital")}</label>
             <select style={{ ...S.select, ...inp, width: "100%" }} value={form.nearbyHospital} onChange={e => setField("nearbyHospital", e.target.value)}>
               <option value="">---</option>
-              {HOSPITALS.map(h => <option key={h} value={h}>{h}</option>)}
+              {HOSPITALS.map(h => <option key={h} value={h}>{tr(h)}</option>)}
             </select>
           </div>
         </div>
@@ -281,10 +284,10 @@ export default function Step1ClientPatient({ form, setField, goToStep, handleWei
             background: form.clientConsentObtained ? `${C.green}12` : C.surface, border: form.clientConsentObtained ? `2px solid ${C.green}` : `1px solid ${C.border}`, flex: 1 }}>
             <input type="checkbox" checked={form.clientConsentObtained || false} onChange={e => setField("clientConsentObtained", e.target.checked)}
               style={{ accentColor: C.green, width: 16, height: 16, cursor: "pointer", flexShrink: 0 }} />
-            Client informed of rehabilitation plan, risks, alternatives, and costs. Consent obtained.
+            {tr("Client informed of rehabilitation plan, risks, alternatives, and costs. Consent obtained.")}
           </label>
           <div style={{ minWidth: 160 }}>
-            <label style={S.label}>Consent Date</label>
+            <label style={S.label}>{tr("Consent Date")}</label>
             <input style={{ ...S.input, ...inp }} type="date" value={form.clientConsentDate} onChange={e => setField("clientConsentDate", e.target.value)} />
           </div>
         </div>

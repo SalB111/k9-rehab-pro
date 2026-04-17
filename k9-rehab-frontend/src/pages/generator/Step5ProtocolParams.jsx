@@ -4,9 +4,11 @@ import C from "../../constants/colors";
 import S from "../../constants/styles";
 import SectionHead from "./SectionHead";
 import StepNavButtons from "./StepNavButtons";
+import { useTr } from "../../i18n/useTr";
 
 // ── Reusable Section wrapper ──
 function Section({ title, subtitle, icon: Icon, color, children, badge }) {
+  const tr = useTr();
   return (
     <div style={{
       background: C.surface, borderRadius: 12, padding: "20px 24px", marginBottom: 16,
@@ -16,11 +18,11 @@ function Section({ title, subtitle, icon: Icon, color, children, badge }) {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: subtitle ? 4 : 10 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <Icon size={18} style={{ color, flexShrink: 0 }} />
-          <div style={{ fontSize: 15, fontWeight: 800, color: C.text }}>{title}</div>
+          <div style={{ fontSize: 15, fontWeight: 800, color: C.text }}>{tr(title)}</div>
         </div>
         {badge && <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 4, background: `${color}15`, color, fontWeight: 600 }}>{badge}</span>}
       </div>
-      {subtitle && <div style={{ fontSize: 11, color: C.textLight, marginBottom: 14, paddingLeft: 28 }}>{subtitle}</div>}
+      {subtitle && <div style={{ fontSize: 11, color: C.textLight, marginBottom: 14, paddingLeft: 28 }}>{tr(subtitle)}</div>}
       {children}
     </div>
   );
@@ -28,6 +30,7 @@ function Section({ title, subtitle, icon: Icon, color, children, badge }) {
 
 // ── Reusable checkbox group ──
 function CheckGroup({ items, form, setField, columns = 3 }) {
+  const tr = useTr();
   return (
     <div style={{ display: "grid", gridTemplateColumns: `repeat(${columns}, 1fr)`, gap: 8 }}>
       {items.map(mod => {
@@ -40,7 +43,7 @@ function CheckGroup({ items, form, setField, columns = 3 }) {
           }}>
             <input type="checkbox" checked={checked} onChange={e => setField(mod.key, e.target.checked)}
               style={{ accentColor: C.teal, width: 15, height: 15, cursor: "pointer", flexShrink: 0 }} />
-            {mod.icon && <span>{mod.icon}</span>} {mod.label}
+            {mod.icon && <span>{mod.icon}</span>} {tr(mod.label)}
           </label>
         );
       })}
@@ -49,6 +52,7 @@ function CheckGroup({ items, form, setField, columns = 3 }) {
 }
 
 export default function Step5ProtocolParams({ form, setField, goToStep }) {
+  const tr = useTr();
   return (
     <>
       <div style={{ marginBottom: 20 }}>
@@ -59,37 +63,37 @@ export default function Step5ProtocolParams({ form, setField, goToStep }) {
       <Section title="Protocol Parameters" subtitle="Duration, frequency, and compliance expectations" icon={FiSettings} color="#0EA5E9">
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
           <div>
-            <label style={{ ...S.label, fontSize: 12, fontWeight: 700 }}>Protocol Duration</label>
+            <label style={{ ...S.label, fontSize: 12, fontWeight: 700 }}>{tr("Protocol Duration")}</label>
             <select style={{ ...S.select, width: "100%", padding: "10px 12px", fontSize: 13, borderRadius: 8, border: `2px solid ${C.border}` }}
               value={form.protocolLength} onChange={e => setField("protocolLength", e.target.value)}>
-              <option value="">--- Select ---</option>
-              <option value="6">6 weeks — Mild / accelerated</option>
-              <option value="8">8 weeks — Standard post-surgical</option>
-              <option value="10">10 weeks — Extended recovery</option>
-              <option value="12">12 weeks — Complex / multi-joint</option>
-              <option value="16">16 weeks — Conservative / neuro</option>
+              <option value="">{tr("--- Select ---")}</option>
+              <option value="6">{tr("6 weeks — Mild / accelerated")}</option>
+              <option value="8">{tr("8 weeks — Standard post-surgical")}</option>
+              <option value="10">{tr("10 weeks — Extended recovery")}</option>
+              <option value="12">{tr("12 weeks — Complex / multi-joint")}</option>
+              <option value="16">{tr("16 weeks — Conservative / neuro")}</option>
             </select>
           </div>
           <div>
-            <label style={{ ...S.label, fontSize: 12, fontWeight: 700 }}>Session Frequency</label>
+            <label style={{ ...S.label, fontSize: 12, fontWeight: 700 }}>{tr("Session Frequency")}</label>
             <select style={{ ...S.select, width: "100%", padding: "10px 12px", fontSize: 13, borderRadius: 8, border: `2px solid ${C.border}` }}
               value={form.sessionFrequency} onChange={e => setField("sessionFrequency", e.target.value)}>
-              <option value="">--- Select ---</option>
-              <option value="1">1× per week</option>
-              <option value="2">2× per week (Recommended)</option>
-              <option value="3">3× per week (Intensive)</option>
-              <option value="5">5× per week (Inpatient)</option>
+              <option value="">{tr("--- Select ---")}</option>
+              <option value="1">{tr("1× per week")}</option>
+              <option value="2">{tr("2× per week (Recommended)")}</option>
+              <option value="3">{tr("3× per week (Intensive)")}</option>
+              <option value="5">{tr("5× per week (Inpatient)")}</option>
             </select>
           </div>
           <div>
-            <label style={{ ...S.label, fontSize: 12, fontWeight: 700 }}>Owner Compliance</label>
+            <label style={{ ...S.label, fontSize: 12, fontWeight: 700 }}>{tr("Owner Compliance")}</label>
             <select style={{ ...S.select, width: "100%", padding: "10px 12px", fontSize: 13, borderRadius: 8, border: `2px solid ${C.border}` }}
               value={form.ownerCompliance} onChange={e => setField("ownerCompliance", e.target.value)}>
-              <option value="">--- Select ---</option>
-              <option value="Highly Motivated">Highly Motivated</option>
-              <option value="Motivated">Motivated — Reliable</option>
-              <option value="Average">Average — Moderate adherence</option>
-              <option value="Limited">Limited — Minimal HEP</option>
+              <option value="">{tr("--- Select ---")}</option>
+              <option value="Highly Motivated">{tr("Highly Motivated")}</option>
+              <option value="Motivated">{tr("Motivated — Reliable")}</option>
+              <option value="Average">{tr("Average — Moderate adherence")}</option>
+              <option value="Limited">{tr("Limited — Minimal HEP")}</option>
             </select>
           </div>
         </div>
@@ -99,20 +103,20 @@ export default function Step5ProtocolParams({ form, setField, goToStep }) {
             background: form.homeExerciseProgram ? `${C.green}12` : C.surface, border: form.homeExerciseProgram ? `2px solid ${C.green}` : `1px solid ${C.border}` }}>
             <input type="checkbox" checked={form.homeExerciseProgram || false} onChange={e => setField("homeExerciseProgram", e.target.checked)}
               style={{ accentColor: C.green, width: 15, height: 15 }} />
-            Include Home Exercise Program (HEP)
+            {tr("Include Home Exercise Program (HEP)")}
           </label>
           <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", padding: "10px 14px", borderRadius: 8, fontSize: 12, fontWeight: 500, color: C.text,
             background: form.aquaticAccess ? `${C.teal}12` : C.surface, border: form.aquaticAccess ? `2px solid ${C.teal}` : `1px solid ${C.border}` }}>
             <input type="checkbox" checked={form.aquaticAccess || false} onChange={e => setField("aquaticAccess", e.target.checked)}
               style={{ accentColor: C.teal, width: 15, height: 15 }} />
-            Aquatic Therapy Available
+            {tr("Aquatic Therapy Available")}
           </label>
         </div>
       </Section>
 
       {/* ═══ 2. THERAPEUTIC MODALITIES ═══ */}
       <Section title="Available Therapeutic Modalities" subtitle="Select all modalities available at your facility" icon={FiActivity} color="#8B5CF6"
-        badge={`${[form.modalityUWTM, form.modalityLaser, form.modalityTENS, form.modalityNMES, form.modalityTherapeuticUS, form.modalityShockwave, form.modalityCryotherapy, form.modalityHeatTherapy, form.modalityPulsedEMF].filter(Boolean).length} selected`}>
+        badge={`${[form.modalityUWTM, form.modalityLaser, form.modalityTENS, form.modalityNMES, form.modalityTherapeuticUS, form.modalityShockwave, form.modalityCryotherapy, form.modalityHeatTherapy, form.modalityPulsedEMF].filter(Boolean).length} ${tr("selected")}`}>
         <CheckGroup columns={3} form={form} setField={setField} items={[
           { key: "modalityUWTM", label: "Underwater Treadmill", icon: "🌊" },
           { key: "modalityLaser", label: "Therapeutic Laser (PBM)", icon: "🔴" },
@@ -160,7 +164,7 @@ export default function Step5ProtocolParams({ form, setField, goToStep }) {
       <Section title="Special Instructions" subtitle="Additional clinical notes for protocol generation" icon={FiCalendar} color="#0EA5E9">
         <textarea style={{ ...S.input, padding: "12px 14px", borderRadius: 8, border: `1px solid ${C.border}`, minHeight: 60, resize: "vertical", fontFamily: "inherit", fontSize: 13, width: "100%" }}
           value={form.specialInstructions} onChange={e => setField("specialInstructions", e.target.value)}
-          placeholder="e.g. Fearful of water — avoid aquatic initially. Aggressive with handling — needs muzzle for manual therapy." />
+          placeholder={tr("e.g. Fearful of water — avoid aquatic initially. Aggressive with handling — needs muzzle for manual therapy.")} />
       </Section>
 
       {/* Navigation */}

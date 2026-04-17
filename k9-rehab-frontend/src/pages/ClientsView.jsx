@@ -9,11 +9,13 @@ import S from "../constants/styles";
 import { API } from "../api/axios";
 import { useToast } from "../components/Toast";
 import { BREEDS, FELINE_BREEDS } from "./generator/constants";
+import { useTr } from "../i18n/useTr";
 
 // ─────────────────────────────────────────────
 // CLIENTS VIEW
 // ─────────────────────────────────────────────
 function ClientsView({ setView, setSelectedPatient }) {
+  const tr = useTr();
   const [clients, setClients] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: "", species: "canine", breed: "", age: "", dob: "", weight: "", weight_kg: "", sex: "Male", condition: "", client_name: "", client_email: "", client_phone: "" });
@@ -60,7 +62,7 @@ function ClientsView({ setView, setSelectedPatient }) {
   const toast = useToast();
 
   useEffect(() => {
-    axios.get(`${API}/patients`).then(r => setClients(r.data?.data || r.data || [])).catch(() => toast("Failed to load patients")).finally(() => setLoading(false));
+    axios.get(`${API}/patients`).then(r => setClients(r.data?.data || r.data || [])).catch(() => toast(tr("Failed to load patients"))).finally(() => setLoading(false));
   }, []);
 
   const submit = async (e) => {
@@ -91,7 +93,7 @@ function ClientsView({ setView, setSelectedPatient }) {
   const deleteSelected = async () => {
     if (selectedIds.size === 0) return;
     const count = selectedIds.size;
-    if (!window.confirm(`Are you sure you want to delete ${count} patient${count > 1 ? "s" : ""}? This cannot be undone.`)) return;
+    if (!window.confirm(`${tr("Are you sure you want to delete")} ${count} ${count > 1 ? tr("patients") : tr("patient")}? ${tr("This cannot be undone.")}`)) return;
     setDeleting(true);
     try {
       await axios.post(`${API}/patients/delete-batch`, { ids: Array.from(selectedIds) });
@@ -99,7 +101,7 @@ function ClientsView({ setView, setSelectedPatient }) {
       const r = await axios.get(`${API}/patients`);
       setClients(r.data?.data || r.data || []);
     } catch (err) {
-      alert(err.response?.data?.error || "Delete failed");
+      alert(err.response?.data?.error || tr("Delete failed"));
     }
     setDeleting(false);
   };
@@ -118,7 +120,7 @@ function ClientsView({ setView, setSelectedPatient }) {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "40vh", gap: 12 }}>
         <div style={{ width: 32, height: 32, borderRadius: "50%", border: `3px solid ${C.border}`, borderTopColor: C.teal, animation: "spin 0.8s linear infinite" }} />
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-        <span style={{ fontSize: 13, fontWeight: 600, color: C.teal }}>Loading patients...</span>
+        <span style={{ fontSize: 13, fontWeight: 600, color: C.teal }}>{tr("Loading patients...")}</span>
       </div>
     );
   }
@@ -134,12 +136,12 @@ function ClientsView({ setView, setSelectedPatient }) {
             </div>
             <div>
               <div style={{ fontSize: 18, fontWeight: 800, color: C.text }}>{clients.length}</div>
-              <div style={{ fontSize: 10, color: C.textLight, textTransform: "uppercase", letterSpacing: "0.5px" }}>Total Patients</div>
+              <div style={{ fontSize: 10, color: C.textLight, textTransform: "uppercase", letterSpacing: "0.5px" }}>{tr("Total Patients")}</div>
             </div>
           </div>
           <div style={{ position: "relative", minWidth: 260 }}>
             <FiSearch size={13} style={{ position: "absolute", left: 10, top: 11, color: C.textLight }} />
-            <input style={{ ...S.input, paddingLeft: 32, fontSize: 12 }} placeholder="Search by name, breed, condition, owner..."
+            <input style={{ ...S.input, paddingLeft: 32, fontSize: 12 }} placeholder={tr("Search by name, breed, condition, owner...")}
               value={search} onChange={e => setSearch(e.target.value)} />
           </div>
         </div>
@@ -150,11 +152,11 @@ function ClientsView({ setView, setSelectedPatient }) {
               background: C.red, color: "#fff",
               opacity: deleting ? 0.6 : 1,
             }} onClick={deleteSelected} disabled={deleting}>
-              <FiAlertTriangle size={13} /> {deleting ? "Deleting..." : `Delete ${selectedIds.size} Selected`}
+              <FiAlertTriangle size={13} /> {deleting ? tr("Deleting...") : `${tr("Delete")} ${selectedIds.size} ${tr("Selected")}`}
             </button>
           )}
           <button style={S.btn("dark")} onClick={() => setShowForm(!showForm)}>
-Register Patient
+{tr("Register Patient")}
           </button>
         </div>
       </div>
@@ -163,7 +165,7 @@ Register Patient
         <div style={S.card}>
           <div>
             <div style={S.sectionHeader()}>
-              <FiHeart size={13} style={{ color: "#39FF7E" }} /> New Patient Registration
+              <FiHeart size={13} style={{ color: "#39FF7E" }} /> {tr("New Patient Registration")}
             </div>
             <div style={{ height: 2, width: "100%", overflow: "hidden", borderRadius: 1 }}>
               <div style={{ width: "200%", height: "100%", background: "linear-gradient(90deg, transparent, #39FF7E, #0EA5E9, #39FF7E, transparent)", animation: "neonFlatline 3s linear infinite" }} />
@@ -172,7 +174,7 @@ Register Patient
           <form onSubmit={submit}>
             {/* Species Toggle */}
             <div style={{ marginBottom: 14, display: "flex", alignItems: "center", gap: 10 }}>
-              <label style={{ ...S.label, marginBottom: 0 }}>Species *</label>
+              <label style={{ ...S.label, marginBottom: 0 }}>{tr("Species")} *</label>
               <div style={{ display: "flex", gap: 0, borderRadius: 8, overflow: "hidden", border: `1px solid ${C.border}` }}>
                 {["canine", "feline"].map(sp => (
                   <button key={sp} type="button" onClick={() => setForm({ ...form, species: sp, breed: "" })} style={{
@@ -182,71 +184,71 @@ Register Patient
                     fontSize: 12, fontWeight: 600, textTransform: "capitalize",
                     transition: "all 0.15s",
                   }}>
-                    {sp === "canine" ? "🐕 Canine" : "🐈 Feline"}
+                    {sp === "canine" ? `🐕 ${tr("Canine")}` : `🐈 ${tr("Feline")}`}
                   </button>
                 ))}
               </div>
             </div>
             <div style={S.grid(3)}>
               <div>
-                <label style={S.label}>Patient Name *</label>
-                <input style={S.input} value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required placeholder="Patient name" />
+                <label style={S.label}>{tr("Patient Name")} *</label>
+                <input style={S.input} value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required placeholder={tr("Patient name")} />
               </div>
               <div>
-                <label style={S.label}>Breed *</label>
+                <label style={S.label}>{tr("Breed")} *</label>
                 <select style={{ ...S.select, width: "100%" }} value={form.breed} onChange={e => setForm({ ...form, breed: e.target.value })} required>
-                  <option value="">Select breed...</option>
+                  <option value="">{tr("Select breed...")}</option>
                   {(form.species === "feline" ? FELINE_BREEDS : BREEDS).map(b => (
                     <option key={b} value={b}>{b}</option>
                   ))}
                 </select>
               </div>
               <div>
-                <label style={S.label}>Primary Condition *</label>
-                <input style={S.input} value={form.condition} onChange={e => setForm({ ...form, condition: e.target.value })} required placeholder="e.g. TPLO, Hip Dysplasia" />
+                <label style={S.label}>{tr("Primary Condition")} *</label>
+                <input style={S.input} value={form.condition} onChange={e => setForm({ ...form, condition: e.target.value })} required placeholder={tr("e.g. TPLO, Hip Dysplasia")} />
               </div>
             </div>
             <div style={{ ...S.grid(2), marginTop: 12 }}>
               <div>
-                <label style={S.label}>Owner Name *</label>
+                <label style={S.label}>{tr("Owner Name")} *</label>
                 <input style={S.input} value={form.client_name} onChange={e => setForm({ ...form, client_name: e.target.value })} required />
               </div>
               <div>
-                <label style={S.label}>Sex</label>
+                <label style={S.label}>{tr("Sex")}</label>
                 <select style={{ ...S.select, width: "100%" }} value={form.sex} onChange={e => setForm({ ...form, sex: e.target.value })}>
-                  {["Male Intact", "Male Neutered", "Female Intact", "Female Spayed"].map(s => <option key={s}>{s}</option>)}
+                  {["Male Intact", "Male Neutered", "Female Intact", "Female Spayed"].map(s => <option key={s} value={s}>{tr(s)}</option>)}
                 </select>
               </div>
             </div>
             {/* ── Phase 1D: Age/DOB pair (auto-converts both ways) ── */}
             <div style={{ ...S.grid(2), marginTop: 12 }}>
               <div>
-                <label style={S.label}>Date of Birth</label>
+                <label style={S.label}>{tr("Date of Birth")}</label>
                 <input style={S.input} type="date" value={form.dob} onChange={e => onDob(e.target.value)} />
               </div>
               <div>
-                <label style={S.label}>Age (years)</label>
-                <input style={S.input} type="number" min="0" max="30" placeholder="e.g. 6" value={form.age} onChange={e => onAge(e.target.value)} />
-                <div style={{ fontSize: 10, color: "#888", marginTop: 4, fontStyle: "italic" }}>Auto-converts to/from DOB</div>
+                <label style={S.label}>{tr("Age (years)")}</label>
+                <input style={S.input} type="number" min="0" max="30" placeholder={tr("e.g. 6")} value={form.age} onChange={e => onAge(e.target.value)} />
+                <div style={{ fontSize: 10, color: "#888", marginTop: 4, fontStyle: "italic" }}>{tr("Auto-converts to/from DOB")}</div>
               </div>
             </div>
             {/* ── Phase 1D: Weight lbs/kg pair (auto-converts both ways) ── */}
             <div style={{ ...S.grid(2), marginTop: 12 }}>
               <div>
-                <label style={S.label}>Weight (lbs)</label>
+                <label style={S.label}>{tr("Weight (lbs)")}</label>
                 <input style={S.input} type="number" step="0.1" placeholder="0.0" value={form.weight} onChange={e => onLbs(e.target.value)} />
               </div>
               <div>
-                <label style={S.label}>Weight (kg)</label>
+                <label style={S.label}>{tr("Weight (kg)")}</label>
                 <input style={S.input} type="number" step="0.1" placeholder="0.0" value={form.weight_kg} onChange={e => onKg(e.target.value)} />
-                <div style={{ fontSize: 10, color: "#888", marginTop: 4, fontStyle: "italic" }}>Auto-converts to/from lbs</div>
+                <div style={{ fontSize: 10, color: "#888", marginTop: 4, fontStyle: "italic" }}>{tr("Auto-converts to/from lbs")}</div>
               </div>
             </div>
             <div style={{ marginTop: 20, display: "flex", gap: 10 }}>
               <button type="submit" style={S.btn("success")}>
-                <FiCheckCircle size={14} /> Save Patient Record
+                <FiCheckCircle size={14} /> {tr("Save Patient Record")}
               </button>
-              <button type="button" style={S.btn("ghost")} onClick={() => setShowForm(false)}>Cancel</button>
+              <button type="button" style={S.btn("ghost")} onClick={() => setShowForm(false)}>{tr("Cancel")}</button>
             </div>
           </form>
         </div>
@@ -262,18 +264,18 @@ Register Patient
                   checked={allSelected}
                   onChange={toggleSelectAll}
                   style={{ cursor: "pointer", width: 15, height: 15, accentColor: C.teal }}
-                  title={allSelected ? "Deselect all" : "Select all"}
+                  title={allSelected ? tr("Deselect all") : tr("Select all")}
                 />
               </th>
               {["Patient", "Owner / Contact", "Signalment", "Condition", "Registered", ""].map(h => (
-                <th key={h} style={S.th}>{h}</th>
+                <th key={h} style={S.th}>{h ? tr(h) : h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 ? (
               <tr><td colSpan={7} style={{ ...S.td, textAlign: "center", color: C.textLight, padding: 48 }}>
-                {search ? "No patients match your search" : "No patients registered — use the button above to add your first patient"}
+                {search ? tr("No patients match your search") : tr("No patients registered — use the button above to add your first patient")}
               </td></tr>
             ) : filtered.map(c => (
               <tr key={c.id} style={{
@@ -294,7 +296,7 @@ Register Patient
                 </td>
                 <td style={S.td}>
                   <div style={{ fontWeight: 600, color: C.text }}>{c.name}</div>
-                  <div style={{ fontSize: 10, color: C.textLight, marginTop: 2 }}>ID: {c.id}</div>
+                  <div style={{ fontSize: 10, color: C.textLight, marginTop: 2 }}>{tr("ID")}: {c.id}</div>
                 </td>
                 <td style={S.td}>
                   <div style={{ fontWeight: 500 }}>{c.client_name || "—"}</div>
@@ -303,8 +305,8 @@ Register Patient
                 <td style={S.td}>
                   <div style={{ fontSize: 12 }}>{c.breed || "—"}</div>
                   <div style={{ fontSize: 11, color: C.textLight }}>
-                    {c.age ? `${c.age}yr` : ""}{c.age && c.weight ? " · " : ""}{c.weight ? `${c.weight}lbs` : ""}
-                    {c.sex ? ` · ${c.sex}` : ""}
+                    {c.age ? `${c.age}${tr("yr")}` : ""}{c.age && c.weight ? " · " : ""}{c.weight ? `${c.weight}${tr("lbs")}` : ""}
+                    {c.sex ? ` · ${tr(c.sex)}` : ""}
                   </div>
                 </td>
                 <td style={S.td}>

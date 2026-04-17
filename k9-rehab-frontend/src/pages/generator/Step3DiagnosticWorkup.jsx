@@ -5,23 +5,25 @@ import C from "../../constants/colors";
 import S from "../../constants/styles";
 import SectionHead from "./SectionHead";
 import StepNavButtons from "./StepNavButtons";
+import { useTr } from "../../i18n/useTr";
 
 const navyCard = { background: C.navy, border: `1px solid ${C.navy}`, borderRadius: 10, padding: "16px 20px", marginBottom: 12, color: "#fff" };
 
 /* Reusable: checkbox + conditional findings input */
 function ImagingRow({ label, checkedKey, findingsKey, form, setField, placeholder }) {
+  const tr = useTr();
   return (
     <div style={{ marginBottom: 10 }}>
       <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
         <input type="checkbox" checked={!!form[checkedKey]} onChange={e => setField(checkedKey, e.target.checked)}
           style={{ accentColor: C.teal, width: 14, height: 14, cursor: "pointer" }} />
-        <span style={{ fontSize: 12, fontWeight: 600, color: "#fff" }}>{label}</span>
+        <span style={{ fontSize: 12, fontWeight: 600, color: "#fff" }}>{tr(label)}</span>
       </label>
       {form[checkedKey] && (
         <textarea
           style={{ ...S.input, border: `1.5px solid ${C.border}`, minHeight: 44, resize: "vertical", fontFamily: "inherit", marginTop: 6 }}
           value={form[findingsKey] || ""} onChange={e => setField(findingsKey, e.target.value)}
-          placeholder={placeholder || `${label} findings...`}
+          placeholder={placeholder ? tr(placeholder) : `${tr(label)} ${tr("findings...")}`}
         />
       )}
     </div>
@@ -30,18 +32,19 @@ function ImagingRow({ label, checkedKey, findingsKey, form, setField, placeholde
 
 /* Reusable: checkbox + conditional results summary input */
 function LabRow({ label, checkedKey, resultsKey, form, setField, placeholder }) {
+  const tr = useTr();
   return (
     <div style={{ marginBottom: 10 }}>
       <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
         <input type="checkbox" checked={!!form[checkedKey]} onChange={e => setField(checkedKey, e.target.checked)}
           style={{ accentColor: C.teal, width: 14, height: 14, cursor: "pointer" }} />
-        <span style={{ fontSize: 12, fontWeight: 600, color: "#fff" }}>{label}</span>
+        <span style={{ fontSize: 12, fontWeight: 600, color: "#fff" }}>{tr(label)}</span>
       </label>
       {form[checkedKey] && (
         <input
           style={{ ...S.input, border: `1.5px solid ${C.border}`, marginTop: 6 }}
           value={form[resultsKey] || ""} onChange={e => setField(resultsKey, e.target.value)}
-          placeholder={placeholder || `${label} results summary...`}
+          placeholder={placeholder ? tr(placeholder) : `${tr(label)} ${tr("results summary...")}`}
         />
       )}
     </div>
@@ -49,6 +52,7 @@ function LabRow({ label, checkedKey, resultsKey, form, setField, placeholder }) 
 }
 
 export default function Step3DiagnosticWorkup({ form, setField, goToStep }) {
+  const tr = useTr();
   return (
     <>
       {/* ═══════════ SECTION: IMAGING STUDIES ═══════════ */}
@@ -56,10 +60,10 @@ export default function Step3DiagnosticWorkup({ form, setField, goToStep }) {
         <SectionHead icon={FiImage} title="Diagnostic Workup" />
 
         <div style={{ fontSize: 11, fontWeight: 700, color: C.teal, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10, paddingBottom: 4, borderBottom: "1px solid rgba(14,165,233,0.25)" }}>
-          Imaging Studies
+          {tr("Imaging Studies")}
         </div>
         <div style={{ fontSize: 10, color: "rgba(255,255,255,0.7)", marginBottom: 12 }}>
-          Select completed imaging and document findings (select all that apply)
+          {tr("Select completed imaging and document findings (select all that apply)")}
         </div>
         <div style={S.grid(2)}>
           <div>
@@ -83,11 +87,11 @@ export default function Step3DiagnosticWorkup({ form, setField, goToStep }) {
       <div style={navyCard}>
         <div style={{ fontSize: 11, fontWeight: 700, color: C.teal, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10, paddingBottom: 4, borderBottom: "1px solid rgba(14,165,233,0.25)" }}>
           <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-            <FiDroplet size={12} style={{ color: C.teal }} /> Laboratory Results
+            <FiDroplet size={12} style={{ color: C.teal }} /> {tr("Laboratory Results")}
           </span>
         </div>
         <div style={{ fontSize: 10, color: "rgba(255,255,255,0.7)", marginBottom: 12 }}>
-          Document relevant lab work — abnormalities influence protocol selection and safety gating
+          {tr("Document relevant lab work — abnormalities influence protocol selection and safety gating")}
         </div>
         <div style={S.grid(2)}>
           <div>
@@ -108,7 +112,7 @@ export default function Step3DiagnosticWorkup({ form, setField, goToStep }) {
         {form.labThyroid && form.species === "Feline" && (
           <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8, padding: "6px 12px", borderRadius: 6, background: C.purpleBg, border: `1px solid ${C.purple}` }}>
             <TbMicroscope size={13} style={{ color: C.purpleLight }} />
-            <span style={{ fontSize: 10, color: C.purpleLight, fontWeight: 600 }}>Feline note: Thyroid panel critical for hyperthyroidism screening — affects anesthesia risk, cardiac function, and metabolic response to exercise.</span>
+            <span style={{ fontSize: 10, color: C.purpleLight, fontWeight: 600 }}>{tr("Feline note: Thyroid panel critical for hyperthyroidism screening — affects anesthesia risk, cardiac function, and metabolic response to exercise.")}</span>
           </div>
         )}
       </div>
@@ -117,79 +121,79 @@ export default function Step3DiagnosticWorkup({ form, setField, goToStep }) {
       <div style={navyCard}>
         <div style={{ fontSize: 11, fontWeight: 700, color: C.teal, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10, paddingBottom: 4, borderBottom: "1px solid rgba(14,165,233,0.25)" }}>
           <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-            <TbStethoscope size={12} style={{ color: C.teal }} /> Functional & Special Tests
+            <TbStethoscope size={12} style={{ color: C.teal }} /> {tr("Functional & Special Tests")}
           </span>
         </div>
         <div style={{ fontSize: 10, color: "rgba(255,255,255,0.7)", marginBottom: 12 }}>
-          Orthopedic and neurological test results — influences diagnosis confirmation and protocol phase assignment
+          {tr("Orthopedic and neurological test results — influences diagnosis confirmation and protocol phase assignment")}
         </div>
 
         <div style={S.grid(3)}>
           {/* Orthopedic Tests */}
           <div>
-            <label style={S.label}>Drawer Test (Cranial Cruciate)</label>
+            <label style={S.label}>{tr("Drawer Test (Cranial Cruciate)")}</label>
             <select style={{ ...S.select, width: "100%", border: `1.5px solid ${C.border}` }}
               value={form.testDrawer || ""} onChange={e => setField("testDrawer", e.target.value)}>
-              <option value="">--- Not Performed ---</option>
-              <option value="Positive">Positive — Cranial tibial translation</option>
-              <option value="Negative">Negative — No laxity</option>
-              <option value="Equivocal">Equivocal — Subtle / inconclusive</option>
+              <option value="">{tr("--- Not Performed ---")}</option>
+              <option value="Positive">{tr("Positive — Cranial tibial translation")}</option>
+              <option value="Negative">{tr("Negative — No laxity")}</option>
+              <option value="Equivocal">{tr("Equivocal — Subtle / inconclusive")}</option>
             </select>
           </div>
           <div>
-            <label style={S.label}>Tibial Thrust</label>
+            <label style={S.label}>{tr("Tibial Thrust")}</label>
             <select style={{ ...S.select, width: "100%", border: `1.5px solid ${C.border}` }}
               value={form.testTibialThrust || ""} onChange={e => setField("testTibialThrust", e.target.value)}>
-              <option value="">--- Not Performed ---</option>
-              <option value="Positive">Positive — Cranial thrust present</option>
-              <option value="Negative">Negative — No thrust</option>
-              <option value="Equivocal">Equivocal — Subtle / inconclusive</option>
+              <option value="">{tr("--- Not Performed ---")}</option>
+              <option value="Positive">{tr("Positive — Cranial thrust present")}</option>
+              <option value="Negative">{tr("Negative — No thrust")}</option>
+              <option value="Equivocal">{tr("Equivocal — Subtle / inconclusive")}</option>
             </select>
           </div>
           <div>
-            <label style={S.label}>Ortolani Sign (Hip Laxity)</label>
+            <label style={S.label}>{tr("Ortolani Sign (Hip Laxity)")}</label>
             <select style={{ ...S.select, width: "100%", border: `1.5px solid ${C.border}` }}
               value={form.testOrtolani || ""} onChange={e => setField("testOrtolani", e.target.value)}>
-              <option value="">--- Not Performed ---</option>
-              <option value="Positive">Positive — Subluxation / reduction click</option>
-              <option value="Negative">Negative — Stable hip</option>
-              <option value="Equivocal">Equivocal — Subtle / inconclusive</option>
+              <option value="">{tr("--- Not Performed ---")}</option>
+              <option value="Positive">{tr("Positive — Subluxation / reduction click")}</option>
+              <option value="Negative">{tr("Negative — Stable hip")}</option>
+              <option value="Equivocal">{tr("Equivocal — Subtle / inconclusive")}</option>
             </select>
           </div>
         </div>
 
         <div style={{ ...S.grid(2), marginTop: 14 }}>
           <div>
-            <label style={S.label}>Spinal Palpation</label>
+            <label style={S.label}>{tr("Spinal Palpation")}</label>
             <select style={{ ...S.select, width: "100%", border: `1.5px solid ${C.border}` }}
               value={form.testSpinalPalpation || ""} onChange={e => setField("testSpinalPalpation", e.target.value)}>
-              <option value="">--- Not Performed ---</option>
-              <option value="Pain Present">Pain Present — Hyperesthesia on palpation</option>
-              <option value="No Pain">No Pain — Non-painful throughout</option>
-              <option value="Equivocal">Equivocal — Inconsistent response</option>
+              <option value="">{tr("--- Not Performed ---")}</option>
+              <option value="Pain Present">{tr("Pain Present — Hyperesthesia on palpation")}</option>
+              <option value="No Pain">{tr("No Pain — Non-painful throughout")}</option>
+              <option value="Equivocal">{tr("Equivocal — Inconsistent response")}</option>
             </select>
           </div>
           <div>
-            <label style={S.label}>Neurological Grade</label>
+            <label style={S.label}>{tr("Neurological Grade")}</label>
             <select style={{ ...S.select, width: "100%", border: `1.5px solid ${C.border}` }}
               value={form.neuroGrade || ""} onChange={e => setField("neuroGrade", e.target.value)}>
-              <option value="">--- Not Assessed ---</option>
-              <option value="I">Grade I — Pain only, no neurological deficits</option>
-              <option value="II">Grade II — Ambulatory paraparesis, ataxia</option>
-              <option value="III">Grade III — Non-ambulatory paraparesis</option>
-              <option value="IV">Grade IV — Paralysis with deep pain perception</option>
-              <option value="V">Grade V — Paralysis WITHOUT deep pain perception</option>
+              <option value="">{tr("--- Not Assessed ---")}</option>
+              <option value="I">{tr("Grade I — Pain only, no neurological deficits")}</option>
+              <option value="II">{tr("Grade II — Ambulatory paraparesis, ataxia")}</option>
+              <option value="III">{tr("Grade III — Non-ambulatory paraparesis")}</option>
+              <option value="IV">{tr("Grade IV — Paralysis with deep pain perception")}</option>
+              <option value="V">{tr("Grade V — Paralysis WITHOUT deep pain perception")}</option>
             </select>
             {form.neuroGrade === "V" && (
               <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 6, padding: "6px 10px", borderRadius: 6, background: C.redBg, border: `1px solid ${C.red}` }}>
                 <FiCrosshair size={12} style={{ color: C.red }} />
-                <span style={{ fontSize: 10, color: C.red, fontWeight: 700 }}>RED FLAG: Absent deep pain perception — protocol generation may be blocked. Immediate veterinary neurologist consult recommended.</span>
+                <span style={{ fontSize: 10, color: C.red, fontWeight: 700 }}>{tr("RED FLAG: Absent deep pain perception — protocol generation may be blocked. Immediate veterinary neurologist consult recommended.")}</span>
               </div>
             )}
             {form.neuroGrade === "IV" && (
               <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 6, padding: "6px 10px", borderRadius: 6, background: C.amberBg, border: `1px solid ${C.amber}` }}>
                 <FiCrosshair size={12} style={{ color: C.amber }} />
-                <span style={{ fontSize: 10, color: C.amber, fontWeight: 600 }}>CAUTION: Paralysis with intact deep pain — restricted to passive exercises. Veterinary neurologist consult recommended.</span>
+                <span style={{ fontSize: 10, color: C.amber, fontWeight: 600 }}>{tr("CAUTION: Paralysis with intact deep pain — restricted to passive exercises. Veterinary neurologist consult recommended.")}</span>
               </div>
             )}
           </div>
@@ -197,11 +201,11 @@ export default function Step3DiagnosticWorkup({ form, setField, goToStep }) {
 
         {/* Additional Diagnostic Notes */}
         <div style={{ marginTop: 14 }}>
-          <label style={S.label}>Additional Diagnostic Notes</label>
+          <label style={S.label}>{tr("Additional Diagnostic Notes")}</label>
           <textarea
             style={{ ...S.input, border: `1.5px solid ${C.border}`, minHeight: 52, resize: "vertical", fontFamily: "inherit" }}
             value={form.diagnosticNotes || ""} onChange={e => setField("diagnosticNotes", e.target.value)}
-            placeholder="e.g. Arthrocentesis pending, second opinion imaging recommended, EMG scheduled"
+            placeholder={tr("e.g. Arthrocentesis pending, second opinion imaging recommended, EMG scheduled")}
           />
         </div>
       </div>
