@@ -1,6 +1,9 @@
 {
-  "_machine_translation_note": "TODO: professional review — machine-quality draft. Safety strings (safety.*) INTENTIONALLY ABSENT — fall back to English with visible EN badge per product owner decision 2026-04-11.",
-  "languageSelector": { "label": "Taal", "selectPlatformLanguage": "Platformtaal selecteren" },
+  "_machine_translation_note": "Machine-quality drafts for clinician review — do NOT ship to paying customers without credentialed veterinary translator review. Includes fields.* namespace (field labels, options, section titles, placeholders) added 2026-04-17. Labels not covered by fields.* fall back to English via i18next defaultValue. Safety strings (safety.*) remain English-locked with visible EN badge per product owner decision 2026-04-11.",
+  "languageSelector": {
+    "label": "Taal",
+    "selectPlatformLanguage": "Platformtaal selecteren"
+  },
   "dashboard": {
     "title": "Klinisch Dashboard",
     "subtitle": "Selecteer een willekeurig blok · Alle velden onafhankelijk · Geen verplichte volgorde",
@@ -29,25 +32,69 @@
     "hipaa": "Veterinaire HIPAA"
   },
   "tiles": {
-    "client":       { "label": "Klant & Patiënt",            "desc": "Demografie · Contact · Verzekering" },
-    "diagnostics":  { "label": "Diagnostiek",                 "desc": "Beeldvorming · Laboratoriumwerk" },
-    "assessment":   { "label": "Beoordeling",                 "desc": "Diagnose · Pijn · Gang · Neuro" },
-    "metrics":      { "label": "B.E.A.U. Metrieken",          "desc": "BCS · Goniometrie · Spier · Postuur" },
-    "diet":         { "label": "Voedingsbeslissings-ondersteuning", "desc": "Mars Petcare therapeutisch portfolio" },
-    "equipment":    { "label": "Klinische Apparatuur",        "desc": "Beschikbare revalidatiemiddelen" },
-    "home":         { "label": "Thuisoefenprogramma",         "desc": "Omgeving · HEP · Eigenaarsprofiel" },
-    "goals":        { "label": "Doelen",                      "desc": "Korte termijn · Lange termijn · Voortgang" },
-    "conditioning": { "label": "Conditionering",              "desc": "Fitness · Prestaties · Onderhoud" },
-    "protocol":     { "label": "Protocol Overzicht",          "desc": "Genereren · Exporteren · E-mail · QR" },
-    "treatment":    { "label": "Behandeling & Chirurgische Status", "desc": "Aanpak · Status · Beperkingen" },
-    "library":      { "label": "Oefenbibliotheek",            "desc": "260 oefeningen · Hond · Kat" },
-    "nutrition":    { "label": "PetCare Voeding",              "desc": "Therapeutische dieetaanbevelingen · Mars PetCare" },
-    "coming-soon":  { "label": "3D Klinische Anatomie Viewer", "desc": "Holografisch · Interactief · Binnenkort" }
+    "client": {
+      "label": "Klant & Patiënt",
+      "desc": "Demografie · Contact · Verzekering"
+    },
+    "diagnostics": {
+      "label": "Diagnostiek",
+      "desc": "Beeldvorming · Laboratoriumwerk"
+    },
+    "assessment": {
+      "label": "Beoordeling",
+      "desc": "Diagnose · Pijn · Gang · Neuro"
+    },
+    "metrics": {
+      "label": "B.E.A.U. Metrieken",
+      "desc": "BCS · Goniometrie · Spier · Postuur"
+    },
+    "diet": {
+      "label": "Voedingsbeslissings-ondersteuning",
+      "desc": "Mars Petcare therapeutisch portfolio"
+    },
+    "equipment": {
+      "label": "Klinische Apparatuur",
+      "desc": "Beschikbare revalidatiemiddelen"
+    },
+    "home": {
+      "label": "Thuisoefenprogramma",
+      "desc": "Omgeving · HEP · Eigenaarsprofiel"
+    },
+    "goals": {
+      "label": "Doelen",
+      "desc": "Korte termijn · Lange termijn · Voortgang"
+    },
+    "conditioning": {
+      "label": "Conditionering",
+      "desc": "Fitness · Prestaties · Onderhoud"
+    },
+    "protocol": {
+      "label": "Protocol Overzicht",
+      "desc": "Genereren · Exporteren · E-mail · QR"
+    },
+    "treatment": {
+      "label": "Behandeling & Chirurgische Status",
+      "desc": "Aanpak · Status · Beperkingen"
+    },
+    "library": {
+      "label": "Oefenbibliotheek",
+      "desc": "260 oefeningen · Hond · Kat"
+    },
+    "nutrition": {
+      "label": "PetCare Voeding",
+      "desc": "Therapeutische dieetaanbevelingen · Mars PetCare"
+    },
+    "coming-soon": {
+      "label": "3D Klinische Anatomie Viewer",
+      "desc": "Holografisch · Interactief · Binnenkort"
+    }
   },
   "modal": {
     "close": "Sluiten",
     "saveAndClose": "Opslaan en Sluiten",
-    "engineSubtitle": "K9 Rehab Pro™ · B.E.A.U.™ Engine"
+    "engineSubtitle": "K9 Rehab Pro™ · B.E.A.U.™ Engine",
+    "saving": "Opslaan…",
+    "updating": "Bijwerken…"
   },
   "common": {
     "loading": "Laden…",
@@ -56,7 +103,8 @@
     "feline": "Kat",
     "both": "Beide",
     "yes": "Ja",
-    "no": "Nee"
+    "no": "Nee",
+    "normalPrefix": "Normaal"
   },
   "form": {
     "species": "Soort",
@@ -76,30 +124,30 @@
     "featureGateTitle": "B.E.A.U. Voedingsbeslissings-ondersteuning",
     "marsPortfolioFooter": "Mars Petcare Therapeutische Catalogus",
     "categories": {
-      "gi":         "Gastro-intestinaal & Verterings-ondersteuning",
-      "renal":      "Nierondersteuning & Urinegezondheid",
-      "derm":       "Dermatologie & Voedselgevoeligheden",
-      "weight":     "Gewichtsbeheer & Metabole Ondersteuning",
-      "mobility":   "Mobiliteit & Gewrichtsondersteuning",
-      "recovery":   "Herstel, Intensieve Zorg & Hoge Energie Ondersteuning",
-      "pediatric":  "Pediatrisch, Groei & Voortplanting",
-      "dental":     "Gebitsgezondheid",
+      "gi": "Gastro-intestinaal & Verterings-ondersteuning",
+      "renal": "Nierondersteuning & Urinegezondheid",
+      "derm": "Dermatologie & Voedselgevoeligheden",
+      "weight": "Gewichtsbeheer & Metabole Ondersteuning",
+      "mobility": "Mobiliteit & Gewrichtsondersteuning",
+      "recovery": "Herstel, Intensieve Zorg & Hoge Energie Ondersteuning",
+      "pediatric": "Pediatrisch, Groei & Voortplanting",
+      "dental": "Gebitsgezondheid",
       "behavioral": "Gedrags- & Cognitieve Ondersteuning",
-      "specialty":  "Specialiteit & Niche Klinische Categorieën"
+      "specialty": "Specialiteit & Niche Klinische Categorieën"
     },
     "conditions": {
-      "none":       "— Aandoening selecteren —",
-      "gi":         "GI / Verteerbaar",
-      "renal":      "Nier / Urinewegen",
-      "derm":       "Dermatologie / Voedselallergie",
-      "weight":     "Gewicht / Metabool",
-      "mobility":   "Mobiliteit / Gewricht / OA",
-      "recovery":   "Herstel / Postoperatief",
-      "pediatric":  "Pediatrisch / Groei / Voortplanting",
-      "dental":     "Tandheelkunde",
+      "none": "— Aandoening selecteren —",
+      "gi": "GI / Verteerbaar",
+      "renal": "Nier / Urinewegen",
+      "derm": "Dermatologie / Voedselallergie",
+      "weight": "Gewicht / Metabool",
+      "mobility": "Mobiliteit / Gewricht / OA",
+      "recovery": "Herstel / Postoperatief",
+      "pediatric": "Pediatrisch / Groei / Voortplanting",
+      "dental": "Tandheelkunde",
       "behavioral": "Gedrag / Cognitief",
-      "specialty":  "Specialiteit (Lever / Hart / Allergie)",
-      "other":      "Andere / Meerdere"
+      "specialty": "Specialiteit (Lever / Hart / Allergie)",
+      "other": "Andere / Meerdere"
     }
   },
   "library": {
@@ -134,6 +182,139 @@
     "askPlaceholder": "bijv. Welke oefeningen zijn gecontra-indiceerd voor een TPLO-patiënt in week 3? Wat is de bewijsbasis voor cavaletti-balken?",
     "askButton": "Vraag B.E.A.U.",
     "thinking": "B.E.A.U. denkt na…",
-    "response": "B.E.A.U. Antwoord"
+    "response": "B.E.A.U. Antwoord",
+    "askBeau": "Vraag B.E.A.U.",
+    "closeBeau": "Sluit B.E.A.U.",
+    "askShort": "VRAAG",
+    "askAboutPlaceholder": "Vraag B.E.A.U. over {{topic}}…"
+  },
+  "fields": {
+    "client_information": "Klantgegevens",
+    "patient_information": "Patiëntgegevens",
+    "address": "Adres",
+    "attending_clinical_team": "Behandelend Klinisch Team",
+    "clinical_notes": "Klinische Notities",
+    "diagnostic_imaging": "Diagnostische Beeldvorming",
+    "laboratory_work": "Laboratoriumonderzoek",
+    "current_medications": "Huidige Medicatie",
+    "clinical_assessment": "Klinische Beoordeling",
+    "pain_assessment": "Pijnbeoordeling",
+    "gait_analysis": "Gangbeeldanalyse",
+    "neurological_exam": "Neurologisch Onderzoek",
+    "orthopedic_exam": "Orthopedisch Onderzoek",
+    "functional_assessment": "Functionele Beoordeling",
+    "special_tests": "Speciale Tests",
+    "treatment_plan": "Behandelplan",
+    "surgical_status": "Chirurgische Status",
+    "treatment_approach": "Behandelaanpak",
+    "activity_restrictions": "Activiteitsbeperkingen",
+    "metrics": "Metingen",
+    "body_condition_score": "Lichaamsconditiescore",
+    "goniometry": "Goniometrie",
+    "muscle_measurements": "Spiermetingen",
+    "equipment": "Apparatuur",
+    "available_modalities": "Beschikbare Modaliteiten",
+    "home_environment": "Thuisomgeving",
+    "home_exercise_program": "Thuis Oefenprogramma",
+    "owner_profile": "Eigenaarsprofiel",
+    "goals": "Doelen",
+    "short_term_goals": "Korte-Termijn Doelen",
+    "long_term_goals": "Lange-Termijn Doelen",
+    "conditioning": "Conditionering",
+    "protocol_summary": "Protocoloverzicht",
+    "exercise_library": "Oefeningenbibliotheek",
+    "client_first_name": "Voornaam Klant",
+    "client_last_name": "Achternaam Klant",
+    "phone": "Telefoon",
+    "email": "E-mail",
+    "street_address": "Straatadres",
+    "apt_suite_unit": "Appt / Suite / Unit",
+    "zip_postal_code": "Postcode",
+    "city": "Stad",
+    "state_province": "Staat / Provincie",
+    "country": "Land",
+    "emergency_contact": "Noodcontact",
+    "referred_by": "Doorverwezen Door",
+    "pet_insurance_provider": "Huisdierverzekering",
+    "other_insurance_provider": "Andere Verzekeraar",
+    "primary_veterinarian": "Huisdierarts",
+    "patient_name": "Naam Patiënt",
+    "species": "Soort",
+    "breed": "Ras",
+    "sex": "Geslacht",
+    "age_years": "Leeftijd (jaren)",
+    "date_of_birth": "Geboortedatum",
+    "color_markings": "Kleur / Tekening",
+    "additional_markings": "Aanvullende Tekeningen",
+    "microchip": "Microchipnummer",
+    "weight": "Gewicht",
+    "attending_clinician_specialist": "Behandelend Clinicus / Specialist",
+    "rehabilitation_nurse_assistant": "Revalidatieverpleegkundige / Assistent",
+    "supplements": "Supplementen",
+    "medication_notes_allergies": "Medicatienotities / Allergieën",
+    "last_nsaid_dose": "Laatste NSAID-dosis",
+    "response_to_current_medications": "Reactie op huidige medicatie",
+    "male_intact": "Mannelijk — Intact",
+    "male_neutered": "Mannelijk — Gecastreerd",
+    "female_intact": "Vrouwelijk — Intact",
+    "female_spayed": "Vrouwelijk — Gesteriliseerd",
+    "normal": "Normaal",
+    "abnormal": "Abnormaal",
+    "mild": "Mild",
+    "moderate": "Matig",
+    "severe": "Ernstig",
+    "absent": "Afwezig",
+    "acute": "Acuut",
+    "chronic": "Chronisch",
+    "update_patient_record": "Patiëntdossier Bijwerken",
+    "update_diagnostics": "Diagnostiek Bijwerken",
+    "update_assessment": "Beoordeling Bijwerken",
+    "update_treatment_status": "Behandelstatus Bijwerken",
+    "update_metrics": "Metingen Bijwerken",
+    "update_equipment": "Apparatuur Bijwerken",
+    "update_home_program": "Thuis Programma Bijwerken",
+    "update_goals": "Doelen Bijwerken",
+    "update_conditioning": "Conditionering Bijwerken",
+    "update_protocol": "Protocol Bijwerken",
+    "first_name": "Voornaam",
+    "last_name": "Achternaam",
+    "phone_placeholder": "+31 0 00 00 00 00",
+    "email_placeholder": "email@voorbeeld.nl",
+    "street_placeholder": "Hoofdstraat 123",
+    "apt_placeholder": "Appt 4B",
+    "zip_placeholder": "bijv. 3301",
+    "city_placeholder": "Fort Lauderdale",
+    "state_placeholder": "FL",
+    "country_placeholder": "Verenigde Staten",
+    "emergency_placeholder": "Naam en telefoon",
+    "referred_by_placeholder": "Verwijzende dierenarts & kliniek",
+    "primary_vet_placeholder": "Naam & kliniek",
+    "insurance_other_placeholder": "Naam verzekeraar en polisnummer",
+    "pet_name_placeholder": "Naam huisdier",
+    "microchip_placeholder": "15-cijferig nummer",
+    "clinical_notes_placeholder": "Observaties van revalidatieverpleegkundige, voortgangsnotities, aanbevelingen...",
+    "yes": "Ja",
+    "no": "Nee",
+    "hint_zip_autofill": "Vult automatisch stad en staat in op basis van postcode",
+    "hint_clinician_roster": "Ingevuld vanuit Instellingen → Clinicuslijst. Wordt overgebracht naar alle blokken.",
+    "hint_staff_roster": "Ingevuld vanuit Instellingen → Personeelslijst. Wordt overgebracht naar alle blokken."
+  },
+  "voice": {
+    "rewind": "2 zinnen terug",
+    "resume": "Hervatten vanaf huidige positie",
+    "playFromBeginning": "Afspelen vanaf begin",
+    "pause": "Pauze",
+    "stop": "Stop",
+    "fastForward": "2 zinnen vooruit",
+    "ffLocked": "Vergrendeld — B.E.A.U. genereert nog",
+    "ffLockedHint": "Vooruitspoelen vergrendeld tot output klaar"
+  },
+  "hints": {
+    "autoConvertsLbs": "Zet automatisch om naar/van lbs",
+    "autoConvertsDob": "Zet automatisch om naar/van geboortedatum"
+  },
+  "toast": {
+    "saveSuccess": "Patiëntdossier succesvol bijgewerkt",
+    "saveFailed": "Opslaan mislukt: {{msg}}"
   }
 }

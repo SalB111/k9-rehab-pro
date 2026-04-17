@@ -1,6 +1,9 @@
 {
-  "_machine_translation_note": "TODO: professional review — machine-quality draft. Safety strings (safety.*) INTENTIONALLY ABSENT — fall back to English with visible EN badge per product owner decision 2026-04-11.",
-  "languageSelector": { "label": "언어", "selectPlatformLanguage": "플랫폼 언어 선택" },
+  "_machine_translation_note": "Machine-quality drafts for clinician review — do NOT ship to paying customers without credentialed veterinary translator review. Includes fields.* namespace (field labels, options, section titles, placeholders) added 2026-04-17. Labels not covered by fields.* fall back to English via i18next defaultValue. Safety strings (safety.*) remain English-locked with visible EN badge per product owner decision 2026-04-11.",
+  "languageSelector": {
+    "label": "언어",
+    "selectPlatformLanguage": "플랫폼 언어 선택"
+  },
   "dashboard": {
     "title": "임상 대시보드",
     "subtitle": "아무 블록이나 선택 · 모든 필드 독립 · 순서 무관",
@@ -29,25 +32,69 @@
     "hipaa": "수의 HIPAA"
   },
   "tiles": {
-    "client":       { "label": "고객 및 환자",         "desc": "인구통계 · 연락처 · 보험" },
-    "diagnostics":  { "label": "진단",                 "desc": "영상 · 실험실 검사" },
-    "assessment":   { "label": "평가",                 "desc": "진단 · 통증 · 보행 · 신경" },
-    "metrics":      { "label": "B.E.A.U. 지표",        "desc": "BCS · 관절각도 · 근육 · 자세" },
-    "diet":         { "label": "식이 결정 지원",        "desc": "Mars Petcare 치료식 포트폴리오" },
-    "equipment":    { "label": "클리닉 장비",          "desc": "사용 가능한 재활 도구" },
-    "home":         { "label": "가정 운동 프로그램",    "desc": "환경 · HEP · 보호자 프로필" },
-    "goals":        { "label": "목표",                 "desc": "단기 · 장기 · 진행" },
-    "conditioning": { "label": "컨디셔닝",             "desc": "피트니스 · 퍼포먼스 · 유지" },
-    "protocol":     { "label": "프로토콜 요약",         "desc": "생성 · 내보내기 · 이메일 · QR" },
-    "treatment":    { "label": "치료 및 수술 상태",      "desc": "접근법 · 상태 · 제한사항" },
-    "library":      { "label": "운동 라이브러리",       "desc": "260 운동 · 개 · 고양이" },
-    "nutrition":    { "label": "PetCare 영양",          "desc": "치료식 추천 · Mars PetCare" },
-    "coming-soon":  { "label": "3D 임상 해부학 뷰어",    "desc": "홀로그래픽 · 인터랙티브 · 곧 출시" }
+    "client": {
+      "label": "고객 및 환자",
+      "desc": "인구통계 · 연락처 · 보험"
+    },
+    "diagnostics": {
+      "label": "진단",
+      "desc": "영상 · 실험실 검사"
+    },
+    "assessment": {
+      "label": "평가",
+      "desc": "진단 · 통증 · 보행 · 신경"
+    },
+    "metrics": {
+      "label": "B.E.A.U. 지표",
+      "desc": "BCS · 관절각도 · 근육 · 자세"
+    },
+    "diet": {
+      "label": "식이 결정 지원",
+      "desc": "Mars Petcare 치료식 포트폴리오"
+    },
+    "equipment": {
+      "label": "클리닉 장비",
+      "desc": "사용 가능한 재활 도구"
+    },
+    "home": {
+      "label": "가정 운동 프로그램",
+      "desc": "환경 · HEP · 보호자 프로필"
+    },
+    "goals": {
+      "label": "목표",
+      "desc": "단기 · 장기 · 진행"
+    },
+    "conditioning": {
+      "label": "컨디셔닝",
+      "desc": "피트니스 · 퍼포먼스 · 유지"
+    },
+    "protocol": {
+      "label": "프로토콜 요약",
+      "desc": "생성 · 내보내기 · 이메일 · QR"
+    },
+    "treatment": {
+      "label": "치료 및 수술 상태",
+      "desc": "접근법 · 상태 · 제한사항"
+    },
+    "library": {
+      "label": "운동 라이브러리",
+      "desc": "260 운동 · 개 · 고양이"
+    },
+    "nutrition": {
+      "label": "PetCare 영양",
+      "desc": "치료식 추천 · Mars PetCare"
+    },
+    "coming-soon": {
+      "label": "3D 임상 해부학 뷰어",
+      "desc": "홀로그래픽 · 인터랙티브 · 곧 출시"
+    }
   },
   "modal": {
     "close": "닫기",
     "saveAndClose": "저장 후 닫기",
-    "engineSubtitle": "K9 Rehab Pro™ · B.E.A.U.™ 엔진"
+    "engineSubtitle": "K9 Rehab Pro™ · B.E.A.U.™ 엔진",
+    "saving": "저장 중…",
+    "updating": "업데이트 중…"
   },
   "common": {
     "loading": "로딩 중…",
@@ -56,7 +103,8 @@
     "feline": "고양이",
     "both": "둘 다",
     "yes": "예",
-    "no": "아니요"
+    "no": "아니요",
+    "normalPrefix": "정상"
   },
   "form": {
     "species": "종",
@@ -76,30 +124,30 @@
     "featureGateTitle": "B.E.A.U. 영양 결정 지원",
     "marsPortfolioFooter": "Mars Petcare 치료식 카탈로그",
     "categories": {
-      "gi":         "소화기계 지원",
-      "renal":      "신장 지원 및 비뇨기 건강",
-      "derm":       "피부과 및 음식 과민증",
-      "weight":     "체중 관리 및 대사 지원",
-      "mobility":   "운동성 및 관절 지원",
-      "recovery":   "회복, 중환자 관리, 고에너지 지원",
-      "pediatric":  "소아, 성장 및 번식",
-      "dental":     "치아 건강",
+      "gi": "소화기계 지원",
+      "renal": "신장 지원 및 비뇨기 건강",
+      "derm": "피부과 및 음식 과민증",
+      "weight": "체중 관리 및 대사 지원",
+      "mobility": "운동성 및 관절 지원",
+      "recovery": "회복, 중환자 관리, 고에너지 지원",
+      "pediatric": "소아, 성장 및 번식",
+      "dental": "치아 건강",
       "behavioral": "행동 및 인지 지원",
-      "specialty":  "전문 및 틈새 임상 카테고리"
+      "specialty": "전문 및 틈새 임상 카테고리"
     },
     "conditions": {
-      "none":       "— 상태 선택 —",
-      "gi":         "소화기계",
-      "renal":      "신장 / 비뇨기",
-      "derm":       "피부과 / 음식 알레르기",
-      "weight":     "체중 / 대사",
-      "mobility":   "운동성 / 관절 / OA",
-      "recovery":   "회복 / 수술 후",
-      "pediatric":  "소아 / 성장 / 번식",
-      "dental":     "치아",
+      "none": "— 상태 선택 —",
+      "gi": "소화기계",
+      "renal": "신장 / 비뇨기",
+      "derm": "피부과 / 음식 알레르기",
+      "weight": "체중 / 대사",
+      "mobility": "운동성 / 관절 / OA",
+      "recovery": "회복 / 수술 후",
+      "pediatric": "소아 / 성장 / 번식",
+      "dental": "치아",
       "behavioral": "행동 / 인지",
-      "specialty":  "전문(간 / 심장 / 알레르기)",
-      "other":      "기타 / 복수"
+      "specialty": "전문(간 / 심장 / 알레르기)",
+      "other": "기타 / 복수"
     }
   },
   "library": {
@@ -134,6 +182,139 @@
     "askPlaceholder": "예: TPLO 환자의 3주차에 금기인 운동은? 카발레티 레일의 근거 기반은?",
     "askButton": "B.E.A.U.에게 질문",
     "thinking": "B.E.A.U.가 생각 중…",
-    "response": "B.E.A.U. 응답"
+    "response": "B.E.A.U. 응답",
+    "askBeau": "B.E.A.U.에게 질문",
+    "closeBeau": "B.E.A.U. 닫기",
+    "askShort": "질문",
+    "askAboutPlaceholder": "{{topic}}에 대해 B.E.A.U.에게 질문…"
+  },
+  "fields": {
+    "client_information": "고객 정보",
+    "patient_information": "환자 정보",
+    "address": "주소",
+    "attending_clinical_team": "담당 임상팀",
+    "clinical_notes": "임상 기록",
+    "diagnostic_imaging": "영상 진단",
+    "laboratory_work": "실험실 검사",
+    "current_medications": "현재 복용 약물",
+    "clinical_assessment": "임상 평가",
+    "pain_assessment": "통증 평가",
+    "gait_analysis": "보행 분석",
+    "neurological_exam": "신경학적 검사",
+    "orthopedic_exam": "정형외과 검사",
+    "functional_assessment": "기능 평가",
+    "special_tests": "특수 검사",
+    "treatment_plan": "치료 계획",
+    "surgical_status": "수술 상태",
+    "treatment_approach": "치료 접근법",
+    "activity_restrictions": "활동 제한",
+    "metrics": "측정값",
+    "body_condition_score": "신체 상태 점수",
+    "goniometry": "관절 각도 측정",
+    "muscle_measurements": "근육 측정",
+    "equipment": "장비",
+    "available_modalities": "사용 가능한 양식",
+    "home_environment": "가정 환경",
+    "home_exercise_program": "가정 운동 프로그램",
+    "owner_profile": "보호자 프로필",
+    "goals": "목표",
+    "short_term_goals": "단기 목표",
+    "long_term_goals": "장기 목표",
+    "conditioning": "컨디셔닝",
+    "protocol_summary": "프로토콜 요약",
+    "exercise_library": "운동 라이브러리",
+    "client_first_name": "고객 이름",
+    "client_last_name": "고객 성",
+    "phone": "전화",
+    "email": "이메일",
+    "street_address": "도로명 주소",
+    "apt_suite_unit": "동/호수",
+    "zip_postal_code": "우편번호",
+    "city": "도시",
+    "state_province": "주 / 도",
+    "country": "국가",
+    "emergency_contact": "비상 연락처",
+    "referred_by": "의뢰인",
+    "pet_insurance_provider": "반려동물 보험사",
+    "other_insurance_provider": "기타 보험사",
+    "primary_veterinarian": "주치 수의사",
+    "patient_name": "환자 이름",
+    "species": "종",
+    "breed": "품종",
+    "sex": "성별",
+    "age_years": "나이 (세)",
+    "date_of_birth": "생년월일",
+    "color_markings": "색상 / 무늬",
+    "additional_markings": "추가 무늬",
+    "microchip": "마이크로칩 번호",
+    "weight": "체중",
+    "attending_clinician_specialist": "담당 의사 / 전문의",
+    "rehabilitation_nurse_assistant": "재활 간호사 / 보조원",
+    "supplements": "보충제",
+    "medication_notes_allergies": "약물 기록 / 알레르기",
+    "last_nsaid_dose": "최근 NSAID 투여",
+    "response_to_current_medications": "현재 약물 반응",
+    "male_intact": "수컷 — 중성화 안 함",
+    "male_neutered": "수컷 — 중성화 완료",
+    "female_intact": "암컷 — 중성화 안 함",
+    "female_spayed": "암컷 — 중성화 완료",
+    "normal": "정상",
+    "abnormal": "비정상",
+    "mild": "경도",
+    "moderate": "중등도",
+    "severe": "중증",
+    "absent": "없음",
+    "acute": "급성",
+    "chronic": "만성",
+    "update_patient_record": "환자 기록 업데이트",
+    "update_diagnostics": "진단 업데이트",
+    "update_assessment": "평가 업데이트",
+    "update_treatment_status": "치료 상태 업데이트",
+    "update_metrics": "측정값 업데이트",
+    "update_equipment": "장비 업데이트",
+    "update_home_program": "가정 프로그램 업데이트",
+    "update_goals": "목표 업데이트",
+    "update_conditioning": "컨디셔닝 업데이트",
+    "update_protocol": "프로토콜 업데이트",
+    "first_name": "이름",
+    "last_name": "성",
+    "phone_placeholder": "000-0000-0000",
+    "email_placeholder": "email@example.com",
+    "street_placeholder": "메인 스트리트 123",
+    "apt_placeholder": "4B호",
+    "zip_placeholder": "예: 33301",
+    "city_placeholder": "포트로더데일",
+    "state_placeholder": "FL",
+    "country_placeholder": "미국",
+    "emergency_placeholder": "이름과 전화번호",
+    "referred_by_placeholder": "의뢰 수의사 및 병원",
+    "primary_vet_placeholder": "이름과 병원",
+    "insurance_other_placeholder": "보험사명 및 증권번호",
+    "pet_name_placeholder": "반려동물 이름",
+    "microchip_placeholder": "15자리 번호",
+    "clinical_notes_placeholder": "재활 간호사 관찰, 진행 기록, 권장 사항...",
+    "yes": "예",
+    "no": "아니요",
+    "hint_zip_autofill": "우편번호로 도시와 주 자동 입력",
+    "hint_clinician_roster": "설정 → 임상의 명단에서 채워집니다. 모든 블록에 전파됩니다.",
+    "hint_staff_roster": "설정 → 직원 명단에서 채워집니다. 모든 블록에 전파됩니다."
+  },
+  "voice": {
+    "rewind": "2문장 뒤로",
+    "resume": "현재 위치에서 재개",
+    "playFromBeginning": "처음부터 재생",
+    "pause": "일시정지",
+    "stop": "정지",
+    "fastForward": "2문장 앞으로",
+    "ffLocked": "잠김 — B.E.A.U. 아직 생성 중",
+    "ffLockedHint": "출력 완료까지 빨리 감기 잠김"
+  },
+  "hints": {
+    "autoConvertsLbs": "lbs와 자동 변환",
+    "autoConvertsDob": "생년월일과 자동 변환"
+  },
+  "toast": {
+    "saveSuccess": "환자 기록이 성공적으로 업데이트되었습니다",
+    "saveFailed": "저장 실패: {{msg}}"
   }
 }

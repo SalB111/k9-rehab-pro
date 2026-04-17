@@ -1,6 +1,9 @@
 {
-  "_machine_translation_note": "TODO: professional review — machine-quality draft. Safety strings (safety.*) INTENTIONALLY ABSENT — fall back to English with visible EN badge per product owner decision 2026-04-11.",
-  "languageSelector": { "label": "言語", "selectPlatformLanguage": "プラットフォーム言語を選択" },
+  "_machine_translation_note": "Machine-quality drafts for clinician review — do NOT ship to paying customers without credentialed veterinary translator review. Includes fields.* namespace (field labels, options, section titles, placeholders) added 2026-04-17. Labels not covered by fields.* fall back to English via i18next defaultValue. Safety strings (safety.*) remain English-locked with visible EN badge per product owner decision 2026-04-11.",
+  "languageSelector": {
+    "label": "言語",
+    "selectPlatformLanguage": "プラットフォーム言語を選択"
+  },
   "dashboard": {
     "title": "臨床ダッシュボード",
     "subtitle": "任意のブロックを選択 · すべてのフィールドは独立 · 順序は任意",
@@ -29,25 +32,69 @@
     "hipaa": "獣医 HIPAA"
   },
   "tiles": {
-    "client":       { "label": "クライアントと患者",      "desc": "人口統計 · 連絡先 · 保険" },
-    "diagnostics":  { "label": "診断",                   "desc": "画像診断 · 検査" },
-    "assessment":   { "label": "評価",                   "desc": "診断 · 痛み · 歩行 · 神経" },
-    "metrics":      { "label": "B.E.A.U. メトリクス",    "desc": "BCS · ゴニオメトリ · 筋肉 · 姿勢" },
-    "diet":         { "label": "食事決定支援",            "desc": "Mars Petcare 療法食ポートフォリオ" },
-    "equipment":    { "label": "クリニック機器",          "desc": "利用可能なリハビリツール" },
-    "home":         { "label": "家庭用運動プログラム",    "desc": "環境 · HEP · 飼い主プロフィール" },
-    "goals":        { "label": "目標",                   "desc": "短期 · 長期 · 進捗" },
-    "conditioning": { "label": "コンディショニング",      "desc": "フィットネス · パフォーマンス · メンテナンス" },
-    "protocol":     { "label": "プロトコル概要",          "desc": "生成 · エクスポート · メール · QR" },
-    "treatment":    { "label": "治療・手術状態",          "desc": "アプローチ · 状態 · 制限事項" },
-    "library":      { "label": "運動ライブラリ",          "desc": "260 運動 · 犬 · 猫" },
-    "nutrition":    { "label": "PetCareニュートリション",  "desc": "治療食推奨 · Mars PetCare" },
-    "coming-soon":  { "label": "3D臨床解剖ビューアー",     "desc": "ホログラフィック · インタラクティブ · 近日公開" }
+    "client": {
+      "label": "クライアントと患者",
+      "desc": "人口統計 · 連絡先 · 保険"
+    },
+    "diagnostics": {
+      "label": "診断",
+      "desc": "画像診断 · 検査"
+    },
+    "assessment": {
+      "label": "評価",
+      "desc": "診断 · 痛み · 歩行 · 神経"
+    },
+    "metrics": {
+      "label": "B.E.A.U. メトリクス",
+      "desc": "BCS · ゴニオメトリ · 筋肉 · 姿勢"
+    },
+    "diet": {
+      "label": "食事決定支援",
+      "desc": "Mars Petcare 療法食ポートフォリオ"
+    },
+    "equipment": {
+      "label": "クリニック機器",
+      "desc": "利用可能なリハビリツール"
+    },
+    "home": {
+      "label": "家庭用運動プログラム",
+      "desc": "環境 · HEP · 飼い主プロフィール"
+    },
+    "goals": {
+      "label": "目標",
+      "desc": "短期 · 長期 · 進捗"
+    },
+    "conditioning": {
+      "label": "コンディショニング",
+      "desc": "フィットネス · パフォーマンス · メンテナンス"
+    },
+    "protocol": {
+      "label": "プロトコル概要",
+      "desc": "生成 · エクスポート · メール · QR"
+    },
+    "treatment": {
+      "label": "治療・手術状態",
+      "desc": "アプローチ · 状態 · 制限事項"
+    },
+    "library": {
+      "label": "運動ライブラリ",
+      "desc": "260 運動 · 犬 · 猫"
+    },
+    "nutrition": {
+      "label": "PetCareニュートリション",
+      "desc": "治療食推奨 · Mars PetCare"
+    },
+    "coming-soon": {
+      "label": "3D臨床解剖ビューアー",
+      "desc": "ホログラフィック · インタラクティブ · 近日公開"
+    }
   },
   "modal": {
     "close": "閉じる",
     "saveAndClose": "保存して閉じる",
-    "engineSubtitle": "K9 Rehab Pro™ · B.E.A.U.™ エンジン"
+    "engineSubtitle": "K9 Rehab Pro™ · B.E.A.U.™ エンジン",
+    "saving": "保存中…",
+    "updating": "更新中…"
   },
   "common": {
     "loading": "読み込み中…",
@@ -56,7 +103,8 @@
     "feline": "猫",
     "both": "両方",
     "yes": "はい",
-    "no": "いいえ"
+    "no": "いいえ",
+    "normalPrefix": "正常"
   },
   "form": {
     "species": "種",
@@ -76,30 +124,30 @@
     "featureGateTitle": "B.E.A.U. 栄養決定支援",
     "marsPortfolioFooter": "Mars Petcare 療法食カタログ",
     "categories": {
-      "gi":         "消化器系サポート",
-      "renal":      "腎サポート・泌尿器健康",
-      "derm":       "皮膚科・食物過敏症",
-      "weight":     "体重管理・代謝サポート",
-      "mobility":   "運動性・関節サポート",
-      "recovery":   "回復・集中治療・高エネルギーサポート",
-      "pediatric":  "小児科・成長・繁殖",
-      "dental":     "歯の健康",
+      "gi": "消化器系サポート",
+      "renal": "腎サポート・泌尿器健康",
+      "derm": "皮膚科・食物過敏症",
+      "weight": "体重管理・代謝サポート",
+      "mobility": "運動性・関節サポート",
+      "recovery": "回復・集中治療・高エネルギーサポート",
+      "pediatric": "小児科・成長・繁殖",
+      "dental": "歯の健康",
       "behavioral": "行動・認知サポート",
-      "specialty":  "専門・ニッチ臨床カテゴリー"
+      "specialty": "専門・ニッチ臨床カテゴリー"
     },
     "conditions": {
-      "none":       "— 症状を選択 —",
-      "gi":         "消化器系",
-      "renal":      "腎臓・泌尿器",
-      "derm":       "皮膚科・食物アレルギー",
-      "weight":     "体重・代謝",
-      "mobility":   "運動性・関節・OA",
-      "recovery":   "回復・術後",
-      "pediatric":  "小児科・成長・繁殖",
-      "dental":     "歯科",
+      "none": "— 症状を選択 —",
+      "gi": "消化器系",
+      "renal": "腎臓・泌尿器",
+      "derm": "皮膚科・食物アレルギー",
+      "weight": "体重・代謝",
+      "mobility": "運動性・関節・OA",
+      "recovery": "回復・術後",
+      "pediatric": "小児科・成長・繁殖",
+      "dental": "歯科",
       "behavioral": "行動・認知",
-      "specialty":  "専門(肝臓・心臓・アレルギー)",
-      "other":      "その他・複数"
+      "specialty": "専門(肝臓・心臓・アレルギー)",
+      "other": "その他・複数"
     }
   },
   "library": {
@@ -134,6 +182,139 @@
     "askPlaceholder": "例: TPLO患者の3週目に禁忌となる運動は？カバレッティレールのエビデンス基盤は？",
     "askButton": "B.E.A.U. に質問",
     "thinking": "B.E.A.U. が考え中…",
-    "response": "B.E.A.U. の回答"
+    "response": "B.E.A.U. の回答",
+    "askBeau": "B.E.A.U. に質問",
+    "closeBeau": "B.E.A.U. を閉じる",
+    "askShort": "質問",
+    "askAboutPlaceholder": "{{topic}}について B.E.A.U. に質問…"
+  },
+  "fields": {
+    "client_information": "クライアント情報",
+    "patient_information": "患者情報",
+    "address": "住所",
+    "attending_clinical_team": "担当臨床チーム",
+    "clinical_notes": "臨床ノート",
+    "diagnostic_imaging": "画像診断",
+    "laboratory_work": "臨床検査",
+    "current_medications": "現在の投薬",
+    "clinical_assessment": "臨床評価",
+    "pain_assessment": "疼痛評価",
+    "gait_analysis": "歩行分析",
+    "neurological_exam": "神経学的検査",
+    "orthopedic_exam": "整形外科検査",
+    "functional_assessment": "機能評価",
+    "special_tests": "特殊検査",
+    "treatment_plan": "治療計画",
+    "surgical_status": "外科的状態",
+    "treatment_approach": "治療アプローチ",
+    "activity_restrictions": "活動制限",
+    "metrics": "指標",
+    "body_condition_score": "ボディコンディションスコア",
+    "goniometry": "ゴニオメトリー",
+    "muscle_measurements": "筋肉測定",
+    "equipment": "機器",
+    "available_modalities": "利用可能なモダリティ",
+    "home_environment": "家庭環境",
+    "home_exercise_program": "ホームエクササイズプログラム",
+    "owner_profile": "飼い主プロフィール",
+    "goals": "目標",
+    "short_term_goals": "短期目標",
+    "long_term_goals": "長期目標",
+    "conditioning": "コンディショニング",
+    "protocol_summary": "プロトコル概要",
+    "exercise_library": "エクササイズライブラリ",
+    "client_first_name": "クライアント名 (名)",
+    "client_last_name": "クライアント名 (姓)",
+    "phone": "電話",
+    "email": "メール",
+    "street_address": "住所",
+    "apt_suite_unit": "アパート / スイート / 号室",
+    "zip_postal_code": "郵便番号",
+    "city": "市区町村",
+    "state_province": "州 / 県",
+    "country": "国",
+    "emergency_contact": "緊急連絡先",
+    "referred_by": "紹介元",
+    "pet_insurance_provider": "ペット保険会社",
+    "other_insurance_provider": "その他の保険会社",
+    "primary_veterinarian": "主治獣医師",
+    "patient_name": "患者名",
+    "species": "種",
+    "breed": "品種",
+    "sex": "性別",
+    "age_years": "年齢 (歳)",
+    "date_of_birth": "生年月日",
+    "color_markings": "色 / 模様",
+    "additional_markings": "追加の模様",
+    "microchip": "マイクロチップ番号",
+    "weight": "体重",
+    "attending_clinician_specialist": "担当臨床医 / 専門医",
+    "rehabilitation_nurse_assistant": "リハビリ看護師 / アシスタント",
+    "supplements": "サプリメント",
+    "medication_notes_allergies": "投薬メモ / アレルギー",
+    "last_nsaid_dose": "最終NSAID投与",
+    "response_to_current_medications": "現在の投薬への反応",
+    "male_intact": "オス — 未去勢",
+    "male_neutered": "オス — 去勢済み",
+    "female_intact": "メス — 未避妊",
+    "female_spayed": "メス — 避妊済み",
+    "normal": "正常",
+    "abnormal": "異常",
+    "mild": "軽度",
+    "moderate": "中等度",
+    "severe": "重度",
+    "absent": "欠如",
+    "acute": "急性",
+    "chronic": "慢性",
+    "update_patient_record": "患者記録を更新",
+    "update_diagnostics": "診断を更新",
+    "update_assessment": "評価を更新",
+    "update_treatment_status": "治療状態を更新",
+    "update_metrics": "指標を更新",
+    "update_equipment": "機器を更新",
+    "update_home_program": "ホームプログラムを更新",
+    "update_goals": "目標を更新",
+    "update_conditioning": "コンディショニングを更新",
+    "update_protocol": "プロトコルを更新",
+    "first_name": "名",
+    "last_name": "姓",
+    "phone_placeholder": "000-0000-0000",
+    "email_placeholder": "email@example.com",
+    "street_placeholder": "メインストリート 123",
+    "apt_placeholder": "4B号室",
+    "zip_placeholder": "例: 33301",
+    "city_placeholder": "フォートローダーデール",
+    "state_placeholder": "FL",
+    "country_placeholder": "アメリカ合衆国",
+    "emergency_placeholder": "名前と電話番号",
+    "referred_by_placeholder": "紹介元の獣医師と病院",
+    "primary_vet_placeholder": "名前と病院",
+    "insurance_other_placeholder": "保険会社名と証券番号",
+    "pet_name_placeholder": "ペットの名前",
+    "microchip_placeholder": "15桁の番号",
+    "clinical_notes_placeholder": "リハビリ看護師の観察、進捗メモ、推奨事項...",
+    "yes": "はい",
+    "no": "いいえ",
+    "hint_zip_autofill": "郵便番号から市と州を自動入力",
+    "hint_clinician_roster": "設定 → 臨床医リストから入力。すべてのブロックに伝播します。",
+    "hint_staff_roster": "設定 → スタッフリストから入力。すべてのブロックに伝播します。"
+  },
+  "voice": {
+    "rewind": "2文戻る",
+    "resume": "現在位置から再開",
+    "playFromBeginning": "最初から再生",
+    "pause": "一時停止",
+    "stop": "停止",
+    "fastForward": "2文早送り",
+    "ffLocked": "ロック中 — B.E.A.U. 生成中",
+    "ffLockedHint": "出力完了まで早送りロック"
+  },
+  "hints": {
+    "autoConvertsLbs": "lbs と自動変換",
+    "autoConvertsDob": "生年月日と自動変換"
+  },
+  "toast": {
+    "saveSuccess": "患者記録を更新しました",
+    "saveFailed": "保存に失敗しました: {{msg}}"
   }
 }

@@ -10,6 +10,34 @@ void i18n;
 // ─── FORM CONTEXT ─── auto-wires all F fields without modifying each call
 const DashFormContext = createContext({ data: {}, update: () => {}, blockId: null, beauVoice: null });
 
+// ─── AUTO-TRANSLATION HELPER ──────────────────────────────────────────────────
+// Storage keys stay English (e.g. "client::Patient Name") — display is translated
+// by slugifying the English label and looking it up in the `fields` namespace
+// of the active locale, falling back to the original English string if the key
+// is missing. This lets us wrap every label/placeholder/title/option with one
+// helper call without migrating any stored data.
+const slugField = (s) => {
+  if (s == null) return "";
+  return String(s).toLowerCase()
+    .replace(/[’'`]/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 80);
+};
+
+// React hook: translate an English string via the `fields` namespace.
+// Usage: const tr = useTr(); <div>{tr("Phone")}</div>
+const useTr = () => {
+  const { t } = useTranslation();
+  return (text) => {
+    if (text == null || text === "") return text;
+    if (typeof text !== "string") return text;
+    const slug = slugField(text);
+    if (!slug) return text;
+    return t(`fields.${slug}`, { defaultValue: text });
+  };
+};
+
 // ─── THEME — WHITE CLINICAL ───────────────────────────────────────────────────
 const C = {
   bg:       "#F0F4F8",
@@ -112,27 +140,35 @@ const CSS = `
 `;
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
-const Lbl = ({ children, range }) => (
-  <div style={{ fontSize:10, fontWeight:600, color:C.muted, letterSpacing:".07em", textTransform:"uppercase", marginBottom:4, marginTop:12, display:"flex", alignItems:"center" }}>
-    {children}{range && <span className="range-badge">Normal: {range}</span>}
-  </div>
-);
+const Lbl = ({ children, range }) => {
+  const tr = useTr();
+  const { t } = useTranslation();
+  const display = typeof children === "string" ? tr(children) : children;
+  return (
+    <div style={{ fontSize:10, fontWeight:600, color:C.muted, letterSpacing:".07em", textTransform:"uppercase", marginBottom:4, marginTop:12, display:"flex", alignItems:"center" }}>
+      {display}{range && <span className="range-badge">{t("common.normalPrefix", { defaultValue: "Normal" })}: {range}</span>}
+    </div>
+  );
+};
 
 const F = ({ label, placeholder, type="text", options, rows, range, hint, disabled }) => {
   const { data, update, blockId } = useContext(DashFormContext);
+  const { t } = useTranslation();
+  const tr = useTr();
   const key = blockId ? `${blockId}::${label}` : label;
   const value = data[key] ?? "";
   const onChange = (val) => { if (!disabled) update(key, val); };
+  const selectPlaceholder = t("common.select", { defaultValue: "Select…" });
   return (
     <div>
       <Lbl range={range}>{label}</Lbl>
       {options
-        ? <select value={value} disabled={disabled} onChange={e => onChange(e.target.value)}><option value="">Select…</option>{options.map(o=><option key={o} value={o}>{o}</option>)}</select>
+        ? <select value={value} disabled={disabled} onChange={e => onChange(e.target.value)}><option value="">{selectPlaceholder}</option>{options.map(o=><option key={o} value={o}>{tr(o)}</option>)}</select>
         : rows
-          ? <textarea placeholder={placeholder} rows={rows} value={value} disabled={disabled} onChange={e => onChange(e.target.value)}/>
-          : <input type={type} placeholder={placeholder} value={value} disabled={disabled} onChange={e => onChange(e.target.value)}/>
+          ? <textarea placeholder={tr(placeholder)} rows={rows} value={value} disabled={disabled} onChange={e => onChange(e.target.value)}/>
+          : <input type={type} placeholder={tr(placeholder)} value={value} disabled={disabled} onChange={e => onChange(e.target.value)}/>
       }
-      {hint && <div style={{ fontSize:10, color:C.muted, marginTop:4, fontStyle:"italic" }}>{hint}</div>}
+      {hint && <div style={{ fontSize:10, color:C.muted, marginTop:4, fontStyle:"italic" }}>{tr(hint)}</div>}
     </div>
   );
 };
@@ -142,6 +178,7 @@ const F = ({ label, placeholder, type="text", options, rows, range, hint, disabl
 // Key format: <blockId>::<label>
 const MultiF = ({ label, options, hint, accent="#EC4899", disabled }) => {
   const { data, update, blockId } = useContext(DashFormContext);
+  const tr = useTr();
   const key = blockId ? `${blockId}::${label}` : label;
   const raw = data[key] ?? "";
   const selected = raw ? raw.split("||").filter(Boolean) : [];
@@ -161,12 +198,12 @@ const MultiF = ({ label, options, hint, accent="#EC4899", disabled }) => {
           return (
             <div key={o} className={`cb-row${checked?" active":""}`} onClick={() => toggle(o)} style={{ cursor: disabled ? "not-allowed" : "pointer" }}>
               <input type="checkbox" checked={checked} disabled={disabled} readOnly style={{ width:14, height:14, accentColor:accent, flexShrink:0 }}/>
-              <span style={{ fontSize:11, color: checked ? accent : C.text }}>{o}</span>
+              <span style={{ fontSize:11, color: checked ? accent : C.text }}>{tr(o)}</span>
             </div>
           );
         })}
       </div>
-      {hint && <div style={{ fontSize:10, color:C.muted, marginTop:4, fontStyle:"italic" }}>{hint}</div>}
+      {hint && <div style={{ fontSize:10, color:C.muted, marginTop:4, fontStyle:"italic" }}>{tr(hint)}</div>}
     </div>
   );
 };
@@ -195,16 +232,18 @@ const WeightPair = ({ label, fieldBase, disabled }) => {
     else if (val === "") update(lbsKey, "");
   };
 
+  const { t } = useTranslation();
+  const tr = useTr();
   return (
     <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
       <div>
-        <Lbl>{label} (lbs)</Lbl>
+        <Lbl>{`${tr(label)} (lbs)`}</Lbl>
         <input type="number" placeholder="0.0" step="0.1" value={lbsVal} disabled={disabled} onChange={e => onLbs(e.target.value)}/>
       </div>
       <div>
-        <Lbl>{label} (kg)</Lbl>
+        <Lbl>{`${tr(label)} (kg)`}</Lbl>
         <input type="number" placeholder="0.0" step="0.1" value={kgVal} disabled={disabled} onChange={e => onKg(e.target.value)}/>
-        <div style={{ fontSize:10, color:C.muted, marginTop:4, fontStyle:"italic" }}>Auto-converts to/from lbs</div>
+        <div style={{ fontSize:10, color:C.muted, marginTop:4, fontStyle:"italic" }}>{t("hints.autoConvertsLbs", { defaultValue: "Auto-converts to/from lbs" })}</div>
       </div>
     </div>
   );
@@ -250,6 +289,7 @@ const AgeDobPair = ({ disabled }) => {
     }
   };
 
+  const { t } = useTranslation();
   return (
     <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
       <div>
@@ -258,8 +298,8 @@ const AgeDobPair = ({ disabled }) => {
       </div>
       <div>
         <Lbl>Age (years)</Lbl>
-        <input type="number" placeholder="e.g. 6" min="0" max="30" disabled={disabled} value={ageVal} onChange={e => onAge(e.target.value)}/>
-        <div style={{ fontSize:10, color:C.muted, marginTop:4, fontStyle:"italic" }}>Auto-converts to/from DOB</div>
+        <input type="number" placeholder={t("fields.age_years_placeholder", { defaultValue: "e.g. 6" })} min="0" max="30" disabled={disabled} value={ageVal} onChange={e => onAge(e.target.value)}/>
+        <div style={{ fontSize:10, color:C.muted, marginTop:4, fontStyle:"italic" }}>{t("hints.autoConvertsDob", { defaultValue: "Auto-converts to/from DOB" })}</div>
       </div>
     </div>
   );
@@ -294,6 +334,7 @@ const collectSecKeys = (children, blockId) => {
 // Backward compatible: omitting `collapsible` renders same as before, no dot.
 const Sec = ({ title, color=C.blue, colorLt, children, noTop, collapsible, defaultOpen=false }) => {
   const { data, blockId } = useContext(DashFormContext);
+  const tr = useTr();
   const [open, setOpen] = useState(defaultOpen);
   const isHidden = collapsible && !open;
 
@@ -332,7 +373,7 @@ const Sec = ({ title, color=C.blue, colorLt, children, noTop, collapsible, defau
           transition: "background .15s, box-shadow .15s",
         }}>
         <span style={{ display:"flex", alignItems:"center", gap:8 }}>
-          <span>{title}</span>
+          <span>{tr(title)}</span>
         </span>
         {collapsible && (
           <span style={{
@@ -371,6 +412,7 @@ const ClinicalNotes = () => (
 // Local state resets on unmount (relies on parent Modal conditional-render fix).
 const CollapsibleSub = ({ title, children, defaultOpen=false, accentColor=C.teal }) => {
   const [open, setOpen] = useState(defaultOpen);
+  const tr = useTr();
   return (
     <div style={{
       border: `1px solid ${C.border}`,
@@ -396,7 +438,7 @@ const CollapsibleSub = ({ title, children, defaultOpen=false, accentColor=C.teal
           borderBottom: open ? `1px solid ${C.border}` : "none",
           userSelect: "none",
         }}>
-        <span>{title}</span>
+        <span>{tr(title)}</span>
         <span style={{ fontSize: 10, opacity: 0.85 }}>{open ? "▼" : "▶"}</span>
       </div>
       {open && <div style={{ padding: "14px" }}>{children}</div>}
@@ -406,12 +448,13 @@ const CollapsibleSub = ({ title, children, defaultOpen=false, accentColor=C.teal
 
 // ─── CHECKBOX ITEM ────────────────────────────────────────────────────────────
 function CbItem({ label, checked, onToggle, children }) {
+  const tr = useTr();
   return (
     <div>
       <div className={`cb-row${checked?" active":""}`} onClick={onToggle}>
         <input type="checkbox" checked={!!checked} readOnly
           style={{ width:16, height:16, accentColor:C.blue, flexShrink:0, cursor:"pointer" }}/>
-        <span style={{ fontSize:12, fontWeight:600, color:checked?C.blue:C.text }}>{label}</span>
+        <span style={{ fontSize:12, fontWeight:600, color:checked?C.blue:C.text }}>{tr(label)}</span>
       </div>
       {checked && children && (
         <div style={{ marginTop:8, marginLeft:14, padding:"12px 14px", background:C.blueLt, borderRadius:5, borderLeft:`2px solid ${C.blue}`, animation:"fadeIn .15s ease" }}>
@@ -429,6 +472,8 @@ function CbItem({ label, checked, onToggle, children }) {
 // FF is locked/disabled until B.E.A.U. finishes full output.
 function BeauBlockPanel({ title, beauQuery, setBeauQuery, beauAnswer, beauLoading, onAskBeau }) {
   const { beauVoice: bv } = useContext(DashFormContext);
+  const { t } = useTranslation();
+  const tr = useTr();
   const [isPlaying, setIsPlaying] = useState(false);
 
   // Track whether this specific answer is done generating
@@ -482,19 +527,19 @@ function BeauBlockPanel({ title, beauQuery, setBeauQuery, beauAnswer, beauLoadin
 
   return (
     <div style={{ marginTop:20, padding:16, background:"#F0F9FF", border:"1px solid #0EA5E944", borderRadius:8, animation:"fadeIn .15s ease" }}>
-      <div style={{ fontSize:11, fontWeight:700, color:"#0EA5E9", letterSpacing:".1em", marginBottom:10 }}>ASK B.E.A.U. — {title.toUpperCase()}</div>
+      <div style={{ fontSize:11, fontWeight:700, color:"#0EA5E9", letterSpacing:".1em", marginBottom:10 }}>{t("beau.askBeauAbout", { defaultValue: "ASK B.E.A.U." })} — {tr(title).toUpperCase()}</div>
       <div style={{ display:"flex", gap:8 }}>
         <textarea
           value={beauQuery || ""}
           onChange={e => setBeauQuery(e.target.value)}
-          placeholder={`Ask B.E.A.U. about ${title.toLowerCase()}…`}
+          placeholder={t("beau.askAboutPlaceholder", { topic: tr(title).toLowerCase(), defaultValue: `Ask B.E.A.U. about ${tr(title).toLowerCase()}…` })}
           rows={2}
           style={{ flex:1, fontSize:12, padding:"10px 12px", border:"1px solid #0EA5E944", borderRadius:5, resize:"vertical" }}
           onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); onAskBeau(); } }}
         />
         <button onClick={onAskBeau} disabled={beauLoading || !beauQuery?.trim()}
           style={{ padding:"10px 18px", background: beauLoading ? "#E0F2FE" : "#0EA5E9", border:"none", color:C.white, borderRadius:5, cursor: beauLoading ? "not-allowed" : "pointer", fontSize:11, fontWeight:700, alignSelf:"flex-end", minWidth:80 }}>
-          {beauLoading ? "..." : "ASK"}
+          {beauLoading ? "..." : t("beau.askShort", { defaultValue: "ASK" })}
         </button>
       </div>
       {beauAnswer && (
@@ -504,21 +549,21 @@ function BeauBlockPanel({ title, beauQuery, setBeauQuery, beauAnswer, beauLoadin
           </div>
           {/* ── Voice Playback Controls ── */}
           <div style={{ display:"flex", alignItems:"center", gap:6, marginTop:10 }}>
-            <button onClick={handleRewind} title="Rewind 2 sentences" disabled={!beauAnswer}
+            <button onClick={handleRewind} title={t("voice.rewind", { defaultValue: "Rewind 2 sentences" })} disabled={!beauAnswer}
               style={vcBtnStyle(!!beauAnswer)}>⏮</button>
             {bv?.isPaused || !bv?.isSpeaking ? (
-              <button onClick={handlePlay} title={bv?.isPaused ? "Resume from current position" : "Play from beginning"} disabled={!beauAnswer}
+              <button onClick={handlePlay} title={bv?.isPaused ? t("voice.resume", { defaultValue: "Resume from current position" }) : t("voice.playFromBeginning", { defaultValue: "Play from beginning" })} disabled={!beauAnswer}
                 style={vcBtnStyle(!!beauAnswer, "#10b981")}>▶</button>
             ) : (
-              <button onClick={handlePause} title="Pause"
+              <button onClick={handlePause} title={t("voice.pause", { defaultValue: "Pause" })}
                 style={vcBtnStyle(true, "#F59E0B")}>⏸</button>
             )}
-            <button onClick={handleStop} title="Stop" disabled={!bv?.isSpeaking && !bv?.isPaused}
+            <button onClick={handleStop} title={t("voice.stop", { defaultValue: "Stop" })} disabled={!bv?.isSpeaking && !bv?.isPaused}
               style={vcBtnStyle(bv?.isSpeaking || bv?.isPaused, "#ef4444")}>⏹</button>
-            <button onClick={handleFF} title={answerDone ? "Fast-forward 2 sentences" : "Locked — B.E.A.U. still generating"} disabled={!answerDone}
+            <button onClick={handleFF} title={answerDone ? t("voice.fastForward", { defaultValue: "Fast-forward 2 sentences" }) : t("voice.ffLocked", { defaultValue: "Locked — B.E.A.U. still generating" })} disabled={!answerDone}
               style={vcBtnStyle(answerDone)}>⏭</button>
             {!answerDone && beauLoading && (
-              <span style={{ fontSize:9, color:"#94a3b8", marginLeft:4, fontStyle:"italic" }}>FF locked until output complete</span>
+              <span style={{ fontSize:9, color:"#94a3b8", marginLeft:4, fontStyle:"italic" }}>{t("voice.ffLockedHint", { defaultValue: "FF locked until output complete" })}</span>
             )}
           </div>
         </div>
@@ -545,6 +590,7 @@ const BLOCK_UPDATE_LABELS = {
 
 function Modal({ title, color, colorLt, icon, onClose, children, beauContext, beauOpen, setBeauOpen, beauQuery, setBeauQuery, beauAnswer, beauLoading, onAskBeau, patientLabel, blockId }) {
   const { t } = useTranslation();
+  const tr = useTr();
   const { handleSave } = useContext(DashFormContext);
   const [saving, setSaving] = useState(false);
   const [blockSaving, setBlockSaving] = useState(false);
@@ -570,7 +616,7 @@ function Modal({ title, color, colorLt, icon, onClose, children, beauContext, be
             {icon}
           </div>
           <div style={{ flex:1 }}>
-            <div style={{ fontSize:15, fontWeight:700, color:C.navy }}>{title}</div>
+            <div style={{ fontSize:15, fontWeight:700, color:C.navy }}>{tr(title)}</div>
             <div style={{ fontSize:9, color:C.muted, letterSpacing:".13em", textTransform:"uppercase" }}>{t("modal.engineSubtitle")}</div>
             {patientLabel && (
               <div style={{ fontSize:11, fontWeight:600, color:C.green, marginTop:4, display:"flex", alignItems:"center", gap:4 }}>
@@ -581,7 +627,7 @@ function Modal({ title, color, colorLt, icon, onClose, children, beauContext, be
           {hasBeau && (
             <button onClick={() => setBeauOpen(!beauOpen)}
               style={{ padding:"6px 14px", background: beauOpen ? "#0EA5E9" : C.blueLt, border:`1px solid ${beauOpen ? "#0EA5E9" : C.border}`, color: beauOpen ? C.white : "#0EA5E9", borderRadius:5, cursor:"pointer", fontSize:11, fontWeight:700, letterSpacing:".06em", transition:"all .15s", marginRight:8 }}>
-              {beauOpen ? "✕ Close B.E.A.U." : "⬡ Ask B.E.A.U."}
+              {beauOpen ? `✕ ${t("beau.closeBeau", { defaultValue: "Close B.E.A.U." })}` : `⬡ ${t("beau.askBeau", { defaultValue: "Ask B.E.A.U." })}`}
             </button>
           )}
           <button onClick={onClose} style={{ background:"none", border:`1px solid ${C.border}`, color:C.muted, fontSize:16, cursor:"pointer", padding:"4px 10px", borderRadius:5 }}>✕</button>
@@ -617,14 +663,14 @@ function Modal({ title, color, colorLt, icon, onClose, children, beauContext, be
                   display:"inline-flex", alignItems:"center", gap:6,
                   transition:"all .18s ease",
                 }}>
-                {blockSaving ? "⏳ UPDATING…" : `✓ ${blockUpdateLabel.toUpperCase()}`}
+                {blockSaving ? `⏳ ${t("modal.updating", { defaultValue: "Updating…" })}` : `✓ ${tr(blockUpdateLabel).toUpperCase()}`}
               </button>
             )}
           </div>
           {/* RIGHT — close + save & close */}
           <div style={{ display:"flex", gap:10 }}>
             <button onClick={onClose} style={{ padding:"9px 22px", background:C.white, border:`1px solid ${C.border}`, color:C.muted, borderRadius:5, cursor:"pointer", fontSize:12, fontWeight:600, textTransform:"uppercase" }}>{t("modal.close")}</button>
-            <button onClick={onSaveClose} disabled={saving} style={{ padding:"9px 22px", background: saving ? "#cbd5e1" : color, border:"none", color:C.white, borderRadius:5, cursor: saving ? "wait" : "pointer", fontSize:12, fontWeight:700, letterSpacing:".06em", textTransform:"uppercase" }}>{saving ? "⏳ SAVING…" : t("modal.saveAndClose")}</button>
+            <button onClick={onSaveClose} disabled={saving} style={{ padding:"9px 22px", background: saving ? "#cbd5e1" : color, border:"none", color:C.white, borderRadius:5, cursor: saving ? "wait" : "pointer", fontSize:12, fontWeight:700, letterSpacing:".06em", textTransform:"uppercase" }}>{saving ? `⏳ ${t("modal.saving", { defaultValue: "Saving…" })}` : t("modal.saveAndClose")}</button>
           </div>
         </div>
       </div>
@@ -3693,11 +3739,11 @@ export default function DashboardView({ setView, currentUser, onLogout, patient,
       } catch {}
 
       // Success toast
-      setUpdateToast({ type: "success", message: "Patient record updated successfully" });
+      setUpdateToast({ type: "success", message: t("toast.saveSuccess", { defaultValue: "Patient record updated successfully" }) });
       setTimeout(() => setUpdateToast(null), 3200);
     } catch (err) {
       console.error("[handleSave]", err);
-      setUpdateToast({ type: "error", message: `Save failed: ${err.message}` });
+      setUpdateToast({ type: "error", message: t("toast.saveFailed", { msg: err.message, defaultValue: `Save failed: ${err.message}` }) });
       setTimeout(() => setUpdateToast(null), 4500);
     }
 

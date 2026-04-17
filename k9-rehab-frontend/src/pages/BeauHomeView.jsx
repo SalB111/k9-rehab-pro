@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 const API_URL = `${import.meta.env.VITE_API_URL || "http://localhost:3000/api"}/beau/chat`;
@@ -541,6 +542,7 @@ function SidebarPanel({ activeTab, intake, messages }) {
 
 // ─── Main Component ─────────────────────────────────────────────────────────
 export default function BeauHomeView({ setView }) {
+  const { i18n: i18nInst } = useTranslation();
   const [intake, setIntake] = useState(null);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
@@ -578,7 +580,7 @@ export default function BeauHomeView({ setView }) {
           "Content-Type": "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify({ messages: initialMessages, systemPrompt }),
+        body: JSON.stringify({ messages: initialMessages, system: systemPrompt, language: i18nInst.language || "en" }),
       });
       if (!res.ok) throw new Error(`API ${res.status}`);
       const data = await res.json();
@@ -622,7 +624,8 @@ export default function BeauHomeView({ setView }) {
         },
         body: JSON.stringify({
           messages: apiMessages,
-          systemPrompt: buildSystemPrompt(intake),
+          system: buildSystemPrompt(intake),
+          language: i18nInst.language || "en",
         }),
       });
       if (!res.ok) throw new Error(`API ${res.status}`);

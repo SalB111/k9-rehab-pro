@@ -31,25 +31,69 @@
     "hipaa": "Veterinary HIPAA"
   },
   "tiles": {
-    "client":       { "label": "Client & Patient",        "desc": "Demographics · Contact · Insurance" },
-    "diagnostics":  { "label": "Diagnostics",              "desc": "Imaging · Laboratory Work" },
-    "assessment":   { "label": "Clinical Assessment",      "desc": "Diagnosis · Pain · Gait · Neuro" },
-    "treatment":    { "label": "Treatment & Surgical Status", "desc": "Approach · Status · Restrictions" },
-    "metrics":      { "label": "B.E.A.U. Metrics",         "desc": "Goniometry · Muscle · Postural" },
-    "diet":         { "label": "Diet Decision Support",    "desc": "Mars Petcare therapeutic portfolio" },
-    "equipment":    { "label": "Clinic Equipment",         "desc": "Available rehabilitation tools" },
-    "home":         { "label": "Home Exercise Program",    "desc": "Environment · HEP · Owner profile" },
-    "goals":        { "label": "Goals",                    "desc": "Short-term · Long-term · Progress" },
-    "conditioning": { "label": "Conditioning",             "desc": "Fitness · Performance · Maintenance" },
-    "protocol":     { "label": "Protocol Summary",         "desc": "Generate · Export · Email · QR" },
-    "library":      { "label": "Exercise Library",         "desc": "260 exercises · Canine & Feline · Evidence-Based" },
-    "nutrition":    { "label": "PetCare Nutrition",        "desc": "Therapeutic diet recommendations · Mars PetCare" },
-    "coming-soon":  { "label": "3D Clinical Anatomy Viewer", "desc": "Holographic · Interactive · Coming Soon" }
+    "client": {
+      "label": "Client & Patient",
+      "desc": "Demographics · Contact · Insurance"
+    },
+    "diagnostics": {
+      "label": "Diagnostics",
+      "desc": "Imaging · Laboratory Work"
+    },
+    "assessment": {
+      "label": "Clinical Assessment",
+      "desc": "Diagnosis · Pain · Gait · Neuro"
+    },
+    "treatment": {
+      "label": "Treatment & Surgical Status",
+      "desc": "Approach · Status · Restrictions"
+    },
+    "metrics": {
+      "label": "B.E.A.U. Metrics",
+      "desc": "Goniometry · Muscle · Postural"
+    },
+    "diet": {
+      "label": "Diet Decision Support",
+      "desc": "Mars Petcare therapeutic portfolio"
+    },
+    "equipment": {
+      "label": "Clinic Equipment",
+      "desc": "Available rehabilitation tools"
+    },
+    "home": {
+      "label": "Home Exercise Program",
+      "desc": "Environment · HEP · Owner profile"
+    },
+    "goals": {
+      "label": "Goals",
+      "desc": "Short-term · Long-term · Progress"
+    },
+    "conditioning": {
+      "label": "Conditioning",
+      "desc": "Fitness · Performance · Maintenance"
+    },
+    "protocol": {
+      "label": "Protocol Summary",
+      "desc": "Generate · Export · Email · QR"
+    },
+    "library": {
+      "label": "Exercise Library",
+      "desc": "260 exercises · Canine & Feline · Evidence-Based"
+    },
+    "nutrition": {
+      "label": "PetCare Nutrition",
+      "desc": "Therapeutic diet recommendations · Mars PetCare"
+    },
+    "coming-soon": {
+      "label": "3D Clinical Anatomy Viewer",
+      "desc": "Holographic · Interactive · Coming Soon"
+    }
   },
   "modal": {
     "close": "Close",
     "saveAndClose": "Save & Close",
-    "engineSubtitle": "K9 Rehab Pro™ · B.E.A.U.™ Engine"
+    "engineSubtitle": "K9 Rehab Pro™ · B.E.A.U.™ Engine",
+    "saving": "Saving…",
+    "updating": "Updating…"
   },
   "common": {
     "loading": "Loading…",
@@ -58,7 +102,8 @@
     "feline": "Feline",
     "both": "Both",
     "yes": "Yes",
-    "no": "No"
+    "no": "No",
+    "normalPrefix": "Normal"
   },
   "form": {
     "species": "Species",
@@ -79,30 +124,30 @@
     "categoryCount": "{{count}} categories · {{brands}} brands · {{products}} product lines",
     "marsPortfolioFooter": "Mars Petcare Therapeutic Catalog",
     "categories": {
-      "gi":         "Gastrointestinal & Digestive Support",
-      "renal":      "Renal Support & Urinary Health",
-      "derm":       "Dermatology & Food Sensitivities",
-      "weight":     "Weight Management & Metabolic Support",
-      "mobility":   "Mobility & Joint Support",
-      "recovery":   "Recovery, Critical Care & High-Energy Support",
-      "pediatric":  "Pediatric, Growth & Reproduction",
-      "dental":     "Dental Health",
+      "gi": "Gastrointestinal & Digestive Support",
+      "renal": "Renal Support & Urinary Health",
+      "derm": "Dermatology & Food Sensitivities",
+      "weight": "Weight Management & Metabolic Support",
+      "mobility": "Mobility & Joint Support",
+      "recovery": "Recovery, Critical Care & High-Energy Support",
+      "pediatric": "Pediatric, Growth & Reproduction",
+      "dental": "Dental Health",
       "behavioral": "Behavioral & Cognitive Support",
-      "specialty":  "Specialty & Niche Clinical Categories"
+      "specialty": "Specialty & Niche Clinical Categories"
     },
     "conditions": {
-      "none":       "— Select condition —",
-      "gi":         "GI / Digestive",
-      "renal":      "Renal / Urinary",
-      "derm":       "Dermatology / Food allergy",
-      "weight":     "Weight / Metabolic",
-      "mobility":   "Mobility / Joint / OA",
-      "recovery":   "Recovery / Post-surgical",
-      "pediatric":  "Pediatric / Growth / Reproduction",
-      "dental":     "Dental",
+      "none": "— Select condition —",
+      "gi": "GI / Digestive",
+      "renal": "Renal / Urinary",
+      "derm": "Dermatology / Food allergy",
+      "weight": "Weight / Metabolic",
+      "mobility": "Mobility / Joint / OA",
+      "recovery": "Recovery / Post-surgical",
+      "pediatric": "Pediatric / Growth / Reproduction",
+      "dental": "Dental",
       "behavioral": "Behavioral / Cognitive",
-      "specialty":  "Specialty (Hepatic / Cardiac / Allergy)",
-      "other":      "Other / Multiple"
+      "specialty": "Specialty (Hepatic / Cardiac / Allergy)",
+      "other": "Other / Multiple"
     },
     "guaranteedAnalysis": "Guaranteed Analysis",
     "keyNutrients": "Key Therapeutic Nutrients",
@@ -152,7 +197,11 @@
     "askPlaceholder": "e.g. What exercises are contraindicated for a TPLO patient at week 3? What is the evidence basis for cavaletti rails?",
     "askButton": "Ask B.E.A.U.",
     "thinking": "B.E.A.U. is thinking…",
-    "response": "B.E.A.U. Response"
+    "response": "B.E.A.U. Response",
+    "askBeau": "Ask B.E.A.U.",
+    "closeBeau": "Close B.E.A.U.",
+    "askShort": "ASK",
+    "askAboutPlaceholder": "Ask B.E.A.U. about {{topic}}…"
   },
   "safety": {
     "_note": "Safety-critical strings are ENGLISH-LOCKED across all locales per product owner decision 2026-04-11. No machine translation. SafetyText component renders these with a visible EN badge when the user is in a non-English locale. Human-reviewed translations will replace these incrementally.",
@@ -163,5 +212,134 @@
     "dietScopeHeader": "Therapeutic Diet Decision Support · Licensed Veterinarian Review Only",
     "equivalentDiets": "Equivalent therapeutic diets from Hill's Prescription Diet, Purina Pro Plan Veterinary Diets, and Blue Buffalo Natural Veterinary Diet may be substituted per clinician judgment.",
     "neverAutoSelect": "B.E.A.U. presents clinician-reviewable options; B.E.A.U. never auto-selects or prescribes. Brand surfacing is logged to support Mars Petcare integration analytics."
+  },
+  "fields": {
+    "client_information": "Client Information",
+    "patient_information": "Patient Information",
+    "address": "Address",
+    "attending_clinical_team": "Attending Clinical Team",
+    "clinical_notes": "Clinical Notes",
+    "diagnostic_imaging": "Diagnostic Imaging",
+    "laboratory_work": "Laboratory Work",
+    "current_medications": "Current Medications",
+    "clinical_assessment": "Clinical Assessment",
+    "pain_assessment": "Pain Assessment",
+    "gait_analysis": "Gait Analysis",
+    "neurological_exam": "Neurological Exam",
+    "orthopedic_exam": "Orthopedic Exam",
+    "functional_assessment": "Functional Assessment",
+    "special_tests": "Special Tests",
+    "treatment_plan": "Treatment Plan",
+    "surgical_status": "Surgical Status",
+    "treatment_approach": "Treatment Approach",
+    "activity_restrictions": "Activity Restrictions",
+    "metrics": "Metrics",
+    "body_condition_score": "Body Condition Score",
+    "goniometry": "Goniometry",
+    "muscle_measurements": "Muscle Measurements",
+    "equipment": "Equipment",
+    "available_modalities": "Available Modalities",
+    "home_environment": "Home Environment",
+    "home_exercise_program": "Home Exercise Program",
+    "owner_profile": "Owner Profile",
+    "goals": "Goals",
+    "short_term_goals": "Short-term Goals",
+    "long_term_goals": "Long-term Goals",
+    "conditioning": "Conditioning",
+    "protocol_summary": "Protocol Summary",
+    "exercise_library": "Exercise Library",
+    "client_first_name": "Client First Name",
+    "client_last_name": "Client Last Name",
+    "phone": "Phone",
+    "email": "Email",
+    "street_address": "Street Address",
+    "apt_suite_unit": "Apt / Suite / Unit",
+    "zip_postal_code": "Zip / Postal Code",
+    "city": "City",
+    "state_province": "State / Province",
+    "country": "Country",
+    "emergency_contact": "Emergency Contact",
+    "referred_by": "Referred By",
+    "pet_insurance_provider": "Pet Insurance Provider",
+    "other_insurance_provider": "Other Insurance Provider",
+    "primary_veterinarian": "Primary Veterinarian",
+    "patient_name": "Patient Name",
+    "species": "Species",
+    "breed": "Breed",
+    "sex": "Sex",
+    "age_years": "Age (years)",
+    "date_of_birth": "Date of Birth",
+    "color_markings": "Color / Markings",
+    "additional_markings": "Additional Markings",
+    "microchip": "Microchip #",
+    "weight": "Weight",
+    "attending_clinician_specialist": "Attending Clinician / Specialist",
+    "rehabilitation_nurse_assistant": "Rehabilitation Nurse / Assistant",
+    "supplements": "Supplements",
+    "medication_notes_allergies": "Medication Notes / Allergies",
+    "last_nsaid_dose": "Last NSAID dose",
+    "response_to_current_medications": "Response to current medications",
+    "male_intact": "Male — Intact",
+    "male_neutered": "Male — Neutered",
+    "female_intact": "Female — Intact",
+    "female_spayed": "Female — Spayed",
+    "normal": "Normal",
+    "abnormal": "Abnormal",
+    "mild": "Mild",
+    "moderate": "Moderate",
+    "severe": "Severe",
+    "absent": "Absent",
+    "acute": "Acute",
+    "chronic": "Chronic",
+    "update_patient_record": "Update Patient Record",
+    "update_diagnostics": "Update Diagnostics",
+    "update_assessment": "Update Assessment",
+    "update_treatment_status": "Update Treatment Status",
+    "update_metrics": "Update Metrics",
+    "update_equipment": "Update Equipment",
+    "update_home_program": "Update Home Program",
+    "update_goals": "Update Goals",
+    "update_conditioning": "Update Conditioning",
+    "update_protocol": "Update Protocol",
+    "first_name": "First name",
+    "last_name": "Last name",
+    "phone_placeholder": "(555) 000-0000",
+    "email_placeholder": "email@example.com",
+    "street_placeholder": "123 Main Street",
+    "apt_placeholder": "Apt 4B",
+    "zip_placeholder": "e.g. 33301",
+    "city_placeholder": "Fort Lauderdale",
+    "state_placeholder": "FL",
+    "country_placeholder": "United States",
+    "emergency_placeholder": "Name & phone",
+    "referred_by_placeholder": "Referring veterinarian & clinic",
+    "primary_vet_placeholder": "Name & clinic",
+    "insurance_other_placeholder": "Provider name & policy number",
+    "pet_name_placeholder": "Pet's name",
+    "microchip_placeholder": "15-digit number",
+    "clinical_notes_placeholder": "Rehabilitation nurse observations, progression notes, recommendations...",
+    "yes": "Yes",
+    "no": "No",
+    "hint_zip_autofill": "Auto-fills city & state from zip",
+    "hint_clinician_roster": "Populated from Settings → Clinician Roster. Propagates to all blocks.",
+    "hint_staff_roster": "Populated from Settings → Staff Roster. Propagates to all blocks."
+  },
+  "voice": {
+    "rewind": "Rewind 2 sentences",
+    "resume": "Resume from current position",
+    "playFromBeginning": "Play from beginning",
+    "pause": "Pause",
+    "stop": "Stop",
+    "fastForward": "Fast-forward 2 sentences",
+    "ffLocked": "Locked — B.E.A.U. still generating",
+    "ffLockedHint": "FF locked until output complete"
+  },
+  "hints": {
+    "autoConvertsLbs": "Auto-converts to/from lbs",
+    "autoConvertsDob": "Auto-converts to/from DOB"
+  },
+  "toast": {
+    "saveSuccess": "Patient record updated successfully",
+    "saveFailed": "Save failed: {{msg}}"
   }
 }

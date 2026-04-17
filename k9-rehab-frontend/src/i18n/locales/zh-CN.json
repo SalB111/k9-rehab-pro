@@ -1,6 +1,9 @@
 {
-  "_machine_translation_note": "TODO: professional review — machine-quality draft. Safety strings (safety.*) INTENTIONALLY ABSENT — fall back to English with visible EN badge per product owner decision 2026-04-11.",
-  "languageSelector": { "label": "语言", "selectPlatformLanguage": "选择平台语言" },
+  "_machine_translation_note": "Machine-quality drafts for clinician review — do NOT ship to paying customers without credentialed veterinary translator review. Includes fields.* namespace (field labels, options, section titles, placeholders) added 2026-04-17. Labels not covered by fields.* fall back to English via i18next defaultValue. Safety strings (safety.*) remain English-locked with visible EN badge per product owner decision 2026-04-11.",
+  "languageSelector": {
+    "label": "语言",
+    "selectPlatformLanguage": "选择平台语言"
+  },
   "dashboard": {
     "title": "临床仪表板",
     "subtitle": "选择任意模块 · 所有字段独立 · 无需特定顺序",
@@ -29,25 +32,69 @@
     "hipaa": "兽医 HIPAA"
   },
   "tiles": {
-    "client":       { "label": "客户与患者",        "desc": "人口统计 · 联系方式 · 保险" },
-    "diagnostics":  { "label": "诊断",              "desc": "影像 · 实验室检查" },
-    "assessment":   { "label": "评估",              "desc": "诊断 · 疼痛 · 步态 · 神经" },
-    "metrics":      { "label": "B.E.A.U. 指标",     "desc": "BCS · 关节测量 · 肌肉 · 姿势" },
-    "diet":         { "label": "饮食决策支持",       "desc": "Mars Petcare 治疗性产品组合" },
-    "equipment":    { "label": "诊所设备",          "desc": "可用的康复工具" },
-    "home":         { "label": "居家运动计划",       "desc": "环境 · HEP · 主人资料" },
-    "goals":        { "label": "目标",              "desc": "短期 · 长期 · 进展" },
-    "conditioning": { "label": "体能训练",          "desc": "健身 · 表现 · 维持" },
-    "protocol":     { "label": "方案摘要",          "desc": "生成 · 导出 · 电子邮件 · QR" },
-    "treatment":    { "label": "治疗与手术状态",      "desc": "方案 · 状态 · 限制" },
-    "library":      { "label": "运动库",            "desc": "260 项运动 · 犬 · 猫" },
-    "nutrition":    { "label": "PetCare营养",        "desc": "治疗饮食建议 · Mars PetCare" },
-    "coming-soon":  { "label": "3D临床解剖查看器",    "desc": "全息 · 交互式 · 即将推出" }
+    "client": {
+      "label": "客户与患者",
+      "desc": "人口统计 · 联系方式 · 保险"
+    },
+    "diagnostics": {
+      "label": "诊断",
+      "desc": "影像 · 实验室检查"
+    },
+    "assessment": {
+      "label": "评估",
+      "desc": "诊断 · 疼痛 · 步态 · 神经"
+    },
+    "metrics": {
+      "label": "B.E.A.U. 指标",
+      "desc": "BCS · 关节测量 · 肌肉 · 姿势"
+    },
+    "diet": {
+      "label": "饮食决策支持",
+      "desc": "Mars Petcare 治疗性产品组合"
+    },
+    "equipment": {
+      "label": "诊所设备",
+      "desc": "可用的康复工具"
+    },
+    "home": {
+      "label": "居家运动计划",
+      "desc": "环境 · HEP · 主人资料"
+    },
+    "goals": {
+      "label": "目标",
+      "desc": "短期 · 长期 · 进展"
+    },
+    "conditioning": {
+      "label": "体能训练",
+      "desc": "健身 · 表现 · 维持"
+    },
+    "protocol": {
+      "label": "方案摘要",
+      "desc": "生成 · 导出 · 电子邮件 · QR"
+    },
+    "treatment": {
+      "label": "治疗与手术状态",
+      "desc": "方案 · 状态 · 限制"
+    },
+    "library": {
+      "label": "运动库",
+      "desc": "260 项运动 · 犬 · 猫"
+    },
+    "nutrition": {
+      "label": "PetCare营养",
+      "desc": "治疗饮食建议 · Mars PetCare"
+    },
+    "coming-soon": {
+      "label": "3D临床解剖查看器",
+      "desc": "全息 · 交互式 · 即将推出"
+    }
   },
   "modal": {
     "close": "关闭",
     "saveAndClose": "保存并关闭",
-    "engineSubtitle": "K9 Rehab Pro™ · B.E.A.U.™ 引擎"
+    "engineSubtitle": "K9 Rehab Pro™ · B.E.A.U.™ 引擎",
+    "saving": "保存中…",
+    "updating": "更新中…"
   },
   "common": {
     "loading": "加载中…",
@@ -56,7 +103,8 @@
     "feline": "猫",
     "both": "两者",
     "yes": "是",
-    "no": "否"
+    "no": "否",
+    "normalPrefix": "正常"
   },
   "form": {
     "species": "物种",
@@ -76,30 +124,30 @@
     "featureGateTitle": "B.E.A.U. 营养决策支持",
     "marsPortfolioFooter": "Mars Petcare 治疗性产品目录",
     "categories": {
-      "gi":         "胃肠道与消化支持",
-      "renal":      "肾脏支持与泌尿健康",
-      "derm":       "皮肤病与食物敏感",
-      "weight":     "体重管理与代谢支持",
-      "mobility":   "活动能力与关节支持",
-      "recovery":   "恢复、重症监护与高能量支持",
-      "pediatric":  "儿科、生长与繁殖",
-      "dental":     "口腔健康",
+      "gi": "胃肠道与消化支持",
+      "renal": "肾脏支持与泌尿健康",
+      "derm": "皮肤病与食物敏感",
+      "weight": "体重管理与代谢支持",
+      "mobility": "活动能力与关节支持",
+      "recovery": "恢复、重症监护与高能量支持",
+      "pediatric": "儿科、生长与繁殖",
+      "dental": "口腔健康",
       "behavioral": "行为与认知支持",
-      "specialty":  "专科与小众临床类别"
+      "specialty": "专科与小众临床类别"
     },
     "conditions": {
-      "none":       "— 选择状况 —",
-      "gi":         "胃肠道 / 消化",
-      "renal":      "肾脏 / 泌尿",
-      "derm":       "皮肤病 / 食物过敏",
-      "weight":     "体重 / 代谢",
-      "mobility":   "活动能力 / 关节 / OA",
-      "recovery":   "恢复 / 术后",
-      "pediatric":  "儿科 / 生长 / 繁殖",
-      "dental":     "口腔",
+      "none": "— 选择状况 —",
+      "gi": "胃肠道 / 消化",
+      "renal": "肾脏 / 泌尿",
+      "derm": "皮肤病 / 食物过敏",
+      "weight": "体重 / 代谢",
+      "mobility": "活动能力 / 关节 / OA",
+      "recovery": "恢复 / 术后",
+      "pediatric": "儿科 / 生长 / 繁殖",
+      "dental": "口腔",
       "behavioral": "行为 / 认知",
-      "specialty":  "专科(肝脏 / 心脏 / 过敏)",
-      "other":      "其他 / 多种"
+      "specialty": "专科(肝脏 / 心脏 / 过敏)",
+      "other": "其他 / 多种"
     }
   },
   "library": {
@@ -134,6 +182,139 @@
     "askPlaceholder": "例如: TPLO患者第3周哪些运动是禁忌的？骑士栏杆的证据基础是什么？",
     "askButton": "向 B.E.A.U. 提问",
     "thinking": "B.E.A.U. 正在思考…",
-    "response": "B.E.A.U. 回复"
+    "response": "B.E.A.U. 回复",
+    "askBeau": "询问 B.E.A.U.",
+    "closeBeau": "关闭 B.E.A.U.",
+    "askShort": "询问",
+    "askAboutPlaceholder": "向 B.E.A.U. 询问关于{{topic}}…"
+  },
+  "fields": {
+    "client_information": "客户信息",
+    "patient_information": "患者信息",
+    "address": "地址",
+    "attending_clinical_team": "主治临床团队",
+    "clinical_notes": "临床记录",
+    "diagnostic_imaging": "影像诊断",
+    "laboratory_work": "实验室检查",
+    "current_medications": "当前用药",
+    "clinical_assessment": "临床评估",
+    "pain_assessment": "疼痛评估",
+    "gait_analysis": "步态分析",
+    "neurological_exam": "神经学检查",
+    "orthopedic_exam": "骨科检查",
+    "functional_assessment": "功能评估",
+    "special_tests": "特殊检查",
+    "treatment_plan": "治疗计划",
+    "surgical_status": "手术状态",
+    "treatment_approach": "治疗方法",
+    "activity_restrictions": "活动限制",
+    "metrics": "指标",
+    "body_condition_score": "体况评分",
+    "goniometry": "关节角度测量",
+    "muscle_measurements": "肌肉测量",
+    "equipment": "设备",
+    "available_modalities": "可用治疗方式",
+    "home_environment": "家庭环境",
+    "home_exercise_program": "家庭锻炼计划",
+    "owner_profile": "主人档案",
+    "goals": "目标",
+    "short_term_goals": "短期目标",
+    "long_term_goals": "长期目标",
+    "conditioning": "体能训练",
+    "protocol_summary": "方案摘要",
+    "exercise_library": "运动库",
+    "client_first_name": "客户名",
+    "client_last_name": "客户姓",
+    "phone": "电话",
+    "email": "电子邮件",
+    "street_address": "街道地址",
+    "apt_suite_unit": "公寓 / 套房 / 单元",
+    "zip_postal_code": "邮政编码",
+    "city": "城市",
+    "state_province": "州 / 省",
+    "country": "国家",
+    "emergency_contact": "紧急联系人",
+    "referred_by": "转诊来自",
+    "pet_insurance_provider": "宠物保险提供商",
+    "other_insurance_provider": "其他保险提供商",
+    "primary_veterinarian": "主治兽医",
+    "patient_name": "患者姓名",
+    "species": "物种",
+    "breed": "品种",
+    "sex": "性别",
+    "age_years": "年龄 (岁)",
+    "date_of_birth": "出生日期",
+    "color_markings": "颜色 / 花纹",
+    "additional_markings": "其他花纹",
+    "microchip": "微芯片编号",
+    "weight": "体重",
+    "attending_clinician_specialist": "主治医师 / 专科医师",
+    "rehabilitation_nurse_assistant": "康复护士 / 助理",
+    "supplements": "补充剂",
+    "medication_notes_allergies": "用药记录 / 过敏",
+    "last_nsaid_dose": "上次 NSAID 剂量",
+    "response_to_current_medications": "对当前用药的反应",
+    "male_intact": "雄性 — 未绝育",
+    "male_neutered": "雄性 — 已绝育",
+    "female_intact": "雌性 — 未绝育",
+    "female_spayed": "雌性 — 已绝育",
+    "normal": "正常",
+    "abnormal": "异常",
+    "mild": "轻度",
+    "moderate": "中度",
+    "severe": "重度",
+    "absent": "缺失",
+    "acute": "急性",
+    "chronic": "慢性",
+    "update_patient_record": "更新患者记录",
+    "update_diagnostics": "更新诊断",
+    "update_assessment": "更新评估",
+    "update_treatment_status": "更新治疗状态",
+    "update_metrics": "更新指标",
+    "update_equipment": "更新设备",
+    "update_home_program": "更新家庭计划",
+    "update_goals": "更新目标",
+    "update_conditioning": "更新体能训练",
+    "update_protocol": "更新方案",
+    "first_name": "名字",
+    "last_name": "姓氏",
+    "phone_placeholder": "000 0000 0000",
+    "email_placeholder": "email@example.com",
+    "street_placeholder": "主街 123 号",
+    "apt_placeholder": "4B 号",
+    "zip_placeholder": "例如 33301",
+    "city_placeholder": "劳德代尔堡",
+    "state_placeholder": "佛罗里达州",
+    "country_placeholder": "美国",
+    "emergency_placeholder": "姓名和电话",
+    "referred_by_placeholder": "转诊兽医和诊所",
+    "primary_vet_placeholder": "姓名和诊所",
+    "insurance_other_placeholder": "保险公司和保单号",
+    "pet_name_placeholder": "宠物名字",
+    "microchip_placeholder": "15 位数字",
+    "clinical_notes_placeholder": "康复护士观察、进展记录、建议...",
+    "yes": "是",
+    "no": "否",
+    "hint_zip_autofill": "根据邮编自动填充城市和州",
+    "hint_clinician_roster": "从设置 → 临床医师名单填充。传播到所有模块。",
+    "hint_staff_roster": "从设置 → 员工名单填充。传播到所有模块。"
+  },
+  "voice": {
+    "rewind": "后退 2 句",
+    "resume": "从当前位置继续",
+    "playFromBeginning": "从头播放",
+    "pause": "暂停",
+    "stop": "停止",
+    "fastForward": "快进 2 句",
+    "ffLocked": "锁定 — B.E.A.U. 仍在生成",
+    "ffLockedHint": "快进锁定，直到输出完成"
+  },
+  "hints": {
+    "autoConvertsLbs": "自动转换为磅/从磅转换",
+    "autoConvertsDob": "自动转换为出生日期/从出生日期转换"
+  },
+  "toast": {
+    "saveSuccess": "患者记录已成功更新",
+    "saveFailed": "保存失败：{{msg}}"
   }
 }

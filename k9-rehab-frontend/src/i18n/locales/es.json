@@ -1,6 +1,9 @@
 {
-  "_machine_translation_note": "TODO: professional review — machine-quality draft. Do NOT ship to paying customers without credentialed Spanish veterinary translator review. Safety strings (safety.*) are INTENTIONALLY ABSENT from this bundle — they fall back to English with a visible EN badge per product owner decision 2026-04-11.",
-  "languageSelector": { "label": "Idioma", "selectPlatformLanguage": "Seleccionar idioma de la plataforma" },
+  "_machine_translation_note": "Machine-quality drafts for clinician review — do NOT ship to paying customers without credentialed veterinary translator review. Includes fields.* namespace (field labels, options, section titles, placeholders) added 2026-04-17. Labels not covered by fields.* fall back to English via i18next defaultValue. Safety strings (safety.*) remain English-locked with visible EN badge per product owner decision 2026-04-11.",
+  "languageSelector": {
+    "label": "Idioma",
+    "selectPlatformLanguage": "Seleccionar idioma de la plataforma"
+  },
   "dashboard": {
     "title": "Panel Clínico",
     "subtitle": "Seleccione cualquier bloque · Todos los campos son independientes · Sin orden requerido",
@@ -29,25 +32,69 @@
     "hipaa": "HIPAA Veterinaria"
   },
   "tiles": {
-    "client":       { "label": "Cliente y Paciente",            "desc": "Datos demográficos · Contacto · Seguro" },
-    "diagnostics":  { "label": "Diagnósticos",                    "desc": "Imagenología · Trabajo de Laboratorio" },
-    "assessment":   { "label": "Evaluación",                      "desc": "Diagnóstico · Dolor · Marcha · Neuro" },
-    "metrics":      { "label": "Métricas B.E.A.U.",               "desc": "BCS · Goniometría · Músculo · Postural" },
-    "diet":         { "label": "Soporte de Decisión Dietética",   "desc": "Portafolio terapéutico Mars Petcare" },
-    "equipment":    { "label": "Equipo Clínico",                  "desc": "Herramientas de rehabilitación disponibles" },
-    "home":         { "label": "Programa de Ejercicios en Casa",  "desc": "Entorno · HEP · Perfil del propietario" },
-    "goals":        { "label": "Objetivos",                       "desc": "Corto plazo · Largo plazo · Progreso" },
-    "conditioning": { "label": "Acondicionamiento",               "desc": "Fitness · Rendimiento · Mantenimiento" },
-    "protocol":     { "label": "Resumen del Protocolo",           "desc": "Generar · Exportar · Email · QR" },
-    "treatment":    { "label": "Tratamiento y Estado Quirúrgico",  "desc": "Enfoque · Estado · Restricciones" },
-    "library":      { "label": "Biblioteca de Ejercicios",        "desc": "260 ejercicios · Canino · Felino" },
-    "nutrition":    { "label": "Nutrición PetCare",               "desc": "Recomendaciones dietéticas terapéuticas · Mars PetCare" },
-    "coming-soon":  { "label": "Visor de Anatomía Clínica 3D",    "desc": "Holográfico · Interactivo · Próximamente" }
+    "client": {
+      "label": "Cliente y Paciente",
+      "desc": "Datos demográficos · Contacto · Seguro"
+    },
+    "diagnostics": {
+      "label": "Diagnósticos",
+      "desc": "Imagenología · Trabajo de Laboratorio"
+    },
+    "assessment": {
+      "label": "Evaluación",
+      "desc": "Diagnóstico · Dolor · Marcha · Neuro"
+    },
+    "metrics": {
+      "label": "Métricas B.E.A.U.",
+      "desc": "BCS · Goniometría · Músculo · Postural"
+    },
+    "diet": {
+      "label": "Soporte de Decisión Dietética",
+      "desc": "Portafolio terapéutico Mars Petcare"
+    },
+    "equipment": {
+      "label": "Equipo Clínico",
+      "desc": "Herramientas de rehabilitación disponibles"
+    },
+    "home": {
+      "label": "Programa de Ejercicios en Casa",
+      "desc": "Entorno · HEP · Perfil del propietario"
+    },
+    "goals": {
+      "label": "Objetivos",
+      "desc": "Corto plazo · Largo plazo · Progreso"
+    },
+    "conditioning": {
+      "label": "Acondicionamiento",
+      "desc": "Fitness · Rendimiento · Mantenimiento"
+    },
+    "protocol": {
+      "label": "Resumen del Protocolo",
+      "desc": "Generar · Exportar · Email · QR"
+    },
+    "treatment": {
+      "label": "Tratamiento y Estado Quirúrgico",
+      "desc": "Enfoque · Estado · Restricciones"
+    },
+    "library": {
+      "label": "Biblioteca de Ejercicios",
+      "desc": "260 ejercicios · Canino · Felino"
+    },
+    "nutrition": {
+      "label": "Nutrición PetCare",
+      "desc": "Recomendaciones dietéticas terapéuticas · Mars PetCare"
+    },
+    "coming-soon": {
+      "label": "Visor de Anatomía Clínica 3D",
+      "desc": "Holográfico · Interactivo · Próximamente"
+    }
   },
   "modal": {
     "close": "Cerrar",
     "saveAndClose": "Guardar y Cerrar",
-    "engineSubtitle": "K9 Rehab Pro™ · Motor B.E.A.U.™"
+    "engineSubtitle": "K9 Rehab Pro™ · Motor B.E.A.U.™",
+    "saving": "Guardando…",
+    "updating": "Actualizando…"
   },
   "common": {
     "loading": "Cargando…",
@@ -56,7 +103,8 @@
     "feline": "Felino",
     "both": "Ambos",
     "yes": "Sí",
-    "no": "No"
+    "no": "No",
+    "normalPrefix": "Normal"
   },
   "form": {
     "species": "Especie",
@@ -76,30 +124,30 @@
     "featureGateTitle": "Soporte de Decisión Nutricional B.E.A.U.",
     "marsPortfolioFooter": "Catálogo Terapéutico Mars Petcare",
     "categories": {
-      "gi":         "Gastrointestinal y Soporte Digestivo",
-      "renal":      "Soporte Renal y Salud Urinaria",
-      "derm":       "Dermatología y Sensibilidades Alimentarias",
-      "weight":     "Control de Peso y Soporte Metabólico",
-      "mobility":   "Movilidad y Soporte Articular",
-      "recovery":   "Recuperación, Cuidados Críticos y Soporte de Alta Energía",
-      "pediatric":  "Pediátrico, Crecimiento y Reproducción",
-      "dental":     "Salud Dental",
+      "gi": "Gastrointestinal y Soporte Digestivo",
+      "renal": "Soporte Renal y Salud Urinaria",
+      "derm": "Dermatología y Sensibilidades Alimentarias",
+      "weight": "Control de Peso y Soporte Metabólico",
+      "mobility": "Movilidad y Soporte Articular",
+      "recovery": "Recuperación, Cuidados Críticos y Soporte de Alta Energía",
+      "pediatric": "Pediátrico, Crecimiento y Reproducción",
+      "dental": "Salud Dental",
       "behavioral": "Soporte Conductual y Cognitivo",
-      "specialty":  "Especialidades y Categorías Clínicas de Nicho"
+      "specialty": "Especialidades y Categorías Clínicas de Nicho"
     },
     "conditions": {
-      "none":       "— Seleccionar condición —",
-      "gi":         "GI / Digestivo",
-      "renal":      "Renal / Urinario",
-      "derm":       "Dermatología / Alergia alimentaria",
-      "weight":     "Peso / Metabólico",
-      "mobility":   "Movilidad / Articular / OA",
-      "recovery":   "Recuperación / Post-quirúrgico",
-      "pediatric":  "Pediátrico / Crecimiento / Reproducción",
-      "dental":     "Dental",
+      "none": "— Seleccionar condición —",
+      "gi": "GI / Digestivo",
+      "renal": "Renal / Urinario",
+      "derm": "Dermatología / Alergia alimentaria",
+      "weight": "Peso / Metabólico",
+      "mobility": "Movilidad / Articular / OA",
+      "recovery": "Recuperación / Post-quirúrgico",
+      "pediatric": "Pediátrico / Crecimiento / Reproducción",
+      "dental": "Dental",
       "behavioral": "Conductual / Cognitivo",
-      "specialty":  "Especialidad (Hepático / Cardíaco / Alergia)",
-      "other":      "Otro / Múltiple"
+      "specialty": "Especialidad (Hepático / Cardíaco / Alergia)",
+      "other": "Otro / Múltiple"
     }
   },
   "library": {
@@ -134,6 +182,139 @@
     "askPlaceholder": "p. ej. ¿Qué ejercicios están contraindicados para un paciente TPLO en la semana 3? ¿Cuál es la base de evidencia para barras cavaletti?",
     "askButton": "Preguntar a B.E.A.U.",
     "thinking": "B.E.A.U. está pensando…",
-    "response": "Respuesta de B.E.A.U."
+    "response": "Respuesta de B.E.A.U.",
+    "askBeau": "Preguntar a B.E.A.U.",
+    "closeBeau": "Cerrar B.E.A.U.",
+    "askShort": "PREGUNTAR",
+    "askAboutPlaceholder": "Pregunta a B.E.A.U. sobre {{topic}}…"
+  },
+  "fields": {
+    "client_information": "Información del Cliente",
+    "patient_information": "Información del Paciente",
+    "address": "Dirección",
+    "attending_clinical_team": "Equipo Clínico a Cargo",
+    "clinical_notes": "Notas Clínicas",
+    "diagnostic_imaging": "Imagenología Diagnóstica",
+    "laboratory_work": "Trabajo de Laboratorio",
+    "current_medications": "Medicamentos Actuales",
+    "clinical_assessment": "Evaluación Clínica",
+    "pain_assessment": "Evaluación del Dolor",
+    "gait_analysis": "Análisis de la Marcha",
+    "neurological_exam": "Examen Neurológico",
+    "orthopedic_exam": "Examen Ortopédico",
+    "functional_assessment": "Evaluación Funcional",
+    "special_tests": "Pruebas Especiales",
+    "treatment_plan": "Plan de Tratamiento",
+    "surgical_status": "Estado Quirúrgico",
+    "treatment_approach": "Enfoque de Tratamiento",
+    "activity_restrictions": "Restricciones de Actividad",
+    "metrics": "Métricas",
+    "body_condition_score": "Puntuación de Condición Corporal",
+    "goniometry": "Goniometría",
+    "muscle_measurements": "Mediciones Musculares",
+    "equipment": "Equipo",
+    "available_modalities": "Modalidades Disponibles",
+    "home_environment": "Entorno del Hogar",
+    "home_exercise_program": "Programa de Ejercicios en Casa",
+    "owner_profile": "Perfil del Propietario",
+    "goals": "Objetivos",
+    "short_term_goals": "Objetivos a Corto Plazo",
+    "long_term_goals": "Objetivos a Largo Plazo",
+    "conditioning": "Acondicionamiento",
+    "protocol_summary": "Resumen del Protocolo",
+    "exercise_library": "Biblioteca de Ejercicios",
+    "client_first_name": "Nombre del Cliente",
+    "client_last_name": "Apellido del Cliente",
+    "phone": "Teléfono",
+    "email": "Correo Electrónico",
+    "street_address": "Dirección",
+    "apt_suite_unit": "Apto / Suite / Unidad",
+    "zip_postal_code": "Código Postal",
+    "city": "Ciudad",
+    "state_province": "Estado / Provincia",
+    "country": "País",
+    "emergency_contact": "Contacto de Emergencia",
+    "referred_by": "Referido Por",
+    "pet_insurance_provider": "Proveedor de Seguro de Mascota",
+    "other_insurance_provider": "Otro Proveedor de Seguro",
+    "primary_veterinarian": "Veterinario de Cabecera",
+    "patient_name": "Nombre del Paciente",
+    "species": "Especie",
+    "breed": "Raza",
+    "sex": "Sexo",
+    "age_years": "Edad (años)",
+    "date_of_birth": "Fecha de Nacimiento",
+    "color_markings": "Color / Marcas",
+    "additional_markings": "Marcas Adicionales",
+    "microchip": "N° de Microchip",
+    "weight": "Peso",
+    "attending_clinician_specialist": "Clínico / Especialista a Cargo",
+    "rehabilitation_nurse_assistant": "Enfermero de Rehabilitación / Asistente",
+    "supplements": "Suplementos",
+    "medication_notes_allergies": "Notas de Medicamentos / Alergias",
+    "last_nsaid_dose": "Última dosis de AINE",
+    "response_to_current_medications": "Respuesta a medicamentos actuales",
+    "male_intact": "Macho — Entero",
+    "male_neutered": "Macho — Castrado",
+    "female_intact": "Hembra — Entera",
+    "female_spayed": "Hembra — Esterilizada",
+    "normal": "Normal",
+    "abnormal": "Anormal",
+    "mild": "Leve",
+    "moderate": "Moderado",
+    "severe": "Severo",
+    "absent": "Ausente",
+    "acute": "Agudo",
+    "chronic": "Crónico",
+    "update_patient_record": "Actualizar Registro del Paciente",
+    "update_diagnostics": "Actualizar Diagnósticos",
+    "update_assessment": "Actualizar Evaluación",
+    "update_treatment_status": "Actualizar Estado del Tratamiento",
+    "update_metrics": "Actualizar Métricas",
+    "update_equipment": "Actualizar Equipo",
+    "update_home_program": "Actualizar Programa en Casa",
+    "update_goals": "Actualizar Objetivos",
+    "update_conditioning": "Actualizar Acondicionamiento",
+    "update_protocol": "Actualizar Protocolo",
+    "first_name": "Nombre",
+    "last_name": "Apellido",
+    "phone_placeholder": "(555) 000-0000",
+    "email_placeholder": "correo@ejemplo.com",
+    "street_placeholder": "Calle Principal 123",
+    "apt_placeholder": "Apto 4B",
+    "zip_placeholder": "p. ej. 33301",
+    "city_placeholder": "Fort Lauderdale",
+    "state_placeholder": "FL",
+    "country_placeholder": "Estados Unidos",
+    "emergency_placeholder": "Nombre y teléfono",
+    "referred_by_placeholder": "Veterinario y clínica que refiere",
+    "primary_vet_placeholder": "Nombre y clínica",
+    "insurance_other_placeholder": "Nombre del proveedor y número de póliza",
+    "pet_name_placeholder": "Nombre de la mascota",
+    "microchip_placeholder": "Número de 15 dígitos",
+    "clinical_notes_placeholder": "Observaciones de enfermería de rehabilitación, notas de progresión, recomendaciones...",
+    "yes": "Sí",
+    "no": "No",
+    "hint_zip_autofill": "Rellena automáticamente ciudad y estado desde el código postal",
+    "hint_clinician_roster": "Se completa desde Configuración → Lista de Clínicos. Se propaga a todos los bloques.",
+    "hint_staff_roster": "Se completa desde Configuración → Lista de Personal. Se propaga a todos los bloques."
+  },
+  "voice": {
+    "rewind": "Retroceder 2 oraciones",
+    "resume": "Reanudar desde la posición actual",
+    "playFromBeginning": "Reproducir desde el inicio",
+    "pause": "Pausar",
+    "stop": "Detener",
+    "fastForward": "Avanzar 2 oraciones",
+    "ffLocked": "Bloqueado — B.E.A.U. sigue generando",
+    "ffLockedHint": "Avance bloqueado hasta que termine la salida"
+  },
+  "hints": {
+    "autoConvertsLbs": "Convierte automáticamente a/de libras",
+    "autoConvertsDob": "Convierte automáticamente a/de fecha de nacimiento"
+  },
+  "toast": {
+    "saveSuccess": "Registro del paciente actualizado correctamente",
+    "saveFailed": "Error al guardar: {{msg}}"
   }
 }
