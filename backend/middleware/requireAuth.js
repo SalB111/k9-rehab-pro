@@ -9,7 +9,14 @@
 const jwt = require("jsonwebtoken");
 const db = require("../db-provider");
 
-const JWT_SECRET = process.env.JWT_SECRET || require("crypto").randomBytes(64).toString("hex");
+// Must match the secret used by auth-routes.js to sign. If JWT_SECRET is
+// missing, auth-routes.js already throws at boot — this file will never
+// load with a broken env. Splitting previously used two different random
+// fallbacks (sign-with-A, verify-with-B → every token invalid).
+if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
+  throw new Error("FATAL: JWT_SECRET environment variable is required and must be at least 32 chars.");
+}
+const JWT_SECRET = process.env.JWT_SECRET;
 
 async function requireAuth(req, res, next) {
   try {

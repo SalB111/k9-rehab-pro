@@ -29,28 +29,35 @@ app.use(helmet({
   contentSecurityPolicy: false, // Disabled for SPA compatibility
 }));
 
-// Rate limiting — general API (10000 req/15min — LEAP-proof)
+// Rate limiting — per IP. Thresholds tightened after the pre-demo audit.
+// Previous values (10000 / 1000 / 10000 per 15min) left the auth endpoint
+// wide open to brute-force and the B.E.A.U. endpoint wide open to
+// Anthropic-spend abuse. Env overrides available for load-testing.
+const num = (v, def) => { const n = parseInt(v, 10); return Number.isFinite(n) && n > 0 ? n : def; };
+
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10000,
+  max: num(process.env.RATE_LIMIT_GENERAL, 300),
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: "Too many requests, please try again later" },
 });
 
-// Rate limiting — auth endpoints (1000 req/15min — LEAP-proof)
+// Auth brute-force protection — 20 attempts per IP per 15 min is enough
+// for a careful typist, tight enough to stop password-spraying.
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 1000,
+  max: num(process.env.RATE_LIMIT_AUTH, 20),
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: "Too many login attempts, please try again later" },
 });
 
-// Rate limiting — B.E.A.U. chat (10000 req/15min — LEAP-proof)
+// B.E.A.U. limiter — each request hits Anthropic/OpenAI and incurs real cost.
+// 60 per IP per 15 min is plenty for a 10-patient clinic day.
 const beauLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10000,
+  max: num(process.env.RATE_LIMIT_BEAU, 60),
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: "Chat rate limit reached, please wait a moment" },
@@ -470,11 +477,14 @@ const evidenceEngine = require("./engines/evidence/evidence-engine");
 const narrativeEngine = require("./engines/narrative/narrative-engine");
 const presentationEngine = require("./engines/presentation/presentation-engine");
 const visualEngine = require("./engines/visual/visual-engine");
-app.use("/api/beau", beauLimiter, beauRouter);
-app.use("/api/tts", require("./tts-router"));
+// Auth-gated — prevents anonymous patient-name disclosure via
+// GET /api/beau/sessions and prevents anonymous spend on
+// POST /api/beau/chat / POST /api/tts (Anthropic + OpenAI cost).
+app.use("/api/beau", beauLimiter, requireAuth, beauRouter);
+app.use("/api/tts", requireAuth, require("./tts-router"));
 
 // Knowledge Engine search endpoint
-app.get("/api/beau/knowledge/search", (req, res) => {
+app.get("/api/beau/knowledge/search", requireAuth, (req, res) => {
   const { q } = req.query;
   if (!q) return res.status(400).json({ error: "Query parameter 'q' is required" });
   const results = knowledgeEngine.search(q, 10);
@@ -486,7 +496,7 @@ app.get("/api/beau/knowledge/status", (req, res) => {
 });
 
 // Evidence Engine search endpoint
-app.post("/api/beau/evidence/search", async (req, res) => {
+app.post("/api/beau/evidence/search", requireAuth, async (req, res) => {
   try {
     const { query, maxResults } = req.body;
     if (!query) return res.status(400).json({ error: "Query is required" });
@@ -504,7 +514,7 @@ app.get("/api/beau/evidence/status", (req, res) => {
 });
 
 // Narrative Engine endpoints
-app.post("/api/beau/narrative/generate", async (req, res) => {
+app.post("/api/beau/narrative/generate", requireAuth, async (req, res) => {
   try {
     const { type, patient, instructions } = req.body;
     if (!type) return res.status(400).json({ error: "Document type is required" });
@@ -524,7 +534,7 @@ app.get("/api/beau/narrative/status", (req, res) => {
 });
 
 // Presentation Engine endpoints
-app.post("/api/beau/presentation/generate", async (req, res) => {
+app.post("/api/beau/presentation/generate", requireAuth, async (req, res) => {
   try {
     const { prompt, patient } = req.body;
     if (!prompt) return res.status(400).json({ error: "Prompt is required" });
@@ -540,7 +550,7 @@ app.get("/api/beau/presentation/status", (req, res) => {
 });
 
 // Visual Engine endpoints
-app.post("/api/beau/visual/generate", (req, res) => {
+app.post("/api/beau/visual/generate", requireAuth, (req, res) => {
   try {
     const { type, ...params } = req.body;
     if (!type) return res.status(400).json({ error: "Card type is required" });
@@ -563,7 +573,7 @@ app.get("/api/beau/visual/status", (req, res) => {
 const { runSafetyGateAgent } = require("./agents/safetyGateAgent");
 
 // Owner-triggered home exercise session (safety-gated)
-app.post("/api/pipeline/home-session", async (req, res) => {
+app.post("/api/pipeline/home-session", requireAuth, async (req, res) => {
   try {
     console.log("[Pipeline] Owner home-session request received");
     const result = await runSafetyGateAgent(req.body);
@@ -621,10 +631,22 @@ app.get("/api/pipeline/status", (req, res) => {
 
     const existingAdmin = await db.findUserByUsername("admin");
     if (!existingAdmin) {
-      const adminPwd = (process.env.ADMIN_PASSWORD || "K9RehabAdmin2026!").trim();
-      const passwordHash = await bcrypt.hash(adminPwd, 10);
-      await db.createUser("admin", passwordHash, "admin");
-      console.log("✅ Default admin user created");
+      // SECURITY: never ship a default admin password. ADMIN_PASSWORD must
+      // be supplied via env (Railway → Variables). If missing on first boot,
+      // we skip admin creation and log a loud warning — the operator can
+      // set the env var and restart, or create the admin manually via
+      // /api/auth/register then promote in the DB.
+      const adminPwd = (process.env.ADMIN_PASSWORD || "").trim();
+      if (!adminPwd || adminPwd.length < 12) {
+        console.warn(
+          "⚠  ADMIN_PASSWORD env var missing or < 12 chars — skipping default admin creation. " +
+          "Set ADMIN_PASSWORD (≥ 12 chars) in Railway env to provision the 'admin' user on next boot."
+        );
+      } else {
+        const passwordHash = await bcrypt.hash(adminPwd, 10);
+        await db.createUser("admin", passwordHash, "admin");
+        console.log("✅ Default admin user created from ADMIN_PASSWORD env");
+      }
     } else {
       console.log("✅ Admin user exists");
     }
