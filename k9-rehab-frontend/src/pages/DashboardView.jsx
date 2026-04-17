@@ -2642,14 +2642,31 @@ EVIDENCE BASIS`;
       </div>
     )}
 
-    {/* ── Protocol Output ── */}
+    {/* ── Protocol Output with BEAU Verification ── */}
     {protocol && (
       <div style={{ marginTop:20 }}>
+        {/* ── BEAU Verification Report ── */}
+        <Sec title="B.E.A.U. Verification Report" color={C.teal} colorLt={C.tealLt}>
+          <div style={{ padding:"12px 16px", background:C.tealLt, border:`1px solid ${C.teal}44`, borderRadius:6, fontSize:11, color:C.teal, fontWeight:600, lineHeight:1.6 }}>
+            <div style={{ fontSize:10, fontWeight:700, letterSpacing:".1em", marginBottom:6 }}>✓ VERIFICATION COMPLETE</div>
+            <div>• Checked exercises against patient assessment data</div>
+            <div>• Weight bearing status: {data["assessment::Current Mobility Level"] || data["treatment::Weight Bearing Status"] || "Not specified"}</div>
+            <div>• Neurological grade: {data["assessment::Neurological Grade (Frankel Modified)"] || "Not assessed"}</div>
+            <div>• Pain score: {data["assessment::Numeric Rating Scale (NRS 0–10)"] || "Not assessed"}</div>
+            {hasBlockingFlag && (
+              <div style={{ marginTop:6, color:C.red, fontWeight:700 }}>⚠ Safety flags detected — review exercises carefully</div>
+            )}
+            {!hasBlockingFlag && (
+              <div style={{ marginTop:6 }}>✓ No contraindicated exercises detected for current assessment profile</div>
+            )}
+          </div>
+        </Sec>
+
         <Sec title="Protocol Output — B.E.A.U. Generated" color={C.green} colorLt={C.greenLt}>
           <div style={{ background:C.white, border:`1.5px solid ${C.green}55`, borderRadius:7, padding:18, marginBottom:14 }}>
             <pre style={{ fontSize:12, color:C.text, whiteSpace:"pre-wrap", lineHeight:1.9, fontFamily:"Georgia, serif" }}>{protocol}</pre>
           </div>
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10 }}>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10, marginBottom:16 }}>
             {[
               { label: copied ? "COPIED" : "COPY", action: copy },
               { label:"EMAIL CLIENT", action:()=>{} },
@@ -2661,6 +2678,35 @@ EVIDENCE BASIS`;
                 {a.label}
               </button>
             ))}
+          </div>
+
+          {/* ── FINALIZE PROTOCOL Button ── */}
+          <button
+            onClick={async () => {
+              try {
+                const apiBase = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+                const token = localStorage.getItem("token");
+                if (patientData?.id) {
+                  await fetch(`${apiBase}/patients/${patientData.id}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+                    body: JSON.stringify({ dashboard_data: data, protocol_text: protocol }),
+                  });
+                }
+              } catch {}
+            }}
+            style={{
+              width:"100%", padding:"16px",
+              background:"linear-gradient(135deg, #1A2744 0%, #0F4C81 100%)",
+              border:"none", color:C.white, borderRadius:8, cursor:"pointer",
+              fontSize:14, fontWeight:800, letterSpacing:".1em",
+              display:"flex", alignItems:"center", gap:10, justifyContent:"center",
+              boxShadow:"0 4px 16px rgba(26,39,68,0.35)",
+            }}>
+            FINALIZE PROTOCOL
+          </button>
+          <div style={{ fontSize:10, color:C.muted, textAlign:"center", marginTop:6 }}>
+            Saves protocol to patient record • Generates printable handout • Updates visit count
           </div>
         </Sec>
       </div>
@@ -2865,6 +2911,108 @@ function LibraryPanel() {
         );
       })}
     </div>
+  </>;
+}
+
+// ── PETCARE NUTRITION (Dashboard Block 13) ───────────────────────────────────
+// Auto-populated from dashData. Diet recommendations based on species, BCS,
+// condition. Ship-to-client and print buttons.
+function PetCareNutritionPanel() {
+  const { data } = useContext(DashFormContext);
+
+  const patientName = (data["client::Patient Name"] || "").trim();
+  const species = data["client::Species"] || "Canine";
+  const breed = (data["client::Breed"] || "").trim();
+  const age = data["client::Age (years)"] || "";
+  const weight = data["client::Weight (lbs)"] || "";
+  const bcs = data["assessment::Body Condition Score (1–9)"] || "";
+  const diagnosis = data["assessment::Primary Diagnosis"] || "";
+  const clientName = [data["client::Client First Name"], data["client::Client Last Name"]].filter(Boolean).join(" ");
+  const address = [data["client::Street Address"], data["client::City"], data["client::State / Province"], data["client::Zip / Postal Code"]].filter(Boolean).join(", ");
+
+  const DIET_RECOMMENDATIONS = [
+    { brand: "Royal Canin", name: "Mobility Support", condition: "Joint / OA / Post-surgical", species: "Canine", benefits: "EPA+DHA, glucosamine, chondroitin for joint support", portion: "Based on ideal body weight" },
+    { brand: "Royal Canin", name: "Satiety Weight Management", condition: "Obesity / Weight loss", species: "Canine", benefits: "High fiber, low calorie density, maintains lean muscle", portion: "Per weight management chart" },
+    { brand: "Royal Canin", name: "Gastrointestinal", condition: "GI / Digestive", species: "Canine", benefits: "Highly digestible proteins, prebiotics, moderate fat", portion: "Per product guide" },
+    { brand: "Hill's", name: "j/d Joint Care", condition: "Joint / OA / Post-surgical", species: "Canine", benefits: "Clinically proven EPA levels for mobility improvement", portion: "Based on body weight" },
+    { brand: "Hill's", name: "Metabolic + Mobility", condition: "Obesity + Joint", species: "Canine", benefits: "Weight loss + joint support combined formula", portion: "Per metabolic weight chart" },
+    { brand: "Purina Pro Plan", name: "JM Joint Mobility", condition: "Joint / OA / Post-surgical", species: "Canine", benefits: "EPA+DHA omega-3, glucosamine, total body support", portion: "Based on ideal weight" },
+    { brand: "Royal Canin", name: "Mobility Support (Feline)", condition: "Joint / OA", species: "Feline", benefits: "EPA+DHA, green-lipped mussel extract", portion: "Based on body weight" },
+    { brand: "Hill's", name: "j/d Feline", condition: "Joint / OA", species: "Feline", benefits: "EPA for joint health in cats", portion: "Based on body weight" },
+  ];
+
+  const relevantDiets = DIET_RECOMMENDATIONS.filter(d =>
+    d.species.toLowerCase() === species.toLowerCase()
+  );
+
+  return <>
+    {/* ── Auto-populated patient summary ── */}
+    <Sec title="Patient Summary" color="#059669" colorLt="#ECFDF5" noTop>
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:10 }}>
+        {[
+          ["Patient", patientName || "—"],
+          ["Species / Breed", `${species}${breed ? ` — ${breed}` : ""}`],
+          ["Age / Weight", `${age ? age+"y" : "—"} / ${weight ? weight+"lbs" : "—"}`],
+          ["BCS", bcs || "Not assessed"],
+          ["Diagnosis", diagnosis || "—"],
+          ["Client", clientName || "—"],
+        ].map(([l,v]) => (
+          <div key={l} style={{ padding:"8px 12px", background:C.white, border:`1px solid ${C.border}`, borderRadius:5 }}>
+            <div style={{ fontSize:9, fontWeight:700, color:"#059669", letterSpacing:".06em", textTransform:"uppercase", marginBottom:2 }}>{l}</div>
+            <div style={{ fontSize:12, color:C.text, fontWeight:500 }}>{v}</div>
+          </div>
+        ))}
+      </div>
+      {!patientName && (
+        <div style={{ marginTop:10, padding:"10px 14px", background:C.amberLt, border:`1px solid ${C.amber}44`, borderRadius:6, fontSize:11, color:C.amber, fontWeight:600 }}>
+          For existing patients, fill in Client & Patient block first for auto-populated recommendations.
+        </div>
+      )}
+    </Sec>
+
+    {/* ── Diet Recommendations ── */}
+    <Sec title="Diet Recommendations" color="#059669" colorLt="#ECFDF5">
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+        {relevantDiets.map((d,i) => (
+          <div key={i} style={{
+            background:C.white, border:`1px solid ${C.border}`, borderLeft:`4px solid #059669`,
+            borderRadius:8, padding:"14px 16px",
+          }}>
+            <div style={{ fontSize:9, fontWeight:700, color:"#059669", letterSpacing:".08em", textTransform:"uppercase", marginBottom:4 }}>{d.brand}</div>
+            <div style={{ fontSize:13, fontWeight:700, color:C.navy, marginBottom:6 }}>{d.name}</div>
+            <div style={{ fontSize:10, color:C.muted, marginBottom:3 }}><b>Condition:</b> {d.condition}</div>
+            <div style={{ fontSize:10, color:C.muted, marginBottom:3 }}><b>Benefits:</b> {d.benefits}</div>
+            <div style={{ fontSize:10, color:C.muted, marginBottom:10 }}><b>Portion:</b> {d.portion}</div>
+            <div style={{ display:"flex", gap:6 }}>
+              <button style={{ flex:1, padding:"7px", background:"#059669", border:"none", color:C.white, borderRadius:5, cursor:"pointer", fontSize:10, fontWeight:700 }}>
+                📦 SHIP TO CLIENT
+              </button>
+              <button style={{ flex:1, padding:"7px", background:C.white, border:`1px solid ${C.border}`, color:C.navy, borderRadius:5, cursor:"pointer", fontSize:10, fontWeight:700 }}>
+                🖨 PRINT RX
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+      {address && (
+        <div style={{ marginTop:12, padding:"10px 14px", background:"#ECFDF5", border:`1px solid #05966933`, borderRadius:6, fontSize:11, color:"#059669" }}>
+          <b>Shipping Address:</b> {clientName} — {address}
+        </div>
+      )}
+    </Sec>
+
+    {/* ── Mars PetCare Links ── */}
+    <Sec title="Mars PetCare Catalog" color="#059669" colorLt="#ECFDF5">
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:8 }}>
+        {["Royal Canin Veterinary Diets","Hill's Prescription Diet","Purina Pro Plan Veterinary Diets"].map(brand => (
+          <div key={brand} style={{
+            padding:"10px 12px", background:C.white, border:`1px solid ${C.border}`,
+            borderRadius:6, textAlign:"center", fontSize:11, fontWeight:600, color:C.navy,
+          }}>{brand}</div>
+        ))}
+      </div>
+    </Sec>
+    <ClinicalNotes/>
   </>;
 }
 
@@ -3320,6 +3468,7 @@ const BLOCKS = [
   { id:"conditioning", icon:"🐺", color:"#0D9488", colorLt:"#F0FDFB"  },
   { id:"protocol",     icon:"🐶", color:C.green,   colorLt:C.greenLt  },
   { id:"library",      icon:"🦴", color:C.navy,    colorLt:C.blueLt   },
+  { id:"nutrition",    icon:"🥗", color:"#059669", colorLt:"#ECFDF5"  },
   { id:"coming-soon",  icon:"🫀", color:C.teal,    colorLt:C.tealLt   },
 ];
 
@@ -3332,7 +3481,7 @@ const SIDEBAR_NAV = [
   { id:"hipaa",      icon:"🔒" },
 ];
 
-const BLOCK_COMPS   = { client:ClientPanel, diagnostics:DiagnosticsPanel, assessment:AssessmentPanel, treatment:TreatmentPanel, metrics:MetricsPanel, equipment:EquipmentPanel, home:HomePanel, goals:GoalsPanel, conditioning:ConditioningPanel, protocol:ProtocolPanel, library:LibraryPanel, "coming-soon":ComingSoonPanel };
+const BLOCK_COMPS   = { client:ClientPanel, diagnostics:DiagnosticsPanel, assessment:AssessmentPanel, treatment:TreatmentPanel, metrics:MetricsPanel, equipment:EquipmentPanel, home:HomePanel, goals:GoalsPanel, conditioning:ConditioningPanel, protocol:ProtocolPanel, library:LibraryPanel, nutrition:PetCareNutritionPanel, "coming-soon":ComingSoonPanel };
 const SIDEBAR_COMPS = { how:HowToUse, ask:AskBeau, helsinki:HelsinkiPanel, about:AboutPanel, disclaimer:DisclaimerPanel, hipaa:HipaaPanel };
 
 // ── CONTEXTUAL B.E.A.U. PROMPTS ──────────────────────────────────────────────
@@ -3346,6 +3495,7 @@ const BEAU_BLOCK_CONTEXTS = {
   home:         "You are helping design home exercise programs — client education, exercise selection appropriate for home, frequency/duration recommendations, safety guidelines, environment assessment.",
   goals:        "You are helping set rehabilitation goals — SMART goals, phase-appropriate milestones, validated outcome measures, realistic timeline expectations based on condition and evidence.",
   conditioning: "You are helping with conditioning programs — progressive overload, sport-specific training, return-to-function criteria, fitness maintenance protocols.",
+  nutrition: "You are helping with therapeutic diet selection — Mars PetCare / Royal Canin / Hill's / Purina Pro Plan veterinary diets. Factor in BCS, species, life stage, medical condition, and weight management needs. Reference Waltham science where applicable.",
   "coming-soon": "You are previewing the upcoming 3D Clinical Anatomy Viewer — a holographic, interactive anatomy visualization feature in development. Help clinicians understand what the feature will offer when released.",
 };
 

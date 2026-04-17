@@ -42,7 +42,8 @@
     "goals":        { "label": "Goals",                    "desc": "Short-term · Long-term · Progress" },
     "conditioning": { "label": "Conditioning",             "desc": "Fitness · Performance · Maintenance" },
     "protocol":     { "label": "Protocol Summary",         "desc": "Generate · Export · Email · QR" },
-    "library":      { "label": "Exercise Library",         "desc": "260 exercises · Canine · Feline" },
+    "library":      { "label": "Exercise Library",         "desc": "260 exercises · Canine & Feline · Evidence-Based" },
+    "nutrition":    { "label": "PetCare Nutrition",        "desc": "Therapeutic diet recommendations · Mars PetCare" },
     "coming-soon":  { "label": "3D Clinical Anatomy Viewer", "desc": "Holographic · Interactive · Coming Soon" }
   },
   "modal": {
