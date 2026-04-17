@@ -13,6 +13,7 @@ const path = require("path");
 const db = require("./db-providers/sqlite-provider");
 const { all, get, run } = require("./db-providers/sqlite-provider");
 const authRoutes = require("./auth-routes");
+const requireAuth = require("./middleware/requireAuth");
 
 const app = express();
 app.set('trust proxy', 1);
@@ -103,7 +104,7 @@ app.use("/api/auth", authLimiter, authRoutes);
 // PATIENTS
 // ---------------------------------------------------------------------------
 
-app.get("/api/patients", async (req, res) => {
+app.get("/api/patients", requireAuth, async (req, res) => {
   try {
     const patients = await all("SELECT * FROM patients ORDER BY created_at DESC");
     res.json({ success: true, data: patients });
@@ -112,7 +113,7 @@ app.get("/api/patients", async (req, res) => {
   }
 });
 
-app.get("/api/patients/:id", async (req, res) => {
+app.get("/api/patients/:id", requireAuth, async (req, res) => {
   try {
     const patient = await get("SELECT * FROM patients WHERE id = ?", [req.params.id]);
     if (!patient) return res.status(404).json({ success: false, error: "Patient not found" });
@@ -122,7 +123,7 @@ app.get("/api/patients/:id", async (req, res) => {
   }
 });
 
-app.post("/api/patients", async (req, res) => {
+app.post("/api/patients", requireAuth, async (req, res) => {
   try {
     const {
       name, species, breed, age, weight, sex, condition, affected_region,
@@ -152,7 +153,7 @@ app.post("/api/patients", async (req, res) => {
   }
 });
 
-app.put("/api/patients/:id", async (req, res) => {
+app.put("/api/patients/:id", requireAuth, async (req, res) => {
   try {
     const {
       name, species, breed, age, weight, sex, condition, affected_region,
@@ -195,7 +196,7 @@ app.put("/api/patients/:id", async (req, res) => {
   }
 });
 
-app.delete("/api/patients/:id", async (req, res) => {
+app.delete("/api/patients/:id", requireAuth, async (req, res) => {
   try {
     await run("DELETE FROM patients WHERE id = ?", [req.params.id]);
     res.json({ success: true });
@@ -284,7 +285,7 @@ app.get("/api/exercises/:id", async (req, res) => {
 // PROTOCOL GENERATION
 // ---------------------------------------------------------------------------
 
-app.post("/api/generate-protocol", (req, res) => {
+app.post("/api/generate-protocol", requireAuth, (req, res) => {
   try {
     const formData = req.body;
 
@@ -342,7 +343,7 @@ app.post("/api/generate-protocol", (req, res) => {
 // SESSIONS
 // ---------------------------------------------------------------------------
 
-app.get("/api/sessions", async (req, res) => {
+app.get("/api/sessions", requireAuth, async (req, res) => {
   try {
     const sessions = await all(`
       SELECT s.*, p.name as patient_name, p.breed as patient_breed
@@ -356,7 +357,7 @@ app.get("/api/sessions", async (req, res) => {
   }
 });
 
-app.get("/api/sessions/:id", async (req, res) => {
+app.get("/api/sessions/:id", requireAuth, async (req, res) => {
   try {
     const session = await get(`
       SELECT s.*, p.name as patient_name, p.breed as patient_breed
@@ -371,7 +372,7 @@ app.get("/api/sessions/:id", async (req, res) => {
   }
 });
 
-app.post("/api/sessions", async (req, res) => {
+app.post("/api/sessions", requireAuth, async (req, res) => {
   try {
     const {
       patient_id, protocol_id, session_date, therapist_name,
@@ -401,7 +402,7 @@ app.post("/api/sessions", async (req, res) => {
 // CLINICS
 // ---------------------------------------------------------------------------
 
-app.get("/api/clinics", async (req, res) => {
+app.get("/api/clinics", requireAuth, async (req, res) => {
   try {
     const clinics = await all("SELECT * FROM clinics");
     res.json({ success: true, data: clinics });
@@ -410,7 +411,7 @@ app.get("/api/clinics", async (req, res) => {
   }
 });
 
-app.post("/api/clinics", async (req, res) => {
+app.post("/api/clinics", requireAuth, async (req, res) => {
   try {
     const {
       clinic_name, contact_email, phone, address,
@@ -431,7 +432,7 @@ app.post("/api/clinics", async (req, res) => {
   }
 });
 
-app.put("/api/clinics/:id", async (req, res) => {
+app.put("/api/clinics/:id", requireAuth, async (req, res) => {
   try {
     const {
       clinic_name, contact_email, phone, address,

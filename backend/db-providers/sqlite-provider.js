@@ -415,6 +415,13 @@ async function findUserByUsername(username) {
   );
 }
 
+async function findUserById(id) {
+  return await get(
+    `SELECT * FROM users WHERE id = ?`,
+    [id]
+  );
+}
+
 async function createUser(username, passwordHash, role = "user") {
   await run(
     `INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)`,
@@ -436,5 +443,6 @@ module.exports = {
   get,
   all,
   findUserByUsername,
+  findUserById,
   createUser
 };
