@@ -309,17 +309,6 @@ useEffect(() => {
             <FiShield size={11} /> About B.E.A.U.
           </button>
           <LanguageSelector/>
-          <BeauVoiceControl
-            isSpeaking={beauVoice.isSpeaking}
-            isPaused={beauVoice.isPaused}
-            autoSpeak={beauVoice.autoSpeak}
-            setAutoSpeak={beauVoice.setAutoSpeak}
-            onStop={beauVoice.stop}
-            onPause={beauVoice.pause}
-            onResume={beauVoice.resume}
-            voiceName={beauVoice.voiceName}
-            compact
-          />
           <button onClick={() => setSidebarOpen(o => !o)} style={{ background: sidebarOpen ? `${C.teal}15` : `${C.navy}08`, border: `1px solid ${C.border}`, borderRadius: 8, color: sidebarOpen ? C.teal : C.text, padding: "6px 10px", cursor: "pointer", fontSize: 11, fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>
             <FiClock size={11} /> {sidebarOpen ? "Hide" : "History"}
           </button>
@@ -473,8 +462,18 @@ useEffect(() => {
             <FiSend size={16} />
           </button>
         </div>
-        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, padding: "0 2px" }}>
-          <span style={{ fontSize: 10, color: C.textLight }}>K9 Rehab Pro™ CDSS • Evidence-based rehabilitation support</span>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 6, padding: "0 2px" }}>
+          <BeauVoiceControl
+            isSpeaking={beauVoice.isSpeaking}
+            isPaused={beauVoice.isPaused}
+            autoSpeak={beauVoice.autoSpeak}
+            setAutoSpeak={beauVoice.setAutoSpeak}
+            onStop={beauVoice.stop}
+            onPause={beauVoice.pause}
+            onResume={beauVoice.resume}
+            voiceName={beauVoice.voiceName}
+            compact
+          />
           <span style={{ fontSize: 10, color: C.textLight }}>B.E.A.U.™ • Millis & Levine • ACVSMR</span>
         </div>
       </div>

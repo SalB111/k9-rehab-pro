@@ -51,7 +51,7 @@ const getStoredSpeed = () => {
 
 export default function useBeauVoice(locale = "en") {
   const [autoSpeak, setAutoSpeak] = useState(() => {
-    try { return localStorage.getItem("k9_beau_autospeak") !== "false"; } catch { return true; }
+    try { const v = localStorage.getItem("k9_beau_autospeak"); return v === "true"; } catch { return false; }
   });
   const [voicePref, setVoicePrefState] = useState(getStoredVoice);
   const [speedPref, setSpeedPrefState] = useState(getStoredSpeed);
@@ -252,6 +252,67 @@ export default function useBeauVoice(locale = "en") {
     if (!processingRef.current) processQueue();
   }, [stop, processQueue]);
 
+  // ── playText — one-shot play of arbitrary text (user presses Play) ──
+  const playText = useCallback((text) => {
+    const cleaned = cleanForSpeech(text);
+    if (!cleaned) return;
+    stop();
+    queueRef.current = [cleaned];
+    processQueue();
+  }, [stop, processQueue]);
+
+  // ── Sentence splitting helper for rewind / fast-forward ──
+  const splitSentences = useCallback((text) => {
+    if (!text) return [];
+    const cleaned = cleanForSpeech(text);
+    return cleaned.match(/[^.!?]+[.!?]+[\s]*/g) || [cleaned];
+  }, []);
+
+  // Track spoken sentences for rewind/ff — callers set this via setSentences
+  const sentencesRef = useRef([]);
+  const [sentenceIndex, setSentenceIndex] = useState(0);
+  const sentenceIndexRef = useRef(0);
+  useEffect(() => { sentenceIndexRef.current = sentenceIndex; }, [sentenceIndex]);
+
+  const setSentences = useCallback((text) => {
+    sentencesRef.current = splitSentences(text);
+    sentenceIndexRef.current = 0;
+    setSentenceIndex(0);
+  }, [splitSentences]);
+
+  // ── rewind(n) — go back n sentences and replay from there ──
+  const rewind = useCallback((n = 2) => {
+    const sents = sentencesRef.current;
+    if (!sents.length) return;
+    stop();
+    const newIdx = Math.max(0, sentenceIndexRef.current - n);
+    sentenceIndexRef.current = newIdx;
+    setSentenceIndex(newIdx);
+    const remaining = sents.slice(newIdx);
+    if (remaining.length > 0) {
+      queueRef.current = [...remaining];
+      processQueue();
+    }
+  }, [stop, processQueue]);
+
+  // ── fastForward(n) — skip ahead n sentences (blocked while generating) ──
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const fastForward = useCallback((n = 2) => {
+    if (isGenerating) return; // blocked while B.E.A.U. is still outputting
+    const sents = sentencesRef.current;
+    if (!sents.length) return;
+    stop();
+    const newIdx = Math.min(sents.length - 1, sentenceIndexRef.current + n);
+    sentenceIndexRef.current = newIdx;
+    setSentenceIndex(newIdx);
+    const remaining = sents.slice(newIdx);
+    if (remaining.length > 0) {
+      queueRef.current = [...remaining];
+      processQueue();
+    }
+  }, [isGenerating, stop, processQueue]);
+
   return {
     speak,
     enqueue,
@@ -259,6 +320,12 @@ export default function useBeauVoice(locale = "en") {
     cancel: stop,
     pause,
     resume,
+    playText,
+    rewind,
+    fastForward,
+    setSentences,
+    isGenerating,
+    setIsGenerating,
     isSpeaking,
     isPaused,
     autoSpeak,

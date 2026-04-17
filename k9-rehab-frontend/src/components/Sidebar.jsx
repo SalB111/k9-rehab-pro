@@ -145,9 +145,9 @@ function SidebarNav({ NAV, view, setView, collapsed }) {
         const baseStyle = {
           borderRadius: 24,
           padding: collapsed ? "8px 8px" : "8px 14px",
-          background: "transparent",
-          border: "1px solid rgba(255,255,255,0.08)",
-          color: "rgba(255,255,255,0.6)",
+          background: "rgba(255,255,255,0.04)",
+          border: "1px solid rgba(255,255,255,0.18)",
+          color: "rgba(255,255,255,0.78)",
           transition: "all 0.2s ease",
           display: "flex",
           alignItems: "center",

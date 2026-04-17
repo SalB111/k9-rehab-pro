@@ -423,15 +423,142 @@ function CbItem({ label, checked, onToggle, children }) {
 }
 
 // ─── MODAL ────────────────────────────────────────────────────────────────────
-function Modal({ title, color, colorLt, icon, onClose, children, beauContext, beauOpen, setBeauOpen, beauQuery, setBeauQuery, beauAnswer, beauLoading, onAskBeau, patientLabel }) {
+// ─── ASK B.E.A.U. PANEL WITH VOICE PLAYBACK ─────────────────────────────────
+// Renders inside each block modal when "Ask B.E.A.U." is toggled on.
+// Includes voice playback controls: Rewind 2, Play, Pause, Stop, Fast-Forward.
+// FF is locked/disabled until B.E.A.U. finishes full output.
+function BeauBlockPanel({ title, beauQuery, setBeauQuery, beauAnswer, beauLoading, onAskBeau }) {
+  const { beauVoice: bv } = useContext(DashFormContext);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  // Track whether this specific answer is done generating
+  const answerDone = !!beauAnswer && !beauLoading;
+
+  const handlePlay = () => {
+    if (!beauAnswer || !bv) return;
+    if (bv.isPaused) {
+      bv.resume();
+    } else {
+      bv.setSentences?.(beauAnswer);
+      bv.playText?.(beauAnswer);
+    }
+    setIsPlaying(true);
+  };
+
+  const handlePause = () => {
+    bv?.pause();
+    setIsPlaying(false);
+  };
+
+  const handleStop = () => {
+    bv?.stop();
+    setIsPlaying(false);
+  };
+
+  const handleRewind = () => {
+    if (!beauAnswer || !bv) return;
+    bv.setSentences?.(beauAnswer);
+    bv.rewind?.(2);
+    setIsPlaying(true);
+  };
+
+  const handleFF = () => {
+    if (!answerDone || !beauAnswer || !bv) return; // blocked while generating
+    bv.setSentences?.(beauAnswer);
+    bv.fastForward?.(2);
+    setIsPlaying(true);
+  };
+
+  const vcBtnStyle = (enabled, accentColor = "#0EA5E9") => ({
+    width: 34, height: 34, borderRadius: 6,
+    display: "flex", alignItems: "center", justifyContent: "center",
+    background: enabled ? `${accentColor}15` : "rgba(100,116,139,0.06)",
+    border: `1px solid ${enabled ? `${accentColor}55` : "rgba(100,116,139,0.2)"}`,
+    color: enabled ? accentColor : "#cbd5e1",
+    fontSize: 15, cursor: enabled ? "pointer" : "not-allowed",
+    opacity: enabled ? 1 : 0.5,
+    transition: "all .15s",
+  });
+
+  return (
+    <div style={{ marginTop:20, padding:16, background:"#F0F9FF", border:"1px solid #0EA5E944", borderRadius:8, animation:"fadeIn .15s ease" }}>
+      <div style={{ fontSize:11, fontWeight:700, color:"#0EA5E9", letterSpacing:".1em", marginBottom:10 }}>ASK B.E.A.U. — {title.toUpperCase()}</div>
+      <div style={{ display:"flex", gap:8 }}>
+        <textarea
+          value={beauQuery || ""}
+          onChange={e => setBeauQuery(e.target.value)}
+          placeholder={`Ask B.E.A.U. about ${title.toLowerCase()}…`}
+          rows={2}
+          style={{ flex:1, fontSize:12, padding:"10px 12px", border:"1px solid #0EA5E944", borderRadius:5, resize:"vertical" }}
+          onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); onAskBeau(); } }}
+        />
+        <button onClick={onAskBeau} disabled={beauLoading || !beauQuery?.trim()}
+          style={{ padding:"10px 18px", background: beauLoading ? "#E0F2FE" : "#0EA5E9", border:"none", color:C.white, borderRadius:5, cursor: beauLoading ? "not-allowed" : "pointer", fontSize:11, fontWeight:700, alignSelf:"flex-end", minWidth:80 }}>
+          {beauLoading ? "..." : "ASK"}
+        </button>
+      </div>
+      {beauAnswer && (
+        <div style={{ marginTop:12 }}>
+          <div style={{ padding:14, background:C.white, border:"1px solid #0EA5E933", borderRadius:6 }}>
+            <pre style={{ fontSize:12, color:C.text, whiteSpace:"pre-wrap", lineHeight:1.8, fontFamily:"Georgia, serif" }}>{beauAnswer}</pre>
+          </div>
+          {/* ── Voice Playback Controls ── */}
+          <div style={{ display:"flex", alignItems:"center", gap:6, marginTop:10 }}>
+            <button onClick={handleRewind} title="Rewind 2 sentences" disabled={!beauAnswer}
+              style={vcBtnStyle(!!beauAnswer)}>⏮</button>
+            {bv?.isPaused || !bv?.isSpeaking ? (
+              <button onClick={handlePlay} title={bv?.isPaused ? "Resume from current position" : "Play from beginning"} disabled={!beauAnswer}
+                style={vcBtnStyle(!!beauAnswer, "#10b981")}>▶</button>
+            ) : (
+              <button onClick={handlePause} title="Pause"
+                style={vcBtnStyle(true, "#F59E0B")}>⏸</button>
+            )}
+            <button onClick={handleStop} title="Stop" disabled={!bv?.isSpeaking && !bv?.isPaused}
+              style={vcBtnStyle(bv?.isSpeaking || bv?.isPaused, "#ef4444")}>⏹</button>
+            <button onClick={handleFF} title={answerDone ? "Fast-forward 2 sentences" : "Locked — B.E.A.U. still generating"} disabled={!answerDone}
+              style={vcBtnStyle(answerDone)}>⏭</button>
+            {!answerDone && beauLoading && (
+              <span style={{ fontSize:9, color:"#94a3b8", marginLeft:4, fontStyle:"italic" }}>FF locked until output complete</span>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Block-specific update button labels
+const BLOCK_UPDATE_LABELS = {
+  client:       "Update Patient Record",
+  diagnostics:  "Update Diagnostics",
+  assessment:   "Update Assessment",
+  treatment:    "Update Treatment Status",
+  metrics:      "Update Metrics",
+  equipment:    "Update Equipment",
+  home:         "Update Home Program",
+  goals:        "Update Goals",
+  conditioning: "Update Conditioning",
+  protocol:     "Update Protocol",
+  library:      null,           // no update for read-only library
+  "coming-soon": null,          // no update for teaser block
+};
+
+function Modal({ title, color, colorLt, icon, onClose, children, beauContext, beauOpen, setBeauOpen, beauQuery, setBeauQuery, beauAnswer, beauLoading, onAskBeau, patientLabel, blockId }) {
   const { t } = useTranslation();
   const { handleSave } = useContext(DashFormContext);
   const [saving, setSaving] = useState(false);
+  const [blockSaving, setBlockSaving] = useState(false);
   const hasBeau = !!beauContext && !!setBeauOpen;
+  const blockUpdateLabel = blockId ? BLOCK_UPDATE_LABELS[blockId] : null;
   const onSaveClose = async () => {
     if (saving) return;
     setSaving(true);
     try { await handleSave?.(); } finally { setSaving(false); onClose(); }
+  };
+  const onBlockUpdate = async () => {
+    if (blockSaving) return;
+    setBlockSaving(true);
+    try { await handleSave?.(); } finally { setTimeout(() => setBlockSaving(false), 600); }
   };
   return (
     <div style={{ position:"fixed", inset:0, zIndex:200, background:"rgba(26,39,68,.55)", display:"flex", alignItems:"center", justifyContent:"center", padding:20, animation:"fadeIn .18s ease" }}
@@ -464,34 +591,41 @@ function Modal({ title, color, colorLt, icon, onClose, children, beauContext, be
           {children}
           {/* ── Contextual B.E.A.U. ── */}
           {hasBeau && beauOpen && (
-            <div style={{ marginTop:20, padding:16, background:"#F0F9FF", border:"1px solid #0EA5E944", borderRadius:8, animation:"fadeIn .15s ease" }}>
-              <div style={{ fontSize:11, fontWeight:700, color:"#0EA5E9", letterSpacing:".1em", marginBottom:10 }}>ASK B.E.A.U. — {title.toUpperCase()}</div>
-              <div style={{ display:"flex", gap:8 }}>
-                <textarea
-                  value={beauQuery || ""}
-                  onChange={e => setBeauQuery(e.target.value)}
-                  placeholder={`Ask B.E.A.U. about ${title.toLowerCase()}…`}
-                  rows={2}
-                  style={{ flex:1, fontSize:12, padding:"10px 12px", border:"1px solid #0EA5E944", borderRadius:5, resize:"vertical" }}
-                  onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); onAskBeau(); } }}
-                />
-                <button onClick={onAskBeau} disabled={beauLoading || !beauQuery?.trim()}
-                  style={{ padding:"10px 18px", background: beauLoading ? "#E0F2FE" : "#0EA5E9", border:"none", color:C.white, borderRadius:5, cursor: beauLoading ? "not-allowed" : "pointer", fontSize:11, fontWeight:700, alignSelf:"flex-end", minWidth:80 }}>
-                  {beauLoading ? "..." : "ASK"}
-                </button>
-              </div>
-              {beauAnswer && (
-                <div style={{ marginTop:12, padding:14, background:C.white, border:"1px solid #0EA5E933", borderRadius:6 }}>
-                  <pre style={{ fontSize:12, color:C.text, whiteSpace:"pre-wrap", lineHeight:1.8, fontFamily:"Georgia, serif" }}>{beauAnswer}</pre>
-                </div>
-              )}
-            </div>
+            <BeauBlockPanel
+              title={title}
+              beauQuery={beauQuery}
+              setBeauQuery={setBeauQuery}
+              beauAnswer={beauAnswer}
+              beauLoading={beauLoading}
+              onAskBeau={onAskBeau}
+            />
           )}
         </div>
         {/* Footer */}
-        <div style={{ padding:"13px 22px", borderTop:`1px solid ${C.border}`, display:"flex", justifyContent:"flex-end", gap:10, flexShrink:0, background:C.bg, borderRadius:"0 0 10px 10px" }}>
-          <button onClick={onClose} style={{ padding:"9px 22px", background:C.white, border:`1px solid ${C.border}`, color:C.muted, borderRadius:5, cursor:"pointer", fontSize:12, fontWeight:600, textTransform:"uppercase" }}>{t("modal.close")}</button>
-          <button onClick={onSaveClose} disabled={saving} style={{ padding:"9px 22px", background: saving ? "#cbd5e1" : color, border:"none", color:C.white, borderRadius:5, cursor: saving ? "wait" : "pointer", fontSize:12, fontWeight:700, letterSpacing:".06em", textTransform:"uppercase" }}>{saving ? "⏳ SAVING…" : t("modal.saveAndClose")}</button>
+        <div style={{ padding:"13px 22px", borderTop:`1px solid ${C.border}`, display:"flex", justifyContent:"space-between", alignItems:"center", flexShrink:0, background:C.bg, borderRadius:"0 0 10px 10px" }}>
+          {/* LEFT — block-specific update button */}
+          <div>
+            {blockUpdateLabel && (
+              <button onClick={onBlockUpdate} disabled={blockSaving}
+                style={{
+                  padding:"9px 20px",
+                  background: blockSaving ? "#d1fae5" : "linear-gradient(135deg, #10b981 0%, #14b8a6 100%)",
+                  border:"none", color: blockSaving ? "#065f46" : "#ffffff",
+                  borderRadius:5, cursor: blockSaving ? "wait" : "pointer",
+                  fontSize:12, fontWeight:700, letterSpacing:".06em",
+                  boxShadow: blockSaving ? "none" : "0 3px 10px rgba(16,185,129,0.3)",
+                  display:"inline-flex", alignItems:"center", gap:6,
+                  transition:"all .18s ease",
+                }}>
+                {blockSaving ? "⏳ UPDATING…" : `✓ ${blockUpdateLabel.toUpperCase()}`}
+              </button>
+            )}
+          </div>
+          {/* RIGHT — close + save & close */}
+          <div style={{ display:"flex", gap:10 }}>
+            <button onClick={onClose} style={{ padding:"9px 22px", background:C.white, border:`1px solid ${C.border}`, color:C.muted, borderRadius:5, cursor:"pointer", fontSize:12, fontWeight:600, textTransform:"uppercase" }}>{t("modal.close")}</button>
+            <button onClick={onSaveClose} disabled={saving} style={{ padding:"9px 22px", background: saving ? "#cbd5e1" : color, border:"none", color:C.white, borderRadius:5, cursor: saving ? "wait" : "pointer", fontSize:12, fontWeight:700, letterSpacing:".06em", textTransform:"uppercase" }}>{saving ? "⏳ SAVING…" : t("modal.saveAndClose")}</button>
+          </div>
         </div>
       </div>
     </div>
@@ -626,8 +760,7 @@ function SafetyText({ k, as = "span", style, className, showBadge = true }) {
 
 // ── CLIENT & PATIENT ──────────────────────────────────────────────────────────
 function ClientPanel() {
-  const { data, update, handleSave } = useContext(DashFormContext);
-  const [updating, setUpdating] = useState(false);
+  const { data, update } = useContext(DashFormContext);
   // Species defaults to Canine; use dashData value if present so breed list stays in sync
   const species = data["client::Species"] || "Canine";
   const setSpecies = (v) => update("client::Species", v);
@@ -640,13 +773,6 @@ function ClientPanel() {
   useEffect(() => {
     try { localStorage.setItem("beau_species", species); } catch {}
   }, [species]);
-
-  const onUpdateClick = async () => {
-    if (updating) return;
-    setUpdating(true);
-    try { await handleSave?.(); }
-    finally { setTimeout(() => setUpdating(false), 600); }
-  };
 
   return <>
     <Sec title="Client Information" color={C.blue} colorLt={C.blueLt} noTop>
@@ -688,40 +814,6 @@ function ClientPanel() {
       <F label="Specialist / Surgeon" placeholder="Referring specialist name & clinic"/>
     </Sec>
 
-    {/* ── UPDATE PATIENT RECORD — explicit commit button per Dr. Zaslow ── */}
-    <div style={{
-      marginTop: 14, padding: "16px 20px",
-      background: "linear-gradient(135deg, #ecfdf5 0%, #f0fdfa 100%)",
-      border: "1.5px solid #10b981", borderRadius: 10,
-      display: "flex", alignItems: "center", justifyContent: "space-between",
-      gap: 14,
-    }}>
-      <div style={{ flex: 1 }}>
-        <div style={{ fontSize: 12, fontWeight: 800, color: "#065f46", letterSpacing: ".04em", marginBottom: 3 }}>
-          Ready to save changes?
-        </div>
-        <div style={{ fontSize: 11, color: "#047857", lineHeight: 1.5 }}>
-          Click <strong>UPDATE PATIENT RECORD</strong> to lock in all edits to the database.
-          This persists the patient chart and creates a visit record.
-        </div>
-      </div>
-      <button
-        onClick={onUpdateClick}
-        disabled={updating}
-        style={{
-          padding: "13px 24px",
-          background: updating ? "#d1fae5" : "linear-gradient(135deg, #10b981 0%, #14b8a6 100%)",
-          border: "none", color: updating ? "#065f46" : "#ffffff",
-          borderRadius: 8, cursor: updating ? "wait" : "pointer",
-          fontSize: 12, fontWeight: 800, letterSpacing: ".08em",
-          whiteSpace: "nowrap",
-          boxShadow: updating ? "none" : "0 4px 14px rgba(16,185,129,0.35)",
-          display: "inline-flex", alignItems: "center", gap: 8,
-          transition: "all .18s ease",
-        }}>
-        {updating ? "⏳ UPDATING…" : "✓ UPDATE PATIENT RECORD"}
-      </button>
-    </div>
     <ClinicalNotes/>
   </>;
 }
@@ -1941,80 +2033,105 @@ REQUIREMENTS:
   </>;
 }
 
-// ── PROTOCOL SUMMARY ──────────────────────────────────────────────────────────
+// ── PROTOCOL SUMMARY (Block 10) ──────────────────────────────────────────────
+// 6-card summary grid showing live dashData, exercise library count bar,
+// compliance checkbox, and GENERATE EXERCISE PROTOCOL button.
 function ProtocolPanel({ patientName, patientData }) {
-  const [generating, setGenerating]       = useState(false);
-  const [protocol,   setProtocol]         = useState("");
   const { data, beauVoice: bv, uiLang } = useContext(DashFormContext);
-  const [copied,     setCopied]           = useState(false);
-  // Quick generate state
-  const [quickCondition, setQuickCondition] = useState(patientData?.condition || "");
-  const [quickRegion,    setQuickRegion]    = useState(patientData?.affected_region || "");
-  const [quickProtocol,  setQuickProtocol]  = useState(null);
-  const [quickLoading,   setQuickLoading]   = useState(false);
 
-  const CONDITIONS = [
-    { value: "TPLO Post-Op", label: "TPLO / CCL Post-Op" },
-    { value: "IVDD", label: "IVDD (Intervertebral Disc Disease)" },
-    { value: "Osteoarthritis", label: "Osteoarthritis (OA)" },
-    { value: "Geriatric Mobility", label: "Geriatric / Mobility Decline" },
-  ];
-  const REGIONS = [
-    "Stifle (Knee)", "Hip", "Elbow", "Shoulder", "Spine — Cervical",
-    "Spine — Thoracolumbar", "Spine — Lumbosacral", "Tarsus (Hock)",
-    "Carpus (Wrist)", "Multiple joints", "Generalized",
-  ];
+  // ── State ──
+  const [generating, setGenerating] = useState(false);
+  const [protocol,   setProtocol]   = useState("");
+  const [copied,     setCopied]     = useState(false);
+  const [complianceChecked, setComplianceChecked] = useState(false);
+  const [exCount, setExCount] = useState(null);
 
-  const quickGenerate = async () => {
-    if (!quickCondition) return;
-    setQuickLoading(true); setQuickProtocol(null);
-    try {
-      const apiBase = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
-      const token = localStorage.getItem("token");
-      // Live values from dashData take priority over stale DB values.
-      const liveWeight = parseFloat(data["client::Weight (lbs)"]) || 0;
-      const liveAge = parseInt(data["client::Age (years)"], 10) || 0;
-      const liveSpecies = (data["client::Species"] || "").toLowerCase();
-      const res = await fetch(`${apiBase}/generate-protocol`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({
-          patientName: patientName || "Patient",
-          clientFirstName: patientData?.client_name?.split(" ")[0] || "Client",
-          clientLastName: patientData?.client_name?.split(" ").slice(1).join(" ") || "",
-          diagnosis: quickCondition,
-          affectedRegion: quickRegion || "Generalized",
-          species: liveSpecies || patientData?.species || "canine",
-          breed: patientData?.breed || "",
-          age: liveAge || patientData?.age || 0,
-          weight: liveWeight || patientData?.weight || 0,
-          protocolLength: 8,
-        }),
-      });
-      const json = await res.json();
-      setQuickProtocol(json.data || json);
-    } catch (err) { setQuickProtocol({ error: err.message }); }
-    setQuickLoading(false);
-  };
+  // ── Fetch exercise library count from backend ──
+  useEffect(() => {
+    const apiBase = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+    fetch(`${apiBase}/exercises`)
+      .then(r => r.json())
+      .then(payload => {
+        const raw = Array.isArray(payload?.data) ? payload.data : [];
+        setExCount(raw.length);
+      })
+      .catch(() => setExCount(0));
+  }, []);
 
+  // ── Live card data from dashData ──
+  const livePatientName = (data["client::Patient Name"] || "").trim() || patientName || "";
+  const liveBreed = (data["client::Breed"] || "").trim() || patientData?.breed || "";
+  const liveSpecies = data["client::Species"] || patientData?.species || "";
+  const liveAge = data["client::Age (years)"] || patientData?.age || "";
+  const liveWeight = data["client::Weight (lbs)"] || patientData?.weight || "";
+  const liveSex = data["client::Sex"] || patientData?.sex || "";
+
+  const liveDiagnosis = data["assessment::Primary Diagnosis"] || data["treatment::Primary Diagnosis"] || patientData?.condition || "";
+  const liveChiefComplaint = data["assessment::Chief Complaint"] || "";
+  const liveLameness = data["assessment::Lameness Grade"] || "";
+  const livePain = data["assessment::CSU Acute Pain Score (0–4)"] || "";
+
+  const liveApproach = data["treatment::Approach"] || "";
+  const liveSurgeryType = data["treatment::Surgery Type"] || "";
+  const liveSurgeryDate = data["treatment::Surgery Date"] || "";
+  const liveWBStatus = data["treatment::Weight Bearing Status"] || "";
+
+  const liveCondition = data["conditioning::Conditioning Phase"] || "";
+  const liveRegion = data["treatment::Affected Limb(s)"] || "";
+
+  const liveGoals = data["goals::Primary Rehabilitation Goals"] || "";
+  const liveGoalsList = liveGoals ? liveGoals.split("||").filter(Boolean) : [];
+  const liveShortTerm = data["goals::Short-Term Clinical Goals"] || "";
+
+  // Safety flags
+  const painNRS = parseInt(data["assessment::Numeric Rating Scale (NRS 0–10)"], 10);
+  const deepPain = data["assessment::Deep Pain Perception"] || "";
+  const incision = data["assessment::Incision Status"] || data["treatment::Incision Status"] || "";
+  const flags = [];
+  if (!isNaN(painNRS) && painNRS >= 8) flags.push({ label: "Pain ≥ 8/10 — BLOCKS protocol", color: C.red });
+  if (deepPain.toLowerCase().includes("absent")) flags.push({ label: "Deep pain absent — BLOCKS protocol", color: C.red });
+  if (incision.toLowerCase().includes("dehiscence") || incision.toLowerCase().includes("infection")) flags.push({ label: `Incision: ${incision}`, color: C.red });
+  if (!isNaN(painNRS) && painNRS >= 7 && painNRS < 8) flags.push({ label: "Pain ≥ 7 — specialist consult recommended", color: C.amber });
+  if (liveLameness.includes("Grade 5")) flags.push({ label: "Grade 5 lameness — passive exercises only", color: C.amber });
+  const hasBlockingFlag = flags.some(f => f.color === C.red);
+
+  // Required fields check for generate button
+  const hasRequiredFields = !!(livePatientName && (liveDiagnosis || liveApproach));
+
+  const canGenerate = complianceChecked && hasRequiredFields && !hasBlockingFlag;
+
+  // ── Card style ──
+  const cardStyle = (accent) => ({
+    background: C.white,
+    border: `1px solid ${C.border}`,
+    borderTop: `3px solid ${accent}`,
+    borderRadius: 8,
+    padding: "16px 18px",
+    boxShadow: "0 1px 4px rgba(26,39,68,.05)",
+  });
+  const cardTitle = (accent) => ({
+    fontSize: 10, fontWeight: 700, color: accent,
+    letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 10,
+  });
+  const cardRow = { fontSize: 11, color: C.text, marginBottom: 5, lineHeight: 1.5, display: "flex", gap: 6 };
+  const cardLabel = { fontWeight: 700, color: C.muted, minWidth: 70, flexShrink: 0 };
+  const cardVal = (v) => v || "—";
+
+  // ── Generate protocol ──
   const generate = async () => {
+    if (!canGenerate) return;
     setGenerating(true); setProtocol("");
     try {
-      // Live patient context — dashData values take priority over stale DB values.
-      const liveWeight = data["client::Weight (lbs)"] || patientData?.weight;
-      const liveAge = data["client::Age (years)"] || patientData?.age;
-      const liveSpecies = data["client::Species"] || patientData?.species;
       const ctxBits = [
-        `Patient: ${patientName || "Current Patient on file"}`,
-        patientData?.breed     ? `Breed: ${patientData.breed}`                 : null,
-        liveAge                ? `Age: ${liveAge}y`                            : null,
-        liveWeight             ? `Weight: ${liveWeight} lbs`                   : null,
-        liveSpecies            ? `Species: ${liveSpecies}`                     : null,
-        (quickCondition || patientData?.condition) ? `Condition: ${quickCondition || patientData.condition}` : null,
+        `Patient: ${livePatientName}`,
+        liveBreed   ? `Breed: ${liveBreed}` : null,
+        liveAge     ? `Age: ${liveAge}y` : null,
+        liveWeight  ? `Weight: ${liveWeight} lbs` : null,
+        liveSpecies ? `Species: ${liveSpecies}` : null,
+        liveDiagnosis ? `Condition: ${liveDiagnosis}` : null,
+        liveApproach ? `Approach: ${liveApproach}` : null,
       ].filter(Boolean).join(" · ");
+
       const systemPrompt = `You are B.E.A.U. — the Biomedical Evidence-based Analytical Unit, clinical protocol engine of K9 Rehab Pro™. Created by Sal Bonanno, Veterinary Technician and Canine Rehabilitation Nurse, 30 years experience. Generate a complete structured evidence-based rehabilitation protocol. Use exact section headers below. No markdown symbols. Write in full clinical sentences.
 
 CLINICAL SUMMARY
@@ -2033,7 +2150,6 @@ RED FLAGS — STOP AND CONTACT VETERINARIAN IMMEDIATELY
 
 EVIDENCE BASIS`;
       const userMsg = `${ctxBits}.\n\nGenerate a comprehensive rehabilitation protocol tailored to this patient. Generate a thorough evidence-based protocol demonstrating B.E.A.U.'s full clinical capability across all phases and exercise categories.`;
-      // Streaming TTS — sentence-by-sentence playback as deltas arrive
       if (bv?.autoSpeak) bv.cancel?.();
       let lastSpoken = 0;
       const text = await callBeau(systemPrompt, userMsg, uiLang, (_chunk, accumulated) => {
@@ -2057,118 +2173,182 @@ EVIDENCE BASIS`;
   const copy = () => { navigator.clipboard?.writeText(protocol); setCopied(true); setTimeout(()=>setCopied(false), 2000); };
 
   return <>
-    {/* ── QUICK GENERATE ── */}
-    <Sec title="Quick Protocol Generation" color={C.green} colorLt={C.greenLt} noTop>
-      <div style={{ fontSize:11, color:C.muted, marginBottom:14, lineHeight:1.65 }}>
-        Generate a structured, evidence-based rehab protocol in seconds. Select the condition and hit generate — B.E.A.U. handles the rest using ACVSMR-aligned exercise selection.
-      </div>
-      <Row>
-        <div>
-          <Lbl>What condition are we treating {patientName || "this patient"} for?</Lbl>
-          <select value={quickCondition} onChange={e => setQuickCondition(e.target.value)}
-            style={{ fontSize:13, fontWeight:600, padding:"10px 12px" }}>
-            <option value="">Select condition…</option>
-            {CONDITIONS.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-          </select>
-        </div>
-        <div>
-          <Lbl>Affected Region</Lbl>
-          <select value={quickRegion} onChange={e => setQuickRegion(e.target.value)}>
-            <option value="">Select region…</option>
-            {REGIONS.map(r => <option key={r} value={r}>{r}</option>)}
-          </select>
-        </div>
-      </Row>
-      <button onClick={quickGenerate} disabled={quickLoading || !quickCondition}
-        style={{ width:"100%", marginTop:14, padding:"14px", background: quickLoading ? C.greenLt : !quickCondition ? "#e2e8f0" : C.green, border:"none", color: !quickCondition ? C.muted : C.white, borderRadius:6, cursor: quickLoading || !quickCondition ? "not-allowed":"pointer", fontSize:14, fontWeight:700, letterSpacing:".1em", display:"flex", alignItems:"center", gap:12, justifyContent:"center", transition:"all .2s" }}>
-        {quickLoading
-          ? <><div style={{ width:18, height:18, border:"2px solid white", borderTopColor:"transparent", borderRadius:"50%", animation:"spinK9 .8s linear infinite" }}/> GENERATING PROTOCOL…</>
-          : "⚡ QUICK GENERATE PROTOCOL"}
-      </button>
-    </Sec>
+    {/* ══════════ 6-CARD SUMMARY GRID ══════════ */}
+    <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14, marginBottom:20 }}>
 
-    {/* ── QUICK PROTOCOL RESULTS ── */}
-    {quickProtocol && !quickProtocol.error && (
-      <Sec title={`Structured Protocol — ${quickProtocol.protocolType?.toUpperCase() || "REHAB"} · ${quickProtocol.totalWeeks} Weeks`} color={C.green} colorLt={C.greenLt}>
-        <div style={{ marginBottom:14, padding:"10px 14px", background:C.greenLt, border:`1px solid ${C.green}44`, borderRadius:6, fontSize:11, color:C.green, fontWeight:600 }}>
-          {quickProtocol.totalWeeks} weeks · {quickProtocol.weeks?.length || 0} phases · {quickProtocol.weeks?.reduce((s,w)=>s+(w.exercises?.length||0),0) || 0} total exercises · Evidence-gated
+      {/* Card 1 — Patient */}
+      <div style={cardStyle(C.blue)}>
+        <div style={cardTitle(C.blue)}>Patient</div>
+        <div style={cardRow}><span style={cardLabel}>Name:</span> <span>{cardVal(livePatientName)}</span></div>
+        <div style={cardRow}><span style={cardLabel}>Species:</span> <span>{cardVal(liveSpecies)}</span></div>
+        <div style={cardRow}><span style={cardLabel}>Breed:</span> <span>{cardVal(liveBreed)}</span></div>
+        <div style={cardRow}><span style={cardLabel}>Age:</span> <span>{liveAge ? `${liveAge} yr` : "—"}</span></div>
+        <div style={cardRow}><span style={cardLabel}>Weight:</span> <span>{liveWeight ? `${liveWeight} lbs` : "—"}</span></div>
+        <div style={cardRow}><span style={cardLabel}>Sex:</span> <span>{cardVal(liveSex)}</span></div>
+      </div>
+
+      {/* Card 2 — Diagnosis & Assessment */}
+      <div style={cardStyle(C.amber)}>
+        <div style={cardTitle(C.amber)}>Diagnosis & Assessment</div>
+        <div style={cardRow}><span style={cardLabel}>Diagnosis:</span> <span>{cardVal(liveDiagnosis)}</span></div>
+        <div style={cardRow}><span style={cardLabel}>Complaint:</span> <span>{cardVal(liveChiefComplaint)}</span></div>
+        <div style={cardRow}><span style={cardLabel}>Lameness:</span> <span>{cardVal(liveLameness)}</span></div>
+        <div style={cardRow}><span style={cardLabel}>Pain (CSU):</span> <span>{cardVal(livePain)}</span></div>
+        {!isNaN(painNRS) && <div style={cardRow}><span style={cardLabel}>NRS:</span> <span>{painNRS}/10</span></div>}
+      </div>
+
+      {/* Card 3 — Treatment Plan */}
+      <div style={cardStyle("#F59E0B")}>
+        <div style={cardTitle("#F59E0B")}>Treatment Plan</div>
+        <div style={cardRow}><span style={cardLabel}>Approach:</span> <span style={{ fontWeight:600, color: liveApproach ? C.navy : C.muted }}>{cardVal(liveApproach)}</span></div>
+        {liveApproach === "Surgical" && <>
+          <div style={cardRow}><span style={cardLabel}>Surgery:</span> <span>{cardVal(liveSurgeryType)}</span></div>
+          <div style={cardRow}><span style={cardLabel}>Date:</span> <span>{cardVal(liveSurgeryDate)}</span></div>
+        </>}
+        <div style={cardRow}><span style={cardLabel}>WB Status:</span> <span>{cardVal(liveWBStatus)}</span></div>
+        <div style={cardRow}><span style={cardLabel}>Region:</span> <span>{cardVal(liveRegion)}</span></div>
+      </div>
+
+      {/* Card 4 — Protocol Configuration */}
+      <div style={cardStyle(C.green)}>
+        <div style={cardTitle(C.green)}>Protocol Configuration</div>
+        <div style={cardRow}><span style={cardLabel}>Condition:</span> <span>{cardVal(liveCondition || liveDiagnosis)}</span></div>
+        <div style={cardRow}><span style={cardLabel}>Species:</span> <span>{cardVal(liveSpecies)}</span></div>
+        <div style={cardRow}><span style={cardLabel}>Phase:</span> <span>{cardVal(liveCondition)}</span></div>
+        <div style={{ fontSize:10, color:C.muted, marginTop:8, fontStyle:"italic" }}>
+          4 Conditions | 16 Phases | 52 Protocol Exercises | {exCount !== null ? exCount : "..."} Exercise Library
         </div>
-        {quickProtocol.weeks?.map(week => (
-          <div key={week.week} style={{ marginBottom:16, border:`1px solid ${C.border}`, borderRadius:7, overflow:"hidden" }}>
-            <div style={{ padding:"10px 14px", background:C.blueLt, borderBottom:`1px solid ${C.border}`, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-              <div style={{ fontSize:12, fontWeight:700, color:C.navy }}>Week {week.week}{week.phaseInfo ? ` — ${week.phaseInfo.name}` : ""}</div>
-              <span style={{ fontSize:10, color:C.muted }}>{week.exercises?.length || 0} exercises</span>
+      </div>
+
+      {/* Card 5 — Rehabilitation Goals */}
+      <div style={cardStyle("#BE185D")}>
+        <div style={cardTitle("#BE185D")}>Rehabilitation Goals</div>
+        {liveGoalsList.length > 0 ? (
+          liveGoalsList.slice(0, 4).map((g, i) => (
+            <div key={i} style={{ fontSize:11, color:C.text, marginBottom:4, display:"flex", gap:6 }}>
+              <span style={{ color:"#BE185D", fontWeight:700 }}>•</span> {g}
             </div>
-            <div style={{ padding:12 }}>
-              {week.exercises?.map((ex, i) => (
-                <div key={i} style={{ padding:"8px 10px", background: i%2===0 ? C.white : C.bg, borderRadius:4, marginBottom:4, display:"grid", gridTemplateColumns:"2fr 1fr 1fr 1fr", gap:8, alignItems:"center", fontSize:11 }}>
-                  <div>
-                    <span style={{ fontWeight:600, color:C.navy }}>{ex.name}</span>
-                    <span style={{ marginLeft:6, fontSize:9, padding:"1px 5px", background: ex.evidence_grade === "A" ? "#DCFCE7" : ex.evidence_grade === "B" ? "#DBEAFE" : "#FEF3C7", borderRadius:3, color: ex.evidence_grade === "A" ? "#166534" : ex.evidence_grade === "B" ? "#1E40AF" : "#92400E", fontWeight:600 }}>
-                      {ex.evidence_grade || "B"}
-                    </span>
-                  </div>
-                  <span style={{ color:C.muted }}>{ex.sets || 3} × {ex.reps || 10}</span>
-                  <span style={{ color:C.muted }}>{ex.frequency || "2x daily"}</span>
-                  <span style={{ color:C.muted }}>{ex.duration_minutes || 10} min</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-        {quickProtocol.warnings?.length > 0 && (
-          <div style={{ padding:"10px 14px", background:C.amberLt, border:`1px solid ${C.amber}44`, borderRadius:6, fontSize:11, color:C.amber, fontWeight:500, marginTop:8 }}>
-            {quickProtocol.warnings.map((w,i) => <div key={i}>⚠ {w}</div>)}
+          ))
+        ) : (
+          <div style={{ fontSize:11, color:C.muted, fontStyle:"italic" }}>No goals set — open Goals block</div>
+        )}
+        {liveShortTerm && (
+          <div style={{ marginTop:8, padding:"6px 10px", background:"#FDF2F8", borderRadius:4, fontSize:10, color:"#9D174D", lineHeight:1.5 }}>
+            <span style={{ fontWeight:700 }}>Short-term:</span> {liveShortTerm.slice(0, 120)}{liveShortTerm.length > 120 ? "…" : ""}
           </div>
         )}
-      </Sec>
-    )}
-    {quickProtocol?.error && (
-      <div style={{ padding:"12px 14px", background:C.redLt, border:`1px solid ${C.red}44`, borderRadius:6, fontSize:12, color:C.red, marginBottom:16 }}>
-        Error: {quickProtocol.error}
+      </div>
+
+      {/* Card 6 — Safety Flags */}
+      <div style={cardStyle(flags.length > 0 ? C.red : C.green)}>
+        <div style={cardTitle(flags.length > 0 ? C.red : C.green)}>Safety Flags</div>
+        {flags.length === 0 ? (
+          <div style={{ fontSize:12, color:C.green, fontWeight:600, display:"flex", alignItems:"center", gap:6 }}>
+            <span style={{ fontSize:16 }}>✓</span> No safety flags detected — clear for protocol generation
+          </div>
+        ) : (
+          flags.map((f, i) => (
+            <div key={i} style={{
+              padding:"6px 10px", marginBottom:6, borderRadius:4,
+              background: f.color === C.red ? C.redLt : C.amberLt,
+              border: `1px solid ${f.color}44`,
+              fontSize:11, fontWeight:600, color: f.color,
+              display:"flex", alignItems:"center", gap:6,
+            }}>
+              <span>{f.color === C.red ? "⛔" : "⚠"}</span> {f.label}
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+
+    {/* ── Exercise Library Count Bar ── */}
+    <div style={{
+      padding:"10px 16px", background:C.blueLt, border:`1px solid ${C.blue}33`,
+      borderRadius:6, marginBottom:16, display:"flex", alignItems:"center", justifyContent:"space-between",
+    }}>
+      <span style={{ fontSize:11, fontWeight:600, color:C.blue }}>
+        📚 Exercise Library: {exCount !== null ? `${exCount} evidence-based exercises loaded` : "Loading..."}
+      </span>
+      <span style={{ fontSize:10, color:C.muted }}>Source-of-truth validated · ACVSMR-aligned</span>
+    </div>
+
+    {/* ── Compliance Acknowledgment Checkbox ── */}
+    <div
+      onClick={() => setComplianceChecked(v => !v)}
+      style={{
+        display:"flex", alignItems:"flex-start", gap:10, padding:"14px 16px",
+        background: complianceChecked ? C.greenLt : C.white,
+        border: `1.5px solid ${complianceChecked ? C.green : C.border}`,
+        borderRadius:8, cursor:"pointer", marginBottom:16,
+        transition:"all .15s",
+      }}>
+      <input type="checkbox" checked={complianceChecked} readOnly
+        style={{ width:18, height:18, accentColor:C.green, flexShrink:0, marginTop:1, cursor:"pointer" }}/>
+      <div>
+        <div style={{ fontSize:12, fontWeight:700, color: complianceChecked ? C.green : C.navy, marginBottom:3 }}>
+          Clinical Compliance Acknowledgment
+        </div>
+        <div style={{ fontSize:11, color:C.muted, lineHeight:1.6 }}>
+          I confirm that all intake data is accurate, the patient has been examined by a licensed veterinarian,
+          and I understand that B.E.A.U.-generated protocols require licensed veterinary review before clinical application.
+          This is a Clinical Decision-Support System (CDSS) — not a substitute for professional judgment.
+        </div>
+      </div>
+    </div>
+
+    {/* ── GENERATE EXERCISE PROTOCOL Button ── */}
+    <button onClick={generate} disabled={!canGenerate || generating}
+      style={{
+        width:"100%", padding:"18px",
+        background: generating ? C.greenLt
+          : !canGenerate ? "#e2e8f0"
+          : "linear-gradient(135deg, #10b981 0%, #0d9488 50%, #0ea5e9 100%)",
+        border:"none",
+        color: !canGenerate ? C.muted : C.white,
+        borderRadius:8, cursor: (!canGenerate || generating) ? "not-allowed" : "pointer",
+        fontSize:16, fontWeight:800, letterSpacing:".12em",
+        display:"flex", alignItems:"center", gap:14, justifyContent:"center",
+        boxShadow: canGenerate && !generating ? "0 6px 20px rgba(16,185,129,0.35)" : "none",
+        transition:"all .25s",
+      }}>
+      {generating
+        ? <><div style={{ width:20, height:20, border:"2.5px solid white", borderTopColor:"transparent", borderRadius:"50%", animation:"spinK9 .8s linear infinite" }}/> GENERATING PROTOCOL…</>
+        : "GENERATE EXERCISE PROTOCOL"}
+    </button>
+
+    {!canGenerate && !generating && (
+      <div style={{ fontSize:10, color:C.muted, textAlign:"center", marginTop:8, lineHeight:1.5 }}>
+        {!complianceChecked && "Check the compliance acknowledgment above. "}
+        {!hasRequiredFields && "Patient name and diagnosis/approach required. "}
+        {hasBlockingFlag && "Red safety flags must be resolved before generation."}
       </div>
     )}
 
-    <Divider/>
-
-    {/* ── B.E.A.U. FULL PROTOCOL ── */}
-    <Sec title="B.E.A.U. AI-Generated Protocol" color={C.green} colorLt={C.greenLt}>
-      <div style={{ fontSize:12, color:C.muted, marginBottom:16, lineHeight:1.65 }}>
-        For a narrative clinical protocol with full evidence citations, safety guardrails, and home exercise instructions — use B.E.A.U.'s AI generation below.
-      </div>
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:8, marginBottom:16 }}>
-        {["Assessment ✓","B.E.A.U. Metrics ✓","Clinic Equipment ✓","Home Environment ✓","Goals ✓","Diagnostics ✓"].map(b=>(
-          <div key={b} style={{ padding:"8px 12px", background:C.greenLt, border:`1px solid ${C.green}44`, borderRadius:5, fontSize:11, color:C.green, fontWeight:600, textAlign:"center" }}>{b}</div>
-        ))}
-      </div>
-      <button onClick={generate} disabled={generating}
-        style={{ width:"100%", padding:"14px", background: generating ? C.greenLt : C.green, border:"none", color:C.white, borderRadius:6, cursor: generating?"not-allowed":"pointer", fontSize:14, fontWeight:700, letterSpacing:".1em", display:"flex", alignItems:"center", gap:12, justifyContent:"center" }}>
-        {generating
-          ? <><div style={{ width:18, height:18, border:"2px solid white", borderTopColor:"transparent", borderRadius:"50%", animation:"spinK9 .8s linear infinite" }}/> GENERATING B.E.A.U. PROTOCOL…</>
-          : "🧠 GENERATE FULL B.E.A.U. PROTOCOL"}
-      </button>
-    </Sec>
-
+    {/* ── Protocol Output ── */}
     {protocol && (
-      <Sec title="Protocol Output — B.E.A.U. Generated" color={C.green} colorLt={C.greenLt}>
-        <div style={{ background:C.white, border:`1.5px solid ${C.green}55`, borderRadius:7, padding:18, marginBottom:14 }}>
-          <pre style={{ fontSize:12, color:C.text, whiteSpace:"pre-wrap", lineHeight:1.9, fontFamily:"Georgia, serif" }}>{protocol}</pre>
-        </div>
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10 }}>
-          {[
-            { label: copied ? "✓ COPIED" : "📋 COPY", action: copy },
-            { label:"📧 EMAIL CLIENT", action:()=>{} },
-            { label:"🖨️ PRINT", action:()=>window.print() },
-            { label:"📱 QR CODE", action:()=>{} },
-          ].map(a=>(
-            <button key={a.label} onClick={a.action}
-              style={{ padding:"10px 6px", background:C.white, border:`1px solid ${C.border}`, color:C.blue, borderRadius:5, cursor:"pointer", fontSize:11, fontWeight:700, letterSpacing:".06em", transition:"all .15s" }}>
-              {a.label}
-            </button>
-          ))}
-        </div>
-      </Sec>
+      <div style={{ marginTop:20 }}>
+        <Sec title="Protocol Output — B.E.A.U. Generated" color={C.green} colorLt={C.greenLt}>
+          <div style={{ background:C.white, border:`1.5px solid ${C.green}55`, borderRadius:7, padding:18, marginBottom:14 }}>
+            <pre style={{ fontSize:12, color:C.text, whiteSpace:"pre-wrap", lineHeight:1.9, fontFamily:"Georgia, serif" }}>{protocol}</pre>
+          </div>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10 }}>
+            {[
+              { label: copied ? "COPIED" : "COPY", action: copy },
+              { label:"EMAIL CLIENT", action:()=>{} },
+              { label:"PRINT", action:()=>window.print() },
+              { label:"QR CODE", action:()=>{} },
+            ].map(a=>(
+              <button key={a.label} onClick={a.action}
+                style={{ padding:"10px 6px", background:C.white, border:`1px solid ${C.border}`, color:C.blue, borderRadius:5, cursor:"pointer", fontSize:11, fontWeight:700, letterSpacing:".06em", transition:"all .15s" }}>
+                {a.label}
+              </button>
+            ))}
+          </div>
+        </Sec>
+      </div>
     )}
+
     <ClinicalNotes/>
   </>;
 }
@@ -3226,6 +3406,7 @@ export default function DashboardView({ setView, currentUser, onLogout, patient,
           if (!Comp) return null;
           return (
             <Modal key={b.id} title={t(`tiles.${b.id}.label`)} color={b.color} colorLt={b.colorLt} icon={b.icon} onClose={()=>setOpenBlock(null)}
+              blockId={b.id}
               patientLabel={patientLabel}
               beauContext={BEAU_BLOCK_CONTEXTS[b.id]}
               beauOpen={beauOpen} setBeauOpen={setBeauOpen}
