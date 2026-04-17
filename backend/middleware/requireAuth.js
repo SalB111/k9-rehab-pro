@@ -7,7 +7,7 @@
 // ============================================================================
 
 const jwt = require("jsonwebtoken");
-const db = require("../db-providers/sqlite-provider");
+const db = require("../db-provider");
 
 const JWT_SECRET = process.env.JWT_SECRET || require("crypto").randomBytes(64).toString("hex");
 

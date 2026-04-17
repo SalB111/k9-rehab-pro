@@ -10,8 +10,8 @@ const rateLimit = require("express-rate-limit");
 const bcrypt = require("bcryptjs");
 const path = require("path");
 
-const db = require("./db-providers/sqlite-provider");
-const { all, get, run } = require("./db-providers/sqlite-provider");
+const db = require("./db-provider");
+const { all, get, run } = require("./db-provider");
 const authRoutes = require("./auth-routes");
 const requireAuth = require("./middleware/requireAuth");
 
@@ -60,18 +60,23 @@ const beauLimiter = rateLimit({
 // MIDDLEWARE
 // ---------------------------------------------------------------------------
 
+// CORS origins — read from CORS_ORIGINS env var (comma-separated) with fallback
+const DEFAULT_CORS_ORIGINS = [
+  "https://k9-rehab-pro.vercel.app",
+  "https://k9-rehab-pro-gcnl.vercel.app",
+  "https://k9-rehab-pro-gcnl-salb111s-projects.vercel.app",
+  "https://beau-ai-lime.vercel.app",
+  "https://beauaihome.vercel.app",
+  "https://beauaihome-salb111s-projects.vercel.app",
+  "http://localhost:3001",
+  "http://localhost:3002",
+  "http://localhost:5173"
+];
+const corsOrigins = process.env.CORS_ORIGINS
+  ? process.env.CORS_ORIGINS.split(",").map(s => s.trim()).filter(Boolean)
+  : DEFAULT_CORS_ORIGINS;
 app.use(cors({
-  origin: [
-    "https://k9-rehab-pro.vercel.app",
-    "https://k9-rehab-pro-gcnl.vercel.app",
-    "https://k9-rehab-pro-gcnl-salb111s-projects.vercel.app",
-    "https://beau-ai-lime.vercel.app",
-    "https://beauaihome.vercel.app",
-    "https://beauaihome-salb111s-projects.vercel.app",
-    "http://localhost:3001",
-    "http://localhost:3002",
-    "http://localhost:5173"
-  ],
+  origin: corsOrigins,
   credentials: true
 }));
 app.use(express.json());

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 
 // ─── Constants ──────────────────────────────────────────────────────────────
-const API_URL = `${import.meta.env.VITE_API_URL}/chat-home`;
+const API_URL = `${import.meta.env.VITE_API_URL || "http://localhost:3000/api"}/beau/chat`;
 
 const SIDEBAR_TABS = [
   { key: "plan", label: "Plan", icon: "📋" },
@@ -571,11 +571,16 @@ export default function BeauHomeView({ setView }) {
     setLoading(true);
 
     try {
+      const token = localStorage.getItem("token");
       const res = await fetch(API_URL, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({ messages: initialMessages, systemPrompt }),
       });
+      if (!res.ok) throw new Error(`API ${res.status}`);
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       setMessages((prev) => [...prev, { role: "assistant", text: data.text }]);
@@ -608,14 +613,19 @@ export default function BeauHomeView({ setView }) {
     }));
 
     try {
+      const token = localStorage.getItem("token");
       const res = await fetch(API_URL, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
           messages: apiMessages,
           systemPrompt: buildSystemPrompt(intake),
         }),
       });
+      if (!res.ok) throw new Error(`API ${res.status}`);
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       setMessages((prev) => [...prev, { role: "assistant", text: data.text }]);

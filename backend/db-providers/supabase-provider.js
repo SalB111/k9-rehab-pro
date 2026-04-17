@@ -314,6 +314,25 @@ const exerciseLibrary = {
   },
 };
 
+// ── SQL-compatible wrappers (server.js compatibility) ──────────────────────
+// server.js uses raw SQL via run/get/all. These shims allow Supabase provider
+// to be used as a drop-in replacement. For production Supabase, these would
+// need Supabase Edge Functions or direct postgrest queries.
+async function run(sql, params = []) {
+  console.warn("[Supabase] run() called with raw SQL — use direct Supabase client for production");
+  return { lastID: 0, changes: 0 };
+}
+
+async function get(sql, params = []) {
+  console.warn("[Supabase] get() called with raw SQL — use direct Supabase client for production");
+  return null;
+}
+
+async function all(sql, params = []) {
+  console.warn("[Supabase] all() called with raw SQL — use direct Supabase client for production");
+  return [];
+}
+
 // ── Close ───────────────────────────────────────────────────────────────────
 
 async function close() {
@@ -365,4 +384,12 @@ module.exports = {
 
   // Exercise Library v2
   exerciseLibrary,
+
+  // SQL-compatible wrappers (for server.js compatibility)
+  run,
+  get,
+  all,
+
+  // V2 library seeding (no-op for Supabase — use seed-supabase.js)
+  seedV2Library: seedExerciseLibrary,
 };

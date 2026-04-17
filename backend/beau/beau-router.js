@@ -6,7 +6,7 @@
 const express = require("express");
 const router = express.Router();
 const { handleChat } = require("./beau-chat-handler");
-const { all, get, run } = require("../db-providers/sqlite-provider");
+const { all, get, run } = require("../db-provider");
 
 // ─────────────────────────────────────────────────────────────────────────────
 // POST /api/beau/chat — Streaming SSE chat endpoint
