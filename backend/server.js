@@ -95,15 +95,6 @@ app.use("/api", generalLimiter);
 // HEALTH CHECK
 // ---------------------------------------------------------------------------
 
-// Redirect non-prefixed routes to /api/* (handles VITE_API_URL without /api suffix)
-app.use((req, res, next) => {
-  if (!req.path.startsWith("/api") && !req.path.startsWith("/assets") && req.path !== "/") {
-    const apiPath = `/api${req.path}`;
-    req.url = apiPath;
-  }
-  next();
-});
-
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", message: "K9 Rehab Pro backend running" });
 });
@@ -699,6 +690,50 @@ app.get("/api/pipeline/status", (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
+// Storyboards — frame-by-frame exercise demonstrations (manual + auto-generated)
+// ---------------------------------------------------------------------------
+
+const {
+  getOrGenerateStoryboard,
+  getExercisesWithStoryboards,
+  getStoryboardStats,
+} = require("./storyboard-references");
+
+// Register specific paths BEFORE the parametrized :code route so Express
+// doesn't treat "stats" as an exercise code.
+app.get("/api/storyboards/stats", requireAuth, (req, res) => {
+  try {
+    res.json({ success: true, data: getStoryboardStats(TAGGED_EXERCISES) });
+  } catch (err) {
+    res.status(500).json({ success: false, error: "Failed to load storyboard stats" });
+  }
+});
+
+app.get("/api/storyboards", requireAuth, (req, res) => {
+  try {
+    res.json({ success: true, data: getExercisesWithStoryboards(TAGGED_EXERCISES) });
+  } catch (err) {
+    console.error("Storyboard list failed:", err);
+    res.status(500).json({ success: false, error: "Failed to list storyboards" });
+  }
+});
+
+app.get("/api/storyboards/:code", requireAuth, (req, res) => {
+  try {
+    const code = req.params.code;
+    const exercise = TAGGED_EXERCISES.find(e => e.code === code);
+    const storyboard = getOrGenerateStoryboard(code, exercise);
+    if (!storyboard) {
+      return res.status(404).json({ success: false, error: "Storyboard not available for this exercise" });
+    }
+    res.json({ success: true, data: storyboard });
+  } catch (err) {
+    console.error("Storyboard lookup failed:", err);
+    res.status(500).json({ success: false, error: "Failed to load storyboard" });
+  }
+});
+
+// ---------------------------------------------------------------------------
 // Safety / adverse-event reporting
 // Required by CLAUDE.md Regulatory Framework § Adverse Event Reporting.
 // Storage: safety_events table. Retention: 7 years (state board rules).
@@ -766,6 +801,25 @@ app.get("/api/safety-reports", requireAuth, requireRole("admin"), async (req, re
     console.error("Safety report list failed:", err);
     res.status(500).json({ success: false, error: "Failed to list safety reports" });
   }
+});
+
+// ---------------------------------------------------------------------------
+// FRONTEND STATIC SERVING (production — backend serves the React build)
+// ---------------------------------------------------------------------------
+// Must be registered AFTER all /api/* routes so API takes precedence. Static
+// files are served from backend/public/. Anything that didn't match an API
+// route and isn't a static file falls through to index.html so the SPA's
+// client-side router can handle it.
+
+app.use(express.static(path.join(__dirname, "public")));
+
+app.use((req, res, next) => {
+  if (req.method !== "GET") return next();
+  if (req.path.startsWith("/api/")) return next();
+  const indexPath = path.join(__dirname, "public", "index.html");
+  res.sendFile(indexPath, (err) => {
+    if (err) next(err);
+  });
 });
 
 // ---------------------------------------------------------------------------

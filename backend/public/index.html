@@ -2,24 +2,47 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <link rel="icon" type="image/svg+xml" href="/logo.svg" />
+    <link rel="icon" type="image/png" href="/logo512.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#050e1c" />
-    <meta name="description" content="K9 Rehab Pro™ — Evidence-based canine rehabilitation protocols" />
-    <link rel="manifest" href="/manifest.json" />
+    <meta
+      name="description"
+      content="K9 Rehab Pro™ — Evidence-based canine rehabilitation protocols"
+    />
+    <!-- manifest removed — was causing PWA splash screen with logo.svg -->
     <title>K9 Rehab Pro™ | Canine Rehabilitation Platform</title>
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@700;800;900&family=Orbitron:wght@700;800;900&display=swap" rel="stylesheet" />
-    <script type="module" crossorigin src="/assets/index-CKaEOviV.js"></script>
-    <link rel="modulepreload" crossorigin href="/assets/vendor-react-Bdb-ndZE.js">
-    <link rel="modulepreload" crossorigin href="/assets/vendor-react-dom-DoSUc94a.js">
-    <link rel="modulepreload" crossorigin href="/assets/vendor-axios-C0Zqfgkc.js">
-    <link rel="modulepreload" crossorigin href="/assets/vendor-icons-0LjW_L3I.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-CB4IXMD3.css">
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Exo+2:wght@700;800;900&family=Orbitron:wght@700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <script type="module" crossorigin src="/assets/index-6nUafJyM.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/vendor-react-BCGPAYEV.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-react-dom-gb43g431.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-axios-qFyJwsfU.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-icons-CpJToXrV.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CLH7PwuW.css">
   </head>
+
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
+
     <div id="root"></div>
+
+    <!-- Nuke any cached service workers from old PWA -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+          registrations.forEach(function(r) { r.unregister(); });
+        });
+        caches.keys().then(function(names) {
+          names.forEach(function(name) { caches.delete(name); });
+        });
+      }
+    </script>
+
+    <!-- Correct entry point for Vite + React -->
   </body>
 </html>

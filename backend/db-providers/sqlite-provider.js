@@ -4,6 +4,7 @@
 
 const sqlite3 = require("sqlite3").verbose();
 const path = require("path");
+const fs = require("fs");
 
 // Import V2 exercise library
 const {
@@ -51,7 +52,10 @@ function all(sql, params = []) {
 // ---------------------------------------------------------------------------
 
 async function initialize() {
-  const dbPath = path.join(__dirname, "..", "k9rehab.db");
+  const dbPath = process.env.DB_PATH || path.join(__dirname, "..", "k9rehab.db");
+  const dbDir = path.dirname(dbPath);
+  if (!fs.existsSync(dbDir)) fs.mkdirSync(dbDir, { recursive: true });
+  console.log(`📂 SQLite DB path: ${dbPath}`);
 
   return new Promise((resolve, reject) => {
     db = new sqlite3.Database(dbPath, (err) => {

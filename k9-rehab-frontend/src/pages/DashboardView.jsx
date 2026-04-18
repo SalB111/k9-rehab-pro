@@ -3676,9 +3676,12 @@ export default function DashboardView({ setView, currentUser, onLogout, patient,
   // ── Fetch patient list for search
   useEffect(() => {
     fetch(`${apiBase}/patients`, { headers: authHeaders })
-      .then(r => r.json())
+      .then(r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then(d => setAllPatients(d.data || d || []))
-      .catch(() => {});
+      .catch(err => { console.warn("[Dashboard] patient list failed:", err.message); setAllPatients([]); });
   }, []);
 
   // ── Close search dropdown on outside click

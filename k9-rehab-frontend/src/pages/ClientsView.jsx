@@ -69,10 +69,16 @@ function ClientsView({ setView, setSelectedPatient }) {
 
   const submit = async (e) => {
     e.preventDefault();
-    await api.post(`/patients`, { ...form, age: +form.age, weight: +form.weight });
-    setShowForm(false);
-    setForm({ name: "", species: "canine", breed: "", age: "", dob: "", weight: "", weight_kg: "", sex: "Male", condition: "", client_name: "", client_email: "", client_phone: "" });
-    api.get(`/patients`).then(r => setClients(r.data?.data || r.data || []));
+    try {
+      await api.post(`/patients`, { ...form, age: +form.age, weight: +form.weight });
+      setShowForm(false);
+      setForm({ name: "", species: "canine", breed: "", age: "", dob: "", weight: "", weight_kg: "", sex: "Male", condition: "", client_name: "", client_email: "", client_phone: "" });
+      const r = await api.get(`/patients`);
+      setClients(r.data?.data || r.data || []);
+      toast(tr("Patient saved"));
+    } catch (err) {
+      toast(err.response?.data?.error || tr("Failed to save patient"));
+    }
   };
 
   const toggleSelect = (id) => {
@@ -99,11 +105,13 @@ function ClientsView({ setView, setSelectedPatient }) {
     setDeleting(true);
     try {
       await api.post(`/patients/delete-batch`, { ids: Array.from(selectedIds) });
+      const deletedCount = selectedIds.size;
       setSelectedIds(new Set());
       const r = await api.get(`/patients`);
       setClients(r.data?.data || r.data || []);
+      toast(`${tr("Deleted")} ${deletedCount} ${deletedCount > 1 ? tr("patients") : tr("patient")}`);
     } catch (err) {
-      alert(err.response?.data?.error || tr("Delete failed"));
+      toast(err.response?.data?.error || tr("Delete failed"));
     }
     setDeleting(false);
   };

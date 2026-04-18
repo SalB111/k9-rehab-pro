@@ -64,12 +64,12 @@ useEffect(() => {
   api
     .get(`/beau/sessions`)
     .then(r => setSessionHistory(r.data?.data || []))
-    .catch(() => {});
+    .catch(err => { console.warn("[BEAU] sessions load failed:", err?.response?.status); setSessionHistory([]); });
 
   api
     .get(`/beau/intelligence`)
     .then(r => setIntelligence(r.data?.data || null))
-    .catch(() => {});
+    .catch(err => { console.warn("[BEAU] intelligence load failed:", err?.response?.status); setIntelligence(null); });
 }, [authToken]);
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs, stream]);
