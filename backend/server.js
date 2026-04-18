@@ -69,7 +69,10 @@ const beauLimiter = rateLimit({
 // MIDDLEWARE
 // ---------------------------------------------------------------------------
 
-// CORS origins — read from CORS_ORIGINS env var (comma-separated) with fallback
+// CORS origins — read from CORS_ORIGINS (plural) or CORS_ORIGIN (singular)
+// env var, comma-separated, with a hardcoded fallback allowlist below.
+// Both spellings accepted because CLAUDE.md historically documented the
+// singular form while this code used the plural.
 const DEFAULT_CORS_ORIGINS = [
   "https://k9-rehab-pro.vercel.app",
   "https://k9-rehab-pro-gncl.vercel.app",
@@ -83,9 +86,11 @@ const DEFAULT_CORS_ORIGINS = [
   "http://localhost:3002",
   "http://localhost:5173"
 ];
-const corsOrigins = process.env.CORS_ORIGINS
-  ? process.env.CORS_ORIGINS.split(",").map(s => s.trim()).filter(Boolean)
+const corsEnv = process.env.CORS_ORIGINS || process.env.CORS_ORIGIN;
+const corsOrigins = corsEnv
+  ? corsEnv.split(",").map(s => s.trim()).filter(Boolean)
   : DEFAULT_CORS_ORIGINS;
+console.log(`🌐 CORS allowed origins (${corsEnv ? "from env" : "defaults"}): ${corsOrigins.join(", ")}`);
 app.use(cors({
   origin: corsOrigins,
   credentials: true

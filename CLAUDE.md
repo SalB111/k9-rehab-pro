@@ -398,7 +398,7 @@ Auto-initializes with seed data on first run.
 - B.E.A.U.: Streaming chat using Anthropic Claude API with clinical system prompt and patient context injection
 - Auth: JWT with role-based access (clinician, admin). Public routes: health, login, register, auth status
 - Security: Helmet headers, CORS restricted to localhost:3001, rate limiting (100 req/15min general, 5 req/15min auth)
-- CORS origin configurable via `CORS_ORIGIN` env var
+- CORS origins configurable via `CORS_ORIGINS` (or `CORS_ORIGIN`) env var, comma-separated
 
 ### Storyboard System
 - 215/215 exercises have auto-generated storyboards with breed-specific data
@@ -420,7 +420,7 @@ Auto-initializes with seed data on first run.
 Backend requires `.env` with:
 - `JWT_SECRET` — Secret for JWT signing (generate with `node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"`)
 - `JWT_EXPIRES_IN` — Token expiry (default: 24h)
-- `CORS_ORIGIN` — Allowed frontend origin (default: http://localhost:3001)
+- `CORS_ORIGINS` (or `CORS_ORIGIN`) — Allowed frontend origins, comma-separated. Both spellings accepted. Falls back to a hardcoded Vercel+localhost allowlist in `backend/server.js` if unset.
 - `ANTHROPIC_API_KEY` — Required for B.E.A.U. clinical assistant
 - `HF_TOKEN` — Hugging Face API token for AI storyboard images (optional, falls back to Dog.CEO breed photos)
 - `PORT` — Server port (default: 3000)
