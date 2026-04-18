@@ -419,3 +419,16 @@ Backend requires `.env` with:
 - `ANTHROPIC_API_KEY` — Required for B.E.A.U. clinical assistant
 - `HF_TOKEN` — Hugging Face API token for AI storyboard images (optional, falls back to Dog.CEO breed photos)
 - `PORT` — Server port (default: 3000)
+- `DEMO_MODE` — Set to `"true"` ONLY on hosts where a temporary, demo-only route must be reachable. Any route wrapped with `requireDemoMode` from `backend/demo-mode.js` returns 404 unless this env var is set. Never set in production. Startup logs a loud warning whenever this is true.
+
+## Repo Hygiene Hooks
+
+A pre-commit hook in `.githooks/pre-commit` blocks commits that reintroduce emergency-patch markers (`EMERGENCY DEMO PATCH`, `TODO: revert`) outside whitelisted paths (`.githooks/`, `.github/`, `CLAUDE.md`, `docs/`, `documentation/`). Activate once per clone:
+
+```bash
+npm run hooks:install
+```
+
+The same scan runs in CI via `.github/workflows/no-emergency-markers.yml` on every push/PR to `main`, so a bypassed local hook is caught before merge.
+
+**Emergency hot-patch protocol:** if a temporary unsafe route is ever required (e.g. demo), wrap the handler with `requireDemoMode` from `backend/demo-mode.js` and set `DEMO_MODE=true` on the demo host only. The route is 404 elsewhere, so it cannot accidentally ship to production.

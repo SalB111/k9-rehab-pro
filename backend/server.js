@@ -14,6 +14,7 @@ const db = require("./db-provider");
 const { all, get, run } = require("./db-provider");
 const authRoutes = require("./auth-routes");
 const requireAuth = require("./middleware/requireAuth");
+const { announceIfDemoMode } = require("./demo-mode");
 
 const app = express();
 app.set('trust proxy', 1);
@@ -523,12 +524,6 @@ const evidenceEngine = require("./engines/evidence/evidence-engine");
 const narrativeEngine = require("./engines/narrative/narrative-engine");
 const presentationEngine = require("./engines/presentation/presentation-engine");
 const visualEngine = require("./engines/visual/visual-engine");
-// EMERGENCY DEMO PATCH — B.E.A.U. chat reachable without JWT for the
-// Dr. Bibevski presentation. The /api/beau/chat endpoint is unusable
-// behind auth if the user session is in a weird state mid-demo. Revert
-// this (mount beau-router *after* requireAuth only) once the demo ends.
-const { handleChat } = require("./beau/beau-chat-handler");
-app.post("/api/beau/chat", beauLimiter, handleChat);
 
 // Public health-style check — no PHI, no AI spend. Registered BEFORE the
 // authed mount so Express matches this first. The frontend calls this at
@@ -709,6 +704,7 @@ app.get("/api/pipeline/status", (req, res) => {
 (async () => {
   try {
     console.log("K9 Rehab Pro backend starting...");
+    announceIfDemoMode();
     await db.initialize();
     await db.createTables();
     await db.seedV2Library();

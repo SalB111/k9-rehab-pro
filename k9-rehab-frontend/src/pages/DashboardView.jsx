@@ -2062,7 +2062,13 @@ async function callBeau(systemPrompt, userMessage, language, onDelta) {
       language: language || "en",
     }),
   });
-  if (!res.ok) throw new Error(`B.E.A.U. API ${res.status}`);
+  if (!res.ok) {
+    if (res.status === 401) {
+      localStorage.removeItem("token");
+      throw new Error("Your session has expired. Please log in again to continue using B.E.A.U.");
+    }
+    throw new Error(`B.E.A.U. API ${res.status}`);
+  }
 
   // True SSE streaming via ReadableStream reader
   const reader = res.body?.getReader();

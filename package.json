@@ -1,4 +1,7 @@
 {
+  "scripts": {
+    "hooks:install": "git config core.hooksPath .githooks"
+  },
   "dependencies": {
     "chokidar": "^5.0.0"
   }

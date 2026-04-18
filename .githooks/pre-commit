@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# Block commits that reintroduce temporary / unreverted emergency-patch markers.
+# Activate once per clone: npm run hooks:install
+
+set -e
+
+BANNED=(
+  "EMERGENCY DEMO PATCH"
+  "TODO: revert"
+)
+
+is_whitelisted() {
+  case "$1" in
+    .githooks/*|.github/*|CLAUDE.md|docs/*|documentation/*) return 0 ;;
+  esac
+  return 1
+}
+
+STAGED=$(git diff --cached --name-only --diff-filter=AM)
+[ -z "$STAGED" ] && exit 0
+
+FAIL=0
+while IFS= read -r FILE; do
+  [ -z "$FILE" ] && continue
+  is_whitelisted "$FILE" && continue
+  ADDED=$(git diff --cached -U0 -- "$FILE" | grep "^+" | grep -v "^+++" || true)
+  for PAT in "${BANNED[@]}"; do
+    if echo "$ADDED" | grep -qF "$PAT"; then
+      echo "BLOCKED: \"$PAT\" added in $FILE" >&2
+      FAIL=1
+    fi
+  done
+done <<< "$STAGED"
+
+if [ "$FAIL" -eq 1 ]; then
+  echo "" >&2
+  echo "Commit blocked by .githooks/pre-commit." >&2
+  echo "These markers indicate code that must be reverted before hitting main." >&2
+  echo "If intentional, add the path to the whitelist in .githooks/pre-commit." >&2
+  exit 1
+fi
+
+exit 0

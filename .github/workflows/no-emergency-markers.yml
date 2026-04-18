@@ -1,0 +1,28 @@
+name: no-emergency-markers
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Scan for banned markers
+        shell: bash
+        run: |
+          set -e
+          FOUND=$(git grep -n -E "EMERGENCY DEMO PATCH|TODO: revert" -- \
+            ':(exclude)CLAUDE.md' \
+            ':(exclude).githooks/' \
+            ':(exclude).github/' \
+            ':(exclude)docs/' \
+            ':(exclude)documentation/' || true)
+          if [ -n "$FOUND" ]; then
+            echo "Emergency / unreverted markers found on main:"
+            echo "$FOUND"
+            exit 1
+          fi
