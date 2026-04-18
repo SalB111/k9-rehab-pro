@@ -72,6 +72,8 @@ const beauLimiter = rateLimit({
 // CORS origins — read from CORS_ORIGINS env var (comma-separated) with fallback
 const DEFAULT_CORS_ORIGINS = [
   "https://k9-rehab-pro.vercel.app",
+  "https://k9-rehab-pro-gncl.vercel.app",
+  "https://k9-rehab-pro-gncl-salb111s-projects.vercel.app",
   "https://k9-rehab-pro-gcnl.vercel.app",
   "https://k9-rehab-pro-gcnl-salb111s-projects.vercel.app",
   "https://beau-ai-lime.vercel.app",
