@@ -263,6 +263,62 @@ app.delete("/api/patients/:id", requireAuth, async (req, res) => {
   }
 });
 
+// Bulk delete — ClientsView "Delete Selected" button
+app.post("/api/patients/delete-batch", requireAuth, async (req, res) => {
+  try {
+    const { ids } = req.body || {};
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ success: false, error: "ids array required" });
+    }
+    const safeIds = ids.map(Number).filter(n => Number.isFinite(n) && n > 0);
+    if (safeIds.length === 0) return res.status(400).json({ success: false, error: "no valid ids" });
+    const placeholders = safeIds.map(() => "?").join(",");
+    const result = await run(`DELETE FROM patients WHERE id IN (${placeholders})`, safeIds);
+    res.json({ success: true, deleted: result.changes });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// PATCH clinical measures — PatientDetailView save button. Columns already
+// exist on patients table; whitelist the allowed keys so nothing unexpected
+// slips through.
+app.patch("/api/patients/:id/measures", requireAuth, async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isFinite(id)) return res.status(400).json({ success: false, error: "invalid id" });
+    const allowed = [
+      "rom_joint", "rom_flexion", "rom_extension",
+      "rom_flexion_contralateral", "rom_extension_contralateral",
+      "hcpi_score", "cbpi_pss", "cbpi_pis", "load_score",
+    ];
+    const fields = [];
+    const values = [];
+    for (const key of allowed) {
+      if (key in (req.body || {})) {
+        fields.push(`${key} = ?`);
+        values.push(req.body[key] == null ? null : String(req.body[key]));
+      }
+    }
+    if (fields.length === 0) return res.status(400).json({ success: false, error: "no measures provided" });
+    values.push(id);
+    await run(`UPDATE patients SET ${fields.join(", ")} WHERE id = ?`, values);
+    const patient = await get("SELECT * FROM patients WHERE id = ?", [id]);
+    if (!patient) return res.status(404).json({ success: false, error: "patient not found" });
+    res.json({ success: true, data: patient });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Protocols by patient — SessionsView fetches this to show protocol history.
+// There's no dedicated protocols table yet (protocol_exercises exists but
+// isn't linked through a parent row), so return empty for now. Frontend
+// renders an empty "no protocols" state gracefully.
+app.get("/api/patients/:id/protocols", requireAuth, async (req, res) => {
+  res.json({ success: true, data: [] });
+});
+
 // ---------------------------------------------------------------------------
 // EXERCISES
 // ---------------------------------------------------------------------------
