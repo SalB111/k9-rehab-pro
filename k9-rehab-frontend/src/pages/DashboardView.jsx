@@ -2395,7 +2395,10 @@ function ProtocolPanel({ patientName, patientData }) {
   // ── Fetch exercise library count from backend ──
   useEffect(() => {
     const apiBase = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
-    fetch(`${apiBase}/exercises`)
+    const token = localStorage.getItem("token");
+    fetch(`${apiBase}/exercises`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
       .then(r => r.json())
       .then(payload => {
         const raw = Array.isArray(payload?.data) ? payload.data : [];
@@ -2824,7 +2827,10 @@ function LibraryPanelLegacy() {
     setLoading(true);
     setError(null);
 
-    fetch(`${apiBase}/exercises`)
+    const token = localStorage.getItem("token");
+    fetch(`${apiBase}/exercises`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
       .then(r => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();

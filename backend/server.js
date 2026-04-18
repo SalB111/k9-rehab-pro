@@ -288,7 +288,7 @@ const TAGGED_EXERCISES = ALL_EXERCISES.map(ex => {
 const { selectExercisesForWeek, getProtocolType, validateIntake } = require("./protocol-generator");
 
 // Exercise library — serves full 260-exercise library (consistent with engines)
-app.get("/api/exercises", (req, res) => {
+app.get("/api/exercises", requireAuth, (req, res) => {
   try {
     res.json({ success: true, data: TAGGED_EXERCISES, total: TAGGED_EXERCISES.length });
   } catch (err) {
@@ -330,7 +330,7 @@ app.get("/api/v2/exercises", (req, res) => {
   }
 });
 
-app.get("/api/exercises/:id", async (req, res) => {
+app.get("/api/exercises/:id", requireAuth, async (req, res) => {
   try {
     const exercise = await get("SELECT * FROM exercises_v2 WHERE id = ?", [req.params.id]);
     if (!exercise) return res.status(404).json({ success: false, error: "Exercise not found" });

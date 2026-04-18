@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from "react";
-import axios from "axios";
+import api from "../../api/axios";
 import {
   FiShield, FiPrinter, FiPlus, FiAlertTriangle, FiCheckCircle,
   FiCalendar, FiFileText, FiHeart, FiAward, FiSearch, FiChevronDown
@@ -140,17 +140,31 @@ export default function ProtocolResults({ protocol, setProtocol, setWizardStep, 
             </span>
           </div>
           {safetySubmitted ? (
-            <div style={{ padding: "16px 20px", background: C.greenBg, borderRadius: 6, border: `1px solid ${C.green}33` }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <FiCheckCircle size={14} style={{ color: C.green }} />
-                <span style={{ fontSize: 12, fontWeight: 700, color: C.green }}>
-                  {safetyFallback ? tr("Safety concern saved locally — server unavailable, please retry when connected") : tr("Safety concern logged to audit trail")}
-                </span>
+            safetyFallback ? (
+              <div style={{ padding: "16px 20px", background: C.amberBg, borderRadius: 6, border: `1px solid ${C.amber}` }}>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                  <FiAlertTriangle size={14} style={{ color: C.amber, flexShrink: 0, marginTop: 2 }} />
+                  <span style={{ fontSize: 12, fontWeight: 700, color: C.amber, lineHeight: 1.5 }}>
+                    {tr("Safety report saved to this browser only — backend logging is not yet configured. This report is NOT in the clinical audit trail. Please contact your K9 Rehab Pro administrator to ensure this concern is captured in the permanent record.")}
+                  </span>
+                </div>
+                <div style={{ fontSize: 10, color: C.textMid, marginTop: 6 }}>
+                  {tr("Protocol ID:")} {protocol.patient_id} · {tr("Patient:")} {protocol.patient_name} · {tr("Saved locally:")} {new Date().toLocaleString()}
+                </div>
               </div>
-              <div style={{ fontSize: 10, color: C.textMid, marginTop: 6 }}>
-                {tr("Protocol ID:")} {protocol.patient_id} · {tr("Patient:")} {protocol.patient_name} · {tr("Logged:")} {new Date().toLocaleString()}
+            ) : (
+              <div style={{ padding: "16px 20px", background: C.greenBg, borderRadius: 6, border: `1px solid ${C.green}33` }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <FiCheckCircle size={14} style={{ color: C.green }} />
+                  <span style={{ fontSize: 12, fontWeight: 700, color: C.green }}>
+                    {tr("Safety concern logged to audit trail")}
+                  </span>
+                </div>
+                <div style={{ fontSize: 10, color: C.textMid, marginTop: 6 }}>
+                  {tr("Protocol ID:")} {protocol.patient_id} · {tr("Patient:")} {protocol.patient_name} · {tr("Logged:")} {new Date().toLocaleString()}
+                </div>
               </div>
-            </div>
+            )
           ) : (
             <>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
@@ -205,14 +219,10 @@ export default function ProtocolResults({ protocol, setProtocol, setWizardStep, 
                       protocol_type: protocol.protocol_type,
                     };
                     try {
-                      const token = localStorage.getItem("k9_token");
-                      await axios.post("/api/safety-report", entry, {
-                        headers: { Authorization: `Bearer ${token}` }
-                      });
+                      await api.post("/safety-report", entry);
                       setSafetySubmitted(true);
                     } catch (err) {
                       console.error("Safety report failed:", err);
-                      // Fallback to localStorage if backend unavailable
                       const log = JSON.parse(localStorage.getItem("k9_safety_log") || "[]");
                       log.push({ timestamp: new Date().toISOString(), ...entry });
                       localStorage.setItem("k9_safety_log", JSON.stringify(log));
