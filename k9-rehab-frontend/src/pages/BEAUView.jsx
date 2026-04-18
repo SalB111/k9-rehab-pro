@@ -1,12 +1,16 @@
 import React, { useEffect, useState, useRef, lazy, Suspense } from "react";
-import axios from "axios";
+// Auth-aware axios instance — the interceptor attaches JWT from localStorage
+// on every request. Raw `axios` hit /api/patients, /api/beau/status,
+// /api/beau/sessions, /api/beau/intelligence without a token and 401'd,
+// which made the UI think B.E.A.U. wasn't configured and left the patient
+// list empty.
+import api, { API } from "../api/axios";
 import {
   FiActivity, FiAlertTriangle, FiBarChart2, FiBookOpen,
   FiCheckCircle, FiClipboard, FiClock, FiDatabase, FiHeart, FiHome,
   FiSearch, FiSend, FiShield
 } from "react-icons/fi";
 import C from "../constants/colors";
-import { API } from "../api/axios";
 import { useToast } from "../components/Toast";
 import useBeauVoice from "../hooks/useBeauVoice";
 import BeauVoiceControl, { SpeakButton } from "../components/BeauVoiceControl";
@@ -47,23 +51,23 @@ function BEAUView({ authToken, setView }) {
 useEffect(() => {
   if (!authToken) return; // ⛔ Prevents all 4 API calls before login
 
-  axios
-    .get(`${API}/patients`)
+  api
+    .get(`/patients`)
     .then(r => setPatients(r.data?.data || r.data || []))
     .catch(() => toast(tr("Failed to load patients")));
 
-  axios
-    .get(`${API}/beau/status`)
+  api
+    .get(`/beau/status`)
     .then(r => setAiStatus(r.data))
     .catch(() => setAiStatus({ configured: false }));
 
-  axios
-    .get(`${API}/beau/sessions`)
+  api
+    .get(`/beau/sessions`)
     .then(r => setSessionHistory(r.data?.data || []))
     .catch(() => {});
 
-  axios
-    .get(`${API}/beau/intelligence`)
+  api
+    .get(`/beau/intelligence`)
     .then(r => setIntelligence(r.data?.data || null))
     .catch(() => {});
 }, [authToken]);
@@ -185,7 +189,7 @@ useEffect(() => {
       });
       const data = await r.json();
       if (data?.data?.id && !sessionId) setSessionId(data.data.id);
-      axios.get(`${API}/beau/sessions`).then(r => setSessionHistory(r.data?.data || [])).catch(() => {});
+      api.get(`/beau/sessions`).then(r => setSessionHistory(r.data?.data || [])).catch(() => {});
     } catch (_) {}
   };
 

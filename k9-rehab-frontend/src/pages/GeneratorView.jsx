@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
-import C from "../constants/colors";
-import { API } from "../api/axios";
+// Auth-aware axios instance — raw `axios` bypasses the JWT interceptor and
+// now 401s on every protected endpoint after the pre-demo auth hardening.
+import api, { API } from "../api/axios";
 import { useToast } from "../components/Toast";
 import { useTr } from "../i18n/useTr";
 
@@ -75,7 +75,7 @@ export default function GeneratorView({ initialStep }) {
 
   // ── Load exercise library ──
   useEffect(() => {
-    axios.get(`${API}/exercises`)
+    api.get(`/exercises`)
       .then(r => setAllExercises(r.data?.data || r.data || []))
       .catch(() => toast("Failed to load exercises"));
   }, []);
@@ -125,7 +125,7 @@ export default function GeneratorView({ initialStep }) {
         cleanedForm[key] = value;
       }
       const [{ data: resp }] = await Promise.all([
-        axios.post(`${API}/generate-protocol`, {
+        api.post(`/generate-protocol`, {
           ...cleanedForm,
           age: +form.age || 0,
           weight: +form.weightLbs || +form.weightKg * 2.20462 || 0,

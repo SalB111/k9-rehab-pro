@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api, { API } from "../api/axios";
 import { FiX, FiLock, FiAlertTriangle } from "react-icons/fi";
 import C from "../constants/colors";
 import S from "../constants/styles";
-import { API } from "../api/axios";
 
 // ─────────────────────────────────────────────
 // SVG OVERLAY LAYER — Anatomical indicators for storyboard frames
@@ -228,7 +227,7 @@ function StoryboardPlayer({ exerciseCode, onClose }) {
 
   useEffect(() => {
     setLoading(true);
-    axios.get(`${API}/storyboards/${exerciseCode}`)
+    api.get(`/storyboards/${exerciseCode}`)
       .then(r => {
         setStoryboard(r.data.data || r.data);
         // Apply default overlay visibility from storyboard data

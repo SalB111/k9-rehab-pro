@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
-import { API } from "../../api/axios";
+// Auth-aware axios — raw axios bypasses JWT and 401s.
+import api, { API } from "../../api/axios";
 
 export function useSettingsState(setBrand, toast) {
   // ── Clinic profile (persisted to API) ──
@@ -94,7 +94,7 @@ export function useSettingsState(setBrand, toast) {
 
   // ── Load clinic data ──
   useEffect(() => {
-    axios.get(`${API}/clinics`).then(r => {
+    api.get(`/clinics`).then(r => {
       const clinic = r.data?.[0];
       if (clinic) {
         setClinicId(clinic.id);
@@ -109,9 +109,9 @@ export function useSettingsState(setBrand, toast) {
     setSaving(true);
     try {
       if (clinicId) {
-        await axios.put(`${API}/clinics/${clinicId}`, form);
+        await api.put(`/clinics/${clinicId}`, form);
       } else {
-        const { data } = await axios.post(`${API}/clinics`, form);
+        const { data } = await api.post(`/clinics`, form);
         setClinicId(data.id);
       }
       setBrand(b => ({ ...b, clinicName: form.clinic_name, accent: form.primary_color }));

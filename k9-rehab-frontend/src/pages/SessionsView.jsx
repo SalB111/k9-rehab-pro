@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+// Auth-aware axios — raw axios 401s on protected endpoints.
+import api, { API } from "../api/axios";
 import {
   FiClipboard, FiActivity, FiClock, FiCheckCircle, FiBook,
   FiFileText, FiChevronDown, FiChevronUp
 } from "react-icons/fi";
 import C from "../constants/colors";
 import S from "../constants/styles";
-import { API } from "../api/axios";
 import { useToast } from "../components/Toast";
 import { useTr } from "../i18n/useTr";
 
@@ -59,13 +59,13 @@ function SessionsView() {
   const [cbpiHistory, setCbpiHistory] = useState([]);
 
   useEffect(() => {
-    axios.get(`${API}/patients`).then(r => setPatients(r.data?.data || r.data || [])).catch(() => toast(tr("Failed to load patients"))).finally(() => setLoadingPatients(false));
+    api.get(`/patients`).then(r => setPatients(r.data?.data || r.data || [])).catch(() => toast(tr("Failed to load patients"))).finally(() => setLoadingPatients(false));
   }, []);
 
   // Fetch protocols when patient is selected
   useEffect(() => {
     if (selectedPatient) {
-      axios.get(`${API}/patients/${selectedPatient}/protocols`)
+      api.get(`/patients/${selectedPatient}/protocols`)
         .then(r => setProtocols(r.data || []))
         .catch(() => setProtocols([]));
     } else {

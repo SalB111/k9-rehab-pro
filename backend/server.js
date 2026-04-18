@@ -523,6 +523,22 @@ const evidenceEngine = require("./engines/evidence/evidence-engine");
 const narrativeEngine = require("./engines/narrative/narrative-engine");
 const presentationEngine = require("./engines/presentation/presentation-engine");
 const visualEngine = require("./engines/visual/visual-engine");
+// Public health-style check — no PHI, no AI spend. Registered BEFORE the
+// authed mount so Express matches this first. The frontend calls this at
+// startup to decide whether to show "B.E.A.U. is not configured" — we
+// don't want that banner for unauthenticated users during login either.
+app.get("/api/beau/status", (req, res) => {
+  const configured = !!process.env.ANTHROPIC_API_KEY;
+  let engines = { clinical: true };
+  try { engines.knowledge = require("./engines/knowledge/knowledge-engine").isReady(); } catch { engines.knowledge = false; }
+  try { engines.evidence = require("./engines/evidence/evidence-engine").isReady(); } catch { engines.evidence = false; }
+  try { engines.diagram = require("./engines/diagram/diagram-engine").isReady(); } catch { engines.diagram = false; }
+  try { engines.narrative = require("./engines/narrative/narrative-engine").isReady(); } catch { engines.narrative = false; }
+  try { engines.presentation = require("./engines/presentation/presentation-engine").isReady(); } catch { engines.presentation = false; }
+  try { engines.visual = require("./engines/visual/visual-engine").isReady(); } catch { engines.visual = false; }
+  res.json({ configured, model: "claude-sonnet-4-20250514", engines });
+});
+
 // Auth-gated — prevents anonymous patient-name disclosure via
 // GET /api/beau/sessions and prevents anonymous spend on
 // POST /api/beau/chat / POST /api/tts (Anthropic + OpenAI cost).

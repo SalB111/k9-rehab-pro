@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+// Auth-aware axios instance — interceptor attaches JWT on every request.
+// Raw `axios` hit /api/patients without a token and 401'd after the
+// patient routes were auth-gated, leaving the client list empty.
+import api, { API } from "../api/axios";
 import {
   FiUsers, FiSearch, FiChevronRight,
   FiAlertTriangle, FiCheckCircle, FiHeart
 } from "react-icons/fi";
 import C from "../constants/colors";
 import S from "../constants/styles";
-import { API } from "../api/axios";
 import { useToast } from "../components/Toast";
 import { BREEDS, FELINE_BREEDS } from "./generator/constants";
 import { useTr } from "../i18n/useTr";
@@ -62,15 +64,15 @@ function ClientsView({ setView, setSelectedPatient }) {
   const toast = useToast();
 
   useEffect(() => {
-    axios.get(`${API}/patients`).then(r => setClients(r.data?.data || r.data || [])).catch(() => toast(tr("Failed to load patients"))).finally(() => setLoading(false));
+    api.get(`/patients`).then(r => setClients(r.data?.data || r.data || [])).catch(() => toast(tr("Failed to load patients"))).finally(() => setLoading(false));
   }, []);
 
   const submit = async (e) => {
     e.preventDefault();
-    await axios.post(`${API}/patients`, { ...form, age: +form.age, weight: +form.weight });
+    await api.post(`/patients`, { ...form, age: +form.age, weight: +form.weight });
     setShowForm(false);
     setForm({ name: "", species: "canine", breed: "", age: "", dob: "", weight: "", weight_kg: "", sex: "Male", condition: "", client_name: "", client_email: "", client_phone: "" });
-    axios.get(`${API}/patients`).then(r => setClients(r.data?.data || r.data || []));
+    api.get(`/patients`).then(r => setClients(r.data?.data || r.data || []));
   };
 
   const toggleSelect = (id) => {
@@ -96,9 +98,9 @@ function ClientsView({ setView, setSelectedPatient }) {
     if (!window.confirm(`${tr("Are you sure you want to delete")} ${count} ${count > 1 ? tr("patients") : tr("patient")}? ${tr("This cannot be undone.")}`)) return;
     setDeleting(true);
     try {
-      await axios.post(`${API}/patients/delete-batch`, { ids: Array.from(selectedIds) });
+      await api.post(`/patients/delete-batch`, { ids: Array.from(selectedIds) });
       setSelectedIds(new Set());
-      const r = await axios.get(`${API}/patients`);
+      const r = await api.get(`/patients`);
       setClients(r.data?.data || r.data || []);
     } catch (err) {
       alert(err.response?.data?.error || tr("Delete failed"));

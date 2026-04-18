@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+// Auth-aware axios.
+import api, { API } from "../../api/axios";
 import { FiFileText, FiDownload } from "react-icons/fi";
 import C from "../../constants/colors";
 import S from "../../constants/styles";
-import { API } from "../../api/axios";
 import { SettingsSection } from "./SettingsShared";
 
 export function AuditLogViewer() {
@@ -17,8 +17,8 @@ export function AuditLogViewer() {
     setLoading(true);
     try {
       const [logRes, statsRes] = await Promise.all([
-        axios.get(`${API}/audit-log?limit=100`),
-        axios.get(`${API}/audit-log/stats`)
+        api.get(`/audit-log?limit=100`),
+        api.get(`/audit-log/stats`)
       ]);
       setEntries(logRes.data.data || logRes.data.entries || []);
       setTotal(logRes.data.total || 0);
