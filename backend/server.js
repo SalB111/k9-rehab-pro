@@ -14,6 +14,7 @@ const db = require("./db-provider");
 const { all, get, run } = require("./db-provider");
 const authRoutes = require("./auth-routes");
 const requireAuth = require("./middleware/requireAuth");
+const { requireRole } = require("./auth");
 const { announceIfDemoMode } = require("./demo-mode");
 
 const app = express();
@@ -695,6 +696,76 @@ app.get("/api/pipeline/status", (req, res) => {
     approvedProtocols: 4,
     aiConfigured: hasAnthropicKey,
   });
+});
+
+// ---------------------------------------------------------------------------
+// Safety / adverse-event reporting
+// Required by CLAUDE.md Regulatory Framework § Adverse Event Reporting.
+// Storage: safety_events table. Retention: 7 years (state board rules).
+// ---------------------------------------------------------------------------
+
+const SAFETY_EVENT_TYPES = new Set([
+  "adverse_reaction",
+  "pain_increase",
+  "injury",
+  "contraindication_missed",
+  "dosing_concern",
+  "safety_gate_failure",
+  "other",
+]);
+const SAFETY_SEVERITIES = new Set(["low", "moderate", "high", "critical"]);
+
+app.post("/api/safety-report", requireAuth, async (req, res) => {
+  try {
+    const { type, severity, description, exercise, patient_id, patient_name, protocol_type } = req.body || {};
+
+    if (!type || !SAFETY_EVENT_TYPES.has(type)) {
+      return res.status(400).json({ success: false, error: "Valid event type required" });
+    }
+    if (!severity || !SAFETY_SEVERITIES.has(severity)) {
+      return res.status(400).json({ success: false, error: "Valid severity required" });
+    }
+    if (!description || typeof description !== "string" || description.trim().length < 10) {
+      return res.status(400).json({ success: false, error: "Description required (min 10 characters)" });
+    }
+
+    const id = await db.insertSafetyEvent({
+      patient_id: patient_id != null ? Number(patient_id) || null : null,
+      patient_name: patient_name || null,
+      protocol_type: protocol_type || null,
+      exercise_code: exercise || null,
+      event_type: type,
+      severity,
+      description: description.trim(),
+      clinician_id: req.user.id,
+      clinician_username: req.user.username,
+      clinician_role: req.user.role,
+      ip_address: req.ip || null,
+      user_agent: req.headers["user-agent"] || null,
+    });
+
+    res.json({ success: true, data: { id, created_at: new Date().toISOString() } });
+  } catch (err) {
+    console.error("Safety report insert failed:", err);
+    res.status(500).json({ success: false, error: "Failed to record safety report" });
+  }
+});
+
+app.get("/api/safety-reports", requireAuth, requireRole("admin"), async (req, res) => {
+  try {
+    const rawLimit = parseInt(req.query.limit, 10);
+    const rawOffset = parseInt(req.query.offset, 10);
+    const rawPatient = req.query.patient_id ? parseInt(req.query.patient_id, 10) : null;
+    const result = await db.listSafetyEvents({
+      limit: Math.min(Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : 200, 1000),
+      offset: Number.isFinite(rawOffset) && rawOffset >= 0 ? rawOffset : 0,
+      patient_id: Number.isFinite(rawPatient) ? rawPatient : null,
+    });
+    res.json({ success: true, ...result });
+  } catch (err) {
+    console.error("Safety report list failed:", err);
+    res.status(500).json({ success: false, error: "Failed to list safety reports" });
+  }
 });
 
 // ---------------------------------------------------------------------------

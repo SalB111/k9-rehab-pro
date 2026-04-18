@@ -209,6 +209,37 @@ async function purgeAuditLog(cutoffDate) {
   return { changes: data.length };
 }
 
+// ── Safety events (adverse event reporting — 7yr retention) ─────────────────
+
+async function insertSafetyEvent(entry) {
+  const { data, error } = await supabase.from('safety_events').insert([{
+    patient_id: entry.patient_id ?? null,
+    patient_name: entry.patient_name ?? null,
+    protocol_type: entry.protocol_type ?? null,
+    exercise_code: entry.exercise_code ?? null,
+    event_type: entry.event_type,
+    severity: entry.severity,
+    description: entry.description,
+    clinician_id: entry.clinician_id,
+    clinician_username: entry.clinician_username,
+    clinician_role: entry.clinician_role ?? null,
+    ip_address: entry.ip_address ?? null,
+    user_agent: entry.user_agent ?? null,
+  }]).select('id');
+  if (error) throw error;
+  return data?.[0]?.id;
+}
+
+async function listSafetyEvents({ limit = 200, offset = 0, patient_id = null } = {}) {
+  let query = supabase.from('safety_events').select('*', { count: 'exact' });
+  if (patient_id != null) query = query.eq('patient_id', patient_id);
+  const { data, error, count } = await query
+    .order('created_at', { ascending: false })
+    .range(offset, offset + limit - 1);
+  if (error) throw error;
+  return { rows: data || [], total: count || 0 };
+}
+
 // ── Users (auth) ────────────────────────────────────────────────────────────
 
 async function getUserCount() {
@@ -375,6 +406,10 @@ module.exports = {
   getAuditLogStats,
   getAuditLogExport,
   purgeAuditLog,
+
+  // Safety events
+  insertSafetyEvent,
+  listSafetyEvents,
 
   // Users
   getUserCount,

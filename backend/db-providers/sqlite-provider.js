@@ -309,6 +309,30 @@ async function createTables() {
     )
   `);
 
+  // Safety / adverse-event reports — 7-year retention per state board rules
+  await run(`
+    CREATE TABLE IF NOT EXISTS safety_events (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      patient_id INTEGER,
+      patient_name TEXT,
+      protocol_type TEXT,
+      exercise_code TEXT,
+      event_type TEXT NOT NULL,
+      severity TEXT NOT NULL,
+      description TEXT NOT NULL,
+      clinician_id INTEGER NOT NULL,
+      clinician_username TEXT NOT NULL,
+      clinician_role TEXT,
+      ip_address TEXT,
+      user_agent TEXT,
+      status TEXT NOT NULL DEFAULT 'open',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (clinician_id) REFERENCES users(id)
+    )
+  `);
+  await run(`CREATE INDEX IF NOT EXISTS idx_safety_events_created_at ON safety_events(created_at)`);
+  await run(`CREATE INDEX IF NOT EXISTS idx_safety_events_patient_id ON safety_events(patient_id)`);
+
   // Migration: add species column to existing patients table
   try {
     await run("ALTER TABLE patients ADD COLUMN species TEXT NOT NULL DEFAULT 'canine'");
@@ -432,6 +456,46 @@ async function createUser(username, passwordHash, role = "user") {
 }
 
 // ---------------------------------------------------------------------------
+// Safety events (adverse event reporting)
+// ---------------------------------------------------------------------------
+
+async function insertSafetyEvent(entry) {
+  const result = await run(
+    `INSERT INTO safety_events
+      (patient_id, patient_name, protocol_type, exercise_code, event_type,
+       severity, description, clinician_id, clinician_username, clinician_role,
+       ip_address, user_agent)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      entry.patient_id ?? null,
+      entry.patient_name ?? null,
+      entry.protocol_type ?? null,
+      entry.exercise_code ?? null,
+      entry.event_type,
+      entry.severity,
+      entry.description,
+      entry.clinician_id,
+      entry.clinician_username,
+      entry.clinician_role ?? null,
+      entry.ip_address ?? null,
+      entry.user_agent ?? null,
+    ]
+  );
+  return result.lastID;
+}
+
+async function listSafetyEvents({ limit = 200, offset = 0, patient_id = null } = {}) {
+  const where = patient_id != null ? ` WHERE patient_id = ?` : ``;
+  const params = patient_id != null ? [patient_id] : [];
+  const rows = await all(
+    `SELECT * FROM safety_events${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+    [...params, limit, offset]
+  );
+  const countRow = await get(`SELECT COUNT(*) as total FROM safety_events${where}`, params);
+  return { rows, total: countRow?.total || 0 };
+}
+
+// ---------------------------------------------------------------------------
 // EXPORTS
 // ---------------------------------------------------------------------------
 
@@ -444,5 +508,7 @@ module.exports = {
   all,
   findUserByUsername,
   findUserById,
-  createUser
+  createUser,
+  insertSafetyEvent,
+  listSafetyEvents,
 };

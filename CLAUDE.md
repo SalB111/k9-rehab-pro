@@ -350,10 +350,14 @@ cd k9-rehab-frontend && npm install && npm start
 - `GET /api/beau/status` — Check if B.E.A.U. is configured
 
 ### Audit Log
-- `GET /api/audit-log` — View audit log
-- `GET /api/audit-log/stats` — Audit statistics
-- `GET /api/audit-log/export` — Export audit log
-- `DELETE /api/audit-log/purge` — Purge audit log (admin only)
+- `GET /api/audit-log` — View audit log (⚠ documented but not yet wired on backend — follow-up)
+- `GET /api/audit-log/stats` — Audit statistics (⚠ not yet wired)
+- `GET /api/audit-log/export` — Export audit log (⚠ not yet wired)
+- `DELETE /api/audit-log/purge` — Purge audit log, admin only (⚠ not yet wired)
+
+### Safety / Adverse Event Reporting
+- `POST /api/safety-report` — Record a safety concern or adverse event (auth required, any clinician). Body: `{type, severity, description, exercise?, patient_id?, patient_name?, protocol_type?}`. Validates `type` ∈ {adverse_reaction, pain_increase, injury, contraindication_missed, dosing_concern, safety_gate_failure, other}, `severity` ∈ {low, moderate, high, critical}, description ≥ 10 chars. Persists to `safety_events` with clinician attribution, IP, user-agent. 7-year retention per state board rules.
+- `GET /api/safety-reports` — List safety events (admin only). Query: `limit`, `offset`, `patient_id`. Returns `{rows, total}`.
 
 ## Database
 
@@ -367,6 +371,7 @@ SQLite3 file-based (`k9_rehab_pro.db`). Key tables:
 - `exercises` — Exercise library (seeded from exercise-part files)
 - `conditions` — Supported conditions
 - `users` — Auth users with roles (clinician, admin)
+- `safety_events` — Adverse event / safety concern reports (clinician-attributed, 7yr retention)
 
 Auto-initializes with seed data on first run.
 
