@@ -19,6 +19,7 @@ const ExerciseVisualDemo = lazy(() => import("./components/ExerciseVisualDemo"))
 const DocsView = lazy(() => import("./pages/DocsView"));
 const BeauMetricsView = lazy(() => import("./pages/BeauMetricsView"));
 const HelsinkiView = lazy(() => import("./pages/HelsinkiView"));
+const RehabCalculatorsView = lazy(() => import("./pages/RehabCalculatorsView"));
 
 export default function App() {
   const [authToken, setAuthToken] = useState(localStorage.getItem("token"));
@@ -127,6 +128,8 @@ export default function App() {
         return <DocsView setView={setView} />;
       case "beau-metrics":
         return <BeauMetricsView authToken={authToken} setView={setView} />;
+      case "rehab-calc":
+        return <RehabCalculatorsView />;
       case "helsinki":
         return <HelsinkiView setView={setView} />;
       case "visual-demo":
