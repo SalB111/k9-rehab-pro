@@ -11,7 +11,7 @@ const NAV = [
   { id: "beau",       label: "Ask B.E.A.U.",          icon: FiCpu,        desc: "Biomedical Evidence-Based Analytical Unit" },
   { id: "helsinki",   label: "Helsinki Index",       icon: FiEdit3,      desc: "Chronic pain questionnaire (print for client)" },
   { id: "beau-metrics", label: "PetCare Nutrition",  icon: FiActivity,   desc: "AI nutrition & rehab protocols" },
-  { id: "rehab-calc", label: "Weight Calculator",   icon: FiPercent,    desc: "BCS, ideal weight, caloric needs (RER/MER)" },
+  { id: "rehab-calc", label: "Rehab Calculators",   icon: FiPercent,    desc: "BCS, RER/MER, ROM, CBPI, FMPI, FGS" },
   { id: "docs",       label: "Reference",            icon: FiBook,       desc: "Clinical reference" },
   { id: "settings",   label: "Settings",            icon: FiSettings,   desc: "Configuration" },
   { id: "about",      label: "About",               icon: FiHeart,      desc: "Platform & methodology" },

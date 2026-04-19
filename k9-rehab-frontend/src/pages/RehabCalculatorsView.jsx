@@ -9,7 +9,7 @@ export default function RehabCalculatorsView() {
     <div style={{ width: "100%", height: "calc(100vh - 80px)", padding: 0 }}>
       <iframe
         src="https://rehab-calculators.vercel.app/"
-        title="Weight Calculator — Clinical Decision Support"
+        title="Rehab Calculators — Clinical Decision Support"
         style={{
           width: "100%",
           height: "100%",
