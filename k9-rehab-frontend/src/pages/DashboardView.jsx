@@ -2380,125 +2380,171 @@ REQUIREMENTS:
 }
 
 // ── PROTOCOL SUMMARY (Block 10) ──────────────────────────────────────────────
-// 6-card summary grid showing live dashData, exercise library count bar,
-// compliance checkbox, and GENERATE EXERCISE PROTOCOL button.
+// 6-section rebuild: completion status, preview, B.E.A.U. generate,
+// exercise list with delete, full generate, sign-off / discharge / appt
 function ProtocolPanel({ patientName, patientData }) {
-  const { data, beauVoice: bv, uiLang } = useContext(DashFormContext);
+  const { data, update, beauVoice: bv, uiLang } = useContext(DashFormContext);
 
   // ── State ──
-  const [generating, setGenerating] = useState(false);
-  const [protocol,   setProtocol]   = useState("");
-  const [copied,     setCopied]     = useState(false);
-  const [complianceChecked, setComplianceChecked] = useState(false);
-  const [exCount, setExCount] = useState(null);
+  const [generating,     setGenerating]     = useState(false);
+  const [protocol,       setProtocol]       = useState("");
+  const [copied,         setCopied]         = useState(false);
+  const [quickCondition, setQuickCondition] = useState(patientData?.condition || "");
+  const [quickRegion,    setQuickRegion]    = useState(patientData?.affected_region || "");
+  const [quickProtocol,  setQuickProtocol]  = useState(null);
+  const [quickLoading,   setQuickLoading]   = useState(false);
+  const [deletedEx,      setDeletedEx]      = useState({});
+  const [discharging,    setDischarging]    = useState(false);
+  const [discharged,     setDischarged]     = useState(false);
 
-  // ── Fetch exercise library count from backend ──
-  useEffect(() => {
-    const apiBase = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
-    const token = localStorage.getItem("token");
-    fetch(`${apiBase}/exercises`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    })
-      .then(r => r.json())
-      .then(payload => {
-        const raw = Array.isArray(payload?.data) ? payload.data : [];
-        setExCount(raw.length);
-      })
-      .catch(() => setExCount(0));
-  }, []);
+  const CONDITIONS = [
+    { value: "TPLO Post-Op", label: "TPLO / CCL Post-Op" },
+    { value: "IVDD", label: "IVDD (Intervertebral Disc Disease)" },
+    { value: "Osteoarthritis", label: "Osteoarthritis (OA)" },
+    { value: "Geriatric Mobility", label: "Geriatric / Mobility Decline" },
+  ];
+  const REGIONS = [
+    "Stifle (Knee)", "Hip", "Elbow", "Shoulder", "Spine \u2014 Cervical",
+    "Spine \u2014 Thoracolumbar", "Spine \u2014 Lumbosacral", "Tarsus (Hock)",
+    "Carpus (Wrist)", "Multiple joints", "Generalized",
+  ];
 
-  // ── Live card data from dashData ──
-  const livePatientName = (data["client::Patient Name"] || "").trim() || patientName || "";
-  const liveBreed = (data["client::Breed"] || "").trim() || patientData?.breed || "";
-  const liveSpecies = data["client::Species"] || patientData?.species || "";
-  const liveAge = data["client::Age (years)"] || patientData?.age || "";
-  const liveWeight = data["client::Weight (lbs)"] || patientData?.weight || "";
-  const liveSex = data["client::Sex"] || patientData?.sex || "";
+  // ── SECTION 1: Block completion status ──
+  const INTAKE_BLOCKS = [
+    { id: "client",       label: "Client & Patient" },
+    { id: "diagnostics",  label: "Diagnostics" },
+    { id: "assessment",   label: "Assessment" },
+    { id: "treatment",    label: "Treatment Plan" },
+    { id: "metrics",      label: "B.E.A.U. Metrics" },
+    { id: "equipment",    label: "Equipment" },
+    { id: "home",         label: "Home Environment" },
+    { id: "goals",        label: "Goals" },
+    { id: "conditioning", label: "Conditioning" },
+  ];
+  const blockStatus = useMemo(() => {
+    const result = {};
+    for (const blk of INTAKE_BLOCKS) {
+      result[blk.id] = Object.keys(data).some(k =>
+        k.startsWith(blk.id + "::") &&
+        data[k] !== undefined && data[k] !== null && String(data[k]).trim() !== ""
+      );
+    }
+    return result;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data]);
+  const filledCount = Object.values(blockStatus).filter(Boolean).length;
+  const totalBlocks = INTAKE_BLOCKS.length;
 
-  const liveDiagnosis = data["assessment::Primary Diagnosis"] || data["treatment::Primary Diagnosis"] || patientData?.condition || "";
-  const liveChiefComplaint = data["assessment::Chief Complaint"] || "";
-  const liveLameness = data["assessment::Lameness Grade"] || "";
-  const livePain = data["assessment::CSU Acute Pain Score (0–4)"] || "";
+  // ── SECTION 2: Preview line from clinician findings ──
+  const previewLine = useMemo(() => {
+    const bits = [
+      data["treatment::Approach"],
+      data["treatment::Surgery Type"],
+      data["assessment::Chief Complaint"],
+    ].filter(v => v && String(v).trim());
+    const goals = data["goals::Primary Rehabilitation Goals"];
+    if (goals) {
+      const first = goals.split("||")[0];
+      if (first) bits.push(first);
+    }
+    return bits.length > 0 ? bits.join(" \u2014 ") : null;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data]);
 
-  const liveApproach = data["treatment::Approach"] || "";
-  const liveSurgeryType = data["treatment::Surgery Type"] || "";
-  const liveSurgeryDate = data["treatment::Surgery Date"] || "";
-  const liveWBStatus = data["treatment::Weight Bearing Status"] || "";
+  // ── Quick generate ──
+  const quickGenerate = async () => {
+    if (!quickCondition) return;
+    setQuickLoading(true); setQuickProtocol(null); setDeletedEx({});
+    try {
+      const apiBase = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+      const token = localStorage.getItem("token");
+      const liveWeight = parseFloat(data["client::Weight (lbs)"]) || 0;
+      const liveAge = parseInt(data["client::Age (years)"], 10) || 0;
+      const liveSpecies = (data["client::Species"] || "").toLowerCase();
+      const res = await fetch(`${apiBase}/generate-protocol`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          patientName: patientName || "Patient",
+          clientFirstName: patientData?.client_name?.split(" ")[0] || "Client",
+          clientLastName: patientData?.client_name?.split(" ").slice(1).join(" ") || "",
+          diagnosis: quickCondition,
+          affectedRegion: quickRegion || "Generalized",
+          species: liveSpecies || patientData?.species || "canine",
+          breed: patientData?.breed || "",
+          age: liveAge || patientData?.age || 0,
+          weight: liveWeight || patientData?.weight || 0,
+          protocolLength: 8,
+        }),
+      });
+      const json = await res.json();
+      setQuickProtocol(json.data || json);
+    } catch (err) { setQuickProtocol({ error: err.message }); }
+    setQuickLoading(false);
+  };
 
-  const liveCondition = data["conditioning::Conditioning Phase"] || "";
-  const liveRegion = data["treatment::Affected Limb(s)"] || "";
+  // ── Delete exercise from quick protocol ──
+  const deleteExercise = (weekNum, exIdx) => {
+    setDeletedEx(prev => {
+      const next = { ...prev };
+      const set = new Set(prev[weekNum] || []);
+      set.add(exIdx);
+      next[weekNum] = set;
+      return next;
+    });
+  };
 
-  const liveGoals = data["goals::Primary Rehabilitation Goals"] || "";
-  const liveGoalsList = liveGoals ? liveGoals.split("||").filter(Boolean) : [];
-  const liveShortTerm = data["goals::Short-Term Clinical Goals"] || "";
+  // ── Filtered exercises (after deletions) ──
+  const filteredWeeks = useMemo(() => {
+    if (!quickProtocol?.weeks) return [];
+    return quickProtocol.weeks.map(week => ({
+      ...week,
+      exercises: (week.exercises || []).filter((_, i) =>
+        !(deletedEx[week.week] && deletedEx[week.week].has(i))
+      ),
+    }));
+  }, [quickProtocol, deletedEx]);
 
-  // Safety flags
-  const painNRS = parseInt(data["assessment::Numeric Rating Scale (NRS 0–10)"], 10);
-  const deepPain = data["assessment::Deep Pain Perception"] || "";
-  const incision = data["assessment::Incision Status"] || data["treatment::Incision Status"] || "";
-  const flags = [];
-  if (!isNaN(painNRS) && painNRS >= 8) flags.push({ label: "Pain ≥ 8/10 — BLOCKS protocol", color: C.red });
-  if (deepPain.toLowerCase().includes("absent")) flags.push({ label: "Deep pain absent — BLOCKS protocol", color: C.red });
-  if (incision.toLowerCase().includes("dehiscence") || incision.toLowerCase().includes("infection")) flags.push({ label: `Incision: ${incision}`, color: C.red });
-  if (!isNaN(painNRS) && painNRS >= 7 && painNRS < 8) flags.push({ label: "Pain ≥ 7 — specialist consult recommended", color: C.amber });
-  if (liveLameness.includes("Grade 5")) flags.push({ label: "Grade 5 lameness — passive exercises only", color: C.amber });
-  const hasBlockingFlag = flags.some(f => f.color === C.red);
-
-  // Required fields check for generate button
-  const hasRequiredFields = !!(livePatientName && (liveDiagnosis || liveApproach));
-
-  const canGenerate = complianceChecked && hasRequiredFields && !hasBlockingFlag;
-
-  // ── Card style ──
-  const cardStyle = (accent) => ({
-    background: C.white,
-    border: `1px solid ${C.border}`,
-    borderTop: `3px solid ${accent}`,
-    borderRadius: 8,
-    padding: "16px 18px",
-    boxShadow: "0 1px 4px rgba(26,39,68,.05)",
-  });
-  const cardTitle = (accent) => ({
-    fontSize: 10, fontWeight: 700, color: accent,
-    letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 10,
-  });
-  const cardRow = { fontSize: 11, color: C.text, marginBottom: 5, lineHeight: 1.5, display: "flex", gap: 6 };
-  const cardLabel = { fontWeight: 700, color: C.muted, minWidth: 70, flexShrink: 0 };
-  const cardVal = (v) => v || "—";
-
-  // ── Generate protocol ──
+  // ── B.E.A.U. full protocol generate ──
   const generate = async () => {
-    if (!canGenerate) return;
     setGenerating(true); setProtocol("");
     try {
+      const liveWeight = data["client::Weight (lbs)"] || patientData?.weight;
+      const liveAge = data["client::Age (years)"] || patientData?.age;
+      const liveSpecies = data["client::Species"] || patientData?.species;
       const ctxBits = [
-        `Patient: ${livePatientName}`,
-        liveBreed   ? `Breed: ${liveBreed}` : null,
-        liveAge     ? `Age: ${liveAge}y` : null,
-        liveWeight  ? `Weight: ${liveWeight} lbs` : null,
-        liveSpecies ? `Species: ${liveSpecies}` : null,
-        liveDiagnosis ? `Condition: ${liveDiagnosis}` : null,
-        liveApproach ? `Approach: ${liveApproach}` : null,
-      ].filter(Boolean).join(" · ");
-
-      const systemPrompt = `You are B.E.A.U. — the Biomedical Evidence-based Analytical Unit, clinical protocol engine of K9 Rehab Pro™. Created by Sal Bonanno, Veterinary Technician and Canine Rehabilitation Nurse, 30 years experience. Generate a complete structured evidence-based rehabilitation protocol. Use exact section headers below. No markdown symbols. Write in full clinical sentences.
+        `Patient: ${patientName || "Current Patient on file"}`,
+        patientData?.breed     ? `Breed: ${patientData.breed}`                 : null,
+        liveAge                ? `Age: ${liveAge}y`                            : null,
+        liveWeight             ? `Weight: ${liveWeight} lbs`                   : null,
+        liveSpecies            ? `Species: ${liveSpecies}`                     : null,
+        (quickCondition || patientData?.condition) ? `Condition: ${quickCondition || patientData.condition}` : null,
+      ].filter(Boolean).join(" \u00b7 ");
+      const exList = filteredWeeks.flatMap(w => w.exercises.map(e => e.name)).filter(Boolean);
+      const exContext = exList.length > 0
+        ? `\n\nSelected exercises from structured protocol: ${exList.join(", ")}.`
+        : "";
+      const systemPrompt = `You are B.E.A.U. \u2014 the Biomedical Evidence-based Analytical Unit, clinical protocol engine of K9 Rehab Pro\u2122. Created by Sal Bonanno, Veterinary Technician and Canine Rehabilitation Nurse, 30 years experience. Generate a complete structured evidence-based rehabilitation protocol. Use exact section headers below. No markdown symbols. Write in full clinical sentences.
 
 CLINICAL SUMMARY
 
 REHABILITATION PHASE & RATIONALE
 
 IN-CLINIC PROTOCOL
-For each exercise: Exercise name · Evidence level (A/B/C) · Sets × Reps · Frequency · Form note · Contraindication flag
+For each exercise: Exercise name \u00b7 Evidence level (A/B/C) \u00b7 Sets \u00d7 Reps \u00b7 Frequency \u00b7 Form note \u00b7 Contraindication flag
 
 HOME EXERCISE PROGRAM
-For each exercise: Exercise name · Items needed · How to perform · Sets × Reps · Frequency · Safety note
+For each exercise: Exercise name \u00b7 Items needed \u00b7 How to perform \u00b7 Sets \u00d7 Reps \u00b7 Frequency \u00b7 Safety note
 
-SAFETY GUARDRAILS — EVERY SESSION
+SAFETY GUARDRAILS \u2014 EVERY SESSION
 
-RED FLAGS — STOP AND CONTACT VETERINARIAN IMMEDIATELY
+RED FLAGS \u2014 STOP AND CONTACT VETERINARIAN IMMEDIATELY
 
 EVIDENCE BASIS`;
-      const userMsg = `${ctxBits}.\n\nGenerate a comprehensive rehabilitation protocol tailored to this patient. Generate a thorough evidence-based protocol demonstrating B.E.A.U.'s full clinical capability across all phases and exercise categories.`;
+      const userMsg = `${ctxBits}.${exContext}\n\nGenerate a comprehensive rehabilitation protocol tailored to this patient. Generate a thorough evidence-based protocol demonstrating B.E.A.U.'s full clinical capability across all phases and exercise categories.`;
       if (bv?.autoSpeak) bv.cancel?.();
       let lastSpoken = 0;
       const text = await callBeau(systemPrompt, userMsg, uiLang, (_chunk, accumulated) => {
@@ -2521,228 +2567,276 @@ EVIDENCE BASIS`;
 
   const copy = () => { navigator.clipboard?.writeText(protocol); setCopied(true); setTimeout(()=>setCopied(false), 2000); };
 
+  // ── Discharge patient ──
+  const handleDischarge = async () => {
+    if (!patientData?.id) return;
+    setDischarging(true);
+    try {
+      const apiBase = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+      const token = localStorage.getItem("token");
+      await fetch(`${apiBase}/patients/${patientData.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ status: "discharged" }),
+      });
+      setDischarged(true);
+    } catch { /* silent \u2014 button stays enabled for retry */ }
+    setDischarging(false);
+  };
+
+  // Auto-populate sign-off date
+  const today = new Date().toISOString().split("T")[0];
+  if (!data["protocol::Sign-Off Date"]) update("protocol::Sign-Off Date", today);
+
   return <>
-    {/* ══════════ 6-CARD SUMMARY GRID ══════════ */}
-    <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14, marginBottom:20 }}>
-
-      {/* Card 1 — Patient */}
-      <div style={cardStyle(C.blue)}>
-        <div style={cardTitle(C.blue)}>Patient</div>
-        <div style={cardRow}><span style={cardLabel}>Name:</span> <span>{cardVal(livePatientName)}</span></div>
-        <div style={cardRow}><span style={cardLabel}>Species:</span> <span>{cardVal(liveSpecies)}</span></div>
-        <div style={cardRow}><span style={cardLabel}>Breed:</span> <span>{cardVal(liveBreed)}</span></div>
-        <div style={cardRow}><span style={cardLabel}>Age:</span> <span>{liveAge ? `${liveAge} yr` : "—"}</span></div>
-        <div style={cardRow}><span style={cardLabel}>Weight:</span> <span>{liveWeight ? `${liveWeight} lbs` : "—"}</span></div>
-        <div style={cardRow}><span style={cardLabel}>Sex:</span> <span>{cardVal(liveSex)}</span></div>
+    {/* ====== SECTION 1 \u2014 BLOCK COMPLETION STATUS ====== */}
+    <Sec title="Intake Completion Status" color={C.green} colorLt={C.greenLt} noTop>
+      <div style={{ fontSize:11, color:C.muted, marginBottom:10, lineHeight:1.5 }}>
+        {filledCount}/{totalBlocks} intake blocks have data. Complete all blocks before generating a protocol for maximum clinical accuracy.
       </div>
-
-      {/* Card 2 — Diagnosis & Assessment */}
-      <div style={cardStyle(C.amber)}>
-        <div style={cardTitle(C.amber)}>Diagnosis & Assessment</div>
-        <div style={cardRow}><span style={cardLabel}>Diagnosis:</span> <span>{cardVal(liveDiagnosis)}</span></div>
-        <div style={cardRow}><span style={cardLabel}>Complaint:</span> <span>{cardVal(liveChiefComplaint)}</span></div>
-        <div style={cardRow}><span style={cardLabel}>Lameness:</span> <span>{cardVal(liveLameness)}</span></div>
-        <div style={cardRow}><span style={cardLabel}>Pain (CSU):</span> <span>{cardVal(livePain)}</span></div>
-        {!isNaN(painNRS) && <div style={cardRow}><span style={cardLabel}>NRS:</span> <span>{painNRS}/10</span></div>}
-      </div>
-
-      {/* Card 3 — Treatment Plan */}
-      <div style={cardStyle("#F59E0B")}>
-        <div style={cardTitle("#F59E0B")}>Treatment Plan</div>
-        <div style={cardRow}><span style={cardLabel}>Approach:</span> <span style={{ fontWeight:600, color: liveApproach ? C.navy : C.muted }}>{cardVal(liveApproach)}</span></div>
-        {liveApproach === "Surgical" && <>
-          <div style={cardRow}><span style={cardLabel}>Surgery:</span> <span>{cardVal(liveSurgeryType)}</span></div>
-          <div style={cardRow}><span style={cardLabel}>Date:</span> <span>{cardVal(liveSurgeryDate)}</span></div>
-        </>}
-        <div style={cardRow}><span style={cardLabel}>WB Status:</span> <span>{cardVal(liveWBStatus)}</span></div>
-        <div style={cardRow}><span style={cardLabel}>Region:</span> <span>{cardVal(liveRegion)}</span></div>
-      </div>
-
-      {/* Card 4 — Protocol Configuration */}
-      <div style={cardStyle(C.green)}>
-        <div style={cardTitle(C.green)}>Protocol Configuration</div>
-        <div style={cardRow}><span style={cardLabel}>Condition:</span> <span>{cardVal(liveCondition || liveDiagnosis)}</span></div>
-        <div style={cardRow}><span style={cardLabel}>Species:</span> <span>{cardVal(liveSpecies)}</span></div>
-        <div style={cardRow}><span style={cardLabel}>Phase:</span> <span>{cardVal(liveCondition)}</span></div>
-        <div style={{ fontSize:10, color:C.muted, marginTop:8, fontStyle:"italic" }}>
-          4 Conditions | 16 Phases | 52 Protocol Exercises | {exCount !== null ? exCount : "..."} Exercise Library
-        </div>
-      </div>
-
-      {/* Card 5 — Rehabilitation Goals */}
-      <div style={cardStyle("#BE185D")}>
-        <div style={cardTitle("#BE185D")}>Rehabilitation Goals</div>
-        {liveGoalsList.length > 0 ? (
-          liveGoalsList.slice(0, 4).map((g, i) => (
-            <div key={i} style={{ fontSize:11, color:C.text, marginBottom:4, display:"flex", gap:6 }}>
-              <span style={{ color:"#BE185D", fontWeight:700 }}>•</span> {g}
-            </div>
-          ))
-        ) : (
-          <div style={{ fontSize:11, color:C.muted, fontStyle:"italic" }}>No goals set — open Goals block</div>
-        )}
-        {liveShortTerm && (
-          <div style={{ marginTop:8, padding:"6px 10px", background:"#FDF2F8", borderRadius:4, fontSize:10, color:"#9D174D", lineHeight:1.5 }}>
-            <span style={{ fontWeight:700 }}>Short-term:</span> {liveShortTerm.slice(0, 120)}{liveShortTerm.length > 120 ? "…" : ""}
-          </div>
-        )}
-      </div>
-
-      {/* Card 6 — Safety Flags */}
-      <div style={cardStyle(flags.length > 0 ? C.red : C.green)}>
-        <div style={cardTitle(flags.length > 0 ? C.red : C.green)}>Safety Flags</div>
-        {flags.length === 0 ? (
-          <div style={{ fontSize:12, color:C.green, fontWeight:600, display:"flex", alignItems:"center", gap:6 }}>
-            <span style={{ fontSize:16 }}>✓</span> No safety flags detected — clear for protocol generation
-          </div>
-        ) : (
-          flags.map((f, i) => (
-            <div key={i} style={{
-              padding:"6px 10px", marginBottom:6, borderRadius:4,
-              background: f.color === C.red ? C.redLt : C.amberLt,
-              border: `1px solid ${f.color}44`,
-              fontSize:11, fontWeight:600, color: f.color,
-              display:"flex", alignItems:"center", gap:6,
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:6, marginBottom:8 }}>
+        {INTAKE_BLOCKS.map(blk => {
+          const filled = blockStatus[blk.id];
+          return (
+            <div key={blk.id} style={{
+              padding:"7px 10px", borderRadius:5, fontSize:10, fontWeight:600,
+              textAlign:"center", letterSpacing:".04em",
+              background: filled ? C.greenLt : C.bg,
+              border: `1px solid ${filled ? C.green + "44" : C.border}`,
+              color: filled ? C.green : C.gray,
             }}>
-              <span>{f.color === C.red ? "⛔" : "⚠"}</span> {f.label}
+              {filled ? "\u2713" : "\u2014"} {blk.label}
             </div>
-          ))
+          );
+        })}
+      </div>
+      <div style={{ height:6, background:C.bg, borderRadius:3, overflow:"hidden", border:`1px solid ${C.border}` }}>
+        <div style={{ height:"100%", width:`${(filledCount/totalBlocks)*100}%`, background:C.green, borderRadius:3, transition:"width .3s ease" }}/>
+      </div>
+    </Sec>
+
+    {/* ====== SECTION 2 \u2014 CLINICAL SUMMARY PREVIEW ====== */}
+    <Sec title="Clinical Summary Preview" color={C.navy} colorLt={C.blueLt}>
+      {previewLine ? (
+        <div style={{
+          padding:"12px 16px", background:C.white, border:`1.5px solid ${C.blue}44`,
+          borderRadius:6, fontSize:12, color:C.navy, lineHeight:1.7, fontWeight:500,
+          borderLeft:`4px solid ${C.blue}`,
+        }}>
+          {previewLine}
+        </div>
+      ) : (
+        <div style={{
+          padding:"12px 16px", background:C.bg, border:`1px dashed ${C.border}`,
+          borderRadius:6, fontSize:11, color:C.muted, textAlign:"center", fontStyle:"italic",
+        }}>
+          Complete Treatment Plan, Assessment, and Goals blocks to see a clinical summary here.
+        </div>
+      )}
+    </Sec>
+
+    {/* ====== SECTION 3 \u2014 GENERATE B.E.A.U. PROTOCOL ====== */}
+    <Sec title="Quick Protocol Generation" color={C.green} colorLt={C.greenLt}>
+      <div style={{ fontSize:11, color:C.muted, marginBottom:14, lineHeight:1.65 }}>
+        Generate a structured, evidence-based rehab protocol in seconds. Select the condition and hit generate \u2014 B.E.A.U. handles the rest using ACVSMR-aligned exercise selection.
+      </div>
+      <Row>
+        <div>
+          <Lbl>What condition are we treating {patientName || "this patient"} for?</Lbl>
+          <select value={quickCondition} onChange={e => setQuickCondition(e.target.value)}
+            style={{ fontSize:13, fontWeight:600, padding:"10px 12px" }}>
+            <option value="">Select condition...</option>
+            {CONDITIONS.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+          </select>
+        </div>
+        <div>
+          <Lbl>Affected Region</Lbl>
+          <select value={quickRegion} onChange={e => setQuickRegion(e.target.value)}>
+            <option value="">Select region...</option>
+            {REGIONS.map(r => <option key={r} value={r}>{r}</option>)}
+          </select>
+        </div>
+      </Row>
+      <button onClick={quickGenerate} disabled={quickLoading || !quickCondition}
+        style={{
+          width:"100%", marginTop:14, padding:"14px",
+          background: quickLoading ? C.greenLt : !quickCondition ? "#e2e8f0" : C.green,
+          border:"none", color: !quickCondition ? C.muted : C.white,
+          borderRadius:6, cursor: quickLoading || !quickCondition ? "not-allowed":"pointer",
+          fontSize:14, fontWeight:700, letterSpacing:".1em",
+          display:"flex", alignItems:"center", gap:12, justifyContent:"center", transition:"all .2s",
+        }}>
+        {quickLoading
+          ? <><div style={{ width:18, height:18, border:"2px solid white", borderTopColor:"transparent", borderRadius:"50%", animation:"spinK9 .8s linear infinite" }}/> GENERATING PROTOCOL...</>
+          : "QUICK GENERATE PROTOCOL"}
+      </button>
+    </Sec>
+
+    {/* ====== SECTION 4 \u2014 EXERCISE LIST WITH DELETE ====== */}
+    {quickProtocol && !quickProtocol.error && (
+      <Sec title={`Structured Protocol \u2014 ${quickProtocol.protocolType?.toUpperCase() || "REHAB"} \u00b7 ${quickProtocol.totalWeeks} Weeks`} color={C.green} colorLt={C.greenLt}>
+        <div style={{ marginBottom:14, padding:"10px 14px", background:C.greenLt, border:`1px solid ${C.green}44`, borderRadius:6, fontSize:11, color:C.green, fontWeight:600 }}>
+          {quickProtocol.totalWeeks} weeks \u00b7 {filteredWeeks.length} phases \u00b7 {filteredWeeks.reduce((s,w)=>s+(w.exercises?.length||0),0)} exercises remaining \u00b7 Evidence-gated
+        </div>
+        {filteredWeeks.map(week => (
+          <div key={week.week} style={{ marginBottom:16, border:`1px solid ${C.border}`, borderRadius:7, overflow:"hidden" }}>
+            <div style={{ padding:"10px 14px", background:C.blueLt, borderBottom:`1px solid ${C.border}`, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+              <div style={{ fontSize:12, fontWeight:700, color:C.navy }}>Week {week.week}{week.phaseInfo ? ` \u2014 ${week.phaseInfo.name}` : ""}</div>
+              <span style={{ fontSize:10, color:C.muted }}>{week.exercises?.length || 0} exercises</span>
+            </div>
+            <div style={{ padding:12 }}>
+              {week.exercises?.length === 0 && (
+                <div style={{ fontSize:11, color:C.muted, fontStyle:"italic", padding:"8px 0" }}>All exercises removed for this week.</div>
+              )}
+              {week.exercises?.map((ex, i) => {
+                const origIdx = (quickProtocol.weeks.find(w => w.week === week.week)?.exercises || []).indexOf(ex);
+                return (
+                  <div key={i} style={{
+                    padding:"8px 10px", background: i%2===0 ? C.white : C.bg, borderRadius:4, marginBottom:4,
+                    display:"grid", gridTemplateColumns:"2fr 1fr 1fr 1fr auto", gap:8, alignItems:"center", fontSize:11,
+                  }}>
+                    <div>
+                      <span style={{ fontWeight:600, color:C.navy }}>{ex.name}</span>
+                      <span style={{
+                        marginLeft:6, fontSize:9, padding:"1px 5px", borderRadius:3, fontWeight:600,
+                        background: ex.evidence_grade === "A" ? "#DCFCE7" : ex.evidence_grade === "B" ? "#DBEAFE" : "#FEF3C7",
+                        color: ex.evidence_grade === "A" ? "#166534" : ex.evidence_grade === "B" ? "#1E40AF" : "#92400E",
+                      }}>
+                        {ex.evidence_grade || "B"}
+                      </span>
+                    </div>
+                    <span style={{ color:C.muted }}>{ex.sets || 3} x {ex.reps || 10}</span>
+                    <span style={{ color:C.muted }}>{ex.frequency || "2x daily"}</span>
+                    <span style={{ color:C.muted }}>{ex.duration_minutes || 10} min</span>
+                    <button
+                      onClick={() => deleteExercise(week.week, origIdx >= 0 ? origIdx : i)}
+                      title="Remove exercise"
+                      style={{
+                        width:24, height:24, borderRadius:4, border:`1px solid ${C.red}44`,
+                        background:C.redLt, color:C.red, cursor:"pointer", fontSize:13,
+                        display:"flex", alignItems:"center", justifyContent:"center",
+                        fontWeight:700, lineHeight:1, padding:0,
+                      }}>
+                      x
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+        {quickProtocol.warnings?.length > 0 && (
+          <div style={{ padding:"10px 14px", background:C.amberLt, border:`1px solid ${C.amber}44`, borderRadius:6, fontSize:11, color:C.amber, fontWeight:500, marginTop:8 }}>
+            {quickProtocol.warnings.map((w,i) => <div key={i}>Warning: {w}</div>)}
+          </div>
         )}
-      </div>
-    </div>
-
-    {/* ── Exercise Library Count Bar ── */}
-    <div style={{
-      padding:"10px 16px", background:C.blueLt, border:`1px solid ${C.blue}33`,
-      borderRadius:6, marginBottom:16, display:"flex", alignItems:"center", justifyContent:"space-between",
-    }}>
-      <span style={{ fontSize:11, fontWeight:600, color:C.blue }}>
-        📚 Exercise Library: {exCount !== null ? `${exCount} evidence-based exercises loaded` : "Loading..."}
-      </span>
-      <span style={{ fontSize:10, color:C.muted }}>Source-of-truth validated · ACVSMR-aligned</span>
-    </div>
-
-    {/* ── Compliance Acknowledgment Checkbox ── */}
-    <div
-      onClick={() => setComplianceChecked(v => !v)}
-      style={{
-        display:"flex", alignItems:"flex-start", gap:10, padding:"14px 16px",
-        background: complianceChecked ? C.greenLt : C.white,
-        border: `1.5px solid ${complianceChecked ? C.green : C.border}`,
-        borderRadius:8, cursor:"pointer", marginBottom:16,
-        transition:"all .15s",
-      }}>
-      <input type="checkbox" checked={complianceChecked} readOnly
-        style={{ width:18, height:18, accentColor:C.green, flexShrink:0, marginTop:1, cursor:"pointer" }}/>
-      <div>
-        <div style={{ fontSize:12, fontWeight:700, color: complianceChecked ? C.green : C.navy, marginBottom:3 }}>
-          Clinical Compliance Acknowledgment
-        </div>
-        <div style={{ fontSize:11, color:C.muted, lineHeight:1.6 }}>
-          I confirm that all intake data is accurate, the patient has been examined by a licensed veterinarian,
-          and I understand that B.E.A.U.-generated protocols require licensed veterinary review before clinical application.
-          This is a Clinical Decision-Support System (CDSS) — not a substitute for professional judgment.
-        </div>
-      </div>
-    </div>
-
-    {/* ── GENERATE EXERCISE PROTOCOL Button ── */}
-    <button onClick={generate} disabled={!canGenerate || generating}
-      style={{
-        width:"100%", padding:"18px",
-        background: generating ? C.greenLt
-          : !canGenerate ? "#e2e8f0"
-          : "linear-gradient(135deg, #10b981 0%, #0d9488 50%, #0ea5e9 100%)",
-        border:"none",
-        color: !canGenerate ? C.muted : C.white,
-        borderRadius:8, cursor: (!canGenerate || generating) ? "not-allowed" : "pointer",
-        fontSize:16, fontWeight:800, letterSpacing:".12em",
-        display:"flex", alignItems:"center", gap:14, justifyContent:"center",
-        boxShadow: canGenerate && !generating ? "0 6px 20px rgba(16,185,129,0.35)" : "none",
-        transition:"all .25s",
-      }}>
-      {generating
-        ? <><div style={{ width:20, height:20, border:"2.5px solid white", borderTopColor:"transparent", borderRadius:"50%", animation:"spinK9 .8s linear infinite" }}/> GENERATING PROTOCOL…</>
-        : "GENERATE EXERCISE PROTOCOL"}
-    </button>
-
-    {!canGenerate && !generating && (
-      <div style={{ fontSize:10, color:C.muted, textAlign:"center", marginTop:8, lineHeight:1.5 }}>
-        {!complianceChecked && "Check the compliance acknowledgment above. "}
-        {!hasRequiredFields && "Patient name and diagnosis/approach required. "}
-        {hasBlockingFlag && "Red safety flags must be resolved before generation."}
+      </Sec>
+    )}
+    {quickProtocol?.error && (
+      <div style={{ padding:"12px 14px", background:C.redLt, border:`1px solid ${C.red}44`, borderRadius:6, fontSize:12, color:C.red, marginBottom:16 }}>
+        Error: {quickProtocol.error}
       </div>
     )}
 
-    {/* ── Protocol Output with BEAU Verification ── */}
+    <Divider/>
+
+    {/* ====== SECTION 5 \u2014 FULL B.E.A.U. PROTOCOL GENERATE ====== */}
+    <Sec title="B.E.A.U. AI-Generated Protocol" color={C.green} colorLt={C.greenLt}>
+      <div style={{ fontSize:12, color:C.muted, marginBottom:16, lineHeight:1.65 }}>
+        For a narrative clinical protocol with full evidence citations, safety guardrails, and home exercise instructions \u2014 use B.E.A.U.'s AI generation below.
+        {filteredWeeks.length > 0 && filteredWeeks.some(w => w.exercises.length > 0) && (
+          <span style={{ display:"block", marginTop:6, color:C.green, fontWeight:600, fontSize:11 }}>
+            {filteredWeeks.reduce((s,w)=>s+w.exercises.length,0)} exercises from the structured protocol above will be included as context.
+          </span>
+        )}
+      </div>
+      <button onClick={generate} disabled={generating}
+        style={{
+          width:"100%", padding:"14px",
+          background: generating ? C.greenLt : C.green,
+          border:"none", color:C.white, borderRadius:6,
+          cursor: generating?"not-allowed":"pointer",
+          fontSize:14, fontWeight:700, letterSpacing:".1em",
+          display:"flex", alignItems:"center", gap:12, justifyContent:"center",
+        }}>
+        {generating
+          ? <><div style={{ width:18, height:18, border:"2px solid white", borderTopColor:"transparent", borderRadius:"50%", animation:"spinK9 .8s linear infinite" }}/> GENERATING B.E.A.U. PROTOCOL...</>
+          : "GENERATE FULL B.E.A.U. PROTOCOL"}
+      </button>
+    </Sec>
+
     {protocol && (
-      <div style={{ marginTop:20 }}>
-        {/* ── BEAU Verification Report ── */}
-        <Sec title="B.E.A.U. Verification Report" color={C.teal} colorLt={C.tealLt}>
-          <div style={{ padding:"12px 16px", background:C.tealLt, border:`1px solid ${C.teal}44`, borderRadius:6, fontSize:11, color:C.teal, fontWeight:600, lineHeight:1.6 }}>
-            <div style={{ fontSize:10, fontWeight:700, letterSpacing:".1em", marginBottom:6 }}>✓ VERIFICATION COMPLETE</div>
-            <div>• Checked exercises against patient assessment data</div>
-            <div>• Weight bearing status: {data["assessment::Current Mobility Level"] || data["treatment::Weight Bearing Status"] || "Not specified"}</div>
-            <div>• Neurological grade: {data["assessment::Neurological Grade (Frankel Modified)"] || "Not assessed"}</div>
-            <div>• Pain score: {data["assessment::Numeric Rating Scale (NRS 0–10)"] || "Not assessed"}</div>
-            {hasBlockingFlag && (
-              <div style={{ marginTop:6, color:C.red, fontWeight:700 }}>⚠ Safety flags detected — review exercises carefully</div>
-            )}
-            {!hasBlockingFlag && (
-              <div style={{ marginTop:6 }}>✓ No contraindicated exercises detected for current assessment profile</div>
-            )}
-          </div>
-        </Sec>
-
-        <Sec title="Protocol Output — B.E.A.U. Generated" color={C.green} colorLt={C.greenLt}>
-          <div style={{ background:C.white, border:`1.5px solid ${C.green}55`, borderRadius:7, padding:18, marginBottom:14 }}>
-            <pre style={{ fontSize:12, color:C.text, whiteSpace:"pre-wrap", lineHeight:1.9, fontFamily:"Georgia, serif" }}>{protocol}</pre>
-          </div>
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10, marginBottom:16 }}>
-            {[
-              { label: copied ? "COPIED" : "COPY", action: copy },
-              { label:"EMAIL CLIENT", action:()=>{} },
-              { label:"PRINT", action:()=>window.print() },
-              { label:"QR CODE", action:()=>{} },
-            ].map(a=>(
-              <button key={a.label} onClick={a.action}
-                style={{ padding:"10px 6px", background:C.white, border:`1px solid ${C.border}`, color:C.blue, borderRadius:5, cursor:"pointer", fontSize:11, fontWeight:700, letterSpacing:".06em", transition:"all .15s" }}>
-                {a.label}
-              </button>
-            ))}
-          </div>
-
-          {/* ── FINALIZE PROTOCOL Button ── */}
-          <button
-            onClick={async () => {
-              try {
-                const apiBase = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
-                const token = localStorage.getItem("token");
-                if (patientData?.id) {
-                  await fetch(`${apiBase}/patients/${patientData.id}`, {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-                    body: JSON.stringify({ dashboard_data: data, protocol_text: protocol }),
-                  });
-                }
-              } catch {}
-            }}
-            style={{
-              width:"100%", padding:"16px",
-              background:"linear-gradient(135deg, #1A2744 0%, #0F4C81 100%)",
-              border:"none", color:C.white, borderRadius:8, cursor:"pointer",
-              fontSize:14, fontWeight:800, letterSpacing:".1em",
-              display:"flex", alignItems:"center", gap:10, justifyContent:"center",
-              boxShadow:"0 4px 16px rgba(26,39,68,0.35)",
-            }}>
-            FINALIZE PROTOCOL
-          </button>
-          <div style={{ fontSize:10, color:C.muted, textAlign:"center", marginTop:6 }}>
-            Saves protocol to patient record • Generates printable handout • Updates visit count
-          </div>
-        </Sec>
-      </div>
+      <Sec title="Protocol Output \u2014 B.E.A.U. Generated" color={C.green} colorLt={C.greenLt}>
+        <div style={{ background:C.white, border:`1.5px solid ${C.green}55`, borderRadius:7, padding:18, marginBottom:14 }}>
+          <pre style={{ fontSize:12, color:C.text, whiteSpace:"pre-wrap", lineHeight:1.9, fontFamily:"Georgia, serif" }}>{protocol}</pre>
+        </div>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10 }}>
+          {[
+            { label: copied ? "COPIED" : "COPY", action: copy },
+            { label:"EMAIL CLIENT", action:()=>{} },
+            { label:"PRINT", action:()=>window.print() },
+            { label:"QR CODE", action:()=>{} },
+          ].map(a=>(
+            <button key={a.label} onClick={a.action}
+              style={{ padding:"10px 6px", background:C.white, border:`1px solid ${C.border}`, color:C.blue, borderRadius:5, cursor:"pointer", fontSize:11, fontWeight:700, letterSpacing:".06em", transition:"all .15s" }}>
+              {a.label}
+            </button>
+          ))}
+        </div>
+      </Sec>
     )}
+
+    <Divider/>
+
+    {/* ====== SECTION 6 \u2014 SIGN-OFF, DISCHARGE, NEXT APPOINTMENT ====== */}
+    <Sec title="Sign-Off & Discharge" color={C.navy} colorLt={C.blueLt}>
+      <Row>
+        <F label="Clinician Name" placeholder="Auto-populated from login"/>
+        <F label="Credential" options={["DVM","CCRP","CCRT","CVT / LVT","Student (supervised)"]}/>
+      </Row>
+      <Row>
+        <F label="Sign-Off Date" type="date"/>
+        <F label="Next Appointment" type="date"/>
+      </Row>
+      <F label="Recheck Interval" options={[
+        "1 week","2 weeks","3 weeks","4 weeks","6 weeks","8 weeks","12 weeks","As needed"
+      ]}/>
+      <F label="Discharge Summary" placeholder="Brief discharge summary, instructions for owner, follow-up notes..." rows={3}/>
+
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginTop:16 }}>
+        <button
+          disabled={!protocol && !quickProtocol}
+          style={{
+            padding:"14px", border:"none", borderRadius:6,
+            background: (!protocol && !quickProtocol) ? "#e2e8f0" : C.green,
+            color: (!protocol && !quickProtocol) ? C.muted : C.white,
+            cursor: (!protocol && !quickProtocol) ? "not-allowed" : "pointer",
+            fontSize:13, fontWeight:700, letterSpacing:".08em",
+          }}>
+          APPROVE PROTOCOL
+        </button>
+        <button
+          onClick={handleDischarge}
+          disabled={discharging || discharged || !patientData?.id}
+          style={{
+            padding:"14px", border:"none", borderRadius:6,
+            background: discharged ? C.greenLt : discharging ? C.amberLt : !patientData?.id ? "#e2e8f0" : C.amber,
+            color: discharged ? C.green : discharging ? C.amber : !patientData?.id ? C.muted : C.white,
+            cursor: discharging || discharged || !patientData?.id ? "not-allowed" : "pointer",
+            fontSize:13, fontWeight:700, letterSpacing:".08em",
+          }}>
+          {discharged ? "PATIENT DISCHARGED" : discharging ? "DISCHARGING..." : "DISCHARGE PATIENT"}
+        </button>
+      </div>
+      {discharged && (
+        <div style={{ marginTop:10, padding:"10px 14px", background:C.greenLt, border:`1px solid ${C.green}44`, borderRadius:6, fontSize:11, color:C.green, fontWeight:600, textAlign:"center" }}>
+          Patient discharged successfully. Record updated.
+        </div>
+      )}
+    </Sec>
 
     <ClinicalNotes/>
   </>;

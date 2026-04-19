@@ -114,7 +114,8 @@
       "Bash(PORT=3097 timeout 15 node:*)",
       "Bash(sed:*)",
       "Bash(rm:*)",
-      "WebFetch(domain:docs.vmssoftware.com)"
+      "WebFetch(domain:docs.vmssoftware.com)",
+      "Bash(find /c/users/user/k9-rehab-pro/k9-rehab-frontend/src -name \"*.jsx\" -exec grep -l \"TabProtocols\\\\|Protocol\" {} \\\\;)"
     ],
     "additionalDirectories": [
       "C:\\k9 _rehab_pro_3d\\reference_pngs\\PLATFORM SEQU"
