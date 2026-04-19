@@ -1,4 +1,4 @@
-import{b as c,j as e}from"./vendor-react-BCGPAYEV.js";import{x as y,a9 as f,I as u,J as m,m as v}from"./vendor-icons-CYjTjpc3.js";function j({document:n}){const[a,x]=c.useState(new Set(((n==null?void 0:n.sections)||[]).map((r,t)=>t))),[s,p]=c.useState(!1);if(!n||!n.sections)return null;const g=r=>{x(t=>{const i=new Set(t);return i.has(r)?i.delete(r):i.add(r),i})},h=()=>{const r=n.sections.map(t=>`## ${t.heading}
+import{b as c,j as e}from"./vendor-react-BCGPAYEV.js";import{w as y,a8 as f,H as u,I as m,l as v}from"./vendor-icons-CpJToXrV.js";function j({document:n}){const[a,x]=c.useState(new Set(((n==null?void 0:n.sections)||[]).map((r,t)=>t))),[s,p]=c.useState(!1);if(!n||!n.sections)return null;const g=r=>{x(t=>{const i=new Set(t);return i.has(r)?i.delete(r):i.add(r),i})},h=()=>{const r=n.sections.map(t=>`## ${t.heading}
 
 ${t.content}`).join(`
 
