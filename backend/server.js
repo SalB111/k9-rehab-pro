@@ -2,7 +2,20 @@
 // K9-REHAB-PRO â€” BACKEND SERVER (PRODUCTION READY)
 // ============================================================================
 
+// Startup diagnostics — surface module-load crashes to Railway logs.
+console.log("[BOOT] server.js module loading. PORT env:", process.env.PORT, "NODE_ENV:", process.env.NODE_ENV);
+process.on("uncaughtException", (err) => {
+  console.error("[BOOT] FATAL uncaughtException:", err && err.stack || err);
+  process.exit(1);
+});
+process.on("unhandledRejection", (reason) => {
+  console.error("[BOOT] FATAL unhandledRejection:", reason && reason.stack || reason);
+  process.exit(1);
+});
+
 require("dotenv").config({ override: true });
+console.log("[BOOT] dotenv loaded. JWT_SECRET length:", (process.env.JWT_SECRET || "").length, "DB_PATH:", process.env.DB_PATH);
+
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
