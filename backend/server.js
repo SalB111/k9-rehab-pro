@@ -95,6 +95,8 @@ const DEFAULT_CORS_ORIGINS = [
   "https://beau-ai-lime.vercel.app",
   "https://beauaihome.vercel.app",
   "https://beauaihome-salb111s-projects.vercel.app",
+  "https://k9rehabprotocols.com",
+  "https://www.k9rehabprotocols.com",
   "http://localhost:3001",
   "http://localhost:3002",
   "http://localhost:5173"
