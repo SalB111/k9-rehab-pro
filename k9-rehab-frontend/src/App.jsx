@@ -1,4 +1,5 @@
 import React, { useEffect, useState, Suspense, lazy } from "react";
+import { Analytics } from "@vercel/analytics/react";
 import { login as loginService } from "./services/authService";
 import { setupAxiosAuth, clearAxiosAuth } from "./api/axios";
 import { ToastProvider } from "./components/Toast";
@@ -171,6 +172,7 @@ export default function App() {
           </Suspense>
         </main>
       </div>
+      <Analytics />
     </ToastProvider>
   );
 }
