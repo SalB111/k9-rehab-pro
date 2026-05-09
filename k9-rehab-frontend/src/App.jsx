@@ -5,6 +5,7 @@ import { ToastProvider } from "./components/Toast";
 import Sidebar from "./components/Sidebar";
 import LoginView from "./pages/LoginView";
 import WelcomeSplash from "./pages/WelcomeSplash";
+import { Analytics } from "@vercel/analytics/react";
 
 const GeneratorView = lazy(() => import("./pages/GeneratorView"));
 const DashboardView = lazy(() => import("./pages/DashboardView"));
@@ -138,7 +139,12 @@ export default function App() {
 
   // Splash screen — always plays on app load, then transitions
   if (showSplash) {
-    return <WelcomeSplash onEnter={() => setShowSplash(false)} />;
+    return (
+      <>
+        <WelcomeSplash onEnter={() => setShowSplash(false)} />
+        <Analytics />
+      </>
+    );
   }
 
   // Auth gate — show login page when not authenticated
@@ -146,6 +152,7 @@ export default function App() {
     return (
       <ToastProvider>
         <LoginView onLogin={handleLogin} onRegister={handleRegister} />
+        <Analytics />
       </ToastProvider>
     );
   }
@@ -171,6 +178,7 @@ export default function App() {
           </Suspense>
         </main>
       </div>
+      <Analytics />
     </ToastProvider>
   );
 }
