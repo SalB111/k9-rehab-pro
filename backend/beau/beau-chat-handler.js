@@ -120,7 +120,7 @@ async function handleChat(req, res) {
 
     // ── Pipeline Step 4: Stream from Anthropic ──
     const stream = await client.messages.stream({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-sonnet-4-6",
       max_tokens: 4096,
       system: systemPrompt,
       messages: validMessages,

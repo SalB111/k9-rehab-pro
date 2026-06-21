@@ -47,7 +47,7 @@ Surgery: ${patient.surgery_date || patient.surgeryDate || "N/A"}` : "";
     .join("\n");
 
   const response = await client.messages.create({
-    model: "claude-sonnet-4-20250514",
+    model: "claude-sonnet-4-6",
     max_tokens: 4096,
     system: `You are B.E.A.U. generating a clinical presentation for K9 Rehab Pro.
 No hallucinated exercises. Only reference exercises from the K9 Rehab Pro library.

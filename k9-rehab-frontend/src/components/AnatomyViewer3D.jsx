@@ -11,6 +11,8 @@
 
 import React, { useEffect, useRef, useState, useMemo } from "react";
 import * as THREE from "three";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
 import { FiEye, FiLayers, FiX, FiRotateCw, FiZoomIn } from "react-icons/fi";
 import { TbDog, TbCat } from "react-icons/tb";
 import C from "../constants/colors";
@@ -348,7 +350,7 @@ const ATLAS = {
   hip_r:        { label:"Coxofemoral Joint (R)", origin:"N/A — joint", insertion:"N/A — joint", action:"Ball-and-socket: flexion, extension, abduction, adduction, rotation", plain:"Hip joint — most mobile joint in the hindlimb", nerve:"Obturator + femoral nerve branches" },
   stifle_l:     { label:"Stifle Joint (L)", origin:"N/A — joint", insertion:"N/A — joint", action:"Hinge: flex 35-45 deg, ext 155-165 deg (dog); flex 22-28, ext 140-148 (cat)", plain:"Knee — most-injured joint in veterinary medicine", nerve:"Femoral + sciatic nerve branches" },
   stifle_r:     { label:"Stifle Joint (R)", origin:"N/A — joint", insertion:"N/A — joint", action:"Hinge: flex 35-45 deg, ext 155-165 deg (dog); flex 22-28, ext 140-148 (cat)", plain:"Knee — most-injured joint in veterinary medicine", nerve:"Femoral + sciatic nerve branches" },
-  ccl:          { label:"Cranial Cruciate Lig.", origin:"Caudal lateral femoral condyle", insertion:"Cranial intercondylar area of tibia", action:"Resists cranial tibial thrust + internal tibial rotation + hyperextension", plain:"ACL equivalent — when ruptured, causes TPLO/TTA surgery", nerve:"Mechanoreceptors (proprioceptive role)" },
+  ccl:          { label:"Cranial Cruciate Ligament (CCL)", origin:"Caudal lateral femoral condyle", insertion:"Cranial intercondylar area of tibia", action:"Resists cranial tibial thrust + internal tibial rotation + hyperextension", plain:"ACL equivalent — when ruptured, causes TPLO/TTA surgery", nerve:"Mechanoreceptors (proprioceptive role)" },
   calf_l:       { label:"Gastrocnemius (L)", origin:"Lateral + medial femoral fabellae", insertion:"Calcaneal tuber via common calcaneal tendon", action:"Hock extension + stifle flexion (biarticular)", plain:"Calf muscle — push-off power, hock extension", nerve:"Tibial n. (L6-S1)" },
   calf_r:       { label:"Gastrocnemius (R)", origin:"Lateral + medial femoral fabellae", insertion:"Calcaneal tuber via common calcaneal tendon", action:"Hock extension + stifle flexion (biarticular)", plain:"Calf muscle — push-off power, hock extension", nerve:"Tibial n. (L6-S1)" },
   hock_l:       { label:"Tarsocrural Joint (L)", origin:"N/A — joint", insertion:"N/A — joint", action:"Hinge: ext 160-165 deg, flex 35-40 deg (dog); ext 165-168 (cat)", plain:"Ankle joint — absorbs landing impact, push-off lever", nerve:"Tibial + peroneal nerve branches" },
@@ -372,13 +374,196 @@ const COL = {
   body:      0x1e3a5f,   // dark navy — body silhouette
   bone:      0x334155,   // dark slate — skeleton
   default:   0x2d4a6b,   // dim blue — inactive muscle
-  primary:   0x14b8a6,   // teal — primary target
+  primary:   0xff2d2d,   // red — primary target (glows when the exercise selects it)
   secondary: 0xf59e0b,   // amber — secondary
-  surgical:  0xef4444,   // red — diagnosis site
+  surgical:  0xd946ef,   // magenta — diagnosis site (distinct from exercise red)
   joint:     0x0f766e,   // dark teal — joints
   hover:     0x67e8f9,   // bright cyan — hover
   emissive:  0x000000,
 };
+
+// ── Real GLB anatomical body ──────────────────────────────────────────────
+// The capsule rig below is still built every time — its meshes carry the
+// muscle IDs that drive highlighting + the hover atlas. When USE_GLB_BODY is
+// on, the plain silhouette meshes (head, bones, paws — no muscle IDs) are
+// hidden and the real GLB mesh is loaded in their place; the muscle/joint
+// meshes stay as the clinical highlight markers (invisible until an exercise
+// or diagnosis lights them up). If the GLB fails to load for any reason, the
+// component falls straight back to the full capsule body — so it can never
+// render empty. Flip USE_GLB_BODY to false to revert instantly.
+const USE_GLB_BODY = true;
+
+const GLB_MODELS = {
+  Canine: "/models/dog-muscle-bone.glb",
+  Feline: "/models/cat-muscle-bone.glb",
+};
+
+// ── Per-species fit (TUNE THESE while previewing — see header notes) ───────
+// rotY:      extra Y rotation (radians). null = auto (longest ground axis → X).
+//            The dog GLB is modelled long-along-Z, the cat long-along-X, so
+//            they need different rotations — auto handles the common case.
+// targetLen: world length the model is scaled to (capsule rig ≈ 2.5 long).
+// pos:       [x,y,z] nudge after centring (y lifts the model onto the grid).
+// flipZ:     mirror left↔right if the model faces the wrong way round.
+const GLB_FIT = {
+  Canine: { rotY: null, targetLen: 2.5, pos: [0, 0.05, 0], flipZ: false },
+  Feline: { rotY: null, targetLen: 2.4, pos: [0, 0.02, 0], flipZ: false },
+};
+
+// Default opacity of a muscle marker when it is NOT highlighted: invisible in
+// GLB mode (the GLB is the body) so only active muscles show; normal in
+// capsule mode.
+const IDLE_MUSCLE_OPACITY_GLB = 0.0;
+
+// Scene background for the viewer (TUNE: darker 0x0a1424 … lighter 0x213352).
+const SCENE_BG = 0x18293f;
+
+// Holographic look of the GLB body (TUNE: raise opacity to make it more solid,
+// brighten color/emissive so it isn't just an outline on the dark background).
+const GLB_BODY_STYLE = { color: 0x5aa9ff, opacity: 0.62, emissive: 0x1f5390, shininess: 42 };
+
+// Muscle markers are small glowing dots placed on the real body. Radius in
+// world units (TUNE — smaller = more precise placement).
+const MARKER_RADIUS = 0.016;
+
+// ── Baked-in marker positions (calibrated 2026-06-21 by Sal) ───────────────
+// Used as the default placement for every viewer; a user's own ?calibrate
+// saves in localStorage still override these per-browser.
+const MUSCLE_POS_3D = {
+  Canine: {
+    quad_l:[-0.68,0.14,-0.15], quad_r:[-0.67,0.14,0.16],
+    hamstring_l:[-0.52,0.06,0.20], hamstring_r:[-0.66,-0.01,-0.20],
+    glute_l:[-0.69,0.28,0.12], glute_r:[-0.71,0.23,-0.13],
+    hip_flexor_l:[-0.50,0.01,-0.13], hip_flexor_r:[-0.58,0.17,-0.21],
+    hip_adduct_l:[-0.47,0.01,-0.14], hip_adduct_r:[-0.51,-0.02,-0.22],
+    hip_l:[-0.68,0.29,-0.11], hip_r:[-0.69,0.28,0.12],
+    stifle_l:[-0.56,-0.18,-0.22], stifle_r:[-0.51,-0.12,0.23],
+    ccl:[-0.56,-0.11,-0.23],
+    calf_l:[-0.66,-0.26,0.21], calf_r:[-0.68,-0.24,-0.20],
+    hock_l:[-0.83,-0.61,-0.18], hock_r:[-0.82,-0.43,0.18],
+    shoulder_l:[0.54,0.15,-0.22], shoulder_r:[0.51,0.19,0.21],
+    elbow_l:[0.48,-0.19,-0.23], elbow_r:[0.47,-0.22,0.23],
+    tricep_l:[0.53,0.06,-0.21], tricep_r:[0.62,0.09,0.23],
+    spine:[0.00,0.44,0.02], core:[-0.02,-0.02,-0.06],
+    paraspinal_l:[-0.37,0.42,-0.08], paraspinal_r:[-0.36,0.40,0.11],
+  },
+  Feline: {
+    quad_l:[0.17,0.13,0.35], quad_r:[0.37,0.08,-0.12],
+    hamstring_l:[0.35,0.09,0.38], hamstring_r:[0.54,0.09,-0.08],
+    glute_l:[0.54,0.25,0.22], glute_r:[0.57,0.26,-0.02],
+    hip_flexor_l:[0.30,-0.09,0.36], hip_flexor_r:[0.57,-0.01,0.12],
+    hip_adduct_l:[0.81,-0.53,0.08], hip_adduct_r:[0.28,0.05,-0.07],
+    hip_l:[0.55,0.24,0.21], hip_r:[0.57,0.22,-0.03],
+    stifle_l:[0.09,-0.05,0.37], stifle_r:[0.47,-0.15,-0.07],
+    calf_l:[0.20,-0.18,0.36], calf_r:[0.66,-0.13,-0.03],
+    hock_l:[0.25,-0.38,0.24], hock_r:[0.80,-0.31,0.04],
+    shoulder_l:[-0.59,0.27,0.15], shoulder_r:[-0.54,0.23,-0.33],
+    elbow_l:[-0.69,-0.15,0.14], elbow_r:[-0.23,-0.06,-0.34],
+    tricep_l:[-0.58,0.18,0.14], tricep_r:[-0.77,0.17,-0.27],
+    spine:[0.29,0.45,0.09], core:[-0.08,-0.04,0.01],
+    paraspinal_l:[0.15,0.43,0.12], paraspinal_r:[0.36,0.38,-0.06],
+  },
+};
+
+// ── Live "look" tuning (lighting + glow), mirrors beauaihome ───────────────
+// In ?calibrate mode a Look panel exposes these as sliders; changes apply live
+// and save to localStorage. "Copy look settings" emits a DEFAULT_LOOK block to
+// bake in. Background lerps between these two navies via bgBright (0..1).
+const SCENE_BG_DARK = 0x0a1424;
+const SCENE_BG_LIGHT = 0x2a3f5c;
+const DEFAULT_LOOK = {
+  ambient: 1.5, key: 2, fill: 1.5, rim: 1,
+  bodyOpacity: 0.7, bodyGlow: 2, bgBright: 0.16, fog: 0.2, markerSize: 1.15,
+};
+const LOOK_SLIDERS = [
+  { key: "ambient",     label: "Ambient light", min: 0,    max: 1.5,  step: 0.05 },
+  { key: "key",         label: "Key light",     min: 0,    max: 2,    step: 0.05 },
+  { key: "fill",        label: "Fill (blue)",   min: 0,    max: 1.5,  step: 0.05 },
+  { key: "rim",         label: "Rim (teal)",    min: 0,    max: 1.5,  step: 0.05 },
+  { key: "bodyOpacity", label: "Body opacity",  min: 0.05, max: 1,    step: 0.01 },
+  { key: "bodyGlow",    label: "Body glow",     min: 0,    max: 3,    step: 0.05 },
+  { key: "bgBright",    label: "Background",    min: 0,    max: 1,    step: 0.02 },
+  { key: "fog",         label: "Fog / haze",    min: 0,    max: 0.35, step: 0.01 },
+  { key: "markerSize",  label: "Marker size",   min: 0.4,  max: 2.5,  step: 0.05 },
+];
+const LOOK_KEY = "k9_look3d";
+function loadSavedLook() {
+  try { return { ...DEFAULT_LOOK, ...(JSON.parse(localStorage.getItem(LOOK_KEY)) || {}) }; }
+  catch { return { ...DEFAULT_LOOK }; }
+}
+function saveLook(look) {
+  try { localStorage.setItem(LOOK_KEY, JSON.stringify(look)); } catch { /* ignore */ }
+}
+function buildLookBlock(look) {
+  const f = (k) => `${k}: ${look[k]}`;
+  return `const DEFAULT_LOOK = {\n  ${["ambient","key","fill","rim"].map(f).join(", ")},\n  ` +
+    `${["bodyOpacity","bodyGlow","bgBright","fog","markerSize"].map(f).join(", ")},\n};`;
+}
+
+// ── Marker position calibration (mirrors beauaihome) ───────────────────────
+// Open the viewer with ?calibrate in the URL to enter calibration mode: pick a
+// muscle, click where it sits on the real model, and the dot is saved to this
+// browser's localStorage. "Copy positions" emits a MUSCLE_POS_3D block you can
+// send back to bake the coordinates in as the new defaults.
+const POS_KEY = (species) => `k9_pos3d_${species}`;       // species: "Canine"|"Feline"
+
+function loadSavedPos(species) {
+  try { return JSON.parse(localStorage.getItem(POS_KEY(species))) || {}; }
+  catch { return {}; }
+}
+function saveOnePos(species, id, pos) {
+  const all = loadSavedPos(species);
+  all[id] = pos;
+  try { localStorage.setItem(POS_KEY(species), JSON.stringify(all)); } catch { /* ignore */ }
+}
+function clearSavedPos(species) {
+  try { localStorage.removeItem(POS_KEY(species)); } catch { /* ignore */ }
+}
+function buildPosBlock(species, markers) {
+  const body = markers
+    .map(mk => {
+      const p = mk.dot.position;
+      const fmt = (n) => (n >= 0 ? " " : "") + n.toFixed(2);
+      return `    ${(mk.id + ":").padEnd(16)}[${fmt(p.x)},${fmt(p.y)},${fmt(p.z)}],`;
+    })
+    .join("\n");
+  return `MUSCLE_POS_3D.${species} = {\n${body}\n};`;
+}
+// Same block, built straight from the saved localStorage object — reliable
+// fallback shown in a text box so it can always be selected + copied.
+function buildPosBlockFromSaved(species, saved) {
+  const ids = Object.keys(saved);
+  if (!ids.length) return `// no ${species} positions saved yet`;
+  const fmt = (n) => (n >= 0 ? " " : "") + Number(n).toFixed(2);
+  const body = ids
+    .map(id => `    ${(id + ":").padEnd(16)}[${fmt(saved[id][0])},${fmt(saved[id][1])},${fmt(saved[id][2])}],`)
+    .join("\n");
+  return `MUSCLE_POS_3D.${species} = {\n${body}\n};`;
+}
+
+// Centre, orient and scale a loaded GLB so it lines up with the capsule rig's
+// coordinate space (head toward +X, up = +Y, body length ≈ targetLen).
+function fitGlbToRig(root, fit) {
+  const box = new THREE.Box3().setFromObject(root);
+  const size = new THREE.Vector3();
+  const center = new THREE.Vector3();
+  box.getSize(size); box.getCenter(center);
+  root.position.sub(center);                       // centre at origin
+
+  const pivot = new THREE.Group();
+  pivot.add(root);
+
+  const rotY = fit.rotY != null ? fit.rotY : (size.z > size.x ? Math.PI / 2 : 0);
+  pivot.rotation.y = rotY;
+  if (fit.flipZ) pivot.scale.z *= -1;
+
+  const groundLen = Math.max(size.x, size.z);       // longest horizontal extent
+  const s = groundLen > 0 ? fit.targetLen / groundLen : 1;
+  pivot.scale.multiplyScalar(s);
+
+  pivot.position.set(fit.pos[0], fit.pos[1], fit.pos[2]);
+  return pivot;
+}
 
 // ── Canine body geometry builder ─────────────────────────────────────────
 // Returns array of { mesh, ids[] } objects
@@ -603,17 +788,42 @@ export default function AnatomyViewer3D({ exerciseCode, diagnosis, species = "Ca
   const meshMapRef = useRef({});
   const isDrag     = useRef(false);
   const lastPos    = useRef({ x: 0, y: 0 });
-  const rotRef     = useRef({ y: 0.3, x: -0.1 });
+  const rotRef     = useRef({ y: 0, x: 0 });   // straight lateral (side) view
   const groupRef   = useRef(null);
+  // True once the real GLB body is in the scene. Flipped back to false if the
+  // GLB fails to load, which restores the full capsule body (fail-safe).
+  const glbActiveRef = useRef(USE_GLB_BODY);
+  const markersRef    = useRef([]);    // [{ id, dot }] glowing muscle markers
+  const glbRootRef    = useRef(null);  // loaded GLB (raycast target in calibrate)
+  const calibTargetRef = useRef(null); // muscle id being placed (readable in loops)
+  const lightsRef     = useRef({});    // { ambient, key, fill, rim }
+  const bodyMatsRef   = useRef([]);    // GLB body materials (for live glow tuning)
+  const lookRef       = useRef(loadSavedLook());
+
+  // Calibration mode turns on click-to-place marker tools + look sliders.
+  // Enabled by either ?calibrate in the URL or the Settings → Appearance toggle
+  // (localStorage "k9_3d_calibrate").
+  const calibrate = typeof window !== "undefined" && (
+    new URLSearchParams(window.location.search).has("calibrate") ||
+    (() => { try { return localStorage.getItem("k9_3d_calibrate") === "1"; } catch { return false; } })()
+  );
+  const [calibTarget, setCalibTarget] = useState(null);  // muscle id being placed
+  const [copied, setCopied]           = useState(false);
+  const [savedTick, setSavedTick]     = useState(0);      // bump to refresh saved set
+  const [look, setLook]               = useState(loadSavedLook);
+  const [lookOpen, setLookOpen]       = useState(false);
+  const [lookCopied, setLookCopied]   = useState(false);
 
   const [hovered, setHovered]       = useState(null);
   const [clientMode, setClientMode]   = useState(false);
   const [visible, setVisible]         = useState(true);
-  const [autoRotate, setAutoRotate]   = useState(true);
-  const autoRotateRef                 = useRef(true);   // readable inside animate loop
-  const mouseInsideRef                = useRef(false);  // pause on hover
+  const mouseInsideRef                = useRef(false);  // hover bookkeeping
 
-  const isFeline = species === "Feline";
+  // In ?calibrate mode an in-panel toggle can override which species is shown
+  // (the live app normally drives species from the exercise/protocol).
+  const [calibSpecies, setCalibSpecies] = useState(null);
+  const effSpecies = (calibrate && calibSpecies) ? calibSpecies : species;
+  const isFeline = effSpecies === "Feline";
 
   const exerciseData = useMemo(() => {
     const code = (exerciseCode || "").toUpperCase().replace(/[- ]/g, "_");
@@ -627,22 +837,86 @@ export default function AnatomyViewer3D({ exerciseCode, diagnosis, species = "Ca
   // ── Apply colours to meshes based on current highlight state ──────────
   const applyColors = (meshMap) => {
     const allMeshes = Object.values(meshMap).flat();
+    const glb = glbActiveRef.current;
     allMeshes.forEach(m => {
       const ids = m.userData.ids || [];
       let col = COL.default;
       let emissive = 0x000000;
-      let opacity = 0.82;
+      // In GLB mode an un-highlighted marker is invisible (the GLB is the
+      // body); in capsule mode it shows as a dim muscle.
+      let opacity = glb ? IDLE_MUSCLE_OPACITY_GLB : 0.82;
       if (ids.some(id => diagnosisStructures.includes(id))) {
-        col = COL.surgical; emissive = 0x330000; opacity = 0.92;
+        col = COL.surgical; emissive = 0x330033; opacity = glb ? 0.96 : 0.92;
       } else if (ids.some(id => exerciseData.primary.includes(id))) {
-        col = COL.primary;  emissive = 0x003322; opacity = 0.92;
+        col = COL.primary;  emissive = 0x990000; opacity = glb ? 0.96 : 0.92;
       } else if (ids.some(id => exerciseData.secondary.includes(id))) {
-        col = COL.secondary; emissive = 0x221100; opacity = 0.88;
+        col = COL.secondary; emissive = 0x221100; opacity = glb ? 0.92 : 0.88;
+      }
+      // Calibration mode: keep every dot visible so it can be placed, and make
+      // the muscle currently being placed pop (bright cyan + enlarged).
+      if (glb && calibrate) {
+        // Only show what needs placing: the marker currently being placed, and
+        // the ones relevant to the selected exercise/diagnosis (opacity already
+        // > 0 from the colour pass above). Everything else stays hidden so it
+        // doesn't get in the way of accurate placement.
+        const ms = lookRef.current.markerSize || 1;
+        const isTarget = ids.includes(calibTargetRef.current);
+        if (isTarget) {
+          col = COL.hover; emissive = 0x004444; opacity = 1;
+        } else if (opacity > 0 && opacity < 0.85) {
+          opacity = 0.85;
+        }
+        // Keep the active marker only slightly larger so it never covers the
+        // muscle it's marking — identify it by the bright cyan colour instead.
+        m.scale.setScalar(isTarget ? ms * 1.5 : ms);
+      } else if (glb) {
+        m.scale.setScalar(lookRef.current.markerSize || 1);
       }
       m.material.color.setHex(col);
       m.material.emissive.setHex(emissive);
       m.material.opacity = opacity;
     });
+  };
+
+  // ── Live look tuning: lighting, body glow, background, fog ────────────────
+  const applyLook = (lk) => {
+    const L = lightsRef.current;
+    if (L.ambient) L.ambient.intensity = lk.ambient;
+    if (L.key)     L.key.intensity     = lk.key;
+    if (L.fill)    L.fill.intensity    = lk.fill;
+    if (L.rim)     L.rim.intensity     = lk.rim;
+    bodyMatsRef.current.forEach(m => {
+      m.opacity = lk.bodyOpacity;
+      m.emissiveIntensity = lk.bodyGlow * 0.5;   // texture self-glow (0..~1.5)
+      m.needsUpdate = true;
+    });
+    const scn = sceneRef.current;
+    if (scn) {
+      scn.background = new THREE.Color(SCENE_BG_DARK).lerp(new THREE.Color(SCENE_BG_LIGHT), lk.bgBright);
+      if (scn.fog) scn.fog.density = lk.fog;
+    }
+  };
+
+  // ── Calibration: click the model to place the selected muscle marker ──────
+  const onCalibClick = (e) => {
+    if (!calibrate || !calibTarget) return;
+    const glb = glbRootRef.current, cam = camRef.current, grp = groupRef.current;
+    if (!glb || !cam || !grp || !mountRef.current) return;
+    const rect = mountRef.current.getBoundingClientRect();
+    const ndc = new THREE.Vector2(
+      ((e.clientX - rect.left) / rect.width) * 2 - 1,
+      -((e.clientY - rect.top) / rect.height) * 2 + 1,
+    );
+    const ray = new THREE.Raycaster();
+    ray.setFromCamera(ndc, cam);
+    const hits = ray.intersectObject(glb, true);
+    if (!hits.length) return;
+    const local = grp.worldToLocal(hits[0].point.clone());
+    const mk = markersRef.current.find(m => m.id === calibTarget);
+    if (!mk) return;
+    mk.dot.position.copy(local);
+    saveOnePos(effSpecies, calibTarget, [+local.x.toFixed(2), +local.y.toFixed(2), +local.z.toFixed(2)]);
+    setSavedTick(t => t + 1);
   };
 
   // ── Raycasting for hover ───────────────────────────────────────────────
@@ -676,7 +950,6 @@ export default function AnatomyViewer3D({ exerciseCode, diagnosis, species = "Ca
   // ── Drag to rotate ─────────────────────────────────────────────────────
   const onPointerDown = (e) => {
     isDrag.current = true;
-    setAutoRotate(false);
     lastPos.current = { x: e.clientX, y: e.clientY };
   };
   const onPointerMove = (e) => {
@@ -693,11 +966,20 @@ export default function AnatomyViewer3D({ exerciseCode, diagnosis, species = "Ca
   };
   const onPointerUp = () => { isDrag.current = false; };
 
-  // ── Scroll to zoom ─────────────────────────────────────────────────────
-  const onWheel = (e) => {
-    if (!camRef.current) return;
-    camRef.current.position.z = Math.max(1.2, Math.min(4.5, camRef.current.position.z + e.deltaY * 0.003));
-  };
+  // ── Scroll to zoom — native non-passive listener so the wheel zooms the
+  //    model and never scrolls the page ("locks" onto the viewer). ──────────
+  useEffect(() => {
+    const el = mountRef.current;
+    if (!el) return;
+    const onWheelNative = (e) => {
+      if (!camRef.current) return;
+      e.preventDefault();
+      e.stopPropagation();
+      camRef.current.position.z = Math.max(1.2, Math.min(12, camRef.current.position.z + e.deltaY * 0.003));
+    };
+    el.addEventListener("wheel", onWheelNative, { passive: false });
+    return () => el.removeEventListener("wheel", onWheelNative);
+  }, [visible]);
 
   // ── Scene setup (runs when species changes) ───────────────────────────
   useEffect(() => {
@@ -707,13 +989,20 @@ export default function AnatomyViewer3D({ exerciseCode, diagnosis, species = "Ca
 
     // Scene
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xdce4ed);
-    scene.fog = new THREE.FogExp2(0x0a1628, 0.18);
+    scene.background = new THREE.Color(USE_GLB_BODY ? SCENE_BG : 0xdce4ed);
+    scene.fog = new THREE.FogExp2(0x0a1628, USE_GLB_BODY ? 0.10 : 0.18);
     sceneRef.current = scene;
 
-    // Camera
-    const camera = new THREE.PerspectiveCamera(45, W / H, 0.1, 100);
-    camera.position.set(0, 0.1, 2.8);
+    // Camera — pulled back far enough that the whole model fits the canvas,
+    // whatever its width (the calibrate layout makes the canvas narrower).
+    const aspect = W / H;
+    const camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 100);
+    const halfV = THREE.MathUtils.degToRad(45 / 2);
+    const fitLen = (GLB_FIT[isFeline ? "Feline" : "Canine"]?.targetLen) || 2.5;
+    const modelW = fitLen * 1.05, modelH = fitLen * 0.62;
+    const zW = (modelW / 2) / (Math.tan(halfV) * aspect);
+    const zH = (modelH / 2) / Math.tan(halfV);
+    camera.position.set(0, 0.05, Math.max(zW, zH) * 1.06);   // small margin — model fills more
     camRef.current = camera;
 
     // Renderer
@@ -725,8 +1014,9 @@ export default function AnatomyViewer3D({ exerciseCode, diagnosis, species = "Ca
     mountRef.current.appendChild(renderer.domElement);
     rendRef.current = renderer;
 
-    // Lights
-    scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+    // Lights (intensities are driven live by the Look tuning)
+    const ambient = new THREE.AmbientLight(0xffffff, 0.55);
+    scene.add(ambient);
     const key = new THREE.DirectionalLight(0xffffff, 0.9);
     key.position.set(2, 3, 2); key.castShadow = true;
     scene.add(key);
@@ -736,6 +1026,7 @@ export default function AnatomyViewer3D({ exerciseCode, diagnosis, species = "Ca
     const rim = new THREE.DirectionalLight(0x14b8a6, 0.25);
     rim.position.set(0, -2, -2);
     scene.add(rim);
+    lightsRef.current = { ambient, key, fill, rim };
 
     // Ground grid
     const grid = new THREE.GridHelper(4, 20, 0x1e3a5f, 0x0f2040);
@@ -772,38 +1063,166 @@ export default function AnatomyViewer3D({ exerciseCode, diagnosis, species = "Ca
 
     applyColors(meshMap);
 
-    // Animate
-    let angle = rotRef.current.y;
+    // ── Real GLB body + dot markers ──────────────────────────────────────
+    // The whole capsule rig is hidden and the real GLB takes its place. One
+    // glowing dot per muscle is placed from MUSCLE_POS_3D (seeded from the rig,
+    // overridden by anything calibrated + saved in this browser). On load
+    // failure we restore the full capsule body so nothing breaks.
+    let glbRoot = null;
+    let glbCancelled = false;
+    let markerDots = [];
+    glbActiveRef.current = USE_GLB_BODY;
+    if (USE_GLB_BODY) {
+      const speciesKey = isFeline ? "Feline" : "Canine";
+
+      // Seed one position per muscle id from the capsule rig (averaged).
+      const seed = {};
+      Object.entries(meshMap).forEach(([id, arr]) => {
+        const v = new THREE.Vector3();
+        arr.forEach(m => v.add(m.position));
+        v.multiplyScalar(1 / Math.max(1, arr.length));
+        seed[id] = [+v.x.toFixed(3), +v.y.toFixed(3), +v.z.toFixed(3)];
+      });
+
+      // Hide the entire capsule rig (kept around for the fail-safe fallback).
+      group.children.filter(o => o.isMesh).forEach(m => { m.visible = false; });
+
+      // Build the dot markers; reuse meshMapRef so applyColors + hover work.
+      const saved = loadSavedPos(speciesKey);
+      const baked = MUSCLE_POS_3D[speciesKey] || {};
+      const markerGeo = new THREE.SphereGeometry(MARKER_RADIUS, 14, 12);
+      const markerMap = {};
+      Object.keys(seed).forEach(id => {
+        const p = saved[id] || baked[id] || seed[id];
+        const dot = new THREE.Mesh(
+          markerGeo,
+          new THREE.MeshPhongMaterial({
+            color: COL.default, emissive: 0x000000,
+            transparent: true, opacity: 0, depthTest: false,
+          }),
+        );
+        dot.position.set(p[0], p[1], p[2]);
+        dot.renderOrder = 10;
+        dot.userData.ids = [id];
+        dot.userData.muscleId = id;
+        group.add(dot);
+        markerMap[id] = [dot];
+        markerDots.push({ id, dot });
+      });
+      meshMapRef.current = markerMap;
+      markersRef.current = markerDots;
+      applyColors(markerMap);
+
+      const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
+      loader.load(
+        GLB_MODELS[speciesKey],
+        (gltf) => {
+          if (glbCancelled) return;
+          glbRoot = fitGlbToRig(gltf.scene, GLB_FIT[speciesKey]);
+          const bodyMats = [];
+          glbRoot.traverse(o => {
+            if (o.isMesh && o.material) {
+              // Keep the GLB's own muscle/bone texture (that's the anatomical
+              // detail) and turn it into a glowing, translucent hologram by
+              // self-illuminating that same texture.
+              const m = o.material;
+              m.transparent = true;
+              m.side = THREE.DoubleSide;
+              m.depthWrite = false;           // see-through; markers show through
+              m.emissive = new THREE.Color(0xffffff);
+              m.emissiveMap = m.map || null;  // muscle/bone texture self-illuminates
+              if ("roughness" in m) { m.roughness = 0.55; m.metalness = 0.0; }
+              o.renderOrder = 1;
+              m.needsUpdate = true;
+              bodyMats.push(m);
+            }
+          });
+          bodyMatsRef.current = bodyMats;
+          group.add(glbRoot);
+          glbRootRef.current = glbRoot;
+          applyLook(lookRef.current);
+          applyColors(meshMapRef.current);
+        },
+        undefined,
+        () => {
+          if (glbCancelled) return;
+          // GLB unavailable → tear down markers, show the capsule body again.
+          glbActiveRef.current = false;
+          markerDots.forEach(({ dot }) => { group.remove(dot); dot.material.dispose(); });
+          markerDots = [];
+          markersRef.current = [];
+          group.children.filter(o => o.isMesh).forEach(m => { m.visible = true; });
+          meshMapRef.current = meshMap;
+          applyColors(meshMap);
+        },
+      );
+    }
+
+    // Animate (manual rotation only — drag to rotate)
     const animate = () => {
       frameRef.current = requestAnimationFrame(animate);
-      if (autoRotateRef.current && !isDrag.current && !mouseInsideRef.current && groupRef.current) {
-        angle += 0.005;
-        groupRef.current.rotation.y = angle;
-        rotRef.current.y = angle;
-      }
       renderer.render(scene, camera);
     };
     animate();
 
     return () => {
+      glbCancelled = true;
+      if (glbRoot) {
+        glbRoot.traverse(o => {
+          if (o.isMesh) {
+            o.geometry?.dispose();
+            if (Array.isArray(o.material)) o.material.forEach(mm => mm.dispose());
+            else o.material?.dispose();
+          }
+        });
+      }
       cancelAnimationFrame(frameRef.current);
       renderer.dispose();
       if (mountRef.current) mountRef.current.innerHTML = "";
     };
   }, [isFeline, visible]);
 
-  // ── Re-apply colours when exercise/diagnosis changes ─────────────────
+  // ── Re-apply colours when exercise/diagnosis/calibration changes ─────
   useEffect(() => {
+    calibTargetRef.current = calibTarget;
     applyColors(meshMapRef.current);
-  }, [exerciseCode, diagnosis]);
+  }, [exerciseCode, diagnosis, calibTarget, savedTick]);
 
-  // ── Auto-rotate respects the ref ─────────────────────────────────────
+  // ── Apply + persist the live look settings ───────────────────────────
   useEffect(() => {
-    // nothing — auto-rotate is checked inside animate loop via closure over ref
-  }, [autoRotate]);
+    lookRef.current = look;
+    applyLook(look);
+    applyColors(meshMapRef.current);   // marker size depends on look
+    saveLook(look);
+  }, [look]);
 
   const hoveredInfo = hovered ? MUSCLE_INFO[hovered] : null;
   const hasHighlights = exerciseData.primary.length > 0 || exerciseData.secondary.length > 0 || diagnosisStructures.length > 0;
+
+  // Calibration panel data (recomputed on each save via savedTick).
+  const calibIds = useMemo(() => Object.keys(ATLAS), []);
+  const savedPos = calibrate ? loadSavedPos(effSpecies) : {};
+  const savedCount = Object.keys(savedPos).length;
+  const copyPositions = () => {
+    if (!markersRef.current.length) return;
+    navigator.clipboard?.writeText(buildPosBlock(effSpecies, markersRef.current))
+      .then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); })
+      .catch(() => {});
+  };
+  // Reliable export: dump both species' saved positions + look to a JSON file.
+  const downloadCalibration = () => {
+    const data = {
+      Canine: loadSavedPos("Canine"),
+      Feline: loadSavedPos("Feline"),
+      look: loadSavedLook(),
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "k9-3d-calibration.json";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
 
   if (!visible) return (
     <button onClick={() => setVisible(true)} style={{
@@ -816,15 +1235,15 @@ export default function AnatomyViewer3D({ exerciseCode, diagnosis, species = "Ca
   );
 
   return (
-    <div style={{ background:"#edf2f7", border:"1px solid #cbd5e1", borderRadius:12,
+    <div style={{ background:"#0b1626", border:"1px solid #1e3a5f", borderRadius:12,
       padding: compact ? "12px 14px" : "16px 20px", marginBottom:12, position:"relative",
-      boxShadow:"0 4px 24px rgba(0,0,0,0.08)" }}>
+      boxShadow:"0 4px 24px rgba(0,0,0,0.35)" }}>
 
       {/* ── Header bar ── */}
-      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:10, paddingBottom:10, borderBottom:"1px solid #cbd5e1" }}>
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:10, paddingBottom:10, borderBottom:"1px solid #1e3a5f" }}>
         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
           {isFeline ? <TbCat size={18} style={{color:"#fff"}}/> : <TbDog size={18} style={{color:"#fff"}}/>}
-          <span style={{ fontSize:13, fontWeight:800, color:"#1a2744", letterSpacing:0.8, textTransform:"uppercase" }}>
+          <span style={{ fontSize:13, fontWeight:800, color:"#e2e8f0", letterSpacing:0.8, textTransform:"uppercase" }}>
             3D Anatomy Viewer
           </span>
           <span style={{ fontSize:10, padding:"4px 12px", borderRadius:20, background: isFeline ? "#7c3aed" : "#0c4a6e",
@@ -840,15 +1259,6 @@ export default function AnatomyViewer3D({ exerciseCode, diagnosis, species = "Ca
           )}
         </div>
         <div style={{ display:"flex", gap:6 }}>
-          <button onClick={() => { const next = !autoRotate; setAutoRotate(next); autoRotateRef.current = next; }}
-            title={autoRotate ? "Stop rotation" : "Auto-rotate"}
-            style={{ display:"flex", alignItems:"center", gap:4, padding:"5px 12px", borderRadius:6,
-              background: autoRotate ? "#0c4a6e" : "#ffffff",
-              border:`1px solid ${autoRotate ? "#0c4a6e" : "#cbd5e1"}`,
-              color: autoRotate ? "#ffffff" : "#475569", fontSize:11, fontWeight:600, cursor:"pointer",
-              transition:"all 0.15s" }}>
-            <FiRotateCw size={12}/> Rotate
-          </button>
           <button onClick={() => setClientMode(m => !m)}
             title={clientMode ? "Clinical labels" : "Owner-friendly labels"}
             style={{ display:"flex", alignItems:"center", gap:4, padding:"5px 12px", borderRadius:6,
@@ -866,8 +1276,11 @@ export default function AnatomyViewer3D({ exerciseCode, diagnosis, species = "Ca
         </div>
       </div>
 
+      {/* ── Model + (in calibrate) side-by-side controls ── */}
+      <div style={{ display: calibrate ? "flex" : "block", gap:12, alignItems:"flex-start" }}>
       {/* ── 3D Canvas ── */}
-      <div style={{ position:"relative", borderRadius:8, overflow:"hidden", cursor: isDrag.current ? "grabbing" : "grab" }}
+      <div style={{ flex:1, minWidth:0, position:"relative", borderRadius:8, overflow:"hidden",
+        cursor: isDrag.current ? "grabbing" : "grab", touchAction:"none", overscrollBehavior:"contain" }}
         onMouseEnter={() => { mouseInsideRef.current = true; }}
         onMouseLeave={() => { mouseInsideRef.current = false; setHovered(null); }}
         onPointerDown={onPointerDown}
@@ -875,7 +1288,7 @@ export default function AnatomyViewer3D({ exerciseCode, diagnosis, species = "Ca
         onPointerUp={onPointerUp}
         onPointerLeave={onPointerUp}
         onMouseMove={onMouseMove}
-        onWheel={onWheel}
+        onClick={onCalibClick}
       >
         <div ref={mountRef} style={{ width:"100%", height:400 }} />
 
@@ -913,6 +1326,124 @@ export default function AnatomyViewer3D({ exerciseCode, diagnosis, species = "Ca
         )}
       </div>
 
+      {/* ── Calibration controls (right column beside the model) ── */}
+      {calibrate && (
+        <div style={{ width:340, flexShrink:0, maxHeight:440, overflowY:"auto",
+          padding:"12px 14px", borderRadius:8,
+          background:"#0b1a2e", border:"1px solid #1e3a5f" }}>
+          <div style={{ fontSize:12, fontWeight:800, color:"#67e8f9", marginBottom:8 }}>
+            🎯 Calibrate · {isFeline ? "Feline" : "Canine"}
+          </div>
+          {/* Dog / cat selector (calibrate only) */}
+          <div style={{ display:"flex", gap:6, marginBottom:10 }}>
+            {["Canine", "Feline"].map(sp => {
+              const active = effSpecies === sp;
+              return (
+                <button key={sp} onClick={() => { setCalibSpecies(sp); setCalibTarget(null); }}
+                  style={{ flex:1, fontSize:12, fontWeight:700, padding:"6px 10px", borderRadius:6, cursor:"pointer",
+                    background: active ? "#0c4a6e" : "#13233a",
+                    border:`1px solid ${active ? "#67e8f9" : "#1e3a5f"}`,
+                    color: active ? "#fff" : "#94a3b8" }}>
+                  {sp === "Feline" ? "🐈 Cat" : "🐕 Dog"}
+                </button>
+              );
+            })}
+          </div>
+          <div style={{ fontSize:11, color:"#cbd5e1", marginBottom:10, lineHeight:1.6 }}>
+            Pick a muscle below, then <b>click where it sits on the model</b>. Drag to rotate first if needed.
+            Each placement auto-saves to this browser. When done, <b>Copy positions</b> and send them to bake in.
+            &nbsp;<span style={{ color:"#94a3b8" }}>{savedCount} of {calibIds.length} placed</span>
+          </div>
+          <div style={{ display:"flex", flexWrap:"wrap", gap:5, marginBottom:10 }}>
+            {calibIds.map(id => {
+              const isTarget = calibTarget === id;
+              const isSaved = !!savedPos[id];
+              return (
+                <button key={id} onClick={() => setCalibTarget(isTarget ? null : id)}
+                  style={{ fontSize:10, fontWeight:700, padding:"3px 8px", borderRadius:4, cursor:"pointer",
+                    background: isTarget ? "#0891b2" : isSaved ? "rgba(20,184,166,0.18)" : "#13233a",
+                    border:`1px solid ${isTarget ? "#67e8f9" : isSaved ? "#14b8a6" : "#1e3a5f"}`,
+                    color: isTarget ? "#fff" : isSaved ? "#5eead4" : "#94a3b8" }}>
+                  {isSaved ? "✓ " : ""}{id}
+                </button>
+              );
+            })}
+          </div>
+          <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+            <button onClick={copyPositions}
+              style={{ fontSize:11, fontWeight:700, padding:"6px 12px", borderRadius:6, cursor:"pointer",
+                background:"#14b8a6", border:"none", color:"#04201c" }}>
+              {copied ? "✓ Copied!" : "Copy positions"}
+            </button>
+            <button onClick={downloadCalibration}
+              style={{ fontSize:11, fontWeight:700, padding:"6px 12px", borderRadius:6, cursor:"pointer",
+                background:"#0c4a6e", border:"none", color:"#fff" }}>
+              ⬇ Download dog+cat+look
+            </button>
+            <button onClick={() => { clearSavedPos(species); setSavedTick(t => t + 1); }}
+              style={{ fontSize:11, fontWeight:700, padding:"6px 12px", borderRadius:6, cursor:"pointer",
+                background:"#1e293b", border:"1px solid #334155", color:"#94a3b8" }}>
+              Clear saved
+            </button>
+            {calibTarget && <span style={{ fontSize:11, color:"#67e8f9", fontWeight:700 }}>
+              placing: {ATLAS[calibTarget]?.label || calibTarget}
+            </span>}
+          </div>
+
+          {/* Saved positions — select all + copy (reliable fallback) */}
+          <div style={{ marginTop:10 }}>
+            <div style={{ fontSize:10, color:"#94a3b8", marginBottom:4 }}>
+              Saved positions ({savedCount}) — click to select all, then copy:
+            </div>
+            <textarea readOnly value={buildPosBlockFromSaved(effSpecies, savedPos)}
+              onFocus={(e) => e.target.select()}
+              style={{ width:"100%", height:120, fontFamily:"monospace", fontSize:10, lineHeight:1.4,
+                background:"#05101e", color:"#9ad8ff", border:"1px solid #1e3a5f", borderRadius:6,
+                padding:8, resize:"vertical", whiteSpace:"pre" }} />
+          </div>
+
+          {/* Lighting & glow sliders */}
+          <div style={{ marginTop:12, borderTop:"1px solid #1e3a5f", paddingTop:10 }}>
+            <button onClick={() => setLookOpen(o => !o)}
+              style={{ display:"flex", alignItems:"center", gap:6, background:"none", border:"none",
+                color:"#67e8f9", fontSize:12, fontWeight:800, cursor:"pointer", padding:0 }}>
+              💡 Lighting &amp; glow {lookOpen ? "▲" : "▼"}
+            </button>
+            {lookOpen && (
+              <div style={{ marginTop:10 }}>
+                {LOOK_SLIDERS.map(s => (
+                  <label key={s.key} style={{ display:"block", marginBottom:8 }}>
+                    <span style={{ display:"flex", justifyContent:"space-between", fontSize:11, color:"#cbd5e1", marginBottom:2 }}>
+                      <span>{s.label}</span><b style={{ color:"#fff" }}>{look[s.key]}</b>
+                    </span>
+                    <input type="range" min={s.min} max={s.max} step={s.step} value={look[s.key]}
+                      onChange={e => setLook(v => ({ ...v, [s.key]: Number(e.target.value) }))}
+                      style={{ width:"100%", accentColor:"#14b8a6", cursor:"pointer" }} />
+                  </label>
+                ))}
+                <div style={{ display:"flex", gap:8 }}>
+                  <button onClick={() => {
+                      navigator.clipboard?.writeText(buildLookBlock(look))
+                        .then(() => { setLookCopied(true); setTimeout(() => setLookCopied(false), 1500); })
+                        .catch(() => {});
+                    }}
+                    style={{ fontSize:11, fontWeight:700, padding:"6px 12px", borderRadius:6, cursor:"pointer",
+                      background:"#14b8a6", border:"none", color:"#04201c" }}>
+                    {lookCopied ? "✓ Copied!" : "Copy look settings"}
+                  </button>
+                  <button onClick={() => setLook({ ...DEFAULT_LOOK })}
+                    style={{ fontSize:11, fontWeight:700, padding:"6px 12px", borderRadius:6, cursor:"pointer",
+                      background:"#1e293b", border:"1px solid #334155", color:"#94a3b8" }}>
+                    Reset
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+      </div>{/* end model + controls row */}
+
       {/* ── Legend ── */}
       {hasHighlights && (
         <div style={{ marginTop:10, paddingTop:10, borderTop:"1px solid rgba(30,58,95,0.6)" }}>
@@ -920,7 +1451,7 @@ export default function AnatomyViewer3D({ exerciseCode, diagnosis, species = "Ca
           <div style={{ display:"flex", gap:16, alignItems:"center", marginBottom:8 }}>
             {exerciseData.primary.length > 0 && (
               <div style={{ display:"flex", alignItems:"center", gap:6 }}>
-                <div style={{ width:10, height:10, borderRadius:3, background:"#14b8a6", boxShadow:"0 0 6px rgba(20,184,166,0.4)" }}/>
+                <div style={{ width:10, height:10, borderRadius:3, background:"#ff2d2d", boxShadow:"0 0 8px rgba(255,45,45,0.7)" }}/>
                 <span style={{ fontSize:11, color:"#e2e8f0", fontWeight:700 }}>Primary Target</span>
                 <span style={{ fontSize:10, color:"#64748b" }}>({exerciseData.primary.length} structures)</span>
               </div>
@@ -934,11 +1465,11 @@ export default function AnatomyViewer3D({ exerciseCode, diagnosis, species = "Ca
             )}
             {diagnosisStructures.length > 0 && (
               <div style={{ display:"flex", alignItems:"center", gap:6 }}>
-                <div style={{ width:10, height:10, borderRadius:3, background:"#ef4444", boxShadow:"0 0 6px rgba(239,68,68,0.4)" }}/>
+                <div style={{ width:10, height:10, borderRadius:3, background:"#d946ef", boxShadow:"0 0 8px rgba(217,70,239,0.6)" }}/>
                 <span style={{ fontSize:11, color:"#e2e8f0", fontWeight:700 }}>Surgical Site</span>
               </div>
             )}
-            <span style={{ marginLeft:"auto", fontSize:10, color:"#475569" }}>
+            <span style={{ marginLeft:"auto", fontSize:10, color:"#94a3b8" }}>
               Drag to rotate &middot; Scroll to zoom
             </span>
           </div>
@@ -946,8 +1477,8 @@ export default function AnatomyViewer3D({ exerciseCode, diagnosis, species = "Ca
           <div style={{ display:"flex", gap:5, flexWrap:"wrap" }}>
             {[...new Set(exerciseData.primary)].map(id => (
               <span key={id} style={{ fontSize:10, fontWeight:600, padding:"2px 8px", borderRadius:4,
-                background:"rgba(20,184,166,0.12)", border:"1px solid rgba(20,184,166,0.25)",
-                color:"#5eead4", letterSpacing:0.2 }}>
+                background:"rgba(255,45,45,0.14)", border:"1px solid rgba(255,45,45,0.35)",
+                color:"#fca5a5", letterSpacing:0.2 }}>
                 {MUSCLE_INFO[id]?.label || id}
               </span>
             ))}
@@ -963,7 +1494,7 @@ export default function AnatomyViewer3D({ exerciseCode, diagnosis, species = "Ca
       )}
       {!hasHighlights && (
         <div style={{ marginTop:8, textAlign:"center" }}>
-          <span style={{ fontSize:10, color:"#475569" }}>Drag to rotate &middot; Scroll to zoom</span>
+          <span style={{ fontSize:10, color:"#94a3b8" }}>Drag to rotate &middot; Scroll to zoom</span>
         </div>
       )}
     </div>

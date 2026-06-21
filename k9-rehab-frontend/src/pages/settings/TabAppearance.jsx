@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { FiMonitor, FiSliders, FiVolume2, FiPlay, FiSquare } from "react-icons/fi";
+import { FiMonitor, FiSliders, FiVolume2, FiPlay, FiSquare, FiTarget } from "react-icons/fi";
 import C from "../../constants/colors";
 import S from "../../constants/styles";
 import { sty } from "./constants";
@@ -23,6 +23,21 @@ export function TabAppearance({ appearance, setAppearance, theme, setTheme, flas
   });
   const [previewing, setPreviewing] = useState(null);
   const previewAudioRef = useRef(null);
+
+  // ── 3D viewer calibration toggle (localStorage "k9_3d_calibrate") ──
+  const [calibrateOn, setCalibrateOn] = useState(() => {
+    try { return localStorage.getItem("k9_3d_calibrate") === "1"; } catch { return false; }
+  });
+  const toggleCalibrate = () => {
+    setCalibrateOn(prev => {
+      const next = !prev;
+      try {
+        if (next) localStorage.setItem("k9_3d_calibrate", "1");
+        else localStorage.removeItem("k9_3d_calibrate");
+      } catch {}
+      return next;
+    });
+  };
 
   const onPickVoice = (id) => {
     setVoicePref(id);
@@ -208,6 +223,31 @@ export function TabAppearance({ appearance, setAppearance, theme, setTheme, flas
           <div style={{ fontSize: 10, color: C.muted, marginTop: 8, fontStyle: "italic" }}>
             Speed applies to all B.E.A.U. voice output. Preview buttons above will use the selected speed.
           </div>
+        </div>
+      </SettingsSection>
+
+      <SettingsSection id="app_calibrate" open={isOpen("app_calibrate")} onToggle={toggleSection} icon={FiTarget} title="3D Anatomy Viewer — Calibration">
+        <div style={{ fontSize: 11, color: C.muted, marginBottom: 10 }}>
+          Calibration mode adds setup tools to the 3D anatomy viewer (Exercises → View Targeted Muscles): a dog/cat selector, click-to-place muscle markers, lighting &amp; glow sliders, and a download/copy of your settings. Changes save in this browser only and don't affect other users.
+        </div>
+        <div onClick={toggleCalibrate}
+          style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            padding: "14px 16px", borderRadius: 8, cursor: "pointer",
+            background: calibrateOn ? C.teal : C.bg,
+            color: calibrateOn ? "#fff" : C.text,
+            border: calibrateOn ? `2px solid ${C.teal}` : `1px solid ${C.border}`,
+            transition: "all 0.15s",
+          }}>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 700 }}>Calibration Mode</div>
+            <div style={{ fontSize: 11, marginTop: 3, opacity: calibrateOn ? 0.85 : 0.65 }}>
+              {calibrateOn
+                ? "ON — open any exercise's 3D viewer to place markers & tune the look"
+                : "OFF — the viewer shows the normal anatomy"}
+            </div>
+          </div>
+          <div style={{ fontSize: 13, fontWeight: 800, letterSpacing: 0.5 }}>{calibrateOn ? "ON" : "OFF"}</div>
         </div>
       </SettingsSection>
 

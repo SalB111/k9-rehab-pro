@@ -608,7 +608,7 @@ app.get("/api/beau/status", (req, res) => {
   try { engines.narrative = require("./engines/narrative/narrative-engine").isReady(); } catch { engines.narrative = false; }
   try { engines.presentation = require("./engines/presentation/presentation-engine").isReady(); } catch { engines.presentation = false; }
   try { engines.visual = require("./engines/visual/visual-engine").isReady(); } catch { engines.visual = false; }
-  res.json({ configured, model: "claude-sonnet-4-20250514", engines });
+  res.json({ configured, model: "claude-sonnet-4-6", engines });
 });
 
 // Auth-gated — prevents anonymous patient-name disclosure via

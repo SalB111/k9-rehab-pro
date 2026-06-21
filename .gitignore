@@ -60,3 +60,5 @@ source_of_truth_temp.txt
 # Sensitive documents
 *.docx
 *.doc
+.vercel
+.env*

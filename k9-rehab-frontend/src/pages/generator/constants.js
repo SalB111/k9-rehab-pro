@@ -114,7 +114,7 @@ export const REGIONS = [
   "Left Stifle", "Right Stifle", "Bilateral Stifle",
   "Left Hip", "Right Hip", "Bilateral Hip",
   "Left Elbow", "Right Elbow", "Left Shoulder", "Right Shoulder",
-  "Left Carpus", "Right Carpus", "Left Tarsus/Hock", "Right Tarsus/Hock",
+  "Left Carpus", "Right Carpus", "Left Hock", "Right Hock",
   "Cervical Spine", "Thoracolumbar Spine", "Lumbosacral Spine",
   "Multiple Joints", "Generalized",
   "No Affected Area — General Conditioning"

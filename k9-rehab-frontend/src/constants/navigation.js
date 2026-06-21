@@ -1,6 +1,7 @@
 import {
   FiBookOpen, FiClipboard, FiSettings,
   FiBarChart2, FiHeart, FiCpu, FiUsers, FiFileText, FiBook, FiActivity, FiEdit3,
+  FiPercent,
 } from "react-icons/fi";
 
 const NAV = [
@@ -10,6 +11,7 @@ const NAV = [
   { id: "sessions",   label: "SOAP Notes",           icon: FiClipboard,  desc: "SOAP notes & outcomes" },
   { id: "beau",       label: "Ask B.E.A.U.",          icon: FiCpu,        desc: "Biomedical Evidence-Based Analytical Unit" },
   { id: "helsinki",   label: "Helsinki Index",       icon: FiEdit3,      desc: "Chronic pain questionnaire (print for client)" },
+  { id: "calculators",label: "Calculators",          icon: FiPercent,    desc: "UWTM buoyancy + daily patient monitor" },
   { id: "beau-metrics", label: "PetCare Nutrition",  icon: FiActivity,   desc: "AI nutrition & rehab protocols" },
   { id: "docs",       label: "Reference",            icon: FiBook,       desc: "Clinical reference" },
   { id: "settings",   label: "Settings",            icon: FiSettings,   desc: "Configuration" },

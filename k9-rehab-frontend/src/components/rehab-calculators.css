@@ -1,0 +1,139 @@
+/* ─── Scoped styles for embedded rehab calculators (DailyMonitorTracker, BuoyancyCalc) ───
+   All rules scoped under .rehab-calc so they cannot leak into the host app.
+   Self-contained: does NOT depend on Tailwind custom-color tokens.
+*/
+
+.rehab-calc {
+  /* Light-theme island within the host app */
+  background: #FFFFFF;
+  color: #0F172A; /* slate-900 */
+  border-radius: 14px;
+  padding: 20px;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-weight: 400;
+  letter-spacing: normal;
+  line-height: 1.5;
+}
+
+/* Re-establish normal text rendering inside the calc (host may override) */
+.rehab-calc * { box-sizing: border-box; }
+.rehab-calc h1, .rehab-calc h2, .rehab-calc h3, .rehab-calc h4 { color: #0C2340; }
+
+/* Color utility shims used by the calculator JSX (not in host's Tailwind theme) */
+.rehab-calc .text-navy     { color: #0C2340; }
+.rehab-calc .bg-navy       { background-color: #0C2340; }
+.rehab-calc .text-navyMid  { color: #0F4C81; }
+.rehab-calc .bg-navyMid    { background-color: #0F4C81; }
+.rehab-calc .text-teal     { color: #0EA5E9; }
+.rehab-calc .bg-teal       { background-color: #0EA5E9; }
+.rehab-calc .border-teal   { border-color: #0EA5E9; }
+.rehab-calc .text-green    { color: #10B981; }
+.rehab-calc .bg-greenBg    { background-color: #ECFDF5; }
+.rehab-calc .text-red      { color: #DC2626; }
+.rehab-calc .bg-redBg      { background-color: #FEF2F2; }
+.rehab-calc .border-red    { border-color: #DC2626; }
+.rehab-calc .text-amber    { color: #F59E0B; }
+.rehab-calc .bg-amberBg    { background-color: #FFFBEB; }
+.rehab-calc .border-borderClr { border-color: #E2E8F0; }
+
+/* Opacity variants used by the JSX (e.g., border-teal/30, bg-teal/5, border-red/40) */
+.rehab-calc .border-teal\/20  { border-color: rgba(14, 165, 233, 0.20); }
+.rehab-calc .border-teal\/30  { border-color: rgba(14, 165, 233, 0.30); }
+.rehab-calc .bg-teal\/5       { background-color: rgba(14, 165, 233, 0.05); }
+.rehab-calc .from-teal\/10    { --tw-gradient-from: rgba(14, 165, 233, 0.10); }
+.rehab-calc .to-navyMid\/10   { --tw-gradient-to: rgba(15, 76, 129, 0.10); }
+.rehab-calc .border-red\/40   { border-color: rgba(220, 38, 38, 0.40); }
+.rehab-calc .border-borderClr\/50 { border-color: rgba(226, 232, 240, 0.50); }
+
+/* Slate scale used heavily by the calc (host may not have all these) */
+.rehab-calc .text-slate-400 { color: #94A3B8; }
+.rehab-calc .text-slate-500 { color: #64748B; }
+.rehab-calc .text-slate-600 { color: #475569; }
+.rehab-calc .text-slate-700 { color: #334155; }
+.rehab-calc .text-slate-800 { color: #1E293B; }
+.rehab-calc .text-slate-900 { color: #0F172A; }
+.rehab-calc .bg-slate-50    { background-color: #F8FAFC; }
+.rehab-calc .hover\:bg-slate-50:hover { background-color: #F8FAFC; }
+
+/* Component primitives ported from the calculator's @layer components */
+.rehab-calc .card {
+  background: #FFFFFF;
+  border-radius: 12px;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  padding: 24px;
+}
+.rehab-calc .card.\!p-4 { padding: 16px; }
+
+.rehab-calc .label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+}
+
+.rehab-calc .input,
+.rehab-calc .select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  font-size: 14px;
+  background: #FFFFFF;
+  color: #0F172A;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.rehab-calc .input:focus,
+.rehab-calc .select:focus {
+  outline: none;
+  border-color: #0EA5E9;
+  box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.2);
+}
+.rehab-calc .input.min-h-\[80px\] { min-height: 80px; resize: vertical; font-family: inherit; }
+
+.rehab-calc .btn-primary {
+  padding: 8px 16px;
+  background: #0F4C81;
+  color: #FFFFFF;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+.rehab-calc .btn-primary:hover { background: #0C2340; }
+
+.rehab-calc .btn-secondary {
+  padding: 8px 16px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  color: #334155;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.rehab-calc .btn-secondary:hover { background: #F8FAFC; }
+
+.rehab-calc .result-primary {
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.10), rgba(15, 76, 129, 0.10));
+  border: 1px solid rgba(14, 165, 233, 0.30);
+  border-radius: 8px;
+  padding: 16px;
+}
+.rehab-calc .result-box {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+/* Table tweaks — guard against host CSS resets */
+.rehab-calc table { border-collapse: collapse; width: 100%; }
+.rehab-calc th, .rehab-calc td { padding: 6px 0; vertical-align: middle; }
