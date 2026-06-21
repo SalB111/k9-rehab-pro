@@ -386,17 +386,15 @@ function ExerciseCard({ e, onOpenStoryboard, onUseInProtocol, onPrintHandout }) 
 
           {/* Storyboard Button â€" only when storyboard exists */}
           {e.client_education?.storyboard_available && onOpenStoryboard && (
-            <button onClick={undefined}
+            <button onClick={(ev) => { ev.stopPropagation(); onOpenStoryboard(e.code); }}
               style={{
                 marginTop: 12, width: "100%", padding: "10px 16px", borderRadius: 8,
                 background: `linear-gradient(135deg, ${C.green}, ${C.teal})`,
                 color: C.surface, border: "none",
                 fontSize: 12, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                boxShadow: "0 2px 8px rgba(14,165,233,0.3)",
-                opacity: 0.5, pointerEvents: "none",
+                boxShadow: "0 2px 8px rgba(14,165,233,0.3)", cursor: "pointer",
               }}>
               <FiMonitor size={14} /> {tr("View Exercise Storyboard")}
-              <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 4, background: C.amberBg, color: C.amber, border: `1px solid ${C.amber}`, marginLeft: 4 }}>{tr("Coming Soon")}</span>
             </button>
           )}
 

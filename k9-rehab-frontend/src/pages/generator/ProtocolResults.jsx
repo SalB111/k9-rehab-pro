@@ -2,12 +2,13 @@ import React, { useState, useMemo, useCallback } from "react";
 import api from "../../api/axios";
 import {
   FiShield, FiPrinter, FiPlus, FiAlertTriangle, FiCheckCircle,
-  FiCalendar, FiFileText, FiHeart, FiAward, FiSearch, FiChevronDown
+  FiCalendar, FiFileText, FiHeart, FiAward, FiSearch, FiChevronDown, FiFilm
 } from "react-icons/fi";
 import C from "../../constants/colors";
 import S from "../../constants/styles";
 import ProtocolExCard from "../../components/ProtocolExCard";
 import StoryboardPlayer from "../../components/StoryboardPlayer";
+import StoryboardPacket from "../../components/StoryboardPacket";
 import AnatomyViewer3D from "../../components/AnatomyViewer3D";
 import { CLINIC_ONLY_CODES } from "./constants";
 import { useTr } from "../../i18n/useTr";
@@ -17,6 +18,7 @@ const PrintableHandout = React.lazy(() => import("../../components/handout/Print
 export default function ProtocolResults({ protocol, setProtocol, setWizardStep, removeExercise, setAddingToWeek, setShowAddModal, showStoryboard, setShowStoryboard }) {
   const tr = useTr();
   const [showHandout, setShowHandout] = useState(false);
+  const [showStoryPacket, setShowStoryPacket] = useState(false);
   const [hepOpen, setHepOpen] = useState({});
   const [showSafetyReport, setShowSafetyReport] = useState(false);
   const [safetyReport, setSafetyReport] = useState({ type: "", exercise: "", description: "", severity: "moderate" });
@@ -62,6 +64,15 @@ export default function ProtocolResults({ protocol, setProtocol, setWizardStep, 
     <div className="print-protocol">
       {/* Storyboard Player Modal */}
       {showStoryboard && <StoryboardPlayer exerciseCode={showStoryboard} onClose={() => setShowStoryboard(null)} />}
+      {/* Multi-exercise Storyboard Packet (print / save PDF / email) */}
+      {showStoryPacket && (
+        <StoryboardPacket
+          exercises={hepExercises}
+          patientName={protocol.patient_name}
+          clientEmail={protocol.client_email || protocol.clientEmail || ""}
+          onClose={() => setShowStoryPacket(false)}
+        />
+      )}
       {/* Printable Handout Modal */}
       {showHandout && (
         <React.Suspense fallback={null}>
@@ -107,6 +118,15 @@ export default function ProtocolResults({ protocol, setProtocol, setWizardStep, 
             borderColor: C.teal, color: C.teal,
           }}>
             <FiFileText size={12} /> {tr("Owner Handout")}
+          </button>
+        )}
+        {hepExercises.length > 0 && (
+          <button onClick={() => setShowStoryPacket(true)} style={{
+            ...S.btn("outline"), fontSize: 11, padding: "6px 14px",
+            display: "flex", alignItems: "center", gap: 6,
+            borderColor: C.green, color: C.green,
+          }}>
+            <FiFilm size={12} /> {tr("Storyboard Packet")}
           </button>
         )}
         <button onClick={() => {

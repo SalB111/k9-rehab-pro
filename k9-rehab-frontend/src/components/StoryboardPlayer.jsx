@@ -7,7 +7,7 @@ import S from "../constants/styles";
 // ─────────────────────────────────────────────
 // SVG OVERLAY LAYER — Anatomical indicators for storyboard frames
 // ─────────────────────────────────────────────
-function SvgOverlayLayer({ indicators, overlayToggles, width, height }) {
+export function SvgOverlayLayer({ indicators, overlayToggles, width, height }) {
   if (!indicators || indicators.length === 0) return null;
 
   // Map SVG indicator types to overlay toggle groups
@@ -102,7 +102,7 @@ const BREED_API_MAP = {
 // In-memory cache so the same breed doesn't re-fetch across frames
 const breedImageCache = {};
 
-function BreedImage({ breedName, exerciseCode, frameNumber, accentColor = '#39FF7E' }) {
+export function BreedImage({ breedName, exerciseCode, frameNumber, accentColor = '#39FF7E' }) {
   const [imageUrl, setImageUrl] = useState(null);
   const [imgLoaded, setImgLoaded] = useState(false);
   const [imgError, setImgError] = useState(false);
