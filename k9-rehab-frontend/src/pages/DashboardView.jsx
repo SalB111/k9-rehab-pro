@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo, createContext, useContext } from "react";
+import AnatomyViewer3D from "../components/AnatomyViewer3D";
 import { useTranslation } from "react-i18next";
 import i18n, { SUPPORTED_LOCALES } from "../i18n";
 import { useTr, slugField } from "../i18n/useTr";
@@ -3192,98 +3193,28 @@ function PetCareNutritionPanel() {
 // statement describing the feature, and feature preview chips.
 // No form fields — purely marketing/communication content for the Mars pitch.
 function ComingSoonPanel() {
+  const [species, setSpecies] = useState("Canine");
   return <>
-    <style dangerouslySetInnerHTML={{ __html: `
-      @keyframes k9ComingSoonFloat {
-        0%,100% { transform: translateY(0px); }
-        50%     { transform: translateY(-8px); }
-      }
-      .k9-cs-float-a { animation: k9ComingSoonFloat 5s ease-in-out infinite; }
-      .k9-cs-float-b { animation: k9ComingSoonFloat 5s ease-in-out infinite; animation-delay: 2.5s; }
-    `}}/>
-
-    {/* ── TOP SECTION — Two holographic X-ray images side by side ── */}
-    <div style={{
-      background: "#050810",
-      borderRadius: 12,
-      padding: "24px 20px",
-      marginBottom: 18,
-      border: "1px solid rgba(0,229,255,0.2)",
-      boxShadow: "0 0 30px rgba(0,229,255,0.08)",
-    }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 16, flexWrap: "wrap" }}>
-        <div style={{ width: "45%", minWidth: 180, textAlign: "center" }}>
-          <img
-            src="/assets/holographic/dog-holographic.png"
-            alt="Canine holographic anatomy preview"
-            className="k9-cs-float-a"
-            style={{
-              width: "100%",
-              height: "auto",
-              maxHeight: 220,
-              objectFit: "contain",
-              filter: "drop-shadow(0 0 15px rgba(0,229,255,0.5))",
-              willChange: "transform",
-            }}
-          />
-          <div style={{
-            fontSize: 10, fontWeight: 700, color: "#00e5ff",
-            fontFamily: "monospace", letterSpacing: 2, marginTop: 8,
-            textTransform: "uppercase",
-          }}>
-            Canine · Skeletal Model
-          </div>
-        </div>
-        <div style={{ width: "45%", minWidth: 180, textAlign: "center" }}>
-          <img
-            src="/assets/holographic/cat-holographic.png"
-            alt="Feline holographic anatomy preview"
-            className="k9-cs-float-b"
-            style={{
-              width: "100%",
-              height: "auto",
-              maxHeight: 220,
-              objectFit: "contain",
-              filter: "drop-shadow(0 0 15px rgba(0,229,255,0.5))",
-              willChange: "transform",
-            }}
-          />
-          <div style={{
-            fontSize: 10, fontWeight: 700, color: "#00e5ff",
-            fontFamily: "monospace", letterSpacing: 2, marginTop: 8,
-            textTransform: "uppercase",
-          }}>
-            Feline · Skeletal Model
-          </div>
-        </div>
-      </div>
-    </div>
-
-    {/* ── MIDDLE SECTION — Professional statement ── */}
+    {/* ── Live 3D Clinical Anatomy Viewer ── */}
     <Sec title="B.E.A.U. 3D Clinical Anatomy Viewer" color={C.teal} colorLt={C.tealLt}>
       <div style={{
-        padding: "18px 22px",
+        padding: "16px 20px",
         background: "linear-gradient(135deg, #F0FDFB 0%, #FFFFFF 100%)",
         border: `1px solid ${C.teal}33`,
         borderLeft: `4px solid ${C.teal}`,
         borderRadius: 8,
-        fontSize: 12, color: C.text, lineHeight: 1.75,
+        fontSize: 12, color: C.text, lineHeight: 1.75, marginBottom: 16,
       }}>
         <div style={{
           fontSize: 11, fontWeight: 700, color: C.teal,
-          letterSpacing: ".12em", textTransform: "uppercase",
-          marginBottom: 10,
+          letterSpacing: ".12em", textTransform: "uppercase", marginBottom: 10,
         }}>
-          Coming to K9 Rehab Pro&trade;
+          Now Live in K9 Rehab Pro&trade;
         </div>
         <p style={{ margin: "0 0 12px" }}>
-          The next evolution in veterinary rehabilitation intelligence. Select any exercise and watch
-          B.E.A.U. illuminate the exact muscle groups, joint structures, and anatomical regions
-          being targeted &mdash; in real-time, interactive 3D holographic visualization.
-        </p>
-        <p style={{ margin: "0 0 12px" }}>
-          Canine and feline anatomical models with precise muscle group mapping, evidence-based
-          exercise correlation, and species-specific skeletal overlay technology.
+          Real anatomical 3D models of the canine and feline patient &mdash; drag to rotate, scroll to zoom.
+          Open any exercise in the <b>Exercise Library</b> and B.E.A.U. illuminates the exact muscle groups,
+          joint structures, and anatomical regions it targets, in real time.
         </p>
         <div style={{
           paddingTop: 10, marginTop: 10,
@@ -3293,19 +3224,38 @@ function ComingSoonPanel() {
           Powered by B.E.A.U. AI &middot; Millis &amp; Levine Evidence-Based Protocols
         </div>
       </div>
+
+      {/* species toggle */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+        {["Canine", "Feline"].map(sp => {
+          const active = species === sp;
+          return (
+            <button key={sp} onClick={() => setSpecies(sp)}
+              style={{
+                flex: 1, padding: "9px 14px", borderRadius: 8, cursor: "pointer",
+                fontSize: 12, fontWeight: 700,
+                background: active ? C.teal : "#fff",
+                color: active ? "#fff" : C.text,
+                border: `1px solid ${active ? C.teal : C.border}`,
+                transition: "all .15s",
+              }}>
+              {sp === "Feline" ? "🐈 Feline" : "🐕 Canine"}
+            </button>
+          );
+        })}
+      </div>
+
+      <AnatomyViewer3D key={species} species={species} />
     </Sec>
 
-    {/* ── BOTTOM SECTION — Feature preview chips ── */}
-    <Sec title="Feature Preview" color={C.teal} colorLt={C.tealLt}>
-      <div style={{ fontSize: 11, color: C.muted, marginBottom: 12, lineHeight: 1.6 }}>
-        What you&apos;ll see in the full 3D Clinical Anatomy Viewer release:
-      </div>
+    {/* ── Features ── */}
+    <Sec title="Features" color={C.teal} colorLt={C.tealLt}>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
         {[
           "Real-time muscle highlighting",
           "Species-aware canine & feline models",
           "Exercise-to-anatomy correlation",
-          "Interactive 3D rotation",
+          "Interactive 3D rotation & zoom",
           "Evidence-based overlay system",
         ].map(feature => (
           <div key={feature} style={{
@@ -3689,7 +3639,7 @@ const BEAU_BLOCK_CONTEXTS = {
   goals:        "You are helping set rehabilitation goals — SMART goals, phase-appropriate milestones, validated outcome measures, realistic timeline expectations based on condition and evidence.",
   conditioning: "You are helping with conditioning programs — progressive overload, sport-specific training, return-to-function criteria, fitness maintenance protocols.",
   nutrition: "You are helping with therapeutic diet selection — Mars PetCare / Royal Canin / Hill's / Purina Pro Plan veterinary diets. Factor in BCS, species, life stage, medical condition, and weight management needs. Reference Waltham science where applicable.",
-  "coming-soon": "You are previewing the upcoming 3D Clinical Anatomy Viewer — a holographic, interactive anatomy visualization feature in development. Help clinicians understand what the feature will offer when released.",
+  "coming-soon": "You are assisting with the live 3D Clinical Anatomy Viewer — a real-time, interactive 3D anatomy visualization of the canine and feline patient. Help clinicians use it: rotate/zoom the model, select an exercise in the Exercise Library to highlight the targeted muscles and joints, and interpret the anatomy clinically.",
 };
 
 export default function DashboardView({ setView, currentUser, onLogout, patient, setSelectedPatient }) {
