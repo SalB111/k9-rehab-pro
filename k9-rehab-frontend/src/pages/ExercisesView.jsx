@@ -8,6 +8,7 @@ import S from "../constants/styles";
 import { API } from "../api/axios";
 import { getK9Icon } from "../K9Icons";
 import StoryboardPlayer from "../components/StoryboardPlayer";
+import StoryboardPacket from "../components/StoryboardPacket";
 import AnatomyViewer3D from "../components/AnatomyViewer3D";
 import { useToast } from "../components/Toast";
 import { useTr } from "../i18n/useTr";
@@ -547,8 +548,8 @@ function ExercisesView({ setView, setGenKey, setGenInitialStep }) {
 
   return (
     <div>
-      {/* Storyboard Player Modal */}
-      {showStoryboard && <StoryboardPlayer exerciseCode={showStoryboard} onClose={() => setShowStoryboard(null)} />}
+      {/* Exercise Handout (instructions + sketch step-by-step) */}
+      {showStoryboard && <StoryboardPacket exercises={[{ code: showStoryboard }]} onClose={() => setShowStoryboard(null)} />}
       {/* Printable Handout Modal */}
       {handoutExercises && (
         <React.Suspense fallback={null}>

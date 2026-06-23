@@ -106,65 +106,49 @@ export function BreedImage({ breedName, exerciseCode, frameNumber, accentColor =
   const [imageUrl, setImageUrl] = useState(null);
   const [imgLoaded, setImgLoaded] = useState(false);
   const [imgError, setImgError] = useState(false);
-  const [generating, setGenerating] = useState(false);
+
+  const cacheKey = exerciseCode && frameNumber ? `${exerciseCode}_f${frameNumber}` : breedName;
+
+  // Fallback: a real breed photo from Dog.CEO when no pre-generated image exists
+  const loadBreedPhoto = () => {
+    const apiPath = BREED_API_MAP[breedName] || BREED_API_MAP['Medium-sized dog'];
+    if (!apiPath) { setImgError(true); return; }
+    fetch(`https://dog.ceo/api/breed/${apiPath}/images/random`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.status === 'success' && data.message) {
+          breedImageCache[cacheKey] = data.message;
+          setImgError(false);
+          setImageUrl(data.message);
+        } else { setImgError(true); }
+      })
+      .catch(() => setImgError(true));
+  };
+
+  // Backend lazy-generation endpoint — produces the same evidence-based pencil
+  // sketch on first open for exercises not yet baked into the static layer.
+  const lazyUrl = exerciseCode && frameNumber
+    ? `${API}/storyboards/${exerciseCode}/frame/${frameNumber}.png`
+    : null;
 
   useEffect(() => {
     setImgLoaded(false);
     setImgError(false);
-
-    // Cache key includes exercise + frame for AI-generated images
-    const cacheKey = exerciseCode && frameNumber ? `${exerciseCode}_f${frameNumber}` : breedName;
-    if (breedImageCache[cacheKey]) {
-      setImageUrl(breedImageCache[cacheKey]);
+    if (breedImageCache[cacheKey]) { setImageUrl(breedImageCache[cacheKey]); return; }
+    // Prefer the pre-generated, evidence-based static storyboard image.
+    // onError walks the chain: static → backend lazy-gen → breed photo.
+    if (exerciseCode && frameNumber) {
+      setImageUrl(`/assets/storyboard/${exerciseCode}/frame-${frameNumber}.png`);
       return;
     }
-
-    // Try AI-generated image from backend first (if exerciseCode provided)
-    if (exerciseCode && frameNumber) {
-      setGenerating(true);
-      fetch(`${API}/storyboard-images/${exerciseCode}/${frameNumber}`)
-        .then(r => {
-          if (r.ok && r.headers.get('content-type')?.includes('image')) {
-            return r.blob();
-          }
-          throw new Error('Not cached yet');
-        })
-        .then(blob => {
-          const url = URL.createObjectURL(blob);
-          breedImageCache[cacheKey] = url;
-          setImageUrl(url);
-          setGenerating(false);
-        })
-        .catch(() => {
-          // Fall back to Dog.CEO breed photo
-          setGenerating(false);
-          const apiPath = BREED_API_MAP[breedName] || BREED_API_MAP['Medium-sized dog'];
-          if (apiPath) {
-            fetch(`https://dog.ceo/api/breed/${apiPath}/images/random`)
-              .then(r => r.json())
-              .then(data => {
-                if (data.status === 'success' && data.message) {
-                  breedImageCache[cacheKey] = data.message;
-                  setImageUrl(data.message);
-                } else { setImgError(true); }
-              })
-              .catch(() => setImgError(true));
-          } else { setImgError(true); }
-        });
-    } else {
-      // No exercise context — use Dog.CEO directly
-      const apiPath = BREED_API_MAP[breedName] || BREED_API_MAP['Medium-sized dog'];
-      fetch(`https://dog.ceo/api/breed/${apiPath}/images/random`)
-        .then(r => r.json())
-        .then(data => {
-          if (data.status === 'success' && data.message) {
-            breedImageCache[cacheKey] = data.message;
-            setImageUrl(data.message);
-          } else { setImgError(true); }
-        })
-        .catch(() => setImgError(true));
-    }
+    loadBreedPhoto();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [breedName, exerciseCode, frameNumber]);
+
+  const isStaticImg = imageUrl && imageUrl.startsWith('/assets/storyboard/');
+  const isLazyImg = imageUrl && lazyUrl && imageUrl === lazyUrl;
+  // Both static and backend-generated images are clean pencil sketches.
+  const isSketchImg = isStaticImg || isLazyImg;
 
   return (
     <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
@@ -173,27 +157,32 @@ export function BreedImage({ breedName, exerciseCode, frameNumber, accentColor =
         <div style={{ position: "absolute", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
           <div style={{ width: 28, height: 28, borderRadius: "50%", border: `2px solid rgba(255,255,255,0.15)`, borderTopColor: accentColor, animation: "spin 0.8s linear infinite" }} />
           <span style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", fontWeight: 500 }}>
-            {generating ? 'Generating exercise image...' : `Loading ${breedName}...`}
+            Loading…
           </span>
         </div>
       )}
-      {/* Exercise / breed photo */}
+      {/* Pre-generated storyboard image (preferred) or breed-photo fallback */}
       {imageUrl && (
         <img
           src={imageUrl}
           alt={`${breedName} - exercise demonstration`}
           onLoad={() => setImgLoaded(true)}
-          onError={() => { setImgError(true); setImageUrl(null); }}
+          onError={() => {
+            // static (Vercel) → backend lazy-gen → breed photo
+            if (isStaticImg && lazyUrl) { setImgLoaded(false); setImageUrl(lazyUrl); }
+            else if (isSketchImg) { setImgLoaded(false); loadBreedPhoto(); }
+            else { setImgError(true); setImageUrl(null); }
+          }}
           style={{
             width: "100%", height: "100%", objectFit: "cover",
-            opacity: imgLoaded ? 0.6 : 0,
+            opacity: imgLoaded ? (isSketchImg ? 1 : 0.6) : 0,
             transition: "opacity 0.5s ease",
-            filter: "saturate(0.8) contrast(1.05)",
+            filter: isSketchImg ? "none" : "saturate(0.8) contrast(1.05)",
           }}
         />
       )}
-      {/* Gradient overlays for text readability */}
-      {imgLoaded && (
+      {/* Gradient overlays for text readability — breed photos only */}
+      {imgLoaded && !isSketchImg && (
         <>
           <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(10,37,64,0.55) 0%, rgba(10,37,64,0.15) 40%, rgba(10,37,64,0.5) 100%)" }} />
           <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(15,52,96,0.25) 0%, transparent 50%)" }} />

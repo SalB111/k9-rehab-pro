@@ -39,6 +39,15 @@ export default function App() {
     }
   }, [authToken]);
 
+  // Auto sign-out: when a request 401s (expired/invalid session), axios clears
+  // the token and fires this event — drop to the login screen instead of
+  // rendering empty/broken pages.
+  useEffect(() => {
+    const onExpired = () => { setAuthToken(null); setCurrentUser(null); };
+    window.addEventListener("k9:session-expired", onExpired);
+    return () => window.removeEventListener("k9:session-expired", onExpired);
+  }, []);
+
   async function handleLogin(username, password) {
     try {
       const res = await loginService(username, password);

@@ -22,6 +22,26 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+// Auto sign-out on an expired/invalid session: when an authenticated request
+// comes back 401, clear the dead token and tell the app to show the login
+// screen (instead of silently rendering empty/broken pages). The login and
+// register calls are exempt so "invalid credentials" still surfaces normally.
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const status = error?.response?.status;
+    const url = error?.config?.url || "";
+    const isAuthCall = url.includes("/auth/login") || url.includes("/auth/register");
+    if (status === 401 && !isAuthCall && localStorage.getItem("token")) {
+      try { localStorage.removeItem("token"); } catch { /* ignore */ }
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("k9:session-expired"));
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 // --- Auth helpers for App.jsx ---
 export const setupAxiosAuth = (token) => {
   if (token) {

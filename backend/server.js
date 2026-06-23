@@ -811,6 +811,46 @@ app.get("/api/storyboards/:code", requireAuth, (req, res) => {
   }
 });
 
+// Lazy on-demand pencil-sketch for one storyboard frame. Public (served into an
+// <img>, which can't carry an auth header) but bounded: only real exercise codes
+// + in-range frame numbers generate, and each result is cached so repeat hits are
+// free. Pre-rendered Vercel static assets are tried first by the client; this is
+// the fallback that fills the long tail the first time a handout is opened.
+const { getFrameImage } = require("./storyboard-image-gen");
+const _sbImageInFlight = new Map(); // de-dupe concurrent requests for the same frame
+app.get("/api/storyboards/:code/frame/:n.png", async (req, res) => {
+  try {
+    const code = req.params.code;
+    const frameNumber = parseInt(req.params.n, 10);
+    if (!code || !Number.isInteger(frameNumber)) {
+      return res.status(400).json({ success: false, error: "Bad request" });
+    }
+    const exercise = TAGGED_EXERCISES.find(e => e.code === code);
+    const sb = getOrGenerateStoryboard(code, exercise);
+    const frame = sb?.frames?.find(f => f.frame_number === frameNumber);
+    if (!sb || !frame) {
+      return res.status(404).json({ success: false, error: "Frame not found" });
+    }
+
+    const key = `${code}:${frameNumber}`;
+    let task = _sbImageInFlight.get(key);
+    if (!task) {
+      task = getFrameImage({ code, sb, frame, category: exercise?.category })
+        .finally(() => _sbImageInFlight.delete(key));
+      _sbImageInFlight.set(key, task);
+    }
+    const { buffer, cached } = await task;
+
+    res.set("Content-Type", "image/png");
+    res.set("Cache-Control", "public, max-age=31536000, immutable");
+    res.set("X-Sketch-Cache", cached ? "hit" : "miss");
+    return res.send(buffer);
+  } catch (err) {
+    console.error("Storyboard frame image failed:", err.message);
+    return res.status(502).json({ success: false, error: "Image generation unavailable" });
+  }
+});
+
 // ---------------------------------------------------------------------------
 // Safety / adverse-event reporting
 // Required by CLAUDE.md Regulatory Framework § Adverse Event Reporting.
