@@ -9,6 +9,7 @@ import S from "../../constants/styles";
 import ProtocolExCard from "../../components/ProtocolExCard";
 import StoryboardPlayer from "../../components/StoryboardPlayer";
 import StoryboardPacket from "../../components/StoryboardPacket";
+import BeauBrainPanel from "../../components/BeauBrainPanel";
 import AnatomyViewer3D from "../../components/AnatomyViewer3D";
 import { CLINIC_ONLY_CODES } from "./constants";
 import { useTr } from "../../i18n/useTr";
@@ -19,6 +20,7 @@ export default function ProtocolResults({ protocol, setProtocol, setWizardStep, 
   const tr = useTr();
   const [showHandout, setShowHandout] = useState(false);
   const [showStoryPacket, setShowStoryPacket] = useState(false);
+  const [showBeauBrain, setShowBeauBrain] = useState(false);
   const [hepOpen, setHepOpen] = useState({});
   const [showSafetyReport, setShowSafetyReport] = useState(false);
   const [safetyReport, setSafetyReport] = useState({ type: "", exercise: "", description: "", severity: "moderate" });
@@ -71,6 +73,19 @@ export default function ProtocolResults({ protocol, setProtocol, setWizardStep, 
           patientName={protocol.patient_name}
           clientEmail={protocol.client_email || protocol.clientEmail || ""}
           onClose={() => setShowStoryPacket(false)}
+        />
+      )}
+      {/* Beau's Brain — shared clinical engine, two voices */}
+      {showBeauBrain && (
+        <BeauBrainPanel
+          patientName={protocol.patient_name}
+          species={protocol.species || "Canine"}
+          diagnosis={protocol.condition || protocol.diagnosis}
+          affectedRegion={protocol.affected_region}
+          treatmentApproach={protocol.treatment_approach || protocol.protocol_type}
+          week={1}
+          totalWeeks={totalWeeks}
+          onClose={() => setShowBeauBrain(false)}
         />
       )}
       {/* Printable Handout Modal */}
@@ -129,6 +144,13 @@ export default function ProtocolResults({ protocol, setProtocol, setWizardStep, 
             <FiFilm size={12} /> {tr("Storyboard Packet")}
           </button>
         )}
+        <button onClick={() => setShowBeauBrain(true)} style={{
+          ...S.btn("outline"), fontSize: 11, padding: "6px 14px",
+          display: "flex", alignItems: "center", gap: 6,
+          borderColor: C.purple || "#a855f7", color: C.purple || "#a855f7",
+        }}>
+          🧠 {tr("Beau's Brain")}
+        </button>
         <button onClick={() => {
           setProtocol(null);
           setWizardStep(1);

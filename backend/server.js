@@ -852,6 +852,24 @@ app.get("/api/storyboards/:code/frame/:n.png", async (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
+// Beau's Brain — the shared clinical engine. ONE verified evidence base, TWO
+// strictly-separated voices: clinical (K9 Rehab Pro / B2B) and consumer
+// (B.E.A.U. at Home / B2C). Deterministic + zero-hallucination: the plan is
+// generated from protocol-generator.js + all-exercises.js, never invented.
+// ---------------------------------------------------------------------------
+const beauBrain = require("./beau-brain");
+app.post("/api/beau-brain/protocol", requireAuth, (req, res) => {
+  try {
+    const voice = req.body?.voice || "both";
+    const out = beauBrain.generate(req.body || {}, { voice });
+    res.json({ success: true, ...out });
+  } catch (err) {
+    console.error("Beau's Brain generate failed:", err.message);
+    res.status(500).json({ success: false, error: "Beau's Brain is temporarily unavailable" });
+  }
+});
+
+// ---------------------------------------------------------------------------
 // Safety / adverse-event reporting
 // Required by CLAUDE.md Regulatory Framework § Adverse Event Reporting.
 // Storage: safety_events table. Retention: 7 years (state board rules).
