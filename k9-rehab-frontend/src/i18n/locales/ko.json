@@ -50,7 +50,7 @@
     },
     "diet": {
       "label": "식이 결정 지원",
-      "desc": "Mars Petcare 치료식 포트폴리오"
+      "desc": "수의학 치료식 포트폴리오"
     },
     "equipment": {
       "label": "클리닉 장비",
@@ -82,7 +82,7 @@
     },
     "nutrition": {
       "label": "PetCare 영양",
-      "desc": "치료식 추천 · Mars PetCare"
+      "desc": "치료식 추천 · 모든 제조사"
     },
     "coming-soon": {
       "label": "3D 임상 해부학 뷰어",
@@ -122,7 +122,7 @@
   "diet": {
     "blockTitle": "치료식 결정 지원",
     "featureGateTitle": "B.E.A.U. 영양 결정 지원",
-    "marsPortfolioFooter": "Mars Petcare 치료식 카탈로그",
+    "marsPortfolioFooter": "수의학 치료식 카탈로그",
     "categories": {
       "gi": "소화기계 지원",
       "renal": "신장 지원 및 비뇨기 건강",

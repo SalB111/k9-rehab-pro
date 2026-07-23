@@ -662,7 +662,7 @@ function Modal({ title, color, colorLt, icon, onClose, children, beauContext, be
 // `k9rp_lang`) through the i18next LanguageDetector caches config.
 //
 // Scope note: this only changes the UI chrome. Clinical content, AI output,
-// exercise library entries, protocol generation, and the Mars Petcare diet
+// exercise library entries, protocol generation, and the veterinary diet
 // catalog remain in English across all locales (CLAUDE.md safety rule).
 export function LanguageSelector() {
   const { t, i18n: i18nInstance } = useTranslation();
@@ -3172,8 +3172,8 @@ function PetCareNutritionPanel() {
       )}
     </Sec>
 
-    {/* ── Mars PetCare Links ── */}
-    <Sec title="Mars PetCare Catalog" color="#059669" colorLt="#ECFDF5">
+    {/* ── Veterinary Diet Links ── */}
+    <Sec title="Veterinary Diet Catalog" color="#059669" colorLt="#ECFDF5">
       <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:8 }}>
         {["Royal Canin Veterinary Diets","Hill's Prescription Diet","Purina Pro Plan Veterinary Diets"].map(brand => (
           <div key={brand} style={{

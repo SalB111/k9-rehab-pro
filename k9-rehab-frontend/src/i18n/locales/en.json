@@ -53,7 +53,7 @@
     },
     "diet": {
       "label": "Diet Decision Support",
-      "desc": "Mars Petcare therapeutic portfolio"
+      "desc": "Veterinary therapeutic diet portfolio"
     },
     "equipment": {
       "label": "Clinic Equipment",
@@ -81,7 +81,7 @@
     },
     "nutrition": {
       "label": "PetCare Nutrition",
-      "desc": "Therapeutic diet recommendations · Mars PetCare"
+      "desc": "Therapeutic diet recommendations · any manufacturer"
     },
     "coming-soon": {
       "label": "3D Clinical Anatomy Viewer",
@@ -122,7 +122,7 @@
     "blockTitle": "Therapeutic Diet Decision Support",
     "featureGateTitle": "B.E.A.U. Nutritional Decision Support",
     "categoryCount": "{{count}} categories · {{brands}} brands · {{products}} product lines",
-    "marsPortfolioFooter": "Mars Petcare Therapeutic Catalog",
+    "marsPortfolioFooter": "Veterinary Therapeutic Diet Catalog",
     "categories": {
       "gi": "Gastrointestinal & Digestive Support",
       "renal": "Renal Support & Urinary Health",
@@ -208,10 +208,10 @@
     "vetReviewOnly": "For licensed veterinarian review — consult product insert for contraindications, adverse reactions, and species-specific formulation.",
     "stopCallVet": "STOP IMMEDIATELY AND CALL YOUR VET IF:",
     "notSubstitute": "This does not replace veterinary care.",
-    "dietScopeBanner": "B.E.A.U. surfaces therapeutic product lines from the Mars Petcare portfolio for clinician review. It does not diagnose, prescribe, or auto-select therapeutic diets. All product decisions require licensed veterinarian judgment. Equivalent therapeutic diets from other veterinary formularies may be substituted per clinic policy and clinician judgment.",
+    "dietScopeBanner": "B.E.A.U. surfaces therapeutic product lines from major veterinary diet manufacturers (Mars Petcare/Royal Canin, Hill's, Purina Pro Plan, and others) for clinician review. It does not diagnose, prescribe, or auto-select therapeutic diets. All product decisions require licensed veterinarian judgment. Equivalent therapeutic diets from other veterinary formularies may be substituted per clinic policy and clinician judgment.",
     "dietScopeHeader": "Therapeutic Diet Decision Support · Licensed Veterinarian Review Only",
     "equivalentDiets": "Equivalent therapeutic diets from Hill's Prescription Diet, Purina Pro Plan Veterinary Diets, and Blue Buffalo Natural Veterinary Diet may be substituted per clinician judgment.",
-    "neverAutoSelect": "B.E.A.U. presents clinician-reviewable options; B.E.A.U. never auto-selects or prescribes. Brand surfacing is logged to support Mars Petcare integration analytics."
+    "neverAutoSelect": "B.E.A.U. presents clinician-reviewable options; B.E.A.U. never auto-selects or prescribes. Brand surfacing is logged to support diet-recommendation analytics."
   },
   "fields": {
     "client_information": "Client Information",

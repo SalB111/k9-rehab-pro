@@ -50,7 +50,7 @@
     },
     "diet": {
       "label": "饮食决策支持",
-      "desc": "Mars Petcare 治疗性产品组合"
+      "desc": "兽医治疗性产品组合"
     },
     "equipment": {
       "label": "诊所设备",
@@ -82,7 +82,7 @@
     },
     "nutrition": {
       "label": "PetCare营养",
-      "desc": "治疗饮食建议 · Mars PetCare"
+      "desc": "治疗饮食建议 · 任何制造商"
     },
     "coming-soon": {
       "label": "3D临床解剖查看器",
@@ -122,7 +122,7 @@
   "diet": {
     "blockTitle": "治疗性饮食决策支持",
     "featureGateTitle": "B.E.A.U. 营养决策支持",
-    "marsPortfolioFooter": "Mars Petcare 治疗性产品目录",
+    "marsPortfolioFooter": "兽医治疗性产品目录",
     "categories": {
       "gi": "胃肠道与消化支持",
       "renal": "肾脏支持与泌尿健康",

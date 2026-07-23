@@ -50,7 +50,7 @@
     },
     "diet": {
       "label": "Voedingsbeslissings-ondersteuning",
-      "desc": "Mars Petcare therapeutisch portfolio"
+      "desc": "Diergeneeskundig therapeutisch portfolio"
     },
     "equipment": {
       "label": "Klinische Apparatuur",
@@ -82,7 +82,7 @@
     },
     "nutrition": {
       "label": "PetCare Voeding",
-      "desc": "Therapeutische dieetaanbevelingen · Mars PetCare"
+      "desc": "Therapeutische dieetaanbevelingen · elke fabrikant"
     },
     "coming-soon": {
       "label": "3D Klinische Anatomie Viewer",
@@ -122,7 +122,7 @@
   "diet": {
     "blockTitle": "Therapeutische Voedingsbeslissings-ondersteuning",
     "featureGateTitle": "B.E.A.U. Voedingsbeslissings-ondersteuning",
-    "marsPortfolioFooter": "Mars Petcare Therapeutische Catalogus",
+    "marsPortfolioFooter": "Diergeneeskundige Therapeutische Catalogus",
     "categories": {
       "gi": "Gastro-intestinaal & Verterings-ondersteuning",
       "renal": "Nierondersteuning & Urinegezondheid",

@@ -50,7 +50,7 @@
     },
     "diet": {
       "label": "Suporte à Decisão Alimentar",
-      "desc": "Portfólio terapêutico Mars Petcare"
+      "desc": "Portfólio terapêutico veterinário"
     },
     "equipment": {
       "label": "Equipamento Clínico",
@@ -82,7 +82,7 @@
     },
     "nutrition": {
       "label": "Nutrição PetCare",
-      "desc": "Recomendações dietéticas terapêuticas · Mars PetCare"
+      "desc": "Recomendações dietéticas terapêuticas · qualquer fabricante"
     },
     "coming-soon": {
       "label": "Visualizador de Anatomia Clínica 3D",
@@ -122,7 +122,7 @@
   "diet": {
     "blockTitle": "Suporte à Decisão de Dieta Terapêutica",
     "featureGateTitle": "Suporte à Decisão Nutricional B.E.A.U.",
-    "marsPortfolioFooter": "Catálogo Terapêutico Mars Petcare",
+    "marsPortfolioFooter": "Catálogo Terapêutico Veterinário",
     "categories": {
       "gi": "Gastrointestinal e Suporte Digestivo",
       "renal": "Suporte Renal e Saúde Urinária",

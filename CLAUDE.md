@@ -170,7 +170,7 @@ K9 Rehab Pro is a veterinary rehabilitation intelligence platform. Clinician FIR
 - Full Millis & Levine assessment framework (TPR, orthopedic, neuro, gait, pain, functional, special tests)
 - 13 dashboard blocks (Client, Diagnostics, Assessment, Treatment, Metrics, Equipment, Home, Goals, Conditioning, Protocol, Library, Nutrition, 3D Viewer)
 - Full multilingual support: 10 locales (en, es, fr, de, pt-BR, it, ja, ko, zh-CN, nl)
-- PetCare Nutrition dashboard block with Mars PetCare diet recommendations
+- PetCare Nutrition dashboard block with multi-manufacturer veterinary diet recommendations (Mars/Royal Canin, Hill's, Purina Pro Plan, Blue Buffalo, etc.)
 - Clinician roster + staff roster management in Settings → Clinic Configuration
 - Hospital language lock system (admin-controlled)
 

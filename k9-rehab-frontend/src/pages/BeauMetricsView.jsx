@@ -1,6 +1,6 @@
 // src/pages/BeauMetricsView.jsx
 // PetCare Nutrition — AI Nutrition + Rehabilitation Protocol Generator
-// Uses 12 Mars PetCare / Waltham knowledge nodes via beauService
+// Uses 12 evidence-based nutrition/rehab knowledge nodes via beauService
 
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -36,6 +36,8 @@ const BRAND_LINKS = [
   { match: /royal\s*canin/i,   name: "Royal Canin",    order: "https://www.royalcanin.com/us", autoship: "https://www.royalcanin.com/us" },
   { match: /pro\s*plan|purina/i, name: "Purina Pro Plan", order: "https://www.proplan.com",       autoship: "https://www.proplan.com" },
   { match: /pedigree/i,        name: "Pedigree",       order: "https://www.pedigree.com",      autoship: "https://www.pedigree.com" },
+  { match: /hill'?s/i,         name: "Hill's",         order: "https://www.hillspet.com",      autoship: "https://www.hillspet.com" },
+  { match: /blue\s*buffalo/i,  name: "Blue Buffalo",   order: "https://bluebuffalo.com",       autoship: "https://bluebuffalo.com" },
 ];
 const resolveBrandLinks = (productName) => {
   if (!productName) return null;
@@ -175,7 +177,7 @@ export default function BeauMetricsView({ authToken, setView }) {
       <div style={S.header}>
         <div>
           <div style={S.title}>{tr("PetCare Nutrition")}</div>
-          <div style={S.subtitle}>{tr("AI Nutrition + Rehabilitation Protocol Engine")} \u2014 {tr("Mars PetCare / Waltham Science")}</div>
+          <div style={S.subtitle}>{tr("AI Nutrition + Rehabilitation Protocol Engine")} \u2014 {tr("Evidence-Based Nutrition Science")}</div>
         </div>
         <BeauVoiceControl
           isSpeaking={beauVoice.isSpeaking}

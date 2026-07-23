@@ -50,7 +50,7 @@
     },
     "diet": {
       "label": "Aide à la Décision Diététique",
-      "desc": "Portefeuille thérapeutique Mars Petcare"
+      "desc": "Portefeuille thérapeutique vétérinaire"
     },
     "equipment": {
       "label": "Équipement Clinique",
@@ -82,7 +82,7 @@
     },
     "nutrition": {
       "label": "Nutrition PetCare",
-      "desc": "Recommandations diététiques thérapeutiques · Mars PetCare"
+      "desc": "Recommandations diététiques thérapeutiques · tout fabricant"
     },
     "coming-soon": {
       "label": "Visualiseur d'Anatomie Clinique 3D",
@@ -122,7 +122,7 @@
   "diet": {
     "blockTitle": "Aide à la Décision Diététique Thérapeutique",
     "featureGateTitle": "Aide à la Décision Nutritionnelle B.E.A.U.",
-    "marsPortfolioFooter": "Catalogue Thérapeutique Mars Petcare",
+    "marsPortfolioFooter": "Catalogue Thérapeutique Vétérinaire",
     "categories": {
       "gi": "Gastro-intestinal et Soutien Digestif",
       "renal": "Soutien Rénal et Santé Urinaire",

@@ -1,6 +1,6 @@
 # K9 Rehab Pro
 
-**AI-powered veterinary rehabilitation intelligence platform.**
+**AI-powered veterinary rehabilitation and conditioning intelligence platform.**
 
 Built on ACVSMR diplomate methodology and Millis & Levine textbook standards by a canine rehabilitation nurse with 30+ years of clinical experience.
 
@@ -10,7 +10,7 @@ Built on ACVSMR diplomate methodology and Millis & Levine textbook standards by 
 
 ## What It Does
 
-K9 Rehab Pro generates evidence-based, phase-gated rehabilitation protocols in minutes — replacing the 20-30 minute manual process clinicians use today. Two products, one clinical intelligence engine:
+K9 Rehab Pro generates evidence-based, phase-gated protocols in minutes — for post-surgical/injury recovery *and* for building and maintaining muscle, strength, and endurance in otherwise-healthy patients — replacing the 20-30 minute manual process clinicians use today. Two products, one clinical intelligence engine:
 
 - **K9 Rehab Pro** (B2B) — For veterinary clinics and universities. AI protocol generation, evidence grading, safety gating, audit trails, and a clinical AI assistant.
 - **B.E.A.U. Home** (B2C) — For pet owners. Professional-grade rehab guidance using household items, with daily check-ins and progress tracking. Referred by the treating veterinarian.

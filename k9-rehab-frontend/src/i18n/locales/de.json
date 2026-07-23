@@ -50,7 +50,7 @@
     },
     "diet": {
       "label": "Ernährungsentscheidungshilfe",
-      "desc": "Mars Petcare Therapie-Portfolio"
+      "desc": "Veterinärmedizinisches Therapie-Portfolio"
     },
     "equipment": {
       "label": "Klinikausstattung",
@@ -82,7 +82,7 @@
     },
     "nutrition": {
       "label": "PetCare Ernährung",
-      "desc": "Therapeutische Diätempfehlungen · Mars PetCare"
+      "desc": "Therapeutische Diätempfehlungen · alle Hersteller"
     },
     "coming-soon": {
       "label": "3D Klinischer Anatomie-Viewer",
@@ -122,7 +122,7 @@
   "diet": {
     "blockTitle": "Therapeutische Ernährungsentscheidungshilfe",
     "featureGateTitle": "B.E.A.U. Ernährungsentscheidungshilfe",
-    "marsPortfolioFooter": "Mars Petcare Therapie-Katalog",
+    "marsPortfolioFooter": "Veterinärmedizinischer Therapie-Katalog",
     "categories": {
       "gi": "Gastrointestinal & Verdauungsunterstützung",
       "renal": "Nierenunterstützung & Harngesundheit",

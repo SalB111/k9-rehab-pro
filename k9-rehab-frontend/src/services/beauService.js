@@ -1,6 +1,6 @@
 // src/services/beauService.js
 // BEAU Metrics API service — sends patient data to /api/beau/chat
-// with the 12-node Mars PetCare system prompt, parses JSON response
+// with the 12-node evidence-based nutrition/rehab system prompt, parses JSON response
 
 import { API } from "../api/axios";
 import { BEAU_SYSTEM_PROMPT, BEAU_USER_PROMPT } from "../data/beauKnowledgeNodes";

@@ -50,7 +50,7 @@
     },
     "diet": {
       "label": "食事決定支援",
-      "desc": "Mars Petcare 療法食ポートフォリオ"
+      "desc": "獣医療法食ポートフォリオ"
     },
     "equipment": {
       "label": "クリニック機器",
@@ -82,7 +82,7 @@
     },
     "nutrition": {
       "label": "PetCareニュートリション",
-      "desc": "治療食推奨 · Mars PetCare"
+      "desc": "治療食推奨 · 全メーカー対応"
     },
     "coming-soon": {
       "label": "3D臨床解剖ビューアー",
@@ -122,7 +122,7 @@
   "diet": {
     "blockTitle": "療法食決定支援",
     "featureGateTitle": "B.E.A.U. 栄養決定支援",
-    "marsPortfolioFooter": "Mars Petcare 療法食カタログ",
+    "marsPortfolioFooter": "獣医療法食カタログ",
     "categories": {
       "gi": "消化器系サポート",
       "renal": "腎サポート・泌尿器健康",
