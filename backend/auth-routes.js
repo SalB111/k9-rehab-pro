@@ -42,7 +42,17 @@ router.post("/register", async (req, res) => {
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
-    await db.createUser(username, passwordHash, "user");
+    try {
+      await db.createUser(username, passwordHash, "user");
+    } catch (err) {
+      // A duplicate username is a client error, not a server failure. It used
+      // to surface as a 500, which both misreported the cause and made this a
+      // second enumeration oracle alongside /login.
+      if (/UNIQUE|duplicate/i.test(String(err && err.message))) {
+        return res.status(409).json({ error: "That username is taken" });
+      }
+      throw err;
+    }
 
     res.json({ message: "User registered successfully" });
 
@@ -55,15 +65,37 @@ router.post("/register", async (req, res) => {
 // ---------------------------------------------------------------------------
 // LOGIN
 // ---------------------------------------------------------------------------
+// A bcrypt hash of nothing in particular, compared against when the username
+// does not exist so that a failed login costs the same time either way.
+// Without it, "no such user" returns immediately while a real username pays
+// for a hash comparison, and that difference is measurable over enough
+// requests. Generated once at module load; the value is never used.
+const DUMMY_HASH = bcrypt.hashSync("no-such-user", 10);
+
 router.post("/login", async (req, res) => {
   try {
     const { username, password } = req.body;
 
-    const user = await db.findUserByUsername(username);
-    if (!user) return res.status(401).json({ error: "Invalid credentials" });
+    // SECURITY: validated BEFORE the lookup, and the same response either way.
+    //
+    // This previously fell through to bcrypt.compare(undefined, hash), which
+    // throws and was caught as a 500. A real username therefore answered 500
+    // and an unknown one answered 401, so anyone could enumerate every account
+    // on this system by POSTing a username with no password. On a clinical
+    // record system that is the first half of a credential handed out for
+    // free. Rejecting here, before any database access, means the response
+    // cannot depend on whether the account exists.
+    if (typeof username !== "string" || typeof password !== "string" ||
+        !username.trim() || !password) {
+      return res.status(400).json({ error: "Username and password required" });
+    }
 
-    const valid = await bcrypt.compare(password, user.password_hash);
-    if (!valid) return res.status(401).json({ error: "Invalid credentials" });
+    const user = await db.findUserByUsername(username);
+
+    // Always compare. For an unknown user the comparison is against a dummy
+    // hash and can only fail, but it costs the same as a real one.
+    const valid = await bcrypt.compare(password, user ? user.password_hash : DUMMY_HASH);
+    if (!user || !valid) return res.status(401).json({ error: "Invalid credentials" });
 
     const token = jwt.sign(
       { id: user.id, username: user.username, role: user.role },
