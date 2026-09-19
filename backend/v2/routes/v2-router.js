@@ -21,6 +21,7 @@
 
 const store = require('../protocol-store');
 const visitStore = require('../visit-store');
+const sessionStore = require('../session-store');
 const clinicStore = require('../clinic-store');
 const adapter = require('../engine-adapter');
 const authority = require('../authority');
@@ -221,6 +222,104 @@ function createV2Router(deps) {
         unstated_clinic_capabilities: capabilities.unstated,
       },
     });
+  }));
+
+  // -------------------------------------------------------------------------
+  // In-clinic treatment sessions — the CCRT/CCRP delivering what the vet
+  // prescribed, and recording how the patient did.
+  // -------------------------------------------------------------------------
+
+  router.post('/patients/:id/sessions', route(async (req, res) => {
+    const session = await sessionStore.startSession(db, {
+      patientId: Number(req.params.id),
+      versionId: Number(req.body.version_id),
+      sessionDate: req.body.session_date,
+      actor: req.user,
+    });
+    res.status(201).json({ success: true, data: session });
+  }));
+
+  router.get('/patients/:id/sessions', route(async (req, res) => {
+    res.json({ success: true, data: await sessionStore.listSessions(db, Number(req.params.id)) });
+  }));
+
+  router.get('/sessions/:id', route(async (req, res) => {
+    res.json({ success: true, data: await sessionStore.getSession(db, Number(req.params.id)) });
+  }));
+
+  router.post('/sessions/:id/exercises/:rowId', route(async (req, res) => {
+    const session = await sessionStore.recordDelivery(db, {
+      sessionId: Number(req.params.id),
+      exerciseRowId: Number(req.params.rowId),
+      delivery: req.body,
+      actor: req.user,
+    });
+    res.json({ success: true, data: session });
+  }));
+
+  router.post('/sessions/:id/measures', route(async (req, res) => {
+    const session = await sessionStore.recordSessionMeasures(db, {
+      sessionId: Number(req.params.id), measures: req.body, actor: req.user,
+    });
+    res.json({ success: true, data: session });
+  }));
+
+  router.post('/sessions/:id/complete', route(async (req, res) => {
+    res.json({ success: true, data: await sessionStore.completeSession(db, {
+      sessionId: Number(req.params.id), actor: req.user,
+    }) });
+  }));
+
+  /** Veterinary sign-off. Requires approval authority, like an approval does. */
+  router.post('/sessions/:id/review', approvalAuthority, route(async (req, res) => {
+    res.json({ success: true, data: await sessionStore.reviewSession(db, {
+      sessionId: Number(req.params.id), note: req.body.note, actor: req.user,
+    }) });
+  }));
+
+  /** Completed sessions nobody has read yet. Omit the patient for the whole caseload. */
+  router.get('/sessions-unreviewed', route(async (req, res) => {
+    const patientId = req.query.patient_id ? Number(req.query.patient_id) : null;
+    res.json({ success: true, data: await sessionStore.listUnreviewedSessions(db, patientId) });
+  }));
+
+  // -------------------------------------------------------------------------
+  // Recheck requests — the practitioner raising a concern to the veterinarian
+  // -------------------------------------------------------------------------
+
+  router.post('/patients/:id/rechecks', route(async (req, res) => {
+    const recheck = await sessionStore.requestRecheck(db, {
+      patientId: Number(req.params.id),
+      sessionId: req.body.session_id ?? null,
+      versionId: req.body.version_id ?? null,
+      urgency: req.body.urgency,
+      reason: req.body.reason,
+      findings: req.body.clinical_findings,
+      actor: req.user,
+    });
+    res.status(201).json({ success: true, data: recheck });
+  }));
+
+  /** Unanswered concerns. Omit the patient for the whole caseload. */
+  router.get('/rechecks', route(async (req, res) => {
+    const patientId = req.query.patient_id ? Number(req.query.patient_id) : null;
+    res.json({ success: true, data: await sessionStore.listOpenRechecks(db, patientId) });
+  }));
+
+  /** Only a clinician may answer a concern. */
+  router.post('/rechecks/:id/respond', approvalAuthority, route(async (req, res) => {
+    res.json({ success: true, data: await sessionStore.respondToRecheck(db, {
+      recheckId: Number(req.params.id),
+      status: req.body.status,
+      response: req.body.response,
+      actor: req.user,
+    }) });
+  }));
+
+  router.post('/rechecks/:id/withdraw', route(async (req, res) => {
+    res.json({ success: true, data: await sessionStore.withdrawRecheck(db, {
+      recheckId: Number(req.params.id), reason: req.body.reason, actor: req.user,
+    }) });
   }));
 
   // -------------------------------------------------------------------------

@@ -393,9 +393,32 @@ async function buildClinicalSnapshot(db, { patientId, patient }) {
     };
   }
 
+  // Concerns raised by the practitioner that a clinician has not answered, and
+  // completed sessions nobody has read. These are what make a veterinarian
+  // "aware" without opening the chart — a concern that only surfaces when
+  // someone happens to look is not a safety net.
+  let openRechecks = [];
+  let unreviewedSessions = [];
+  try {
+    const sessionStore = require('./session-store');
+    openRechecks = await sessionStore.listOpenRechecks(db, patientId);
+    unreviewedSessions = await sessionStore.listUnreviewedSessions(db, patientId);
+  } catch {
+    // session schema not applied yet — the snapshot still stands on its own
+  }
+
   return {
     patient: patient || { id: patientId },
     visit_count: visits.length,
+    open_recheck_requests: openRechecks.map((r) => ({
+      id: r.id,
+      urgency: r.urgency,
+      reason: r.reason,
+      raised_by: r.raised_by_username,
+      raised_at: r.raised_at,
+      status: r.status,
+    })),
+    unreviewed_session_count: unreviewedSessions.length,
     last_visit: lastVisit
       ? {
           id: lastVisit.id,
