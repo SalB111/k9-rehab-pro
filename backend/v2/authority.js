@@ -177,6 +177,62 @@ function explainDenial(reason, actor) {
   }
 }
 
+
+// ---------------------------------------------------------------------------
+// System owner
+// ---------------------------------------------------------------------------
+
+/**
+ * Who owns this installation.
+ *
+ * Restricted approval authority creates a real failure mode: once a second
+ * administrator exists they can demote the first, and the person who owns the
+ * software can be locked out of it by someone they granted access to.
+ *
+ * The owner's role cannot be changed by anyone else. This is deliberately NOT a
+ * hidden backdoor — the owner is shown in the access screen and the CLI, holds
+ * no permission an administrator lacks, and can be released or transferred
+ * whenever the installation is handed over.
+ */
+async function getSystemOwner(db) {
+  try {
+    const row = await db.get(`SELECT * FROM system_owner WHERE id = 1`);
+    if (!row) return null;
+    const user = await db.get(`SELECT id, username, role FROM users WHERE id = ?`, [row.user_id]);
+    return user ? { ...row, user } : null;
+  } catch {
+    return null; // table not yet applied
+  }
+}
+
+async function isSystemOwner(db, userId) {
+  const owner = await getSystemOwner(db);
+  return Boolean(owner && Number(owner.user_id) === Number(userId));
+}
+
+/** Claim or transfer ownership. */
+async function setSystemOwner(db, { userId, note }) {
+  const user = await db.get(`SELECT id, username FROM users WHERE id = ?`, [userId]);
+  if (!user) throw new Error(`No user with id ${userId}`);
+
+  const existing = await db.get(`SELECT id FROM system_owner WHERE id = 1`);
+  if (existing) {
+    await db.run(
+      `UPDATE system_owner SET user_id = ?, note = ?, set_at = CURRENT_TIMESTAMP WHERE id = 1`,
+      [userId, note ?? null]
+    );
+  } else {
+    await db.run(`INSERT INTO system_owner (id, user_id, note) VALUES (1, ?, ?)`, [userId, note ?? null]);
+  }
+  return getSystemOwner(db);
+}
+
+/** Give up ownership. Used when handing an installation to its operator. */
+async function releaseSystemOwner(db) {
+  await db.run(`DELETE FROM system_owner WHERE id = 1`);
+  return null;
+}
+
 /** Record a credential. Used by seeding and by clinic administration. */
 async function addCredential(db, { userId, credential, licenseNumber, issuingBody, validFrom, validUntil, verifiedBy }) {
   const result = await db.run(
@@ -210,4 +266,8 @@ module.exports = {
   resolveApprovalAuthority,
   explainDenial,
   addCredential,
+  getSystemOwner,
+  isSystemOwner,
+  setSystemOwner,
+  releaseSystemOwner,
 };

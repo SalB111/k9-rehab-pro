@@ -362,6 +362,7 @@ function createV2Router(deps) {
       const check = await authority.resolveApprovalAuthority(db, { actor: user });
       enriched.push({
         ...user,
+        is_system_owner: await authority.isSystemOwner(db, user.id),
         can_approve: check.allowed,
         basis: check.basis,
         reason: check.reason,
@@ -383,6 +384,18 @@ function createV2Router(deps) {
     const user = await db.get(`SELECT id, username, role FROM users WHERE id = ?`, [userId]);
     if (!user) {
       return res.status(404).json({ success: false, error: 'User not found', code: 'NOT_FOUND' });
+    }
+
+    // The system owner's role is theirs alone to change. Without this, granting
+    // a hospital administrator access would let them lock the owner out of
+    // their own installation.
+    if (await authority.isSystemOwner(db, userId) && Number(req.user.id) !== userId) {
+      return res.status(403).json({
+        success: false,
+        code: 'FORBIDDEN',
+        error: `${user.username} owns this installation; only they can change their own role. `
+          + `Ownership can be transferred or released from the access screen.`,
+      });
     }
 
     // Refuse to remove the last admin. Locking every administrator out of a
@@ -407,6 +420,37 @@ function createV2Router(deps) {
       success: true,
       data: { id: userId, username: user.username, role, can_approve: check.allowed, basis: check.basis },
     });
+  }));
+
+  /** Who owns this installation. Visible to everyone — it is not a secret. */
+  router.get('/system-owner', route(async (req, res) => {
+    res.json({ success: true, data: await authority.getSystemOwner(db) });
+  }));
+
+  /**
+   * Transfer or release ownership. Only the current owner may do this, so a
+   * newly granted administrator cannot seize it.
+   */
+  router.post('/system-owner', requireRole('admin'), route(async (req, res) => {
+    const current = await authority.getSystemOwner(db);
+    if (current && Number(current.user_id) !== Number(req.user.id)) {
+      return res.status(403).json({
+        success: false,
+        code: 'FORBIDDEN',
+        error: `Only ${current.user.username} can transfer or release ownership of this installation.`,
+      });
+    }
+
+    if (req.body.release === true) {
+      await authority.releaseSystemOwner(db);
+      return res.json({ success: true, data: null });
+    }
+
+    const userId = Number(req.body.user_id);
+    if (!userId) {
+      return res.status(400).json({ success: false, code: 'INVALID', error: 'user_id is required' });
+    }
+    res.json({ success: true, data: await authority.setSystemOwner(db, { userId, note: req.body.note }) });
   }));
 
   /** Revoke a credential. Past approvals that relied on it remain valid. */

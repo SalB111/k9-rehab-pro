@@ -58,3 +58,26 @@ CREATE TABLE IF NOT EXISTS clinician_credentials (
 
 CREATE INDEX IF NOT EXISTS idx_cc_user_id ON clinician_credentials(user_id);
 CREATE INDEX IF NOT EXISTS idx_cc_status ON clinician_credentials(status);
+
+-- ---------------------------------------------------------------------------
+-- system_owner — who owns this installation.
+--
+-- Approval authority is restricted by design, which creates a real failure
+-- mode: once a second administrator exists, they can demote the first. In a
+-- deployed system the person who built and owns the software can be locked out
+-- of it by someone they granted access to.
+--
+-- The owner's role cannot be changed by anyone else. It is NOT a hidden
+-- backdoor: the owner is listed in the access UI and the CLI, and the owner can
+-- release or transfer the marker deliberately when handing an installation over
+-- to a hospital's own administrator.
+--
+-- One row. Enforced by the fixed primary key.
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS system_owner (
+  id         INTEGER PRIMARY KEY CHECK (id = 1),
+  user_id    INTEGER NOT NULL,
+  note       TEXT,
+  set_at     DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id)
+);

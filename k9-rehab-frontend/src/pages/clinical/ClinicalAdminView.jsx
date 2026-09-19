@@ -140,6 +140,11 @@ export default function ClinicalAdminView({ setView }) {
           A veterinarian approves by licensure. A rehab practitioner approves only while holding a
           current CCRP/CCRT. Recording a credential here asserts that someone checked a certificate —
           it does not verify one.
+          <div style={{ marginTop: 6 }}>
+            The account marked <strong>owner</strong> owns this installation: no other administrator
+            can change their role, so granting access here cannot lock them out. They can transfer or
+            release ownership when handing the system over.
+          </div>
         </div>
 
         <div style={{ display: "grid", gap: 10 }}>
@@ -154,6 +159,17 @@ export default function ClinicalAdminView({ setView }) {
               <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
                 <span style={{ fontSize: 14, fontWeight: 600, color: C.text, minWidth: 140 }}>
                   {u.username}
+                  {u.is_system_owner && (
+                    <span
+                      title="Owns this installation. Their role cannot be changed by anyone else — they can transfer or release it."
+                      style={{
+                        marginLeft: 8, fontSize: 10, padding: "2px 7px", borderRadius: 999,
+                        background: C.navy, color: "#fff", fontWeight: 600,
+                      }}
+                    >
+                      owner
+                    </span>
+                  )}
                 </span>
 
                 <select
@@ -161,6 +177,9 @@ export default function ClinicalAdminView({ setView }) {
                   value={ROLES.some((r) => r.value === u.role) ? u.role : "user"}
                   disabled={busy}
                   onChange={(e) => setRole(u.id, e.target.value)}
+                  title={u.is_system_owner
+                    ? "Only the owner can change their own role"
+                    : undefined}
                 >
                   {ROLES.map((r) => (
                     <option key={r.value} value={r.value}>{r.label}</option>

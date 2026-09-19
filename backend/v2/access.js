@@ -213,6 +213,90 @@ async function cmdCapabilities(flags) {
   console.log('');
 }
 
+async function cmdOwner(flags, positional) {
+  const current = await authority.getSystemOwner(db);
+
+  if (flags.release) {
+    await authority.releaseSystemOwner(db);
+    console.log('\n  Ownership released. Any administrator can now change any role.\n');
+    return;
+  }
+
+  const target = positional[0];
+  if (target) {
+    const user = await findUser(target);
+    await authority.setSystemOwner(db, { userId: user.id, note: flags.note || null });
+    console.log(`\n  ${user.username} now owns this installation.`);
+    console.log('  Their role cannot be changed by anyone else.\n');
+    return;
+  }
+
+  if (!current) {
+    console.log('\n  No owner set. Any administrator can change any role, which means');
+    console.log('  an administrator you grant access to can demote you.');
+    console.log('  Set one:  node v2/access.js owner <username>\n');
+    return;
+  }
+
+  console.log(`\n  Owner: ${current.user.username} (id ${current.user_id}, role ${current.user.role})`);
+  console.log(`  Since: ${current.set_at}`);
+  if (current.note) console.log(`  Note:  ${current.note}`);
+  console.log('\n  Only they can change their own role, or transfer/release ownership.\n');
+}
+
+/**
+ * Set a password.
+ *
+ * The operator types it at the prompt. It is never passed as a command-line
+ * argument, so it does not reach shell history or a process listing, and it is
+ * hashed immediately rather than stored or logged.
+ */
+async function cmdPassword(username) {
+  const user = await findUser(username);
+  const readline = require('readline');
+  const bcrypt = require(path.join(__dirname, '..', 'node_modules', 'bcryptjs'));
+
+  const ask = (prompt) =>
+    new Promise((resolve) => {
+      const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout,
+        terminal: true,
+      });
+      // Mask the echo so the password is not left on screen or in scrollback.
+      const onData = () => {
+        const shown = prompt + '*'.repeat(rl.line.length);
+        process.stdout.write('[2K[200D' + shown);
+      };
+      process.stdin.on('data', onData);
+      rl.question(prompt, (answer) => {
+        process.stdin.removeListener('data', onData);
+        rl.close();
+        process.stdout.write('\n');
+        resolve(answer);
+      });
+    });
+
+  const first = await ask(`New password for ${user.username}: `);
+  if (!first || first.length < 12) {
+    console.log('\n  Password must be at least 12 characters. Nothing changed.\n');
+    process.exitCode = 1;
+    return;
+  }
+
+  const second = await ask('Repeat: ');
+  if (first !== second) {
+    console.log('\n  Passwords did not match. Nothing changed.\n');
+    process.exitCode = 1;
+    return;
+  }
+
+  const hash = await bcrypt.hash(first, 10);
+  await db.run(`UPDATE users SET password_hash = ? WHERE id = ?`, [hash, user.id]);
+  console.log(`\n  Password updated for ${user.username}.`);
+  console.log('  Stored as a bcrypt hash — it cannot be read back by anyone, including this tool.\n');
+}
+
 function usage() {
   console.log(`
 K9 Clinical Workflow V2 — access administration
@@ -225,6 +309,14 @@ K9 Clinical Workflow V2 — access administration
   node v2/access.js credential <username> <CCRP|CCRT|DVM|VMD|BVSC|CCRV> [--license N] [--body NAME] [--from DATE] [--until DATE]
   node v2/access.js revoke-credential <id>
   node v2/access.js capabilities [--all | --none | --set key=true,key=false]
+
+  node v2/access.js owner                 Who owns this installation
+  node v2/access.js owner <username>      Transfer ownership
+  node v2/access.js owner --release       Give up ownership
+
+  node v2/access.js password <username>
+      Set a password. You type it at the prompt — it is never passed as an
+      argument, so it does not reach shell history. Stored as a bcrypt hash.
 
 Roles:
 ${Object.entries(ROLES).map(([r, d]) => `  ${r.padEnd(20)}${d}`).join('\n')}
@@ -251,6 +343,8 @@ ${Object.entries(ROLES).map(([r, d]) => `  ${r.padEnd(20)}${d}`).join('\n')}
       case 'credential': await cmdCredential(positional[0], positional[1], flags); break;
       case 'revoke-credential': await cmdRevokeCredential(positional[0]); break;
       case 'capabilities': await cmdCapabilities(flags); break;
+      case 'owner': await cmdOwner(flags, positional); break;
+      case 'password': await cmdPassword(positional[0]); break;
       default:
         console.log(`\n  Unknown command '${command}'`);
         usage();

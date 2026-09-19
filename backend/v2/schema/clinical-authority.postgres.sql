@@ -61,3 +61,18 @@ CREATE POLICY v2_cc_admin_write ON v2_clinician_credentials
       WHERE users.id::text = auth.uid()::text AND lower(users.role) = 'admin'
     )
   );
+
+-- ---------------------------------------------------------------------------
+-- v2_system_owner — see clinical-authority.sqlite.sql for the rationale.
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS v2_system_owner (
+  id         INTEGER PRIMARY KEY CHECK (id = 1),
+  user_id    BIGINT NOT NULL REFERENCES users(id),
+  note       TEXT,
+  set_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE v2_system_owner ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY v2_owner_select ON v2_system_owner
+  FOR SELECT TO authenticated USING (true);
