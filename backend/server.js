@@ -29,6 +29,7 @@ const authRoutes = require("./auth-routes");
 const requireAuth = require("./middleware/requireAuth");
 const { requireRole } = require("./auth");
 const { announceIfDemoMode } = require("./demo-mode");
+const { mountV2 } = require("./v2/mount-v2");
 
 const app = express();
 app.set('trust proxy', 1);
@@ -969,6 +970,24 @@ app.use((req, res, next) => {
     await db.initialize();
     await db.createTables();
     await db.seedV2Library();
+
+    // ── K9 Clinical Workflow V2 ─────────────────────────────────────────────
+    // Additive: adds /api/v2 only. No existing route, table or middleware is
+    // modified. Mounted here so the schema is applied and the routes are
+    // registered before the server accepts connections.
+    //
+    // mountV2 first proves the configured provider actually persists, and
+    // refuses to start if it does not — the Supabase provider's run/get/all are
+    // no-op stubs, and a clinical workflow must never run on top of those.
+    //
+    // The SPA catch-all registered above passes /api/ paths through, so
+    // mounting after it is safe.
+    await mountV2(app, {
+      db,
+      engine: require("./protocol-generator"),
+      allExercises: require("./all-exercises").ALL_EXERCISES,
+      requireAuth,
+    });
 
     // Initialize Knowledge Engine (RAG — source document grounding)
     await knowledgeEngine.initialize();

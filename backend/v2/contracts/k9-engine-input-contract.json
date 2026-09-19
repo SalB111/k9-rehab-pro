@@ -1,0 +1,95 @@
+{
+  "$comment": "AUTHORITATIVE input contract for the existing K9 clinical engine. Derived by forensic read of backend/protocol-generator.js and backend/server.js in C:/Users/User/k9-rehab-pro. Language-neutral. Any V2 adapter MUST carry every field marked safety_gate true, or the corresponding gate silently fails.",
+  "source_of_truth": {
+    "engine_module": "backend/protocol-generator.js",
+    "engine_exports": ["validateIntake", "getExcludedCodes", "selectExercisesForWeek", "getProtocolType", "getPhaseForWeek", "parseReps", "PROTOCOL_DEFINITIONS", "EVIDENCE_MAP"],
+    "route": "backend/server.js POST /api/generate-protocol",
+    "shape": "single flat camelCase object named formData",
+    "verified_on": "2026-09-18"
+  },
+
+  "CRITICAL_call_order_dependency": {
+    "description": "validateIntake() MUTATES formData in place, setting five private severity flags. getExcludedCodes() and selectExercisesForWeek() read those flags. If V2 calls the selection functions without first calling validateIntake on the SAME object reference, the OA / MMT / IVDD / high-pain / Grade-V safety gates silently do not fire.",
+    "required_sequence": ["validateIntake(formData)", "selectExercisesForWeek(week, totalWeeks, allExercises, formData)"],
+    "must_not": "pass a copy, a frozen object, or a re-serialized object between the two calls",
+    "derived_flags_set_by_validateIntake": {
+      "_highPainOverride": "painScore >= 8 -> forces palliative approach plus phase lock",
+      "_severeWeakness": "mmtGrade <= 1 -> phase lock plus applies full NWB exclusion set",
+      "_ivddSevere": "ivddGrade IV or V -> phase lock to Phase 1 neuro support",
+      "_severeOA": "oaStage >= 4 -> excludes 9 impact-loading exercise codes",
+      "_gradeVSupport": "neuroDeepPain contains 'absent' -> passive supportive care only"
+    }
+  },
+
+  "engine_inputs": {
+    "patientName": {"safety_gate": false, "role": "identity", "validate": "REQUIRED - hard error if absent"},
+    "clientFirstName": {"safety_gate": false, "role": "identity", "validate": "one of clientFirstName/clientLastName REQUIRED - hard error if both absent"},
+    "clientLastName": {"safety_gate": false, "role": "identity", "validate": "see clientFirstName"},
+
+    "diagnosis": {"safety_gate": true, "role": "contraindication keyword scan plus protocol type selection", "default_if_absent": "Conditioning (warns)"},
+    "affectedRegion": {"safety_gate": true, "role": "protocol type selection", "default_if_absent": "Generalized (warns)"},
+    "treatmentApproach": {"safety_gate": true, "role": "protocol type plus phase path", "default_if_absent": "Conservative (warns)"},
+
+    "painScore": {"safety_gate": true, "role": "value >= 8 sets _highPainOverride -> palliative plus phase lock", "alias": "painLevel"},
+    "painLevel": {"safety_gate": true, "role": "alias of painScore"},
+    "lamenessGrade": {"safety_gate": true, "role": "value >= 5 applies NWB exclusion set when weightBearingStatus is unset"},
+    "weightBearingStatus": {"safety_gate": true, "role": "PRIMARY weight-bearing gate - keys WEIGHT_BEARING_EXCLUSIONS (NWB/TTWB/PWB)"},
+    "mobilityLevel": {"safety_gate": true, "role": "contraindication keyword scan"},
+
+    "mmtGrade": {"safety_gate": true, "role": "value <= 1 sets _severeWeakness -> passive, NMES and assisted standing only"},
+    "ivddGrade": {"safety_gate": true, "role": "IV or V sets _ivddSevere -> Phase 1 neuro lock"},
+    "oaStage": {"safety_gate": true, "role": "value >= 4 sets _severeOA -> excludes impact loading"},
+
+    "neuroProprioception": {"safety_gate": true, "role": "absent/none/zero-of-five -> RED FLAG warning"},
+    "neuroWithdrawal": {"safety_gate": true, "role": "see neuroProprioception"},
+    "neuroDeepPain": {"safety_gate": true, "role": "value containing 'absent' sets _gradeVSupport -> passive supportive care only (CRITICAL)"},
+    "neuroMotorGrade": {"safety_gate": true, "role": "see neuroProprioception"},
+
+    "incisionStatus": {"safety_gate": true, "role": "dehisc/infected/open/draining -> HARD ERROR block; otherwise keys INCISION_EXCLUSIONS"},
+    "complicationsNoted": {"safety_gate": true, "role": "scanned for seroma, dehiscence, implant failure, osteomyelitis, septic keywords"},
+    "medicalHistory": {"safety_gate": true, "role": "contraindication keyword scan plus complication keyword scan"},
+    "currentMedications": {"safety_gate": true, "role": "contraindication keyword scan"},
+    "specialInstructions": {"safety_gate": true, "role": "contraindication keyword scan"},
+    "surgeryDate": {"safety_gate": true, "role": "post-op timing check when treatmentApproach is surgical"},
+
+    "crateRestRequired": {"safety_gate": true, "role": "true -> ACTIVITY_RESTRICTION_EXCLUSIONS", "type": "boolean or string true"},
+    "eCollarRequired": {"safety_gate": true, "role": "true -> ACTIVITY_RESTRICTION_EXCLUSIONS", "type": "boolean or string true"},
+
+    "aquaticAccess": {"safety_gate": true, "role": "ENABLEMENT gate - aquatic exercises withheld unless true OR modalityUWTM true", "type": "boolean or string true"},
+    "modalityUWTM": {"safety_gate": true, "role": "alternate aquatic enablement", "type": "boolean or string true"},
+    "modalityLaser": {"safety_gate": true, "role": "enables LASER_IV", "type": "boolean or string true"},
+    "modalityTENS": {"safety_gate": true, "role": "enables TENS_THERAPY", "type": "boolean or string true"},
+    "modalityNMES": {"safety_gate": true, "role": "enables NMES_QUAD", "type": "boolean or string true"},
+    "modalityTherapeuticUS": {"safety_gate": true, "role": "enables US_PULSED and US_CONTINUOUS", "type": "boolean or string true"},
+    "modalityPulsedEMF": {"safety_gate": true, "role": "enables PEMF_THERAPY", "type": "boolean or string true"},
+    "modalityShockwave": {"safety_gate": true, "role": "enables SHOCKWAVE", "type": "boolean or string true"},
+    "modalityCryotherapy": {"safety_gate": true, "role": "enables COLD_THERAPY", "type": "boolean or string true"},
+    "modalityHeatTherapy": {"safety_gate": true, "role": "enables HEAT_THERAPY", "type": "boolean or string true"}
+  },
+
+  "route_level_inputs": {
+    "$comment": "Consumed by server.js POST /api/generate-protocol, not by protocol-generator.js. V2 must supply these where it replaces the route.",
+    "protocolLength": {"role": "total weeks", "default": 8},
+    "frequency": {"role": "echoed into output", "default": "2x/week"},
+    "species": {"role": "echoed", "default": "canine"},
+    "breed": {"role": "echoed"},
+    "age": {"role": "echoed"},
+    "weight": {"role": "echoed", "alias": "weightLbs"}
+  },
+
+  "omission_semantics": {
+    "description": "Omitting an engine input is never neutral. Two distinct failure modes exist and both are clinically wrong.",
+    "fails_unsafe_if_omitted": [
+      "weightBearingStatus", "incisionStatus", "mmtGrade", "ivddGrade", "oaStage",
+      "neuroDeepPain", "neuroProprioception", "neuroWithdrawal", "neuroMotorGrade",
+      "complicationsNoted", "crateRestRequired", "eCollarRequired"
+    ],
+    "fails_unsafe_meaning": "The restriction never fires. The patient receives exercises their clinical state forbids.",
+    "fails_restrictive_if_omitted": [
+      "aquaticAccess", "modalityUWTM", "modalityLaser", "modalityTENS", "modalityNMES",
+      "modalityTherapeuticUS", "modalityPulsedEMF", "modalityShockwave",
+      "modalityCryotherapy", "modalityHeatTherapy"
+    ],
+    "fails_restrictive_meaning": "Modality and aquatic flags are ENABLEMENT gates, not restrictions. An absent or false flag WITHHOLDS the exercise, removing therapy the clinic can actually deliver."
+  }
+}

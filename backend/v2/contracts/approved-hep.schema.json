@@ -1,0 +1,329 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "k9/contracts/approved-hep.schema.json",
+  "title": "Approved HEP Contract",
+  "description": "The formal, controlled boundary between K9-REHAB-PRO (clinical control plane) and B.E.A.U. Home (home execution plane). Emitted by protocol-store.handoffToBeau(). Only an APPROVED protocol version may produce one. B.E.A.U. receives the exact approved prescription and cannot alter it.",
+  "type": "object",
+  "required": [
+    "contract_version",
+    "patient_id",
+    "protocol_id",
+    "protocol_version_id",
+    "protocol_version_number",
+    "effective_date",
+    "exercises",
+    "restrictions",
+    "active_safety_gates",
+    "approval",
+    "beau_permissions"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "contract_version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "patient_id": {
+      "type": "integer"
+    },
+    "patient_name": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "protocol_id": {
+      "type": "integer"
+    },
+    "protocol_version_id": {
+      "type": "integer"
+    },
+    "protocol_version_number": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "B.E.A.U. must key its local state on this. A new version supersedes the previous handoff."
+    },
+    "effective_date": {
+      "type": "string",
+      "description": "Timestamp of clinician approval \u2014 the moment the recommendation became a prescription."
+    },
+    "protocol_type": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "total_weeks": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "frequency": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Protocol-level session frequency, e.g. '2x/week'. NOT the same as an exercise's own frequency."
+    },
+    "exercises": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "week_number",
+          "exercise_code",
+          "origin"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "week_number": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "exercise_code": {
+            "type": "string",
+            "description": "Canonical code from the K9 exercise library. B.E.A.U. must treat this as the identity of the prescribed movement and must not substitute a different exercise."
+          },
+          "exercise_name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "phase": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "origin": {
+            "type": "string",
+            "enum": [
+              "ENGINE",
+              "CLINICIAN"
+            ],
+            "description": "ENGINE means the exercise passed every K9 safety gate. CLINICIAN means a clinician added it by hand, bypassing those gates on their own authority. B.E.A.U. should surface the distinction rather than hide it."
+          },
+          "sets": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "reps": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "frequency": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "This exercise's own dosing frequency, e.g. '2-3x/day'. Distinct from the protocol-level frequency above; collapsing the two loses the prescription."
+          },
+          "duration_minutes": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "dosage_override": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Clinician-specified dosage. When present it takes precedence over sets/reps/frequency/duration above, which are retained so the change stays visible."
+          },
+          "equipment": {
+            "type": [
+              "string",
+              "array",
+              "null"
+            ],
+            "description": "What the exercise requires. This is the input B.E.A.U. computes household substitutions against \u2014 substitution must preserve the movement objective, never change the prescription."
+          },
+          "progression": {
+            "type": [
+              "string",
+              "array",
+              "null"
+            ]
+          },
+          "contraindications": {
+            "type": [
+              "string",
+              "array",
+              "null"
+            ]
+          },
+          "red_flags": {
+            "type": [
+              "string",
+              "array",
+              "null"
+            ],
+            "description": "Stop conditions for an unsupervised home session. B.E.A.U. must present these to the owner and halt the exercise when one is observed."
+          },
+          "evidence_citation": {
+            "type": [
+              "string",
+              "array",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "restrictions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "type",
+          "detail",
+          "source"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "CONTRAINDICATION",
+              "WARNING",
+              "SAFETY_INSTRUCTION",
+              "ACTIVITY_LIMIT"
+            ]
+          },
+          "detail": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "ENGINE",
+              "CLINICIAN"
+            ]
+          }
+        }
+      }
+    },
+    "active_safety_gates": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "_highPainOverride",
+          "_severeWeakness",
+          "_ivddSevere",
+          "_severeOA",
+          "_gradeVSupport"
+        ]
+      },
+      "description": "Which K9 safety gates fired for this patient. B.E.A.U. must NOT re-derive or re-evaluate these \u2014 clinical reasoning stays in K9 \u2014 but needs them to refuse unsafe household substitutions. Example: with _severeOA active, no substitution may reintroduce impact loading."
+    },
+    "approval": {
+      "type": "object",
+      "required": [
+        "approved_by",
+        "approver_username",
+        "approver_role",
+        "approval_basis",
+        "approved_at",
+        "content_hash"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "approved_by": {
+          "type": "integer"
+        },
+        "approver_username": {
+          "type": "string"
+        },
+        "approver_role": {
+          "type": "string",
+          "description": "Always a clinician-class role. Technicians and owners cannot approve."
+        },
+        "approved_at": {
+          "type": "string"
+        },
+        "content_hash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "SHA-256 over the canonical content of the approved version. B.E.A.U. should store it: it identifies exactly which clinical content was authorized, and distinguishes a genuine revision from a corrupted or replayed payload."
+        },
+        "approval_basis": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "LICENSURE",
+            "CREDENTIAL",
+            "ADMINISTRATIVE",
+            null
+          ],
+          "description": "How the approver held authority. LICENSURE = an attending veterinarian. CREDENTIAL = a rehabilitation practitioner with a current CCRP/CCRT. ADMINISTRATIVE = an admin override, deliberately distinguishable from a clinical approval."
+        },
+        "approver_credential": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The credential relied upon, e.g. CCRP. Null for a veterinarian approving by licensure with no licence record on file."
+        }
+      }
+    },
+    "beau_permissions": {
+      "type": "object",
+      "description": "The explicit authority boundary, transmitted with every handoff so it is never assumed. B.E.A.U. adapts EXECUTION; it never generates or alters a PRESCRIPTION.",
+      "required": [
+        "may_adapt_execution_to_home_environment",
+        "may_substitute_household_equipment",
+        "may_record_adherence_and_observations",
+        "may_modify_prescription",
+        "may_change_dosage",
+        "may_change_frequency",
+        "may_add_or_remove_exercises",
+        "may_override_restrictions"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "may_adapt_execution_to_home_environment": {
+          "type": "boolean",
+          "const": true
+        },
+        "may_substitute_household_equipment": {
+          "type": "boolean",
+          "const": true
+        },
+        "may_record_adherence_and_observations": {
+          "type": "boolean",
+          "const": true
+        },
+        "may_modify_prescription": {
+          "type": "boolean",
+          "const": false
+        },
+        "may_change_dosage": {
+          "type": "boolean",
+          "const": false
+        },
+        "may_change_frequency": {
+          "type": "boolean",
+          "const": false
+        },
+        "may_add_or_remove_exercises": {
+          "type": "boolean",
+          "const": false
+        },
+        "may_override_restrictions": {
+          "type": "boolean",
+          "const": false
+        }
+      }
+    }
+  }
+}
