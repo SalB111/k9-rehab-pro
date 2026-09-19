@@ -128,6 +128,15 @@ CREATE TABLE IF NOT EXISTS protocol_version_exercises (
   red_flags         TEXT,
   evidence_citation TEXT,
 
+  -- Where this exercise may be performed, and the shortlist decision.
+  -- A Class IV laser or NMES cannot go home whatever the clinic owns, so venue
+  -- is stored per exercise rather than inferred at handoff time.
+  venue             TEXT DEFAULT 'HOME',      -- CLINIC | HOME
+  venue_reason      TEXT,
+  home_rank         INTEGER,
+  home_selected     INTEGER DEFAULT 0,
+  selection_reason  TEXT,
+
   FOREIGN KEY (version_id) REFERENCES protocol_versions(id)
 );
 

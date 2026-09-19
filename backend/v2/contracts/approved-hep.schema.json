@@ -173,6 +173,13 @@
               "array",
               "null"
             ]
+          },
+          "selection_reason": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Why this exercise was shortlisted for the home programme. Ranking narrows what the engine already permitted; it never adds an exercise or changes a dosage."
           }
         }
       }
@@ -322,6 +329,65 @@
         "may_override_restrictions": {
           "type": "boolean",
           "const": false
+        }
+      }
+    },
+    "clinic_protocol": {
+      "type": "array",
+      "description": "Clinic-delivered work the veterinarian has prescribed for the CCRT/CCRP to perform in practice \u2014 Class IV laser, NMES, underwater treadmill. Carried so B.E.A.U. can show the owner what happens at their appointment. It must NEVER be presented as something to attempt at home.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "week_number": {
+            "type": "integer"
+          },
+          "exercise_code": {
+            "type": "string"
+          },
+          "exercise_name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "phase": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "sets": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "reps": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "frequency": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "duration_minutes": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "venue_reason": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Why it cannot be done at home."
+          }
         }
       }
     }

@@ -35,6 +35,7 @@
 
 const crypto = require('crypto');
 const authority = require('./authority');
+const hepSelection = require('./hep-selection');
 
 // ---------------------------------------------------------------------------
 // States and roles
@@ -281,16 +282,35 @@ async function createVersion(db, { protocolId, engineInput, engineResult, actor,
   const versionId = result.lastID;
 
   // Exercises, flattened from the engine's week structure.
+  //
+  // Each week is classified by venue and ranked for home suitability before
+  // storage. This only narrows what the engine already permitted — it never
+  // adds an exercise, changes a dosage, or overrides an exclusion.
+  const affectedRegion = engineInput.affectedRegion;
   let sortOrder = 0;
   for (const week of engineResult.weeks || []) {
+    const rawExercises = (week.exercises || [])
+      .filter((ex) => ex && ex.code)
+      .map((ex) => ({ ...ex, exercise_code: ex.code, exercise_name: ex.name }));
+
+    const proposal = hepSelection.proposeHomeProgramme(rawExercises, {
+      context: { affectedRegion },
+    });
+    const decisionByCode = new Map();
+    for (const item of [...proposal.home, ...proposal.clinic]) {
+      decisionByCode.set(item.exercise_code, item);
+    }
+
     for (const ex of week.exercises || []) {
       if (!ex || !ex.code) continue;
+      const decision = decisionByCode.get(ex.code) || {};
       await db.run(
         `INSERT INTO protocol_version_exercises
            (version_id, week_number, exercise_code, exercise_name, phase, sort_order, origin,
             sets, reps, frequency, duration_minutes,
-            equipment, progression, contraindications, red_flags, evidence_citation)
-         VALUES (?, ?, ?, ?, ?, ?, 'ENGINE', ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            equipment, progression, contraindications, red_flags, evidence_citation,
+            venue, venue_reason, home_rank, home_selected, selection_reason)
+         VALUES (?, ?, ?, ?, ?, ?, 'ENGINE', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           versionId,
           week.week,
@@ -309,6 +329,11 @@ async function createVersion(db, { protocolId, engineInput, engineResult, actor,
           serializeField(ex.contraindications),
           serializeField(ex.red_flags),
           serializeField(ex.evidence_citation),
+          decision.venue || 'HOME',
+          decision.venue_reason || null,
+          decision.home_rank ?? null,
+          decision.home_selected ? 1 : 0,
+          decision.selection_reason || null,
         ]
       );
     }
@@ -802,7 +827,13 @@ function buildHepPayload(protocol, version) {
     protocol_type: version.protocol_type,
     total_weeks: version.total_weeks,
     frequency: version.frequency,
-    exercises: version.exercises.map((e) => ({
+    // ONLY what the owner is to perform. Clinic-delivered work — Class IV
+    // laser, NMES, underwater treadmill — is excluded here and travels in
+    // `clinic_protocol` for the CCRT instead. Sending a pet owner an exercise
+    // that needs a trained operator is a safety failure, not a UX one.
+    exercises: version.exercises
+      .filter((e) => e.venue !== 'CLINIC' && (e.home_selected === 1 || e.origin === 'CLINICIAN'))
+      .map((e) => ({
       week_number: e.week_number,
       exercise_code: e.exercise_code,
       exercise_name: e.exercise_name,
@@ -822,7 +853,28 @@ function buildHepPayload(protocol, version) {
       contraindications: e.contraindications,
       red_flags: e.red_flags,
       evidence_citation: e.evidence_citation,
+      selection_reason: e.selection_reason,
     })),
+
+    // The in-clinic protocol: what the veterinarian has prescribed for the
+    // CCRT/CCRP to deliver in the practice. Carried on the same approved
+    // version so home and clinic work cannot drift apart, and so B.E.A.U. can
+    // show the owner what happens at their appointment without offering it as
+    // something to attempt themselves.
+    clinic_protocol: version.exercises
+      .filter((e) => e.venue === 'CLINIC')
+      .map((e) => ({
+        week_number: e.week_number,
+        exercise_code: e.exercise_code,
+        exercise_name: e.exercise_name,
+        phase: e.phase,
+        sets: e.sets,
+        reps: e.reps,
+        frequency: e.frequency,
+        duration_minutes: e.duration_minutes,
+        venue_reason: e.venue_reason,
+      })),
+
     restrictions: version.restrictions.map((r) => ({
       type: r.restriction_type,
       detail: r.detail,
