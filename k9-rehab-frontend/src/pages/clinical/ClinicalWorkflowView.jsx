@@ -47,6 +47,7 @@ export default function ClinicalWorkflowView({ setView, patient: initialPatient 
   const [assessment, setAssessment] = useState(EMPTY_ASSESSMENT);
   const [measurements, setMeasurements] = useState([]);
   const [version, setVersion] = useState(null);
+  const [videoRequests, setVideoRequests] = useState([]);
 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
@@ -65,13 +66,59 @@ export default function ClinicalWorkflowView({ setView, patient: initialPatient 
   const loadSnapshot = useCallback(async (patientId) => {
     setBusy(true); setError(null);
     try {
-      setSnapshot(await v2.getSnapshot(patientId));
+      const [snap, videos] = await Promise.all([
+        v2.getSnapshot(patientId),
+        v2.listVideoRequests(patientId).catch(() => []),
+      ]);
+      setSnapshot(snap);
+      setVideoRequests(videos || []);
     } catch (e) {
       setError(v2.describeError(e));
     } finally {
       setBusy(false);
     }
   }, []);
+
+  /**
+   * Answer a concern raised by the practitioner or reported by the owner.
+   *
+   * Answering reloads the snapshot rather than patching state locally: a
+   * SCHEDULED recheck stays outstanding until the patient is actually seen, and
+   * the server is the authority on that, not the screen.
+   */
+  const respondToRecheck = async (recheckId, status, response) => {
+    setBusy(true); setError(null); setNotice(null);
+    try {
+      await v2.respondToRecheck(recheckId, status, response);
+      setNotice("Response recorded.");
+      await loadSnapshot(patient.id);
+    } catch (e) {
+      setError(v2.describeError(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const requestVideo = async () => {
+    const exercise = window.prompt(
+      "Which exercise should the client film? (exercise code, or leave blank for general)"
+    );
+    if (exercise === null) return;
+    setBusy(true); setError(null);
+    try {
+      await v2.requestVideo(patient.id, {
+        version_id: snapshot?.active_protocol?.version_id,
+        exercise_code: exercise || null,
+        note: "Requested from the patient snapshot",
+      });
+      setNotice("Video requested. The client will see it in B.E.A.U. Home.");
+      await loadSnapshot(patient.id);
+    } catch (e) {
+      setError(v2.describeError(e));
+    } finally {
+      setBusy(false);
+    }
+  };
 
   useEffect(() => {
     if (patient?.id) loadSnapshot(patient.id);
@@ -174,7 +221,15 @@ export default function ClinicalWorkflowView({ setView, patient: initialPatient 
 
       {step === "snapshot" && patient && (
         <>
-          <ClinicalSnapshot snapshot={snapshot} patient={patient} />
+          <ClinicalSnapshot
+            snapshot={snapshot}
+            patient={patient}
+            canRespond={authority?.allowed === true}
+            onRespondToRecheck={respondToRecheck}
+            onRequestVideo={snapshot?.active_protocol ? requestVideo : null}
+            videoRequests={videoRequests}
+            busy={busy}
+          />
           <Actions>
             <button style={btn.primary} onClick={() => setStep("update")}>
               Record today's visit

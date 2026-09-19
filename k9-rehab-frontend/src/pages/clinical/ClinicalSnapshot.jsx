@@ -4,6 +4,8 @@ import {
 } from "react-icons/fi";
 import C from "../../constants/colors";
 import { SAFETY_GATE_LABELS, CAPABILITY_LABELS } from "./v2api";
+import ClinicalAlerts from "./ClinicalAlerts";
+import HomeProgramme from "./HomeProgramme";
 
 // ─────────────────────────────────────────────
 // CLINICAL SNAPSHOT
@@ -65,7 +67,9 @@ function Stat({ label, value, change }) {
   );
 }
 
-export default function ClinicalSnapshot({ snapshot, patient }) {
+export default function ClinicalSnapshot({
+  snapshot, patient, canRespond, onRespondToRecheck, onRequestVideo, videoRequests, busy,
+}) {
   if (!snapshot) return null;
 
   const {
@@ -77,12 +81,27 @@ export default function ClinicalSnapshot({ snapshot, patient }) {
     has_baseline: hasBaseline,
     visit_count: visitCount,
     clinic,
+    open_recheck_requests: rechecks = [],
+    unreviewed_session_count: unreviewedClinic = 0,
+    home,
   } = snapshot;
 
   const unstated = clinic?.unstated_capabilities || [];
 
   return (
     <div style={{ display: "grid", gap: 14 }}>
+      {/* Concerns come before clinical detail. Anything needing a clinician
+          today should not be reachable only by scrolling past ROM trends. */}
+      <ClinicalAlerts
+        rechecks={rechecks}
+        unreviewedClinicSessions={unreviewedClinic}
+        unreviewedHomeSessions={home?.unreviewed_session_count || 0}
+        ownerObservations={home?.new_observations || []}
+        canRespond={canRespond}
+        onRespond={onRespondToRecheck}
+        busy={busy}
+      />
+
       {/* ── Identity + condition ─────────────────────────────────────────── */}
       <div style={card}>
         <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
@@ -193,6 +212,15 @@ export default function ClinicalSnapshot({ snapshot, patient }) {
             ))}
           </div>
         </div>
+      )}
+
+      {/* ── What came back from home ─────────────────────────────────────── */}
+      {home && (
+        <HomeProgramme
+          home={home}
+          videoRequests={videoRequests}
+          onRequestVideo={onRequestVideo}
+        />
       )}
 
       {/* ── Prescription currently in force ──────────────────────────────── */}

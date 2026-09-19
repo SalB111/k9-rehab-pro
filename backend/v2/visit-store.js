@@ -441,9 +441,16 @@ async function buildClinicalSnapshot(db, { patientId, patient }) {
       id: r.id,
       urgency: r.urgency,
       reason: r.reason,
+      clinical_findings: r.clinical_findings,
       raised_by: r.raised_by_username,
       raised_at: r.raised_at,
       status: r.status,
+      // What a clinician has already said about it. Without this a second
+      // clinician sees an outstanding concern and no sign it has been answered,
+      // and either duplicates the response or contradicts it.
+      vet_response: r.vet_response,
+      answered_by: r.acknowledged_by_username,
+      answered_at: r.acknowledged_at,
     })),
     unreviewed_session_count: unreviewedSessions.length,
     home,

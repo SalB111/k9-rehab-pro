@@ -144,3 +144,61 @@ export const CAPABILITY_LABELS = {
   modality_cryotherapy: "Cryotherapy",
   modality_heat_therapy: "Heat therapy",
 };
+
+// ── Recheck requests ─────────────────────────────────────────────────────────
+
+export const listRechecks = (patientId) =>
+  api.get(`/v2/rechecks`, { params: { patient_id: patientId } }).then(unwrap);
+
+export const respondToRecheck = (recheckId, status, response) =>
+  api.post(`/v2/rechecks/${recheckId}/respond`, { status, response }).then(unwrap);
+
+// ── In-clinic sessions ───────────────────────────────────────────────────────
+
+export const listClinicSessions = (patientId) =>
+  api.get(`/v2/patients/${patientId}/sessions`).then(unwrap);
+
+export const getClinicSession = (sessionId) =>
+  api.get(`/v2/sessions/${sessionId}`).then(unwrap);
+
+export const reviewClinicSession = (sessionId, note) =>
+  api.post(`/v2/sessions/${sessionId}/review`, { note }).then(unwrap);
+
+// ── Home programme ───────────────────────────────────────────────────────────
+
+export const getAdherence = (patientId) =>
+  api.get(`/v2/patients/${patientId}/adherence`).then(unwrap);
+
+export const listHomeSessions = (patientId) =>
+  api.get(`/v2/patients/${patientId}/home-sessions`).then(unwrap);
+
+export const reviewHomeSession = (sessionId, note) =>
+  api.post(`/v2/home-sessions/${sessionId}/review`, { note }).then(unwrap);
+
+export const requestVideo = (patientId, body) =>
+  api.post(`/v2/patients/${patientId}/video-requests`, body).then(unwrap);
+
+export const listVideoRequests = (patientId, status) =>
+  api.get(`/v2/beau/patients/${patientId}/video-requests`, { params: { status } }).then(unwrap);
+
+// ── Labels ───────────────────────────────────────────────────────────────────
+
+export const URGENCY_LABELS = {
+  URGENT: "Urgent",
+  SOON: "Soon",
+  ROUTINE: "Routine",
+};
+
+export const RECHECK_RESPONSES = [
+  { value: "ACKNOWLEDGED", label: "Acknowledge", hint: "Seen. Still deciding." },
+  { value: "SCHEDULED", label: "Book a recheck", hint: "Stays open until the patient is seen." },
+  { value: "RESOLVED", label: "Resolve", hint: "Dealt with — closes the concern." },
+  { value: "DECLINED", label: "No action needed", hint: "Requires a reason." },
+];
+
+export const DIFFICULTY_LABELS = {
+  EASY: "too easy",
+  JUST_RIGHT: "about right",
+  HARD: "hard",
+  TOO_HARD: "too hard",
+};
