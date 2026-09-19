@@ -17,8 +17,13 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      # Comma-separated. Setting this OVERRIDES the allowlist in server.js
+      # entirely, so every origin that must reach the API belongs here —
+      # including B.E.A.U. at Home, which deploys separately to Vercel and
+      # whose clients would otherwise be blocked by CORS the moment they open
+      # their exercise programme.
       - key: CORS_ORIGIN
-        value: "https://k9-rehab-pro.onrender.com"
+        value: "https://k9-rehab-pro.onrender.com,https://beauaihome.vercel.app,https://beauaihome-salb111s-projects.vercel.app"
       - key: DB_PATH
         value: /var/data/k9-rehab-pro/database.db
       - key: JWT_SECRET
