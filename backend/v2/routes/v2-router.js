@@ -22,6 +22,7 @@
 const store = require('../protocol-store');
 const visitStore = require('../visit-store');
 const sessionStore = require('../session-store');
+const homeStore = require('../home-store');
 const clinicStore = require('../clinic-store');
 const adapter = require('../engine-adapter');
 const authority = require('../authority');
@@ -393,6 +394,123 @@ function createV2Router(deps) {
 
   router.get('/protocols/:id/audit', route(async (req, res) => {
     res.json({ success: true, data: await store.getAuditTrail(db, Number(req.params.id)) });
+  }));
+
+  // -------------------------------------------------------------------------
+  // B.E.A.U. Home — the client feedback loop
+  //
+  // Everything here REPORTS. Nothing here prescribes: B.E.A.U. cannot change an
+  // approved protocol, a dosage, or a restriction.
+  // -------------------------------------------------------------------------
+
+  /** Did the client open the app. Separate signal from whether they did the work. */
+  router.post('/beau/patients/:id/engagement', route(async (req, res) => {
+    await homeStore.recordEngagement(db, {
+      patientId: Number(req.params.id),
+      handoffId: req.body.handoff_id,
+      event: req.body.event,
+      detail: req.body.detail,
+    });
+    res.status(201).json({ success: true });
+  }));
+
+  /** Begin a home session against the live prescription. */
+  router.post('/beau/patients/:id/home-sessions', route(async (req, res) => {
+    const session = await homeStore.startHomeSession(db, {
+      patientId: Number(req.params.id),
+      sessionDate: req.body.session_date,
+      weekNumber: req.body.week_number,
+    });
+    res.status(201).json({ success: true, data: session });
+  }));
+
+  router.get('/beau/home-sessions/:id', route(async (req, res) => {
+    res.json({ success: true, data: await homeStore.getHomeSession(db, Number(req.params.id)) });
+  }));
+
+  router.post('/beau/home-sessions/:id/exercises/:rowId', route(async (req, res) => {
+    const session = await homeStore.logExercise(db, {
+      sessionId: Number(req.params.id),
+      exerciseRowId: Number(req.params.rowId),
+      log: req.body,
+    });
+    res.json({ success: true, data: session });
+  }));
+
+  /** The few short questions, asked once at the end. */
+  router.post('/beau/home-sessions/:id/complete', route(async (req, res) => {
+    res.json({ success: true, data: await homeStore.completeHomeSession(db, {
+      sessionId: Number(req.params.id), summary: req.body,
+    }) });
+  }));
+
+  /** Free feedback, a question, or a stop condition the owner saw. */
+  router.post('/beau/patients/:id/observations', route(async (req, res) => {
+    const observation = await homeStore.reportObservation(db, {
+      patientId: Number(req.params.id),
+      homeSessionId: req.body.home_session_id,
+      type: req.body.observation_type || 'FEEDBACK',
+      severity: req.body.severity,
+      detail: req.body.detail,
+    });
+    res.status(201).json({ success: true, data: observation });
+  }));
+
+  /** Videos the clinic has asked this client for. */
+  router.get('/beau/patients/:id/video-requests', route(async (req, res) => {
+    res.json({ success: true, data: await homeStore.listVideoRequests(db, {
+      patientId: Number(req.params.id), status: req.query.status,
+    }) });
+  }));
+
+  router.post('/beau/video-requests/:id/submit', route(async (req, res) => {
+    res.json({ success: true, data: await homeStore.submitVideo(db, {
+      requestId: Number(req.params.id),
+      mediaRef: req.body.media_ref,
+      homeSessionId: req.body.home_session_id,
+      ownerNote: req.body.owner_note,
+    }) });
+  }));
+
+  // -- Clinic side of the loop ----------------------------------------------
+
+  router.get('/patients/:id/home-sessions', route(async (req, res) => {
+    res.json({ success: true, data: await homeStore.listHomeSessions(db, Number(req.params.id)) });
+  }));
+
+  router.get('/patients/:id/adherence', route(async (req, res) => {
+    res.json({ success: true, data: await homeStore.getAdherenceSummary(db, Number(req.params.id)) });
+  }));
+
+  /** Home reports nobody has read. Omit the patient for the whole caseload. */
+  router.get('/home-sessions-unreviewed', route(async (req, res) => {
+    const patientId = req.query.patient_id ? Number(req.query.patient_id) : null;
+    res.json({ success: true, data: await homeStore.listUnreviewedHomeSessions(db, patientId) });
+  }));
+
+  /** A clinician reading what came back. This is what advances the record. */
+  router.post('/home-sessions/:id/review', approvalAuthority, route(async (req, res) => {
+    res.json({ success: true, data: await homeStore.reviewHomeSession(db, {
+      sessionId: Number(req.params.id), note: req.body.note, actor: req.user,
+    }) });
+  }));
+
+  /** Ask this client to film one exercise. */
+  router.post('/patients/:id/video-requests', route(async (req, res) => {
+    const request = await homeStore.requestVideo(db, {
+      patientId: Number(req.params.id),
+      versionId: req.body.version_id,
+      exerciseCode: req.body.exercise_code,
+      note: req.body.note,
+      actor: req.user,
+    });
+    res.status(201).json({ success: true, data: request });
+  }));
+
+  router.post('/video-requests/:id/review', route(async (req, res) => {
+    res.json({ success: true, data: await homeStore.reviewVideo(db, {
+      requestId: Number(req.params.id), note: req.body.note, actor: req.user,
+    }) });
   }));
 
   // -------------------------------------------------------------------------

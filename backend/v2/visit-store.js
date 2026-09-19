@@ -407,6 +407,33 @@ async function buildClinicalSnapshot(db, { patientId, patient }) {
     // session schema not applied yet — the snapshot still stands on its own
   }
 
+  // What came back from home. Kept in its own branch and labelled: an owner's
+  // observations are not clinician measurements, and must not be read from the
+  // same place as `current_state` or `measurement_trends`.
+  let home = null;
+  try {
+    const homeStore = require('./home-store');
+    const [adherence, engagement, newObservations, unreviewedHome] = await Promise.all([
+      homeStore.getAdherenceSummary(db, patientId),
+      homeStore.getEngagementSummary(db, patientId),
+      homeStore.listNewObservations(db, patientId),
+      homeStore.listUnreviewedHomeSessions(db, patientId),
+    ]);
+    home = {
+      source: 'OWNER_REPORTED',
+      adherence,
+      engagement,
+      unreviewed_session_count: unreviewedHome.length,
+      new_observations: newObservations.map((o) => ({
+        id: o.id, type: o.observation_type, severity: o.severity,
+        detail: o.detail, reported_at: o.reported_at,
+        escalated_recheck_id: o.recheck_request_id,
+      })),
+    };
+  } catch {
+    // home schema not applied yet
+  }
+
   return {
     patient: patient || { id: patientId },
     visit_count: visits.length,
@@ -419,6 +446,7 @@ async function buildClinicalSnapshot(db, { patientId, patient }) {
       status: r.status,
     })),
     unreviewed_session_count: unreviewedSessions.length,
+    home,
     last_visit: lastVisit
       ? {
           id: lastVisit.id,

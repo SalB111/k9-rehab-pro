@@ -21,6 +21,7 @@ const SQLITE_SCHEMAS = [
   'clinical-authority.sqlite.sql',
   'clinic-capabilities.sqlite.sql',
   'clinic-sessions.sqlite.sql',
+  'home-execution.sqlite.sql',
 ];
 
 /** Postgres/Supabase equivalents, same order. Kept in parity by tests/schema-parity.test.js. */
@@ -30,6 +31,7 @@ const POSTGRES_SCHEMAS = [
   'clinical-authority.postgres.sql',
   'clinic-capabilities.postgres.sql',
   'clinic-sessions.postgres.sql',
+  'home-execution.postgres.sql',
 ];
 
 /**

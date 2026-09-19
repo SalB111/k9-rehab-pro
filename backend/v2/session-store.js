@@ -50,10 +50,27 @@ const SESSION_AUDIT = {
   RECHECK_ANSWERED: 'RECHECK_ANSWERED',
 };
 
+/**
+ * Every clinical write needs a named actor.
+ *
+ * `external: true` covers an actor who is not a system user — a pet owner
+ * reporting through B.E.A.U. They are still named and still attributed; they
+ * simply have no row in `users`, so their id is stored as NULL rather than
+ * invented. Fabricating an id to satisfy a foreign key would put a reference to
+ * a non-existent user on a clinical record.
+ */
 function requireActor(actor) {
-  if (!actor || actor.id === undefined || actor.id === null || !actor.username) {
+  if (!actor || !actor.username) {
     throw new ProtocolStoreError('An identified actor is required for every clinical write', ERR.INVALID);
   }
+  if (!actor.external && (actor.id === undefined || actor.id === null)) {
+    throw new ProtocolStoreError('An identified actor is required for every clinical write', ERR.INVALID);
+  }
+}
+
+/** User id for a foreign key — NULL for an actor with no user account. */
+function actorUserId(actor) {
+  return actor && actor.external ? null : (actor ? actor.id : null);
 }
 
 async function audit(db, { patientId, versionId, action, actor, detail }) {
@@ -63,7 +80,7 @@ async function audit(db, { patientId, versionId, action, actor, detail }) {
      VALUES (?, ?, ?, ?, ?, ?, 'K9', ?)`,
     [
       patientId ?? null, versionId ?? null, action,
-      actor?.id ?? null, actor?.username ?? null, actor?.role ?? null,
+      actorUserId(actor), actor?.username ?? null, actor?.role ?? null,
       detail ? JSON.stringify(detail) : null,
     ]
   );
@@ -441,7 +458,7 @@ async function withdrawRecheck(db, { recheckId, actor, reason }) {
   requireActor(actor);
   const recheck = await getRecheck(db, recheckId);
 
-  if (Number(recheck.raised_by) !== Number(actor.id)) {
+  if (recheck.raised_by === null || Number(recheck.raised_by) !== Number(actor.id)) {
     throw new ProtocolStoreError(
       `Only ${recheck.raised_by_username}, who raised this concern, can withdraw it.`,
       ERR.FORBIDDEN
