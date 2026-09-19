@@ -21,6 +21,7 @@ const BeauMetricsView = lazy(() => import("./pages/BeauMetricsView"));
 const HelsinkiView = lazy(() => import("./pages/HelsinkiView"));
 const CalculatorsView = lazy(() => import("./pages/CalculatorsView"));
 const ClinicalWorkflowView = lazy(() => import("./pages/clinical/ClinicalWorkflowView"));
+const ClinicalAdminView = lazy(() => import("./pages/clinical/ClinicalAdminView"));
 
 export default function App() {
   // ── DEV-ONLY LOGIN BYPASS ────────────────────────────────────────────────
@@ -103,6 +104,8 @@ export default function App() {
     switch (view) {
       case "dashboard":
         return <DashboardView setView={setView} currentUser={currentUser} onLogout={handleLogout} patient={selectedPatient} setSelectedPatient={setSelectedPatient} />;
+      case "clinical-admin":
+        return <ClinicalAdminView setView={setView} />;
       case "clinical":
         return <ClinicalWorkflowView setView={setView} patient={selectedPatient} />;
       case "generator":

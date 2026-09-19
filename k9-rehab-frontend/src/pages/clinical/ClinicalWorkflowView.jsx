@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { FiAlertCircle, FiArrowLeft, FiCheck, FiRefreshCw } from "react-icons/fi";
+import { FiAlertCircle, FiArrowLeft, FiCheck, FiRefreshCw, FiSettings } from "react-icons/fi";
 import api from "../../api/axios";
 import C from "../../constants/colors";
 import ClinicalSnapshot from "./ClinicalSnapshot";
@@ -234,11 +234,16 @@ function Header({ setView, patient, onChangePatient }) {
         <FiArrowLeft size={13} /> Dashboard
       </button>
       <div style={{ fontSize: 18, fontWeight: 700, color: C.navy }}>Clinical Workflow</div>
-      {patient && (
-        <button style={{ ...btn.ghost, marginLeft: "auto" }} onClick={onChangePatient}>
-          Change patient
+      <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
+        {patient && (
+          <button style={btn.ghost} onClick={onChangePatient}>Change patient</button>
+        )}
+        {/* Reachable from the workflow because that is where a clinician
+            discovers they cannot approve, or that equipment is undeclared. */}
+        <button style={btn.ghost} onClick={() => setView("clinical-admin")}>
+          <FiSettings size={13} /> Access & equipment
         </button>
-      )}
+      </div>
     </div>
   );
 }

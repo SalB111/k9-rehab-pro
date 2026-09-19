@@ -348,6 +348,78 @@ function createV2Router(deps) {
     res.status(201).json({ success: true, data: credential });
   }));
 
+  // ── User + role administration ─────────────────────────────────────────
+  //
+  // Approval authority is deliberately restricted, which means there must be a
+  // supported way to grant and inspect it. Without this the owner of the system
+  // can be locked out of their own project with no route back except SQL.
+
+  /** Every user with whether they can approve, and why not. Admin only. */
+  router.get('/users', requireRole('admin'), route(async (req, res) => {
+    const users = await db.all(`SELECT id, username, role FROM users ORDER BY id`);
+    const enriched = [];
+    for (const user of users) {
+      const check = await authority.resolveApprovalAuthority(db, { actor: user });
+      enriched.push({
+        ...user,
+        can_approve: check.allowed,
+        basis: check.basis,
+        reason: check.reason,
+        explanation: check.allowed ? null : authority.explainDenial(check.reason, user),
+        credentials: await authority.listCredentials(db, user.id),
+      });
+    }
+    res.json({ success: true, data: enriched });
+  }));
+
+  /** Set a user's role. Admin only. */
+  router.post('/users/:id/role', requireRole('admin'), route(async (req, res) => {
+    const userId = Number(req.params.id);
+    const role = String(req.body.role || '').trim().toLowerCase();
+    if (!role) {
+      return res.status(400).json({ success: false, error: 'role is required', code: 'INVALID' });
+    }
+
+    const user = await db.get(`SELECT id, username, role FROM users WHERE id = ?`, [userId]);
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User not found', code: 'NOT_FOUND' });
+    }
+
+    // Refuse to remove the last admin. Locking every administrator out of a
+    // running clinical system leaves no supported way back in.
+    if (String(user.role).toLowerCase() === 'admin' && role !== 'admin') {
+      const admins = await db.all(`SELECT id FROM users WHERE lower(role) = 'admin'`);
+      if (admins.length <= 1) {
+        return res.status(409).json({
+          success: false,
+          code: 'IMMUTABLE',
+          error: 'This is the only administrator. Promote another user to admin first, '
+            + 'or the system would have no one able to manage access.',
+        });
+      }
+    }
+
+    await db.run(`UPDATE users SET role = ? WHERE id = ?`, [role, userId]);
+    const check = await authority.resolveApprovalAuthority(db, {
+      actor: { ...user, role },
+    });
+    res.json({
+      success: true,
+      data: { id: userId, username: user.username, role, can_approve: check.allowed, basis: check.basis },
+    });
+  }));
+
+  /** Revoke a credential. Past approvals that relied on it remain valid. */
+  router.post('/credentials/:id/revoke', requireRole('admin'), route(async (req, res) => {
+    const id = Number(req.params.id);
+    const row = await db.get(`SELECT * FROM clinician_credentials WHERE id = ?`, [id]);
+    if (!row) {
+      return res.status(404).json({ success: false, error: 'Credential not found', code: 'NOT_FOUND' });
+    }
+    await db.run(`UPDATE clinician_credentials SET status = 'REVOKED' WHERE id = ?`, [id]);
+    res.json({ success: true, data: { id, status: 'REVOKED' } });
+  }));
+
   /** Whether the current user may approve, and why not if they cannot. */
   router.get('/me/approval-authority', route(async (req, res) => {
     const check = await authority.resolveApprovalAuthority(db, { actor: req.user });
@@ -377,11 +449,23 @@ function createV2Router(deps) {
  * so there is nothing to resolve against. This returns the single configured
  * clinic. Correct for a single-practice deployment, and wrong the moment two
  * clinics share an instance — which is why the router accepts an override.
+ *
+ * If no clinic row exists, one is created rather than returning an id that does
+ * not. Returning a fabricated id 1 satisfied the type but violated the
+ * clinic_capabilities foreign key, so recording equipment failed with an opaque
+ * SQLITE_CONSTRAINT on any installation that had never created a clinic.
  */
 async function defaultResolveClinicId(req, db) {
   if (req.user && req.user.clinic_id) return req.user.clinic_id;
+
   const clinic = await db.get(`SELECT id FROM clinics ORDER BY id LIMIT 1`);
-  return clinic ? clinic.id : 1;
+  if (clinic) return clinic.id;
+
+  const created = await db.run(
+    `INSERT INTO clinics (clinic_name) VALUES (?)`,
+    ['Default clinic']
+  );
+  return created.lastID;
 }
 
 async function defaultGetPatient(db, patientId) {
