@@ -191,7 +191,7 @@ function SessionsView() {
             border: `1.5px solid ${C.teal}44`,
           }}>
             {/* Header — clickable toggle */}
-            <div
+            <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => setProtocolExpanded(e => !e))(e); } }}
               onClick={() => setProtocolExpanded(e => !e)}
               style={{
                 display: "flex", alignItems: "center", gap: 10,

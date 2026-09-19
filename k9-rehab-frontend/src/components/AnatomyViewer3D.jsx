@@ -1279,7 +1279,7 @@ export default function AnatomyViewer3D({ exerciseCode, diagnosis, species = "Ca
       {/* ── Model + (in calibrate) side-by-side controls ── */}
       <div style={{ display: calibrate ? "flex" : "block", gap:12, alignItems:"flex-start" }}>
       {/* ── 3D Canvas ── */}
-      <div style={{ flex:1, minWidth:0, position:"relative", borderRadius:8, overflow:"hidden",
+      <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (onCalibClick)(e); } }} style={{ flex:1, minWidth:0, position:"relative", borderRadius:8, overflow:"hidden",
         cursor: isDrag.current ? "grabbing" : "grab", touchAction:"none", overscrollBehavior:"contain" }}
         onMouseEnter={() => { mouseInsideRef.current = true; }}
         onMouseLeave={() => { mouseInsideRef.current = false; setHovered(null); }}

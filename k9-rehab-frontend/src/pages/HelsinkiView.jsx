@@ -155,7 +155,7 @@ export default function HelsinkiView({ setView }) {
             <div style={S.qText}>{q.n}. {tr(q.text)}</div>
             <div style={S.optGrid}>
               {HELSINKI_OPTIONS.map(opt => (
-                <div key={opt.v}
+                <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => update(`Q${q.n}`, opt.v))(e); } }} key={opt.v}
                   onClick={() => update(`Q${q.n}`, opt.v)}
                   style={S.opt(val === opt.v)}>
                   {tr(opt.label)}

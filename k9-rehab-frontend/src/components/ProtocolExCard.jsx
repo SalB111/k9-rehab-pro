@@ -18,7 +18,7 @@ function ProtocolExCard({ entry, onRemove, onOpenStoryboard, onAnatomyClick }) {
       {/* Card header */}
       <div style={{ padding: "14px 16px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
-          <div style={{ display: "flex", gap: 10, flex: 1, cursor: "pointer" }} onClick={() => setOpen(o => !o)}>
+          <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => setOpen(o => !o))(e); } }} style={{ display: "flex", gap: 10, flex: 1, cursor: "pointer" }} onClick={() => setOpen(o => !o)}>
             {/* Category icon badge */}
             <div style={{
               width: 36, height: 36, borderRadius: 8, background: catIcon.SvgIcon ? "#0A0A0A" : catIcon.bg,

@@ -359,7 +359,7 @@ export default function Step7HomeProtocol({ form, setField, generate, allExercis
             style={{ accentColor: C.green, width: 16, height: 16, cursor: "pointer" }} />
           <span style={{ fontSize: 11, fontWeight: 600, color: C.text }}>
             {tr("I acknowledge the")}{" "}
-            <span
+            <span role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (e => { e.preventDefault(); setComplianceOpen(o => !o); })(e); } }}
               onClick={e => { e.preventDefault(); setComplianceOpen(o => !o); }}
               style={{ color: C.teal, textDecoration: "underline", cursor: "pointer" }}
             >{tr("K9 Rehab Pro — Compliance & Data Protection Notice")}</span>

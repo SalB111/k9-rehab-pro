@@ -202,3 +202,14 @@ export const DIFFICULTY_LABELS = {
   HARD: "hard",
   TOO_HARD: "too hard",
 };
+
+// ── B.E.A.U. Home access ─────────────────────────────────────────────────────
+
+export const getHomeAccess = (patientId) =>
+  api.get(`/v2/patients/${patientId}/home-access`).then(unwrap);
+
+export const issueHomeAccess = (patientId) =>
+  api.post(`/v2/patients/${patientId}/home-access`).then(unwrap);
+
+export const revokeHomeAccess = (patientId) =>
+  api.delete(`/v2/patients/${patientId}/home-access`).then(unwrap);

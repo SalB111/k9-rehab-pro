@@ -1,5 +1,5 @@
 import React from "react";
-import { FiHome, FiSmartphone, FiVideo } from "react-icons/fi";
+import { FiHome, FiKey, FiSmartphone, FiVideo } from "react-icons/fi";
 import C from "../../constants/colors";
 import { DIFFICULTY_LABELS } from "./v2api";
 
@@ -36,7 +36,7 @@ function Figure({ label, value, sub, tone }) {
   );
 }
 
-export default function HomeProgramme({ home, videoRequests = [], onRequestVideo }) {
+export default function HomeProgramme({ home, videoRequests = [], onRequestVideo, access, onIssueAccess, issuedCode }) {
   if (!home) return null;
 
   const { adherence, engagement } = home;
@@ -155,6 +155,45 @@ export default function HomeProgramme({ home, videoRequests = [], onRequestVideo
             : "App never opened"}
         </div>
       )}
+
+      {/* ── Access ───────────────────────────────────────────────────────── */}
+      <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${C.purpleLight}` }}>
+        {issuedCode ? (
+          <div style={{ padding: 12, borderRadius: 8, background: C.surface, border: `1px solid ${C.teal}` }}>
+            <div style={{ fontSize: 12, color: C.textMid }}>
+              Give this to the client. It is shown once and cannot be looked up again.
+            </div>
+            <div style={{
+              fontSize: 24, fontWeight: 700, letterSpacing: 3, marginTop: 6,
+              fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace", color: C.navy,
+            }}>
+              {issuedCode}
+            </div>
+          </div>
+        ) : (
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <FiKey size={14} style={{ color: C.textLight }} />
+            <span style={{ fontSize: 12, color: C.textMid }}>
+              {access
+                ? `Client access active — code ending ${access.code_hint}` +
+                  (access.last_used_at ? ` · last used ${access.last_used_at}` : " · never used")
+                : "No client access yet. The owner cannot open their programme."}
+            </span>
+            {onIssueAccess && (
+              <button
+                onClick={onIssueAccess}
+                style={{
+                  marginLeft: "auto", padding: "6px 12px", fontSize: 12, fontWeight: 600,
+                  borderRadius: 6, cursor: "pointer",
+                  border: `1px solid ${C.border}`, background: C.surface, color: C.textMid,
+                }}
+              >
+                {access ? "New code" : "Give client access"}
+              </button>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* ── Video ────────────────────────────────────────────────────────── */}
       <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${C.purpleLight}` }}>

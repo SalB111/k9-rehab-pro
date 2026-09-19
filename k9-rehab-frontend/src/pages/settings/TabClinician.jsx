@@ -56,7 +56,7 @@ export function TabClinician({ clinician, setClinician, flashSave, isOpen, toggl
             {CREDENTIAL_OPTIONS.map(cred => {
               const active = clinician.credentials.includes(cred);
               return (
-                <div key={cred} onClick={() => {
+                <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => { setClinician(prev => ({ ...prev, credentials: active ? prev.credentials.filter(c => c !== cred) : [...prev.credentials, cred], })); })(e); } }} key={cred} onClick={() => {
                   setClinician(prev => ({
                     ...prev,
                     credentials: active
@@ -85,7 +85,7 @@ export function TabClinician({ clinician, setClinician, flashSave, isOpen, toggl
             {BOARD_CERT_OPTIONS.map(cert => {
               const active = clinician.board_certs.includes(cert);
               return (
-                <div key={cert} onClick={() => {
+                <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => { setClinician(prev => ({ ...prev, board_certs: active ? prev.board_certs.filter(c => c !== cert) : [...prev.board_certs, cert], })); })(e); } }} key={cert} onClick={() => {
                   setClinician(prev => ({
                     ...prev,
                     board_certs: active

@@ -547,7 +547,7 @@ export default function ProtocolResults({ protocol, setProtocol, setWizardStep, 
                         padding: "10px 14px", background: C.surface,
                         border: `1px solid ${C.border}`, borderRadius: 8,
                       }}>
-                        <div
+                        <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (hasDetails ? () => setHepOpen(prev => ({ ...prev, [key]: !prev[key] })) : undefined)(e); } }}
                           onClick={hasDetails ? () => setHepOpen(prev => ({ ...prev, [key]: !prev[key] })) : undefined}
                           style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", cursor: hasDetails ? "pointer" : "default" }}
                         >

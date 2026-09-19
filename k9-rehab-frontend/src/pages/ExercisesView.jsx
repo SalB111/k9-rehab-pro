@@ -139,7 +139,7 @@ function ExerciseCard({ e, onOpenStoryboard, onUseInProtocol, onPrintHandout }) 
       transition: "box-shadow 0.15s", gridColumn: open ? "1 / -1" : undefined
     }}>
       {/* Header â€" always visible */}
-      <div style={{ padding: 20, cursor: "pointer" }} onClick={() => setOpen(o => !o)}>
+      <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => setOpen(o => !o))(e); } }} style={{ padding: 20, cursor: "pointer" }} onClick={() => setOpen(o => !o)}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
           <div style={{ fontWeight: 700, fontSize: 14, color: C.text, flex: 1, paddingRight: 12 }}>
             {e.name}
@@ -614,7 +614,7 @@ function ExercisesView({ setView, setGenKey, setGenInitialStep }) {
               { label: "Moderate", count: modCount, color: C.teal },
               { label: "Advanced", count: advCount, color: C.amber },
             ].map(d => (
-              <div key={d.label} onClick={() => setFilterDiff(prev => prev === d.label ? "" : d.label)}
+              <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => setFilterDiff(prev => prev === d.label ? "" : d.label))(e); } }} key={d.label} onClick={() => setFilterDiff(prev => prev === d.label ? "" : d.label)}
                 style={{ display: "flex", alignItems: "baseline", gap: 5, cursor: "pointer", transition: "opacity 0.15s", opacity: filterDiff && filterDiff !== d.label ? 0.4 : 1 }}>
                 <span style={{ fontSize: 18, fontWeight: 800, color: d.color, lineHeight: 1 }}>{d.count}</span>
                 <span style={{ fontSize: 11, fontWeight: 700, color: "#222", textTransform: "uppercase", letterSpacing: "0.5px" }}>{tr(d.label)}</span>
@@ -730,7 +730,7 @@ function ExercisesView({ setView, setGenKey, setGenInitialStep }) {
         return (
           <div key={cat} ref={el => catRefs.current[cat] = el} style={{ ...S.card, padding: 0, overflow: "hidden", marginBottom: 16, border: `2px solid ${C.teal}40`, borderRadius: 12 }}>
             {/* Category header — centered, bold */}
-            <div
+            <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => toggleCat(cat))(e); } }}
               onClick={() => toggleCat(cat)}
               style={{
                 display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",

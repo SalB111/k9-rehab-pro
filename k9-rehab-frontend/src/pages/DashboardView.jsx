@@ -174,7 +174,7 @@ const MultiF = ({ label, options, hint, accent="#EC4899", disabled }) => {
         {options.map(o => {
           const checked = selected.includes(o);
           return (
-            <div key={o} className={`cb-row${checked?" active":""}`} onClick={() => toggle(o)} style={{ cursor: disabled ? "not-allowed" : "pointer" }}>
+            <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => toggle(o))(e); } }} key={o} className={`cb-row${checked?" active":""}`} onClick={() => toggle(o)} style={{ cursor: disabled ? "not-allowed" : "pointer" }}>
               <input type="checkbox" checked={checked} disabled={disabled} readOnly style={{ width:14, height:14, accentColor:accent, flexShrink:0 }}/>
               <span style={{ fontSize:11, color: checked ? accent : C.text }}>{tr(o)}</span>
             </div>
@@ -329,7 +329,7 @@ const Sec = ({ title, color=C.blue, colorLt, children, noTop, collapsible, defau
 
   return (
     <div style={{ marginBottom: isHidden ? 8 : 22 }}>
-      <div
+      <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (collapsible ? () => setOpen(o => !o) : undefined)(e); } }}
         onClick={collapsible ? () => setOpen(o => !o) : undefined}
         style={{
           fontSize:11, fontWeight:700, color, letterSpacing:".1em", textTransform:"uppercase",
@@ -399,7 +399,7 @@ const CollapsibleSub = ({ title, children, defaultOpen=false, accentColor=C.teal
       marginBottom: 12,
       marginTop: 4,
     }}>
-      <div
+      <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => setOpen(o => !o))(e); } }}
         onClick={() => setOpen(o => !o)}
         style={{
           padding: "10px 14px",
@@ -429,7 +429,7 @@ function CbItem({ label, checked, onToggle, children }) {
   const tr = useTr();
   return (
     <div>
-      <div className={`cb-row${checked?" active":""}`} onClick={onToggle}>
+      <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (onToggle)(e); } }} className={`cb-row${checked?" active":""}`} onClick={onToggle}>
         <input type="checkbox" checked={!!checked} readOnly
           style={{ width:16, height:16, accentColor:C.blue, flexShrink:0, cursor:"pointer" }}/>
         <span style={{ fontSize:12, fontWeight:600, color:checked?C.blue:C.text }}>{tr(label)}</span>
@@ -585,7 +585,7 @@ function Modal({ title, color, colorLt, icon, onClose, children, beauContext, be
     try { await handleSave?.(); } finally { setTimeout(() => setBlockSaving(false), 600); }
   };
   return (
-    <div style={{ position:"fixed", inset:0, zIndex:200, background:"rgba(26,39,68,.55)", display:"flex", alignItems:"center", justifyContent:"center", padding:48, animation:"fadeIn .18s ease" }}
+    <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (e=>{ if(e.target===e.currentTarget) onClose(); })(e); } }} style={{ position:"fixed", inset:0, zIndex:200, background:"rgba(26,39,68,.55)", display:"flex", alignItems:"center", justifyContent:"center", padding:48, animation:"fadeIn .18s ease" }}
       onClick={e=>{ if(e.target===e.currentTarget) onClose(); }}>
       <div style={{ background:C.white, borderRadius:10, width:"100%", height:"100%", maxWidth:1600, maxHeight:"none", display:"flex", flexDirection:"column", animation:"modalIn .2s ease", boxShadow:"0 24px 80px rgba(26,39,68,.25)", border:`1px solid ${C.border}` }}>
         {/* Header */}
@@ -717,7 +717,7 @@ export function LanguageSelector() {
           {SUPPORTED_LOCALES.map(l => {
             const active = l.code === current.code;
             return (
-              <div key={l.code} onClick={() => pick(l.code)}
+              <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => pick(l.code))(e); } }} key={l.code} onClick={() => pick(l.code)}
                 style={{
                   display: "flex", alignItems: "center", gap: 9,
                   padding: "8px 10px", cursor: "pointer", borderRadius: 4,
@@ -923,7 +923,7 @@ function ClientPanel() {
           <div style={{ display:"flex", flexWrap:"wrap", gap:4, padding:"8px 10px", background:C.white, border:`1px solid ${C.border}`, borderRadius:5, minHeight:38, marginBottom:4 }}>
             {selectedColors.length === 0 && <span style={{ fontSize:11, color:C.gray }}>Select colors & patterns…</span>}
             {selectedColors.map(c => (
-              <span key={c} onClick={() => toggleColor(c)} style={{
+              <span role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => toggleColor(c))(e); } }} key={c} onClick={() => toggleColor(c)} style={{
                 fontSize:10, fontWeight:600, padding:"2px 8px", borderRadius:10,
                 background:C.blueLt, border:`1px solid ${C.blue}44`, color:C.blue,
                 cursor:"pointer", display:"inline-flex", alignItems:"center", gap:3,
@@ -934,7 +934,7 @@ function ClientPanel() {
             {[...COLOR_OPTIONS, ...PATTERN_OPTIONS].map(opt => {
               const sel = selectedColors.includes(opt);
               return (
-                <span key={opt} onClick={() => toggleColor(opt)} style={{
+                <span role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => toggleColor(opt))(e); } }} key={opt} onClick={() => toggleColor(opt)} style={{
                   fontSize:9, padding:"2px 7px", borderRadius:3, cursor:"pointer",
                   background: sel ? C.blue : C.bg, color: sel ? C.white : C.muted,
                   border: `1px solid ${sel ? C.blue : C.border}`, fontWeight:sel?700:400,
@@ -1043,7 +1043,7 @@ function DiagnosticsPanel() {
               borderRadius: 6, padding: "10px 12px", cursor: "pointer",
               transition: "all .12s",
             }}>
-              <div onClick={() => toggleImg(im)} style={{ display:"flex", alignItems:"center", gap:8 }}>
+              <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => toggleImg(im))(e); } }} onClick={() => toggleImg(im)} style={{ display:"flex", alignItems:"center", gap:8 }}>
                 <div style={{
                   width: 16, height: 16, borderRadius: 3,
                   border: `1.5px solid ${selected ? C.purple : C.border}`,
@@ -1056,7 +1056,7 @@ function DiagnosticsPanel() {
               {selected && (
                 <div style={{ display:"flex", gap:6, marginTop:8, paddingLeft: 24 }}>
                   {["performed","recommended"].map(s => (
-                    <div key={s}
+                    <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); ((e) => { e.stopPropagation(); setImgStatus(im, s); })(e); } }} key={s}
                       onClick={(e) => { e.stopPropagation(); setImgStatus(im, s); }}
                       style={{
                         padding: "3px 10px", fontSize: 10, fontWeight: 700,
@@ -1085,7 +1085,7 @@ function DiagnosticsPanel() {
       </div>
 
       {/* Master "Labwork performed" checkbox */}
-      <div onClick={() => toggleLab("Performed")}
+      <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => toggleLab("Performed"))(e); } }} onClick={() => toggleLab("Performed")}
         style={{
           display: "flex", alignItems: "center", gap: 10, padding: "10px 14px",
           border: `1.5px solid ${isLabChecked("Performed") ? C.purple : C.border}`,
@@ -1109,7 +1109,7 @@ function DiagnosticsPanel() {
         {labTypes.map(lab => {
           const checked = isLabChecked(lab);
           return (
-            <div key={lab} onClick={() => toggleLab(lab)}
+            <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => toggleLab(lab))(e); } }} key={lab} onClick={() => toggleLab(lab)}
               style={{
                 display: "flex", alignItems: "center", gap: 9, padding: "9px 12px",
                 border: `1.5px solid ${checked ? C.purple : C.border}`,
@@ -1130,7 +1130,7 @@ function DiagnosticsPanel() {
       </div>
 
       {/* Other lab — checkbox + free text */}
-      <div onClick={() => toggleLab("Other")}
+      <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => toggleLab("Other"))(e); } }} onClick={() => toggleLab("Other")}
         style={{
           display: "flex", alignItems: "center", gap: 9, padding: "9px 12px",
           border: `1.5px solid ${isLabChecked("Other") ? C.purple : C.border}`,
@@ -1176,7 +1176,7 @@ function DiagnosticsPanel() {
           {reportName && (
             <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 12px", background: C.greenLt, border: `1px solid ${C.green}55`, borderRadius: 6, fontSize: 11, color: C.green, fontWeight: 600 }}>
               ✓ {reportName}
-              <span onClick={clearFile} style={{ cursor: "pointer", color: C.red, fontSize: 13, marginLeft: 4 }}>✕</span>
+              <span role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (clearFile)(e); } }} onClick={clearFile} style={{ cursor: "pointer", color: C.red, fontSize: 13, marginLeft: 4 }}>✕</span>
             </div>
           )}
         </div>
@@ -1569,19 +1569,19 @@ function TreatmentPanel() {
         Select the primary treatment approach for this patient. Each approach reveals a tailored field set below.
       </div>
       <div style={{ display:"flex", gap:12 }}>
-        <div style={cardStyle(approach === "Surgical", "#F59E0B")}
+        <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => update("treatment::Approach", "Surgical"))(e); } }} style={cardStyle(approach === "Surgical", "#F59E0B")}
              onClick={() => update("treatment::Approach", "Surgical")}>
           <div style={{ fontSize:28, marginBottom:6 }}>🏥</div>
           <div style={{ fontSize:13, fontWeight:800, letterSpacing:".05em" }}>SURGICAL</div>
           <div style={{ fontSize:10, marginTop:4, opacity:.85 }}>Post-op recovery</div>
         </div>
-        <div style={cardStyle(approach === "Conservative", "#0EA5E9")}
+        <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => update("treatment::Approach", "Conservative"))(e); } }} style={cardStyle(approach === "Conservative", "#0EA5E9")}
              onClick={() => update("treatment::Approach", "Conservative")}>
           <div style={{ fontSize:28, marginBottom:6 }}>💊</div>
           <div style={{ fontSize:13, fontWeight:800, letterSpacing:".05em" }}>CONSERVATIVE</div>
           <div style={{ fontSize:10, marginTop:4, opacity:.85 }}>Non-surgical management</div>
         </div>
-        <div style={cardStyle(approach === "Palliative", "#BE185D")}
+        <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => update("treatment::Approach", "Palliative"))(e); } }} style={cardStyle(approach === "Palliative", "#BE185D")}
              onClick={() => update("treatment::Approach", "Palliative")}>
           <div style={{ fontSize:28, marginBottom:6 }}>💗</div>
           <div style={{ fontSize:13, fontWeight:800, letterSpacing:".05em" }}>PALLIATIVE</div>
@@ -1636,7 +1636,7 @@ function TreatmentPanel() {
         <Row cols={3}>
           <div>
             <Lbl>E-Collar Required</Lbl>
-            <div className={`cb-row${data["treatment::E-Collar Required"]==="true"?" active":""}`}
+            <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => update("treatment::E-Collar Required", data["treatment::E-Collar Required"]==="true" ? "" : "true"))(e); } }} className={`cb-row${data["treatment::E-Collar Required"]==="true"?" active":""}`}
                  onClick={() => update("treatment::E-Collar Required", data["treatment::E-Collar Required"]==="true" ? "" : "true")}>
               <input type="checkbox" checked={data["treatment::E-Collar Required"]==="true"} readOnly
                      style={{ width:15, height:15, accentColor:"#F59E0B", flexShrink:0 }}/>
@@ -1645,7 +1645,7 @@ function TreatmentPanel() {
           </div>
           <div>
             <Lbl>Strict Crate Rest</Lbl>
-            <div className={`cb-row${data["treatment::Strict Crate Rest"]==="true"?" active":""}`}
+            <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => update("treatment::Strict Crate Rest", data["treatment::Strict Crate Rest"]==="true" ? "" : "true"))(e); } }} className={`cb-row${data["treatment::Strict Crate Rest"]==="true"?" active":""}`}
                  onClick={() => update("treatment::Strict Crate Rest", data["treatment::Strict Crate Rest"]==="true" ? "" : "true")}>
               <input type="checkbox" checked={data["treatment::Strict Crate Rest"]==="true"} readOnly
                      style={{ width:15, height:15, accentColor:"#F59E0B", flexShrink:0 }}/>
@@ -1654,7 +1654,7 @@ function TreatmentPanel() {
           </div>
           <div>
             <Lbl>Sling Assist Required</Lbl>
-            <div className={`cb-row${data["treatment::Sling Assist Required"]==="true"?" active":""}`}
+            <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => update("treatment::Sling Assist Required", data["treatment::Sling Assist Required"]==="true" ? "" : "true"))(e); } }} className={`cb-row${data["treatment::Sling Assist Required"]==="true"?" active":""}`}
                  onClick={() => update("treatment::Sling Assist Required", data["treatment::Sling Assist Required"]==="true" ? "" : "true")}>
               <input type="checkbox" checked={data["treatment::Sling Assist Required"]==="true"} readOnly
                      style={{ width:15, height:15, accentColor:"#F59E0B", flexShrink:0 }}/>
@@ -1758,7 +1758,7 @@ function TreatmentPanel() {
         <F label="Owner Goals & Expectations" placeholder="e.g. Maximize comfort, family time, avoid further surgery, hospice approach…" rows={3}/>
         <div style={{ marginTop:8 }}>
           <Lbl>DNR / Comfort Care Only</Lbl>
-          <div className={`cb-row${data["treatment::DNR Comfort Care Only"]==="true"?" active":""}`}
+          <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => update("treatment::DNR Comfort Care Only", data["treatment::DNR Comfort Care Only"]==="true" ? "" : "true"))(e); } }} className={`cb-row${data["treatment::DNR Comfort Care Only"]==="true"?" active":""}`}
                onClick={() => update("treatment::DNR Comfort Care Only", data["treatment::DNR Comfort Care Only"]==="true" ? "" : "true")}>
             <input type="checkbox" checked={data["treatment::DNR Comfort Care Only"]==="true"} readOnly
                    style={{ width:15, height:15, accentColor:"#BE185D", flexShrink:0 }}/>
@@ -1925,7 +1925,7 @@ function EquipmentPanel() {
             const k = `equipment::${grp.cat}::${item}`;
             const checked = data[k] === "true";
             return (
-              <div key={item} className={`cb-row${checked?" active":""}`} onClick={()=>update(k, checked ? "" : "true")}>
+              <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (()=>update(k, checked ? "" : "true"))(e); } }} key={item} className={`cb-row${checked?" active":""}`} onClick={()=>update(k, checked ? "" : "true")}>
                 <input type="checkbox" checked={checked} readOnly style={{ width:15, height:15, accentColor:C.teal, flexShrink:0 }}/>
                 <span style={{ fontSize:11, color:checked?C.teal:C.text }}>{item}</span>
               </div>
@@ -2654,7 +2654,7 @@ EVIDENCE BASIS`;
     </div>
 
     {/* ── Compliance Acknowledgment Checkbox ── */}
-    <div
+    <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => setComplianceChecked(v => !v))(e); } }}
       onClick={() => setComplianceChecked(v => !v)}
       style={{
         display:"flex", alignItems:"flex-start", gap:10, padding:"14px 16px",
@@ -2998,7 +2998,7 @@ function LibraryPanelLegacy() {
         const open = sel===ex.id;
         const c = lc(ex.lvl);
         return (
-          <div key={ex.id} onClick={()=>setSel(s=>s===ex.id?null:ex.id)}
+          <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (()=>setSel(s=>s===ex.id?null:ex.id))(e); } }} key={ex.id} onClick={()=>setSel(s=>s===ex.id?null:ex.id)}
             style={{ border:`1px solid ${open?c:C.border}`, background: open ? C.white : "#FAFCFF", borderRadius:7, padding:"12px 16px", cursor:"pointer", transition:"border .15s", boxShadow: open ? "0 2px 12px rgba(26,39,68,.08)":"none" }}>
             <div style={{ display:"flex", alignItems:"center", gap:10 }}>
               <span style={{ fontSize:9, fontFamily:"monospace", color:C.muted, flexShrink:0 }}>{ex.id}</span>
@@ -3474,7 +3474,7 @@ function HelsinkiPanel() {
               {HELSINKI_OPTIONS.map(opt => {
                 const selected = val === opt.v;
                 return (
-                  <div key={opt.v}
+                  <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => update(`helsinki::Q${q.n}`, opt.v))(e); } }} key={opt.v}
                     onClick={() => update(`helsinki::Q${q.n}`, opt.v)}
                     style={{
                       padding: "6px 8px", textAlign: "center",
@@ -3987,7 +3987,7 @@ export default function DashboardView({ setView, currentUser, onLogout, patient,
                     boxShadow:"0 8px 32px rgba(0,0,0,.15)", maxHeight:280, overflowY:"auto", marginTop:4,
                   }}>
                     {filteredPatients.map(p => (
-                      <div key={p.id} onClick={() => selectPatient(p)}
+                      <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => selectPatient(p))(e); } }} key={p.id} onClick={() => selectPatient(p)}
                         style={{
                           padding:"10px 14px", cursor:"pointer", borderBottom:`1px solid ${C.bg}`,
                           display:"flex", justifyContent:"space-between", alignItems:"center",
@@ -4065,36 +4065,47 @@ export default function DashboardView({ setView, currentUser, onLogout, patient,
               const dotColor = dataStatus === "complete" ? C.green : dataStatus === "partial" ? C.amber : null;
 
               return (
-              <div key={b.id} className="block-card"
+              <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (()=>handleBlockClick(b.id))(e); } }} key={b.id} className="block-card"
                 onClick={()=>handleBlockClick(b.id)}
                 title={hasData ? "Block contains data — click to review" : ""}
                 style={{
                   background:C.white,
-                  border: hasData ? `1.5px solid ${dotColor}55` : `1.5px solid ${C.border}`,
+                  border: hasData ? `1.5px solid ${dotColor}99` : `1.5px solid ${C.border}`,
                   borderRadius:9, padding:"22px 20px", position:"relative", overflow:"hidden",
-                  boxShadow: hasData ? `0 1px 6px rgba(26,39,68,.06), 0 0 8px ${dotColor}20` : "0 1px 6px rgba(26,39,68,.06)",
+                  boxShadow: hasData ? `0 1px 6px rgba(26,39,68,.10), 0 0 10px ${dotColor}33` : "0 1px 6px rgba(26,39,68,.06)",
                   animationDelay:`${i*.04}s`, animation:"fadeUp .3s ease both",
                 }}>
                 <div style={{ position:"absolute", top:0, left:0, right:0, height:4, background:b.color }}/>
                 {/* ── Data indicator dot — top right ── */}
                 {hasData && (
-                  <div style={{
-                    position:"absolute", top:10, right:10,
-                    width:10, height:10, borderRadius:"50%",
-                    background:dotColor, border:`1.5px solid ${C.white}`,
-                    boxShadow:`0 0 6px ${dotColor}55`,
-                  }}/>
+                  <div
+                    aria-label={dataStatus === "complete" ? "Block complete" : "Block partially filled"}
+                    title={dataStatus === "complete" ? "Complete" : "Partially filled"}
+                    style={{
+                      position:"absolute", top:9, right:9,
+                      width:16, height:16, borderRadius:"50%",
+                      background:dotColor, border:`2px solid ${C.white}`,
+                      // Outer ring gives the dot an edge against the white card;
+                      // at 10px with a white border the green core was only 7px.
+                      boxShadow:`0 0 0 1.5px ${dotColor}, 0 1px 3px rgba(26,39,68,.35)`,
+                      display:"flex", alignItems:"center", justifyContent:"center",
+                      fontSize:9, lineHeight:1, color:C.white, fontWeight:900,
+                    }}>
+                    {/* Glyph, not colour alone — WCAG 1.4.1 Use of Colour. */}
+                    {dataStatus === "complete" ? "\u2713" : "\u2022"}
+                  </div>
                 )}
                 <div style={{ width:44, height:44, borderRadius:10, background:b.colorLt, border:`1px solid ${b.color}33`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:22, marginBottom:14, boxShadow:`0 2px 8px ${b.color}22`, position:"relative" }}>
                   {b.icon}
                   {/* ── Checkmark badge on icon ── */}
                   {dataStatus === "complete" && (
-                    <div style={{
-                      position:"absolute", bottom:-3, right:-3,
-                      width:16, height:16, borderRadius:"50%",
+                    <div aria-hidden="true" style={{
+                      position:"absolute", bottom:-4, right:-4,
+                      width:19, height:19, borderRadius:"50%",
                       background:C.green, border:`2px solid ${C.white}`,
+                      boxShadow:`0 1px 3px rgba(26,39,68,.35)`,
                       display:"flex", alignItems:"center", justifyContent:"center",
-                      fontSize:9, color:C.white, fontWeight:900,
+                      fontSize:11, lineHeight:1, color:C.white, fontWeight:900,
                     }}>✓</div>
                   )}
                 </div>

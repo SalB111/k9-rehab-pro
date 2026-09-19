@@ -50,7 +50,7 @@ export default function StoryboardPacket({ exercises = [], patientName = "", cli
   };
 
   return (
-    <div className="sb-packet-overlay" style={{ position: "fixed", inset: 0, background: "rgba(8,15,30,0.6)", zIndex: 1200, overflow: "auto", padding: "24px 0" }}
+    <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (e => { if (e.target === e.currentTarget && onClose) onClose(); })(e); } }} className="sb-packet-overlay" style={{ position: "fixed", inset: 0, background: "rgba(8,15,30,0.6)", zIndex: 1200, overflow: "auto", padding: "24px 0" }}
       onClick={e => { if (e.target === e.currentTarget && onClose) onClose(); }}>
 
       <style dangerouslySetInnerHTML={{ __html: `
@@ -137,7 +137,7 @@ export default function StoryboardPacket({ exercises = [], patientName = "", cli
                   {/* right: pencil-sketch image */}
                   <div style={{ flex: "0 0 230px", padding: 10, display: "flex", alignItems: "center", justifyContent: "center", background: "#fff" }}>
                     <div style={{ position: "relative", width: 210, height: 210, background: "#fff" }}>
-                      <BreedImage breedName="athletic dog" exerciseCode={sb.exercise_code} frameNumber={frame.frame_number} accentColor="#0c4a6e" />
+                      <BreedImage breedName="athletic dog" exerciseCode={sb.exercise_code} frameNumber={frame.frame_number} imageVersion={frame.image_version} accentColor="#0c4a6e" />
                     </div>
                   </div>
                 </div>

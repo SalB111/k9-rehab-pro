@@ -187,7 +187,7 @@ export default function Step6PreProtocolSummary({ form, allExercises, compliance
           <div>
             <span style={{ fontSize: 14, fontWeight: 700, color: C.text }}>
               {tr("I acknowledge the")}{" "}
-              <span onClick={e => { e.preventDefault(); setComplianceOpen(o => !o); }}
+              <span role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (e => { e.preventDefault(); setComplianceOpen(o => !o); })(e); } }} onClick={e => { e.preventDefault(); setComplianceOpen(o => !o); }}
                 style={{ color: C.teal, textDecoration: "underline", cursor: "pointer" }}>
                 {tr("K9 Rehab Pro — Compliance & Data Protection Notice")}
               </span>

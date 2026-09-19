@@ -126,13 +126,13 @@ export function TabDataManagement({ isOpen, toggleSection }) {
 
       {/* ── 3-step Danger Zone modal ── */}
       {deleteModalOpen && (
-        <div style={{
+        <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (closeDeleteModal)(e); } }} style={{
           position: "fixed", inset: 0, zIndex: 500,
           background: "rgba(0,0,0,0.65)",
           display: "flex", alignItems: "center", justifyContent: "center",
           padding: 20,
         }} onClick={closeDeleteModal}>
-          <div onClick={e => e.stopPropagation()} style={{
+          <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (e => e.stopPropagation())(e); } }} onClick={e => e.stopPropagation()} style={{
             background: "#fff", borderRadius: 12,
             maxWidth: 560, width: "100%",
             boxShadow: "0 24px 80px rgba(0,0,0,0.3)",

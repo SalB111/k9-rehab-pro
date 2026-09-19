@@ -36,7 +36,7 @@ export default function AddExerciseModal({ addingToWeek, filteredEx, addExercise
 
         <div style={{ overflowY: "auto", flex: 1 }}>
           {filteredEx.slice(0, 40).map(ex => (
-            <div key={ex.code}
+            <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => addExercise(addingToWeek, ex))(e); } }} key={ex.code}
               onClick={() => addExercise(addingToWeek, ex)}
               style={{
                 padding: "10px 12px", borderRadius: 8, cursor: "pointer",

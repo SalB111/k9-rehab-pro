@@ -26,6 +26,7 @@ const homeStore = require('../home-store');
 const clinicStore = require('../clinic-store');
 const adapter = require('../engine-adapter');
 const authority = require('../authority');
+const ownerAuth = require('../owner-auth');
 const { requireRole, requireApprovalAuthority } = require('../middleware/require-role');
 const { route } = require('../http-errors');
 
@@ -59,6 +60,16 @@ function createV2Router(deps) {
 
   const router = express.Router();
   router.use(express.json({ limit: '1mb' }));
+
+  // B.E.A.U. Home mounts BEFORE the clinician guard: pet owners authenticate
+  // with a code the practice issues, not a clinician account.
+  if (deps.jwt && deps.jwtSecret) {
+    const { createBeauRouter } = require('./beau-router');
+    router.use('/beau', createBeauRouter({
+      db, express, jwt: deps.jwt, secret: deps.jwtSecret, requireAuth,
+    }));
+  }
+
   if (requireAuth) router.use(requireAuth);
 
   const approvalAuthority = requireApprovalAuthority(() => db);
@@ -396,82 +407,6 @@ function createV2Router(deps) {
     res.json({ success: true, data: await store.getAuditTrail(db, Number(req.params.id)) });
   }));
 
-  // -------------------------------------------------------------------------
-  // B.E.A.U. Home — the client feedback loop
-  //
-  // Everything here REPORTS. Nothing here prescribes: B.E.A.U. cannot change an
-  // approved protocol, a dosage, or a restriction.
-  // -------------------------------------------------------------------------
-
-  /** Did the client open the app. Separate signal from whether they did the work. */
-  router.post('/beau/patients/:id/engagement', route(async (req, res) => {
-    await homeStore.recordEngagement(db, {
-      patientId: Number(req.params.id),
-      handoffId: req.body.handoff_id,
-      event: req.body.event,
-      detail: req.body.detail,
-    });
-    res.status(201).json({ success: true });
-  }));
-
-  /** Begin a home session against the live prescription. */
-  router.post('/beau/patients/:id/home-sessions', route(async (req, res) => {
-    const session = await homeStore.startHomeSession(db, {
-      patientId: Number(req.params.id),
-      sessionDate: req.body.session_date,
-      weekNumber: req.body.week_number,
-    });
-    res.status(201).json({ success: true, data: session });
-  }));
-
-  router.get('/beau/home-sessions/:id', route(async (req, res) => {
-    res.json({ success: true, data: await homeStore.getHomeSession(db, Number(req.params.id)) });
-  }));
-
-  router.post('/beau/home-sessions/:id/exercises/:rowId', route(async (req, res) => {
-    const session = await homeStore.logExercise(db, {
-      sessionId: Number(req.params.id),
-      exerciseRowId: Number(req.params.rowId),
-      log: req.body,
-    });
-    res.json({ success: true, data: session });
-  }));
-
-  /** The few short questions, asked once at the end. */
-  router.post('/beau/home-sessions/:id/complete', route(async (req, res) => {
-    res.json({ success: true, data: await homeStore.completeHomeSession(db, {
-      sessionId: Number(req.params.id), summary: req.body,
-    }) });
-  }));
-
-  /** Free feedback, a question, or a stop condition the owner saw. */
-  router.post('/beau/patients/:id/observations', route(async (req, res) => {
-    const observation = await homeStore.reportObservation(db, {
-      patientId: Number(req.params.id),
-      homeSessionId: req.body.home_session_id,
-      type: req.body.observation_type || 'FEEDBACK',
-      severity: req.body.severity,
-      detail: req.body.detail,
-    });
-    res.status(201).json({ success: true, data: observation });
-  }));
-
-  /** Videos the clinic has asked this client for. */
-  router.get('/beau/patients/:id/video-requests', route(async (req, res) => {
-    res.json({ success: true, data: await homeStore.listVideoRequests(db, {
-      patientId: Number(req.params.id), status: req.query.status,
-    }) });
-  }));
-
-  router.post('/beau/video-requests/:id/submit', route(async (req, res) => {
-    res.json({ success: true, data: await homeStore.submitVideo(db, {
-      requestId: Number(req.params.id),
-      mediaRef: req.body.media_ref,
-      homeSessionId: req.body.home_session_id,
-      ownerNote: req.body.owner_note,
-    }) });
-  }));
-
   // -- Clinic side of the loop ----------------------------------------------
 
   router.get('/patients/:id/home-sessions', route(async (req, res) => {
@@ -511,22 +446,6 @@ function createV2Router(deps) {
     res.json({ success: true, data: await homeStore.reviewVideo(db, {
       requestId: Number(req.params.id), note: req.body.note, actor: req.user,
     }) });
-  }));
-
-  // -------------------------------------------------------------------------
-  // B.E.A.U.
-  // -------------------------------------------------------------------------
-
-  router.get('/beau/handoffs/:patientId', route(async (req, res) => {
-    const handoff = await store.getActiveHandoff(db, Number(req.params.patientId));
-    if (!handoff) {
-      return res.status(404).json({
-        success: false,
-        error: 'No active home exercise programme for this patient',
-        code: 'NOT_FOUND',
-      });
-    }
-    res.json({ success: true, data: handoff });
   }));
 
   // -------------------------------------------------------------------------
@@ -679,6 +598,46 @@ function createV2Router(deps) {
     }
     await db.run(`UPDATE clinician_credentials SET status = 'REVOKED' WHERE id = ?`, [id]);
     res.json({ success: true, data: { id, status: 'REVOKED' } });
+  }));
+
+  /**
+   * The clinic reading a patient's live home programme.
+   *
+   * Clinician-only, and on the clinical router rather than the owner one: it
+   * lived under /beau by naming coincidence, which made a clinical route
+   * disappear whenever owner authentication was not configured.
+   */
+  router.get('/beau/handoffs/:patientId', route(async (req, res) => {
+    const handoff = await store.getActiveHandoff(db, Number(req.params.patientId));
+    if (!handoff) {
+      return res.status(404).json({
+        success: false, code: 'NOT_FOUND',
+        error: 'No active home exercise programme for this patient',
+      });
+    }
+    res.json({ success: true, data: handoff });
+  }));
+
+  // ── B.E.A.U. Home access ──────────────────────────────────────────────
+  //
+  // The code is shown once, at issue. It is stored hashed, so a client who
+  // loses it gets a new one rather than the clinic looking the old one up.
+
+  router.get('/patients/:id/home-access', route(async (req, res) => {
+    res.json({ success: true, data: await ownerAuth.getAccessStatus(db, Number(req.params.id)) });
+  }));
+
+  router.post('/patients/:id/home-access', route(async (req, res) => {
+    const issued = await ownerAuth.issueAccessCode(db, {
+      patientId: Number(req.params.id), actor: req.user,
+    });
+    res.status(201).json({ success: true, data: issued });
+  }));
+
+  router.delete('/patients/:id/home-access', route(async (req, res) => {
+    res.json({ success: true, data: await ownerAuth.revokeAccess(db, {
+      patientId: Number(req.params.id),
+    }) });
   }));
 
   /** Whether the current user may approve, and why not if they cannot. */

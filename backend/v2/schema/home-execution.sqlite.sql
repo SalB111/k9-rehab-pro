@@ -218,3 +218,35 @@ CREATE TABLE IF NOT EXISTS home_engagement (
 
 CREATE INDEX IF NOT EXISTS idx_he_patient_id ON home_engagement(patient_id);
 CREATE INDEX IF NOT EXISTS idx_he_occurred ON home_engagement(occurred_at DESC);
+
+-- ---------------------------------------------------------------------------
+-- home_access — how an owner reaches their dog's programme.
+--
+-- Pet owners do not get clinician accounts. They receive a code from the
+-- practice, and that code resolves to one patient.
+--
+-- Tied to the PATIENT rather than to a handoff, deliberately: a protocol is
+-- revised often, and forcing a new code on every revision would mean an owner
+-- losing access precisely when their programme changed. Revoking is explicit.
+--
+-- The code is compared as a hash, not stored in the clear, for the same reason
+-- passwords are: whoever can read the database should not be able to walk into
+-- a client's record.
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS home_access (
+  id             INTEGER PRIMARY KEY AUTOINCREMENT,
+  patient_id     INTEGER NOT NULL,
+  code_hash      TEXT NOT NULL,
+  code_hint      TEXT,          -- last 4 characters, so the clinic can identify it
+  status         TEXT NOT NULL DEFAULT 'ACTIVE',   -- ACTIVE | REVOKED
+  issued_by      INTEGER,
+  issued_by_username TEXT,
+  issued_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
+  last_used_at   DATETIME,
+  revoked_at     DATETIME,
+  FOREIGN KEY (patient_id) REFERENCES patients(id),
+  FOREIGN KEY (issued_by) REFERENCES users(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_ha_patient_id ON home_access(patient_id);
+CREATE INDEX IF NOT EXISTS idx_ha_status ON home_access(status);

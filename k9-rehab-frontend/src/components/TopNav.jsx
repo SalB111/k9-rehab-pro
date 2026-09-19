@@ -28,7 +28,7 @@ export default function TopNav({ brand, setView }) {
         }
       `}</style>
 
-      <div
+      <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => setView("generator"))(e); } }}
         onClick={() => setView("generator")}
         style={{
           display: "flex",

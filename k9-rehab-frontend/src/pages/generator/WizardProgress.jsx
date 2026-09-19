@@ -24,7 +24,7 @@ export default function WizardProgress({ wizardStep, goToStep }) {
           return (
             <React.Fragment key={s.num}>
               {i > 0 && <div style={S.wizardLine(wizardStep > s.num)} />}
-              <div style={S.wizardStep(state)}
+              <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => goToStep(s.num))(e); } }} style={S.wizardStep(state)}
                 onClick={() => goToStep(s.num)}>
                 <div style={S.wizardDot(state)}>
                   {state === "done" ? <FiCheckCircle size={16} /> : s.num}

@@ -12,26 +12,27 @@
 :root {
   --k9-navy:         #1A5F8A;
   --k9-navy-mid:     #2272A0;
-  --k9-navy-light:   #378ADD;
-  --k9-teal:         #1D9E75;
+  --k9-navy-light:   #2F79C4;
+  --k9-teal:         #177C5C;
   --k9-teal-dark:    #0F6E56;
   --k9-teal-light:   #E1F5EE;
-  --k9-green:        #1D9E75;
+  --k9-green:        #177C5C;
   --k9-green-bg:     #E1F5EE;
-  --k9-amber:        #BA7517;
+  --k9-amber:        #996013;
   --k9-amber-bg:     #FAEEDA;
   --k9-red:          #A32D2D;
   --k9-red-bg:       #FCEBEB;
   --k9-bg:           #F4F8FD;
   --k9-surface:      #FFFFFF;
-  --k9-border:       #B5D4F4;
+  --k9-border:       #6A8FBA;
   --k9-border-light: #E6F1FB;
   --k9-text:         #0C2340;
   --k9-text-mid:     #2E5F8A;
-  --k9-text-light:   #7AAACF;
+  --k9-text-light:   #3C77A5;
   --k9-purple:       #534AB7;
-  --k9-purple-light: #AFA9EC;
+  --k9-purple-light: #635AC9;
   --k9-purple-bg:    #EEEDFE;
+  --k9-focus:        #2F79C4;
 }
 
 /* ── Clinical Dark ── */
@@ -51,7 +52,7 @@
   --k9-red-bg:       #450A0A;
   --k9-bg:           #0B1120;
   --k9-surface:      #111827;
-  --k9-border:       #1E293B;
+  --k9-border:       #516A8E;
   --k9-border-light: #1E293B;
   --k9-text:         #F1F5F9;
   --k9-text-mid:     #CBD5E1;
@@ -59,6 +60,7 @@
   --k9-purple:       #A78BFA;
   --k9-purple-light: #C4B5FD;
   --k9-purple-bg:    #1E1338;
+  --k9-focus:        #7DD3FC;
 }
 
 /* ── High Contrast ── */
@@ -78,14 +80,15 @@
   --k9-red-bg:       #450A0A;
   --k9-bg:           #000000;
   --k9-surface:      #0A0A0A;
-  --k9-border:       #4B5563;
-  --k9-border-light: #374151;
+  --k9-border:       #8A94A6;
+  --k9-border-light: #687689;
   --k9-text:         #FFFFFF;
   --k9-text-mid:     #E5E7EB;
   --k9-text-light:   #D1D5DB;
   --k9-purple:       #C4B5FD;
   --k9-purple-light: #DDD6FE;
   --k9-purple-bg:    #1A0E2E;
+  --k9-focus:        #FFFFFF;
 }
 
 html, body {
@@ -139,14 +142,14 @@ textarea {
 
 /* ── Placeholder text: light grey ── */
 .k9-app-content input::placeholder {
-  color: #B0B8C4 !important;
+  color: #69778D !important;
   font-weight: 400 !important;
   opacity: 1;
 }
 
 /* ── Empty inputs before user types: light grey text ── */
 .k9-app-content input:placeholder-shown {
-  color: #B0B8C4 !important;
+  color: #69778D !important;
   font-weight: 400 !important;
 }
 
@@ -162,12 +165,12 @@ textarea {
   font-weight: 700 !important;
 }
 .k9-app-content select option[value=""] {
-  color: #B0B8C4 !important;
+  color: #69778D !important;
   font-weight: 400 !important;
 }
 .k9-app-content select:invalid,
 .k9-app-content select[data-empty="true"] {
-  color: #B0B8C4 !important;
+  color: #69778D !important;
   font-weight: 400 !important;
 }
 
@@ -187,3 +190,12 @@ textarea {
   from { opacity: 0; transform: translateX(40px); }
   to   { opacity: 1; transform: translateX(0); }
 }
+
+/* ── Keyboard focus indicator (WCAG 2.1 SC 2.4.7 Focus Visible) ──────
+   Shown for keyboard/AT users only; pointer clicks stay visually clean. */
+:focus-visible {
+  outline: 3px solid var(--k9-focus, #2F79C4);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+:focus:not(:focus-visible) { outline: none; }

@@ -295,7 +295,7 @@ export default function BeauMetricsView({ authToken, setView }) {
         <div style={S.label}>{tr("Health Conditions")} *</div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 4 }}>
           {CONDITIONS.map(c => (
-            <span key={c} style={S.chip(form.conditions.includes(c))} onClick={() => toggleCondition(c)}>{tr(c)}</span>
+            <span role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => toggleCondition(c))(e); } }} key={c} style={S.chip(form.conditions.includes(c))} onClick={() => toggleCondition(c)}>{tr(c)}</span>
           ))}
         </div>
 

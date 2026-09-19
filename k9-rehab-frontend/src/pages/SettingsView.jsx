@@ -41,7 +41,7 @@ function SettingsView({ setBrand }) {
               {tr(g.label)}
             </span>
             {TABS.filter(t => t.group === g.key).map(t => (
-              <div key={t.id} style={sty.tab(state.activeTab === t.id)} onClick={() => {
+              <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => { state.setActiveTab(t.id); const el = document.querySelector("[data-content-scroll]"); if (el) el.scrollTop = 0; })(e); } }} key={t.id} style={sty.tab(state.activeTab === t.id)} onClick={() => {
                 state.setActiveTab(t.id);
                 const el = document.querySelector("[data-content-scroll]");
                 if (el) el.scrollTop = 0;

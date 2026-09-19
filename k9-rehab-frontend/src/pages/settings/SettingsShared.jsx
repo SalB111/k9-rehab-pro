@@ -10,7 +10,7 @@ export function SettingsToggle({ value, onChange, label, desc }) {
         <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{label}</div>
         {desc && <div style={{ fontSize: 11, color: C.textLight, marginTop: 2 }}>{desc}</div>}
       </div>
-      <div style={settingsStyles.toggleTrack(value)} onClick={() => onChange(!value)}>
+      <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => onChange(!value))(e); } }} style={settingsStyles.toggleTrack(value)} onClick={() => onChange(!value)}>
         <div style={settingsStyles.toggleDot} />
       </div>
     </div>
@@ -20,7 +20,7 @@ export function SettingsToggle({ value, onChange, label, desc }) {
 export function SettingsSection({ id, icon: Icon, title, open, onToggle, children }) {
   return (
     <div style={settingsStyles.sectionCard}>
-      <div style={settingsStyles.sectionHeader(open)} onClick={() => onToggle(id)}>
+      <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => onToggle(id))(e); } }} style={settingsStyles.sectionHeader(open)} onClick={() => onToggle(id)}>
         <div style={settingsStyles.sectionTitle()}>
           <Icon size={16} />
           {title}

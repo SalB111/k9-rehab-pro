@@ -17,7 +17,7 @@ export function TabProtocols({ protocolDefaults, setProtocolDefaults, flashSave,
               ["moderate", "Moderate (Recommended)", "Balanced approach per Millis & Levine guidelines"],
               ["progressive", "Progressive", "Accelerated timelines for athletic or high-demand patients"],
             ].map(([val, label, desc]) => (
-              <div key={val} onClick={() => setProtocolDefaults({ ...protocolDefaults, progression_philosophy: val })}
+              <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => setProtocolDefaults({ ...protocolDefaults, progression_philosophy: val }))(e); } }} key={val} onClick={() => setProtocolDefaults({ ...protocolDefaults, progression_philosophy: val })}
                 style={{
                   flex: 1, padding: "14px 16px", borderRadius: 8, cursor: "pointer",
                   background: protocolDefaults.progression_philosophy === val ? C.teal : C.bg,

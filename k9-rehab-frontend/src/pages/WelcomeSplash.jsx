@@ -146,7 +146,7 @@ export default function WelcomeSplash({ onEnter }) {
   }, []);
 
   return (
-    <div
+    <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (phase === "ready" ? onEnter : undefined)(e); } }}
       style={{
         position: "fixed", inset: 0, zIndex: 99999,
         background: "#040608",
@@ -273,7 +273,7 @@ export default function WelcomeSplash({ onEnter }) {
           </div>
 
           {/* ENTER button */}
-          <div
+          <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (phase === "ready" ? onEnter : undefined)(e); } }}
             onClick={phase === "ready" ? onEnter : undefined}
             style={{
               fontSize: 22, fontWeight: 700, letterSpacing: 14,

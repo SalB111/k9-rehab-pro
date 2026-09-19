@@ -69,6 +69,7 @@ function Stat({ label, value, change }) {
 
 export default function ClinicalSnapshot({
   snapshot, patient, canRespond, onRespondToRecheck, onRequestVideo, videoRequests, busy,
+  access, onIssueAccess, issuedCode,
 }) {
   if (!snapshot) return null;
 
@@ -220,6 +221,9 @@ export default function ClinicalSnapshot({
           home={home}
           videoRequests={videoRequests}
           onRequestVideo={onRequestVideo}
+          access={access}
+          onIssueAccess={onIssueAccess}
+          issuedCode={issuedCode}
         />
       )}
 

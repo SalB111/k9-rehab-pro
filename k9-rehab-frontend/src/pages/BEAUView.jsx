@@ -237,7 +237,7 @@ useEffect(() => {
             <div style={{ padding: 14, fontSize: 11, color: C.textLight }}>{tr("No saved sessions yet.")}</div>
           )}
           {sessionHistory.map(s => (
-            <div key={s.id} onClick={() => loadSession(s)} style={{
+            <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => loadSession(s))(e); } }} key={s.id} onClick={() => loadSession(s)} style={{
               padding: "10px 14px", cursor: "pointer", borderBottom: `1px solid ${C.border}`,
               background: sessionId === s.id ? `${C.teal}10` : "transparent", transition: "background 0.1s",
             }}
@@ -291,7 +291,7 @@ useEffect(() => {
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           {patient && (
-            <div onClick={() => setShowPatientPanel(true)} style={{ display: "flex", alignItems: "center", gap: 6, background: `${C.teal}10`, border: `1px solid ${C.teal}30`, borderRadius: 8, padding: "5px 12px", cursor: "pointer" }}>
+            <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => setShowPatientPanel(true))(e); } }} onClick={() => setShowPatientPanel(true)} style={{ display: "flex", alignItems: "center", gap: 6, background: `${C.teal}10`, border: `1px solid ${C.teal}30`, borderRadius: 8, padding: "5px 12px", cursor: "pointer" }}>
               <FiCheckCircle size={11} style={{ color: C.teal }} />
               <span style={{ fontSize: 12, color: C.teal, fontWeight: 600 }}>{patient.name}</span>
             </div>
@@ -333,7 +333,7 @@ useEffect(() => {
           {patients.length === 0 && <div style={{ fontSize: 12, color: C.textLight, padding: 12 }}>{tr("No patients found. Add patients in Patient Records first.")}</div>}
           <div style={{ maxHeight: 300, overflowY: "auto" }}>
             {patients.map(pt => (
-              <div key={pt.id} onClick={() => pickPatient(pt)} style={{ padding: "10px 12px", borderRadius: 8, marginBottom: 4, background: patient?.id === pt.id ? `${C.teal}10` : C.bg, border: patient?.id === pt.id ? `1px solid ${C.teal}40` : "1px solid transparent", cursor: "pointer", transition: "all 0.15s" }}>
+              <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => pickPatient(pt))(e); } }} key={pt.id} onClick={() => pickPatient(pt)} style={{ padding: "10px 12px", borderRadius: 8, marginBottom: 4, background: patient?.id === pt.id ? `${C.teal}10` : C.bg, border: patient?.id === pt.id ? `1px solid ${C.teal}40` : "1px solid transparent", cursor: "pointer", transition: "all 0.15s" }}>
                 <div style={{ display: "flex", justifyContent: "space-between" }}>
                   <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{pt.name}</span>
                   <span style={{ fontSize: 10, color: C.textLight }}>{pt.breed || ""}</span>
@@ -343,7 +343,7 @@ useEffect(() => {
               </div>
             ))}
           </div>
-          <div onClick={() => setShowPatientPanel(false)} style={{ fontSize: 10, color: C.textLight, marginTop: 8, textAlign: "center", cursor: "pointer" }}>{tr("Close")}</div>
+          <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => setShowPatientPanel(false))(e); } }} onClick={() => setShowPatientPanel(false)} style={{ fontSize: 10, color: C.textLight, marginTop: 8, textAlign: "center", cursor: "pointer" }}>{tr("Close")}</div>
         </div>
       )}
 

@@ -277,7 +277,7 @@ function PatientDetailView({ patient, setView }) {
               const isOpen = expandedSession === session.id;
               return (
                 <div key={session.id} style={{ marginBottom: 10, border: `1px solid ${C.border}`, borderRadius: 10, overflow: "hidden" }}>
-                  <div
+                  <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => setExpandedSession(isOpen ? null : session.id))(e); } }}
                     onClick={() => setExpandedSession(isOpen ? null : session.id)}
                     style={{
                       display: "flex", justifyContent: "space-between", alignItems: "center",

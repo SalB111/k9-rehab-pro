@@ -74,61 +74,42 @@ export function SvgOverlayLayer({ indicators, overlayToggles, width, height }) {
 }
 
 // ─────────────────────────────────────────────
-// BREED IMAGE — Real dog breed photos via Dog.CEO API for storyboard frames
+// BREED IMAGE — storyboard frame artwork.
+//
+// 2026-08-13: this component used to fall back to a RANDOM REAL PHOTO from the
+// Dog.CEO API when no sketch was available. Three problems:
+//   • Dog.CEO is canine-only, so every feline exercise fell back to a dog.
+//   • The photo is a random dog, not a demonstration of the step — it depicts
+//     nothing clinical, in a document a client follows at home.
+//   • Photos mixed into a pencil-sketch series is the "art pics and realistic
+//     pics" inconsistency reported from the exercise library.
+// A handout that says "illustration unavailable" is honest. One that shows an
+// unrelated stock dog is not. The fallback chain is now: static → lazy-gen →
+// labelled placeholder.
 // ─────────────────────────────────────────────
-const BREED_API_MAP = {
-  'Belgian Malinois':              'malinois',
-  'Border Collie':                 'collie/border',
-  'Cavalier King Charles Spaniel': 'spaniel/cocker',
-  'Labrador Retriever':            'labrador',
-  'Dachshund':                     'dachshund',
-  'Golden Retriever':              'retriever/golden',
-  'German Shepherd':               'german/shepherd',
-  'Shih Tzu':                      'shihtzu',
-  'Rottweiler':                    'rottweiler',
-  'Boxer':                         'boxer',
-  'Great Dane':                    'dane/great',
-  'Pembroke Welsh Corgi':          'corgi',
-  'French Bulldog':                'bulldog/french',
-  'Bernese Mountain Dog':          'mountain/bernese',
-  'English Bulldog':               'bulldog/english',
-  'Australian Shepherd':           'australian/shepherd',
-  'Greyhound':                     'greyhound',
-  'Standard Poodle':               'poodle/standard',
-  'Newfoundland':                  'newfoundland',
-  'Medium-sized dog':              'retriever/golden',
-};
 
 // In-memory cache so the same breed doesn't re-fetch across frames
 const breedImageCache = {};
 
-export function BreedImage({ breedName, exerciseCode, frameNumber, accentColor = '#39FF7E' }) {
+export function BreedImage({ breedName, exerciseCode, frameNumber, imageVersion, accentColor = '#39FF7E' }) {
+  // ?v=<hash> is the artwork version from the API. It changes whenever the
+  // species, the clinical copy, or the prompt template changes, which forces a
+  // browser holding a stale (or wrong-species) image to re-fetch.
+  const v = imageVersion ? `?v=${imageVersion}` : "";
   const [imageUrl, setImageUrl] = useState(null);
   const [imgLoaded, setImgLoaded] = useState(false);
   const [imgError, setImgError] = useState(false);
 
-  const cacheKey = exerciseCode && frameNumber ? `${exerciseCode}_f${frameNumber}` : breedName;
+  const cacheKey = exerciseCode && frameNumber ? `${exerciseCode}_f${frameNumber}_${imageVersion || "0"}` : breedName;
 
-  // Fallback: a real breed photo from Dog.CEO when no pre-generated image exists
-  const loadBreedPhoto = () => {
-    const apiPath = BREED_API_MAP[breedName] || BREED_API_MAP['Medium-sized dog'];
-    if (!apiPath) { setImgError(true); return; }
-    fetch(`https://dog.ceo/api/breed/${apiPath}/images/random`)
-      .then(r => r.json())
-      .then(data => {
-        if (data.status === 'success' && data.message) {
-          breedImageCache[cacheKey] = data.message;
-          setImgError(false);
-          setImageUrl(data.message);
-        } else { setImgError(true); }
-      })
-      .catch(() => setImgError(true));
-  };
+  // No third-party photo fallback. If neither the static asset nor the backend
+  // sketch is available, we show a placeholder rather than an unrelated animal.
+  const showPlaceholder = () => { setImgError(true); setImageUrl(null); };
 
   // Backend lazy-generation endpoint — produces the same evidence-based pencil
   // sketch on first open for exercises not yet baked into the static layer.
   const lazyUrl = exerciseCode && frameNumber
-    ? `${API}/storyboards/${exerciseCode}/frame/${frameNumber}.png`
+    ? `${API}/storyboards/${exerciseCode}/frame/${frameNumber}.png${v}`
     : null;
 
   useEffect(() => {
@@ -138,12 +119,12 @@ export function BreedImage({ breedName, exerciseCode, frameNumber, accentColor =
     // Prefer the pre-generated, evidence-based static storyboard image.
     // onError walks the chain: static → backend lazy-gen → breed photo.
     if (exerciseCode && frameNumber) {
-      setImageUrl(`/assets/storyboard/${exerciseCode}/frame-${frameNumber}.png`);
+      setImageUrl(`/assets/storyboard/${exerciseCode}/frame-${frameNumber}.png${v}`);
       return;
     }
-    loadBreedPhoto();
+    showPlaceholder();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [breedName, exerciseCode, frameNumber]);
+  }, [breedName, exerciseCode, frameNumber, imageVersion]);
 
   const isStaticImg = imageUrl && imageUrl.startsWith('/assets/storyboard/');
   const isLazyImg = imageUrl && lazyUrl && imageUrl === lazyUrl;
@@ -170,8 +151,7 @@ export function BreedImage({ breedName, exerciseCode, frameNumber, accentColor =
           onError={() => {
             // static (Vercel) → backend lazy-gen → breed photo
             if (isStaticImg && lazyUrl) { setImgLoaded(false); setImageUrl(lazyUrl); }
-            else if (isSketchImg) { setImgLoaded(false); loadBreedPhoto(); }
-            else { setImgError(true); setImageUrl(null); }
+            else { showPlaceholder(); }
           }}
           style={{
             width: "100%", height: "100%", objectFit: "cover",
@@ -191,8 +171,13 @@ export function BreedImage({ breedName, exerciseCode, frameNumber, accentColor =
       {/* Error fallback */}
       {imgError && (
         <div style={{ textAlign: "center", padding: 20 }}>
-          <div style={{ fontSize: 36, opacity: 0.15 }}>🐕</div>
-          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 4 }}>{breedName}</div>
+          <div style={{ fontSize: 30, opacity: 0.18 }}>✎</div>
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", marginTop: 6, fontWeight: 600 }}>
+            Illustration unavailable
+          </div>
+          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 3 }}>
+            Follow the written steps below
+          </div>
         </div>
       )}
     </div>
@@ -269,7 +254,7 @@ function StoryboardPlayer({ exerciseCode, onClose }) {
   const branding = storyboard.branding || {};
 
   return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(10,37,64,0.92)", backdropFilter: "blur(8px)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}
+    <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (e => { if (e.target === e.currentTarget) onClose(); })(e); } }} style={{ position: "fixed", inset: 0, background: "rgba(10,37,64,0.92)", backdropFilter: "blur(8px)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
       <div style={{ background: C.surface, borderRadius: 16, width: "94%", maxWidth: 1100, maxHeight: "92vh", overflow: "auto", boxShadow: "0 20px 60px rgba(0,0,0,0.4)", border: `1px solid ${C.border}` }}>
 
@@ -331,6 +316,7 @@ function StoryboardPlayer({ exerciseCode, onClose }) {
                   breedName={storyboard.breed_model?.breed || 'Medium-sized dog'}
                   exerciseCode={storyboard.exercise_code || exerciseCode}
                   frameNumber={frame.frame_number}
+                  imageVersion={frame.image_version}
                   accentColor={branding.neon_accent || '#39FF7E'}
                 />
                 {/* SVG Overlay Layer — renders on top of breed photo */}

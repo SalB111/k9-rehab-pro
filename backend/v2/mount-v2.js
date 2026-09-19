@@ -132,7 +132,15 @@ async function mountV2(app, deps) {
   clinicStore.assertCoversEngineGates(contract);
 
   // 4. Routes.
-  app.use(basePath, createV2Router({ db, engine, allExercises, requireAuth, ...routerDeps }));
+  // jwt + secret are passed through so B.E.A.U. Home can issue owner tokens.
+  // Without them the owner-facing routes simply do not mount, rather than
+  // mounting unauthenticated.
+  app.use(basePath, createV2Router({
+    db, engine, allExercises, requireAuth,
+    jwt: routerDeps.jwt || require('jsonwebtoken'),
+    jwtSecret: routerDeps.jwtSecret || process.env.JWT_SECRET,
+    ...routerDeps,
+  }));
 
   // 5. Error handling, scoped to V2 so existing routes are unaffected.
   app.use(basePath, errorHandler(logger));

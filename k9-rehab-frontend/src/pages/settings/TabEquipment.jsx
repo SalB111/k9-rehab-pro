@@ -87,7 +87,7 @@ export function TabEquipment({ equipment, setEquipment, flashSave, isOpen, toggl
                 <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{label}</div>
                 <div style={{ fontSize: 10, color: C.textLight, marginTop: 2 }}>{desc}</div>
               </div>
-              <div style={settingsStyles.toggleTrack(equipment[key])} onClick={() => setEquipment({ ...equipment, [key]: !equipment[key] })}>
+              <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => setEquipment({ ...equipment, [key]: !equipment[key] }))(e); } }} style={settingsStyles.toggleTrack(equipment[key])} onClick={() => setEquipment({ ...equipment, [key]: !equipment[key] })}>
                 <div style={settingsStyles.toggleDot} />
               </div>
             </div>

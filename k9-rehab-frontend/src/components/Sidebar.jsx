@@ -40,7 +40,7 @@ export default function Sidebar({ view, setView, currentUser, onLogout, hospital
       `}
     >
       {/* Logo */}
-      <div
+      <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => setView("dashboard"))(e); } }}
         className="flex items-center gap-3 px-4 py-5 cursor-pointer border-b border-white/10"
         onClick={() => setView("dashboard")}
       >

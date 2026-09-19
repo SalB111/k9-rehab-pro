@@ -90,7 +90,7 @@ export default function PresentationView({ deck, onClose }) {
           {slides.map((slide, i) => {
             const Comp = SLIDE_MAP[slide.type] || GenericSlide;
             return (
-              <div key={i} onClick={() => { setCurrentSlide(i); setShowGrid(false); }}
+              <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => { setCurrentSlide(i); setShowGrid(false); })(e); } }} key={i} onClick={() => { setCurrentSlide(i); setShowGrid(false); }}
                 style={{
                   cursor: "pointer", borderRadius: 8, overflow: "hidden",
                   border: i === currentSlide ? "2px solid #1D9E75" : "2px solid transparent",

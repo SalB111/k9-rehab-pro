@@ -130,7 +130,7 @@ export function TabClinicConfig({ isOpen, toggleSection, flashSave }) {
                 : "When locked, clinicians cannot override the hospital language."}
             </div>
           </div>
-          <div style={ss.toggleTrack(langLocked)} onClick={toggleLock}>
+          <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (toggleLock)(e); } }} style={ss.toggleTrack(langLocked)} onClick={toggleLock}>
             <div style={ss.toggleDot} />
           </div>
         </div>

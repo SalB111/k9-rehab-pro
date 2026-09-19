@@ -48,6 +48,8 @@ export default function ClinicalWorkflowView({ setView, patient: initialPatient 
   const [measurements, setMeasurements] = useState([]);
   const [version, setVersion] = useState(null);
   const [videoRequests, setVideoRequests] = useState([]);
+  const [access, setAccess] = useState(null);
+  const [issuedCode, setIssuedCode] = useState(null);
 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
@@ -66,12 +68,14 @@ export default function ClinicalWorkflowView({ setView, patient: initialPatient 
   const loadSnapshot = useCallback(async (patientId) => {
     setBusy(true); setError(null);
     try {
-      const [snap, videos] = await Promise.all([
+      const [snap, videos, homeAccess] = await Promise.all([
         v2.getSnapshot(patientId),
         v2.listVideoRequests(patientId).catch(() => []),
+        v2.getHomeAccess(patientId).catch(() => null),
       ]);
       setSnapshot(snap);
       setVideoRequests(videos || []);
+      setAccess(homeAccess);
     } catch (e) {
       setError(v2.describeError(e));
     } finally {
@@ -97,6 +101,23 @@ export default function ClinicalWorkflowView({ setView, patient: initialPatient 
     } finally {
       setBusy(false);
     }
+  };
+
+  /**
+   * Issue a client access code.
+   *
+   * Shown once, here, and never recoverable: the database stores only a hash.
+   * A client who loses it gets a new one, which ends the old.
+   */
+  const issueAccess = async () => {
+    setBusy(true); setError(null);
+    try {
+      const issued = await v2.issueHomeAccess(patient.id);
+      setIssuedCode(issued.code);
+      await loadSnapshot(patient.id);
+    } catch (e) {
+      setError(v2.describeError(e));
+    } finally { setBusy(false); }
   };
 
   const requestVideo = async () => {
@@ -129,6 +150,7 @@ export default function ClinicalWorkflowView({ setView, patient: initialPatient 
     setVersion(null);
     setAssessment(EMPTY_ASSESSMENT);
     setMeasurements([]);
+    setIssuedCode(null);
     setStep("snapshot");
   };
 
@@ -228,6 +250,9 @@ export default function ClinicalWorkflowView({ setView, patient: initialPatient 
             onRespondToRecheck={respondToRecheck}
             onRequestVideo={snapshot?.active_protocol ? requestVideo : null}
             videoRequests={videoRequests}
+            access={access}
+            onIssueAccess={issueAccess}
+            issuedCode={issuedCode}
             busy={busy}
           />
           <Actions>

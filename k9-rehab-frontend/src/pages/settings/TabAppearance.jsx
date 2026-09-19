@@ -103,7 +103,7 @@ export function TabAppearance({ appearance, setAppearance, theme, setTheme, flas
               ["clinical_dark", "Clinical Dark", "Dark navy backgrounds, reduced eye strain"],
               ["high_contrast", "High Contrast", "Maximum contrast for accessibility compliance"],
             ].map(([val, label, desc]) => (
-              <div key={val} onClick={() => setTheme(val)}
+              <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => setTheme(val))(e); } }} key={val} onClick={() => setTheme(val)}
                 style={{
                   flex: 1, padding: "14px 16px", borderRadius: 8, cursor: "pointer",
                   background: theme === val ? C.teal : C.bg,
@@ -171,7 +171,7 @@ export function TabAppearance({ appearance, setAppearance, theme, setTheme, flas
                     transition: "all 0.15s",
                     display: "flex", alignItems: "center", gap: 12,
                   }}>
-                  <div style={{ flex: 1, cursor: "pointer" }} onClick={() => onPickVoice(v.id)}>
+                  <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => onPickVoice(v.id))(e); } }} style={{ flex: 1, cursor: "pointer" }} onClick={() => onPickVoice(v.id)}>
                     <div style={{ fontSize: 13, fontWeight: 700 }}>{v.name}</div>
                     <div style={{ fontSize: 11, marginTop: 2, opacity: selected ? 0.85 : 0.65 }}>{v.desc}</div>
                   </div>
@@ -206,7 +206,7 @@ export function TabAppearance({ appearance, setAppearance, theme, setTheme, flas
             {BEAU_SPEEDS.map(opt => {
               const selected = Math.abs(speedPref - opt.value) < 0.01;
               return (
-                <div key={opt.value} onClick={() => onPickSpeed(opt.value)}
+                <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => onPickSpeed(opt.value))(e); } }} key={opt.value} onClick={() => onPickSpeed(opt.value)}
                   style={{
                     padding: "10px 8px", borderRadius: 7, cursor: "pointer", textAlign: "center",
                     background: selected ? C.teal : C.bg,
@@ -230,7 +230,7 @@ export function TabAppearance({ appearance, setAppearance, theme, setTheme, flas
         <div style={{ fontSize: 11, color: C.muted, marginBottom: 10 }}>
           Calibration mode adds setup tools to the 3D anatomy viewer (Exercises → View Targeted Muscles): a dog/cat selector, click-to-place muscle markers, lighting &amp; glow sliders, and a download/copy of your settings. Changes save in this browser only and don't affect other users.
         </div>
-        <div onClick={toggleCalibrate}
+        <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (toggleCalibrate)(e); } }} onClick={toggleCalibrate}
           style={{
             display: "flex", alignItems: "center", justifyContent: "space-between",
             padding: "14px 16px", borderRadius: 8, cursor: "pointer",

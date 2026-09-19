@@ -167,3 +167,28 @@ CREATE POLICY v2_vr_write ON v2_video_requests FOR ALL TO authenticated USING (t
 
 CREATE POLICY v2_he_select ON v2_home_engagement FOR SELECT TO authenticated USING (true);
 CREATE POLICY v2_he_insert ON v2_home_engagement FOR INSERT TO authenticated WITH CHECK (true);
+
+-- ---------------------------------------------------------------------------
+-- v2_home_access — see home-execution.sqlite.sql for the rationale.
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS v2_home_access (
+  id             BIGSERIAL PRIMARY KEY,
+  patient_id     BIGINT NOT NULL,
+  code_hash      TEXT NOT NULL,
+  code_hint      TEXT,
+  status         TEXT NOT NULL DEFAULT 'ACTIVE',
+  issued_by      BIGINT REFERENCES users(id),
+  issued_by_username TEXT,
+  issued_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  last_used_at   TIMESTAMPTZ,
+  revoked_at     TIMESTAMPTZ,
+  CONSTRAINT v2_ha_status_check CHECK (status IN ('ACTIVE','REVOKED'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_v2_ha_patient_id ON v2_home_access(patient_id);
+CREATE INDEX IF NOT EXISTS idx_v2_ha_status ON v2_home_access(status);
+
+ALTER TABLE v2_home_access ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY v2_ha_select ON v2_home_access FOR SELECT TO authenticated USING (true);
+CREATE POLICY v2_ha_write ON v2_home_access FOR ALL TO authenticated USING (true) WITH CHECK (true);

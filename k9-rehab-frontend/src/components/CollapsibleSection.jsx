@@ -43,7 +43,7 @@ export default function CollapsibleSection({ title, icon: Icon, defaultOpen = fa
   return (
     <div style={{ marginTop: 16 }}>
       {/* Header — clickable toggle */}
-      <div
+      <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => setOpen(o => !o))(e); } }}
         onClick={() => setOpen(o => !o)}
         style={{
           display: "flex", alignItems: "center", gap: 8, cursor: "pointer",

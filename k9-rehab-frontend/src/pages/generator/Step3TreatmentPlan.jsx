@@ -41,7 +41,7 @@ export default function Step3TreatmentPlan({ form, setField, goToStep, handleSur
             { value: "conservative", label: "Conservative", icon: "🩺", desc: "Non-surgical management", color: "#1D9E75" },
             { value: "palliative", label: "Palliative / Comfort", icon: "💙", desc: "Quality of life focused", color: "#8B5CF6" },
           ].map(opt => (
-            <div key={opt.value}
+            <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => setField("treatmentApproach", opt.value))(e); } }} key={opt.value}
               onClick={() => setField("treatmentApproach", opt.value)}
               style={{
                 padding: "16px 18px", borderRadius: 12, cursor: "pointer", textAlign: "center",

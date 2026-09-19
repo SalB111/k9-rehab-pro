@@ -55,7 +55,7 @@ export function TabClinicProfile({ form, setForm, saving, saveClinic, isOpen, to
             <label style={sty.fieldLabel}>Primary Color</label>
             <div style={{ display: "flex", gap: 8, marginTop: 6, alignItems: "center" }}>
               {["#0F4C81", "#0EA5E9", "#10B981", "#7C3AED", "#DC2626"].map(color => (
-                <div key={color} onClick={() => setForm({ ...form, primary_color: color })}
+                <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => setForm({ ...form, primary_color: color }))(e); } }} key={color} onClick={() => setForm({ ...form, primary_color: color })}
                   style={{
                     width: 32, height: 32, borderRadius: 8, background: color, cursor: "pointer",
                     border: form.primary_color === color ? `3px solid ${C.text}` : "3px solid transparent",
@@ -72,7 +72,7 @@ export function TabClinicProfile({ form, setForm, saving, saveClinic, isOpen, to
             <label style={sty.fieldLabel}>Secondary Color</label>
             <div style={{ display: "flex", gap: 8, marginTop: 6, alignItems: "center" }}>
               {["#0EA5E9", "#10B981", "#F59E0B", "#8B5CF6", "#EC4899"].map(color => (
-                <div key={color} onClick={() => setForm({ ...form, secondary_color: color })}
+                <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => setForm({ ...form, secondary_color: color }))(e); } }} key={color} onClick={() => setForm({ ...form, secondary_color: color })}
                   style={{
                     width: 32, height: 32, borderRadius: 8, background: color, cursor: "pointer",
                     border: form.secondary_color === color ? `3px solid ${C.text}` : "3px solid transparent",

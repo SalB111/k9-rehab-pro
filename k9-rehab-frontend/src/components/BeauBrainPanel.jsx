@@ -65,7 +65,7 @@ export default function BeauBrainPanel({ patientName, species = "Canine", diagno
   const body = data ? (isClinical ? data.clinical : data.consumer) : "";
 
   return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(8,15,30,0.6)", zIndex: 1200, overflow: "auto", padding: "24px 0" }}
+    <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (e => { if (e.target === e.currentTarget && onClose) onClose(); })(e); } }} style={{ position: "fixed", inset: 0, background: "rgba(8,15,30,0.6)", zIndex: 1200, overflow: "auto", padding: "24px 0" }}
       onClick={e => { if (e.target === e.currentTarget && onClose) onClose(); }}>
       <div style={{ background: "#fff", maxWidth: 820, margin: "0 auto", borderRadius: 12, boxShadow: "0 20px 60px rgba(0,0,0,0.3)", padding: "22px 26px" }}>
 
