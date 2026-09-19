@@ -81,3 +81,20 @@ CREATE TABLE IF NOT EXISTS system_owner (
   set_at     DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id)
 );
+
+-- ---------------------------------------------------------------------------
+-- test_fixtures — everything the test-clinic seeder created.
+--
+-- Tracked explicitly rather than inferred from a name prefix, so tearing the
+-- test environment down can never delete a real patient that happens to be
+-- named like one. Reset removes exactly what was created and nothing else.
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS test_fixtures (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  kind       TEXT NOT NULL,          -- clinic | patient | user | credential
+  ref_id     INTEGER NOT NULL,
+  label      TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_test_fixtures_kind ON test_fixtures(kind);

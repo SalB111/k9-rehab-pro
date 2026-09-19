@@ -76,3 +76,16 @@ ALTER TABLE v2_system_owner ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY v2_owner_select ON v2_system_owner
   FOR SELECT TO authenticated USING (true);
+
+-- ---------------------------------------------------------------------------
+-- v2_test_fixtures — see clinical-authority.sqlite.sql.
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS v2_test_fixtures (
+  id         BIGSERIAL PRIMARY KEY,
+  kind       TEXT NOT NULL,
+  ref_id     BIGINT NOT NULL,
+  label      TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_v2_test_fixtures_kind ON v2_test_fixtures(kind);
