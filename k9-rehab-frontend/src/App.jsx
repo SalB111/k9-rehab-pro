@@ -20,9 +20,18 @@ const DocsView = lazy(() => import("./pages/DocsView"));
 const BeauMetricsView = lazy(() => import("./pages/BeauMetricsView"));
 const HelsinkiView = lazy(() => import("./pages/HelsinkiView"));
 const CalculatorsView = lazy(() => import("./pages/CalculatorsView"));
+const ClinicalWorkflowView = lazy(() => import("./pages/clinical/ClinicalWorkflowView"));
 
 export default function App() {
-  const [authToken, setAuthToken] = useState(localStorage.getItem("token"));
+  // ── DEV-ONLY LOGIN BYPASS ────────────────────────────────────────────────
+  // Set VITE_DEV_AUTH_BYPASS=true in k9-rehab-frontend/.env.local to skip the
+  // login screen while testing. Vite only inlines this at dev/build time, and
+  // a production build without the flag has no bypass in the bundle at all.
+  // The backend has a matching, separately-gated flag — both must be on.
+  const DEV_AUTH_BYPASS = import.meta.env.VITE_DEV_AUTH_BYPASS === "true";
+  const [authToken, setAuthToken] = useState(
+    DEV_AUTH_BYPASS ? "dev-bypass" : localStorage.getItem("token")
+  );
   const [currentUser, setCurrentUser] = useState({ username: "Clinician", role: "clinician", id: 1 });
   const [view, setView] = useState("dashboard");
   const [showSplash, setShowSplash] = useState(true); // Always show splash on app load
@@ -94,6 +103,8 @@ export default function App() {
     switch (view) {
       case "dashboard":
         return <DashboardView setView={setView} currentUser={currentUser} onLogout={handleLogout} patient={selectedPatient} setSelectedPatient={setSelectedPatient} />;
+      case "clinical":
+        return <ClinicalWorkflowView setView={setView} patient={selectedPatient} />;
       case "generator":
         return (
           <GeneratorView
@@ -148,8 +159,9 @@ export default function App() {
     }
   }
 
-  // Splash screen — always plays on app load, then transitions
-  if (showSplash) {
+  // Splash screen — always plays on app load, then transitions.
+  // Skipped under the dev bypass so testing lands straight on the app.
+  if (showSplash && !DEV_AUTH_BYPASS) {
     return <WelcomeSplash onEnter={() => setShowSplash(false)} />;
   }
 
