@@ -1,7 +1,7 @@
 {
   "name": "k9-rehab-pro-backend",
   "version": "1.0.0",
-  "description": "K9 Rehab Pro™ — AI-powered clinical canine rehabilitation protocol engine powered by B.E.A.U.",
+  "description": "K9 Rehab Pro\u2122 \u2014 AI-powered clinical canine rehabilitation protocol engine powered by B.E.A.U.",
   "author": "Salvatore Bonanno <salvatore@k9rehabpro.com>",
   "license": "UNLICENSED",
   "private": true,
@@ -13,7 +13,11 @@
   "scripts": {
     "start": "node server.js",
     "postinstall": "npm rebuild sqlite3 --build-from-source",
-    "package": "pkg . --targets node18-win-x64 --output ../K9_Rehab_Pro_Demo/K9RehabPro.exe"
+    "package": "pkg . --targets node18-win-x64 --output ../K9_Rehab_Pro_Demo/K9RehabPro.exe",
+    "lint:storyboards": "node storyboard-lint.js",
+    "test:storyboards": "node storyboard-image-gen.test.js",
+    "storyboards:dry": "node generate-storyboard-images.js --all --dry-run",
+    "storyboards:build": "node generate-storyboard-images.js --all"
   },
   "pkg": {
     "assets": [
