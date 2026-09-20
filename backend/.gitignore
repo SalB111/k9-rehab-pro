@@ -20,3 +20,9 @@ storyboard-images/
 
 # Logs
 *.log
+
+# Database backups. "*.db" above does not match "k9rehab.db.bak-2026-..." —
+# the timestamp suffix puts it outside the pattern. These files contain
+# bcrypt password hashes and patient records; they must never be committed.
+*.db.bak-*
+*.db.bak
