@@ -42,6 +42,61 @@ function createBeauRouter({ db, express, jwt, secret, requireAuth }) {
   const guard = ownerAuth.allowOwnerOrClinician({ jwt, secret, requireAuth, db });
 
   /**
+   * Whether this patient is under an active approved home programme.
+   *
+   * This exists for ONE consumer: B.E.A.U. at Home's own server, which must
+   * refuse to generate exercises for a patient a veterinarian is already
+   * treating. That refusal has to be a decision made against a record, not a
+   * sentence in a prompt asking a language model to behave.
+   *
+   * Deliberately carries NO clinical content — no exercises, no dosage, no
+   * restrictions, no diagnosis. It answers one question, and the answer is a
+   * boolean. Anything more would be clinical record leaving the clinical system
+   * to a place that has no business holding it.
+   *
+   * `total_weeks` and `effective_date` are included because the consumer needs
+   * to know when the programme's own window closes. A protocol is not
+   * indefinite, and a lock with no horizon becomes a lock nobody can lift.
+   */
+  router.get('/hep-status', guard, route(async (req, res) => {
+    const patientId = ownerAuth.patientIdFor(req);
+    if (!patientId) {
+      return res.status(400).json({ success: false, code: 'INVALID', error: 'No patient in scope' });
+    }
+
+    const handoff = await db.get(
+      `SELECT * FROM beau_handoffs WHERE patient_id = ? AND status = 'ACTIVE'
+        ORDER BY handed_off_at DESC LIMIT 1`,
+      [patientId]
+    );
+    const patient = await db.get(`SELECT id, name FROM patients WHERE id = ?`, [patientId]);
+
+    let payload = null;
+    if (handoff) {
+      try { payload = JSON.parse(handoff.handoff_payload_json); } catch { payload = null; }
+    }
+
+    res.json({
+      success: true,
+      data: {
+        patient_id: patientId,
+        patient_name: patient ? patient.name : null,
+        has_active_hep: Boolean(handoff),
+        version_number: payload ? payload.protocol_version_number : null,
+        effective_date: payload ? payload.effective_date : null,
+        total_weeks: payload ? payload.total_weeks : null,
+        // The owner is told a person authorised this. Name and credential only.
+        approved_by: payload && payload.approval
+          ? {
+              name: payload.approval.approver_username,
+              credential: payload.approval.approver_credential,
+            }
+          : null,
+      },
+    });
+  }));
+
+  /**
    * Today's programme, shaped for the person doing it.
    *
    * Restrictions and stop conditions travel with it. An owner following
