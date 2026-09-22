@@ -70,7 +70,7 @@ function Stat({ label, value, change }) {
 
 export default function ClinicalSnapshot({
   snapshot, patient, canRespond, onRespondToRecheck, onRequestVideo, videoRequests, busy,
-  access, onIssueAccess, issuedCode, onEditPatient,
+  access, onIssueAccess, issuedCode, onEditPatient, gaps, onFixRecord,
 }) {
   if (!snapshot) return null;
 
@@ -139,6 +139,30 @@ export default function ClinicalSnapshot({
                 }}
               >
                 <FiEdit2 size={11} /> Correct this record
+              </button>
+            )}
+            {/* The generator does not refuse an incomplete record — it reasons
+                from whatever it has and produces something thinner. The count
+                belongs on the button, because a gap nobody is told about is a
+                gap nobody fixes. */}
+            {onFixRecord && gaps && gaps.gaps && gaps.gaps.length > 0 && (
+              <button
+                type="button"
+                onClick={onFixRecord}
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                  marginTop: 10, marginLeft: 8,
+                  padding: "5px 10px", fontSize: 11.5, fontWeight: 700,
+                  borderRadius: 6, cursor: "pointer",
+                  background: gaps.blocking > 0 ? (C.redBg || "#FEF2F2") : C.amberBg,
+                  border: `1px solid ${gaps.blocking > 0 ? C.red : C.amber}`,
+                  color: gaps.blocking > 0 ? C.red : C.amber,
+                }}
+              >
+                <FiAlertTriangle size={11} />
+                {gaps.blocking > 0
+                  ? `${gaps.blocking} missing — generation blocked`
+                  : `${gaps.gaps.length} missing before generating`}
               </button>
             )}
           </div>

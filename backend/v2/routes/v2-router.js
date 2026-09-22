@@ -27,6 +27,7 @@ const clinicStore = require('../clinic-store');
 const adapter = require('../engine-adapter');
 const authority = require('../authority');
 const intakeProposal = require('../intake-proposal');
+const patientGaps = require('../patient-gaps');
 const ownerAuth = require('../owner-auth');
 const { requireRole, requireApprovalAuthority } = require('../middleware/require-role');
 const { route } = require('../http-errors');
@@ -180,6 +181,32 @@ function createV2Router(deps) {
    * assessment still writes the values, and the gates still have to be ticked
    * before a protocol built on them can be approved.
    */
+  /**
+   * What the generator does not know about this patient, and what it will do
+   * about it.
+   *
+   * An incomplete record does not fail loudly — the engine reasons from
+   * whatever it has. An empty condition becomes a conditioning protocol, an
+   * empty medical history reads exactly like "no contraindications", and an
+   * unstated piece of equipment removes that therapy from every protocol in the
+   * practice. This is what says so before a protocol is built on it, rather
+   * than after.
+   *
+   * Open to any signed-in clinician. Correcting a record is not approving a
+   * protocol: a CCRP whose credential has lapsed can still fix a mistyped
+   * weight, and should. Approval authority is checked where approval happens.
+   */
+  router.get('/patients/:id/gaps', route(async (req, res) => {
+    const patientId = Number(req.params.id);
+    const patient = await getPatient(db, patientId);
+    if (!patient) {
+      return res.status(404).json({ success: false, error: 'Patient not found', code: 'NOT_FOUND' });
+    }
+    const clinicId = await resolveClinicId(req, db);
+    const capabilities = await clinicStore.getCapabilities(db, clinicId);
+    res.json({ success: true, data: patientGaps.findGaps(patient, capabilities) });
+  }));
+
   router.get('/patients/:id/intake-proposal', route(async (req, res) => {
     const patientId = Number(req.params.id);
     const patient = await getPatient(db, patientId);

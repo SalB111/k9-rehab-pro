@@ -7,6 +7,7 @@ import TodaysUpdate from "./TodaysUpdate";
 import RecommendationReview from "./RecommendationReview";
 import NewPatient from "./NewPatient";
 import EditPatient from "./EditPatient";
+import FixRecord from "./FixRecord";
 import SafetyGates from "./SafetyGates";
 import * as v2 from "./v2api";
 
@@ -152,6 +153,8 @@ export default function ClinicalWorkflowView({ setView, patient: initialPatient 
 
   // What the system already knows, and which gates need a person.
   const [proposal, setProposal] = useState(null);
+  const [gaps, setGaps] = useState(null);
+  const [fixing, setFixing] = useState(false);
   const [gateConfirmations, setGateConfirmations] = useState({});
 
   const [busy, setBusy] = useState(false);
@@ -281,6 +284,14 @@ export default function ClinicalWorkflowView({ setView, patient: initialPatient 
       setProposal(null);
       setAssessment(EMPTY_ASSESSMENT);
     }
+    // What the generator does not know. Loaded here rather than on opening the
+    // dialog, because the count belongs on the button: a gap nobody is told
+    // about is a gap nobody fixes.
+    try {
+      setGaps(await v2.getPatientGaps(patientId));
+    } catch {
+      setGaps(null);
+    }
   }, []);
 
   const selectPatient = async (p) => {
@@ -340,6 +351,12 @@ export default function ClinicalWorkflowView({ setView, patient: initialPatient 
     } finally {
       setBusy(false);
     }
+  };
+
+  /** Save from the fix-the-record dialog. Same path as any other correction. */
+  const saveGaps = async (changes) => {
+    await savePatient(changes);
+    setFixing(false);
   };
 
   // ── Visit -> assessment -> measurements -> recommendation ──────────────
@@ -441,6 +458,15 @@ export default function ClinicalWorkflowView({ setView, patient: initialPatient 
         />
       )}
 
+      {fixing && patient && (
+        <FixRecord
+          patient={patient}
+          onSave={saveGaps}
+          onClose={() => setFixing(false)}
+          busy={busy}
+        />
+      )}
+
       {step === "edit-patient" && patient && (
         <EditPatient
           patient={patient}
@@ -457,6 +483,8 @@ export default function ClinicalWorkflowView({ setView, patient: initialPatient 
             snapshot={snapshot}
             patient={patient}
             onEditPatient={() => { setError(null); setNotice(null); setStep("edit-patient"); }}
+            gaps={gaps}
+            onFixRecord={() => { setError(null); setNotice(null); setFixing(true); }}
             canRespond={authority?.allowed === true}
             onRespondToRecheck={respondToRecheck}
             onRequestVideo={snapshot?.active_protocol ? requestVideo : null}

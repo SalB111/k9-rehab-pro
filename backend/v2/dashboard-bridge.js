@@ -186,7 +186,19 @@ function number(value) {
  * proposing this field never excuses confirming it.
  */
 const MAP = [
-  // ── Identity and longitudinal record ──────────────────────────────────────
+  // ── Identity ──────────────────────────────────────────────────────────────
+  // Not engine reasoning inputs — the engine echoes these — but they are
+  // fields of the record, and a record with an age of 0 on a ten-year-old dog
+  // is wrong on the face of it. Mapped so the gap check can offer the answer
+  // the V1 record already holds.
+  { keys: ['client::Age (years)'], to: 'age', via: number },
+  { keys: ['client::Weight (lbs)'], to: 'weight', via: number },
+  { keys: ['metrics::BCS (1–9)', 'assessment::Body Condition Score (1–9)'],
+    to: 'bodyConditionScore', via: number },
+  { keys: ['client::Breed'], to: 'breed', via: text },
+  { keys: ['client::Sex'], to: 'sex', via: text },
+
+  // ── Longitudinal record ───────────────────────────────────────────────────
   { keys: ['assessment::Primary Diagnosis', 'treatment::Primary Diagnosis'],
     to: 'diagnosis', via: text },
   { keys: ['treatment::Affected Limb(s)', 'treatment::Affected Area'],

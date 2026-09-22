@@ -140,6 +140,17 @@ export const createPatient = (body) =>
 export const updatePatient = (id, body) =>
   api.put(`/patients/${id}`, body).then((r) => r.data.data || r.data);
 
+/**
+ * What the generator does not know about this patient.
+ *
+ * An incomplete record does not fail loudly — the engine reasons from whatever
+ * it has, so an empty condition becomes a conditioning protocol and an empty
+ * medical history reads exactly like "no contraindications". This is what says
+ * so before a protocol is built on it.
+ */
+export const getPatientGaps = (id) =>
+  api.get(`/v2/patients/${id}/gaps`).then(unwrap);
+
 // ── Reference data ───────────────────────────────────────────────────────────
 
 /** Human labels for the engine's five severity gates. */

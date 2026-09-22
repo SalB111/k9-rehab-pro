@@ -56,6 +56,11 @@ const CHECKS = [
   // the real engine — the V1 record is where the clinical detail actually is.
   { name: 'K9 · dashboard bridge',     cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/dashboard-bridge.test.js'],
     ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
+  // What the generator does not know about a patient, and what it does about
+  // it. Severity is the difference between "will not generate" and "will
+  // generate and be wrong", and a clinician reads it before a visit.
+  { name: 'K9 · record gaps',          cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/patient-gaps.test.js'],
+    ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
   { name: 'K9 · frontend build',       cwd: path.join(K9, 'k9-rehab-frontend'), cmd: 'npx', args: ['--no-install', 'vite', 'build'],
     ok: (out) => /built in/.test(out) && !/error/i.test(out) },
   { name: 'B.E.A.U. · tests',          cwd: BEAU, cmd: 'npm', args: ['test'],
