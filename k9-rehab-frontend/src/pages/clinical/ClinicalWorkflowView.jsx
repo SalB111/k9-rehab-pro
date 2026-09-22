@@ -259,6 +259,30 @@ export default function ClinicalWorkflowView({ setView, patient: initialPatient 
     if (patient?.id) loadSnapshot(patient.id);
   }, [patient?.id, loadSnapshot]);
 
+  /**
+   * Fetch the intake proposal and pre-fill today's assessment from it, so the
+   * clinician corrects rather than types.
+   *
+   * Shared by selecting a patient and by saving a correction. It has to be
+   * both: the proposal is DERIVED FROM THE RECORD, so editing the surgery date
+   * or the condition changes which safety gates apply. Refreshing the snapshot
+   * and not the proposal leaves the gate list describing the record as it was
+   * — which is how a gate goes missing.
+   *
+   * Failure is not fatal: the clinician gets the empty form they had before,
+   * and every gate still has to be confirmed by hand before approval.
+   */
+  const loadProposal = useCallback(async (patientId) => {
+    try {
+      const prop = await v2.getIntakeProposal(patientId);
+      setProposal(prop);
+      setAssessment(assessmentFromProposal(prop));
+    } catch {
+      setProposal(null);
+      setAssessment(EMPTY_ASSESSMENT);
+    }
+  }, []);
+
   const selectPatient = async (p) => {
     setPatient(p);
     setVersion(null);
@@ -267,17 +291,7 @@ export default function ClinicalWorkflowView({ setView, patient: initialPatient 
     setGateConfirmations({});
     setAssessment(EMPTY_ASSESSMENT);
     setStep("snapshot");
-
-    // Pre-fill today's assessment from what the record already supports, so
-    // the clinician corrects rather than types. Failure is not fatal: they
-    // simply get the empty form they had before.
-    try {
-      const prop = await v2.getIntakeProposal(p.id);
-      setProposal(prop);
-      setAssessment(assessmentFromProposal(prop));
-    } catch {
-      setProposal(null);
-    }
+    await loadProposal(p.id);
   };
 
   const createPatient = async (body) => {
@@ -297,10 +311,16 @@ export default function ClinicalWorkflowView({ setView, patient: initialPatient 
   /**
    * Save corrections to the patient record.
    *
-   * Reloads the snapshot afterwards rather than patching local state: the
-   * intake proposal is derived from the record, so changing the condition or
-   * the surgery date changes which safety gates apply. Showing the old
-   * proposal beside a corrected record is how a gate goes missing.
+   * Reloads the snapshot AND the proposal, rather than patching local state.
+   * Both matter and for different reasons: the snapshot is what the clinician
+   * reads, and the proposal is what pre-fills the safety gates. The proposal is
+   * derived from the record, so correcting a surgery date changes which gates
+   * apply — and refreshing only the snapshot leaves the gate list describing
+   * the record as it was. That is how a gate goes missing.
+   *
+   * The reload is also why nothing here patches `patient` by hand: the server
+   * decides what was actually written, and reading it back is cheaper than
+   * being wrong about it.
    */
   const savePatient = async (changes) => {
     setBusy(true); setError(null); setNotice(null);
@@ -310,6 +330,8 @@ export default function ClinicalWorkflowView({ setView, patient: initialPatient 
       setPatient(fresh);
       await api.get("/patients").then((r) => setPatients(r.data.data || r.data || []));
       await loadSnapshot(patient.id);
+      await loadProposal(patient.id);
+      setGateConfirmations({});
       const n = Object.keys(changes).length;
       setNotice(`${fresh.name}'s record updated — ${n} field${n === 1 ? "" : "s"}.`);
       setStep("snapshot");

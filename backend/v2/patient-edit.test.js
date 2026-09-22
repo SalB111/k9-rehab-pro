@@ -332,6 +332,60 @@ test('the BCS vocabulary is the nine WSAVA points, plus "not recorded"', () => {
 });
 
 // ---------------------------------------------------------------------------
+// A correction must refresh what was derived from the record
+// ---------------------------------------------------------------------------
+
+test('saving a correction reloads the intake proposal, not just the snapshot', () => {
+  // The proposal is DERIVED from the patient record: applicableGates() reads
+  // the condition and the surgery date to decide which safety gates a
+  // clinician is asked to confirm. Correcting a surgery date therefore changes
+  // the gate list.
+  //
+  // The first version of savePatient reloaded the snapshot and not the
+  // proposal, so after a correction the form showed the gates for the record
+  // as it had been. The comment above it even claimed it refreshed the
+  // proposal. Caught in the browser: the assessment form came up completely
+  // empty after a save.
+  const wf = read(path.join(path.dirname(EDIT_FORM), 'ClinicalWorkflowView.jsx'));
+  const body = wf.slice(wf.indexOf('const savePatient'), wf.indexOf('const generate'));
+  assert.ok(
+    /loadSnapshot\(/.test(body),
+    'savePatient must refresh the snapshot the clinician reads'
+  );
+  assert.ok(
+    /loadProposal\(/.test(body),
+    'savePatient must refresh the PROPOSAL too — it is derived from the record ' +
+    'that was just corrected, and a stale one describes the old gate list'
+  );
+});
+
+test('the proposal is fetched through one function, used by both callers', () => {
+  const wf = read(path.join(path.dirname(EDIT_FORM), 'ClinicalWorkflowView.jsx'));
+  assert.ok(
+    /const loadProposal = /.test(wf),
+    'proposal loading must live in one place — two copies drift, and the copy ' +
+    'that gets forgotten is the one after a correction'
+  );
+  const direct = wf.split('v2.getIntakeProposal').length - 1;
+  assert.strictEqual(
+    direct, 1,
+    `v2.getIntakeProposal is called ${direct} times. It should be called once, ` +
+    `inside loadProposal`
+  );
+});
+
+test('a correction clears stale gate confirmations', () => {
+  // A gate ticked against the old record is not a confirmation of the new one.
+  const wf = read(path.join(path.dirname(EDIT_FORM), 'ClinicalWorkflowView.jsx'));
+  const body = wf.slice(wf.indexOf('const savePatient'), wf.indexOf('const generate'));
+  assert.ok(
+    /setGateConfirmations\(\{\}\)/.test(body),
+    'savePatient must clear gate confirmations — a gate confirmed against the ' +
+    'record before the correction says nothing about the record after it'
+  );
+});
+
+// ---------------------------------------------------------------------------
 // Corrections do not rewrite approved protocols
 // ---------------------------------------------------------------------------
 
