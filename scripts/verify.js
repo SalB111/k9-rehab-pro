@@ -66,6 +66,10 @@ const CHECKS = [
   // is a safety rule, not a preference.
   { name: 'K9 · record sync',          cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/record-sync.test.js'],
     ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
+  // The protocol engine has no feline path, so generation refuses for a cat.
+  // The test asserts BOTH directions, and asserts the reason still holds.
+  { name: 'K9 · feline gate',          cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/feline-gate.test.js'],
+    ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
   { name: 'K9 · frontend build',       cwd: path.join(K9, 'k9-rehab-frontend'), cmd: 'npx', args: ['--no-install', 'vite', 'build'],
     ok: (out) => /built in/.test(out) && !/error/i.test(out) },
   { name: 'B.E.A.U. · tests',          cwd: BEAU, cmd: 'npm', args: ['test'],

@@ -90,12 +90,36 @@ const SOURCE = {
  *      looks answered. "true" sitting in a complications box is not caution;
  *      it is a field nobody will look at twice.
  */
+/**
+ * How long a post-operative restriction is plausibly still in force.
+ *
+ * Crate rest and an e-collar are ordinary for the fortnight after surgery and
+ * implausible months later. Proposing them regardless of time was not merely
+ * over-cautious, it was degenerate: measured on 22 Sep 2026, a TPLO patient
+ * 26 weeks post-op received the same five passive exercises every week for
+ * eight weeks, and another protocol's final week contained a single modality.
+ * Answering both gates "no" turned those into 27 distinct exercises with real
+ * progression.
+ *
+ * A default that is obviously wrong every time is a default people learn to
+ * accept without reading, which costs more than it protects.
+ */
+const ACUTE_POST_OP_DAYS = 14;
+
 const SAFETY_GATES = [
   { field: 'weightBearingStatus', label: 'Weight-bearing status',   cautious: 'NWB' },
   { field: 'incisionStatus',      label: 'Incision status',          cautious: null },
   { field: 'complicationsNoted',  label: 'Post-operative complications', cautious: null },
-  { field: 'crateRestRequired',   label: 'Crate rest required',      cautious: true },
-  { field: 'eCollarRequired',     label: 'E-collar required',        cautious: true },
+  // Beyond the acute window these propose NOTHING rather than "no". The gate is
+  // still raised and still confirmed; it simply arrives empty, because "this
+  // dog is not crated six months after surgery" is a clinician's statement to
+  // make and not a default to assume in either direction.
+  { field: 'crateRestRequired',   label: 'Crate rest required',
+    cautious: ({ postOpDays }) =>
+      (postOpDays !== null && postOpDays > ACUTE_POST_OP_DAYS ? null : true) },
+  { field: 'eCollarRequired',     label: 'E-collar required',
+    cautious: ({ postOpDays }) =>
+      (postOpDays !== null && postOpDays > ACUTE_POST_OP_DAYS ? null : true) },
   { field: 'mmtGrade',            label: 'Muscle strength (MMT)',    cautious: null },
   { field: 'ivddGrade',           label: 'IVDD grade',               cautious: null },
   { field: 'oaStage',             label: 'Osteoarthritis stage',     cautious: null },
@@ -374,9 +398,15 @@ function proposeEngineInputs({ patient, clinicInputs = {}, priorInputs = null } 
     const fromV1 = carried === undefined && v1.values[gate.field] !== undefined
       ? v1.values[gate.field] : undefined;
 
+    // A cautious value may depend on the case — crate rest is ordinary two days
+    // after surgery and implausible six months after it.
+    const cautious = typeof gate.cautious === 'function'
+      ? gate.cautious({ postOpDays, patient: effective })
+      : gate.cautious;
+
     const value = carried !== undefined ? carried
       : fromV1 !== undefined ? fromV1
-        : gate.cautious;
+        : cautious;
     proposed[gate.field] = relevant ? value : null;
 
     if (relevant) {

@@ -288,10 +288,16 @@ function createV2Router(deps) {
     if (!engineResult.valid) {
       // A clinical refusal, not a malformed request — e.g. a dehisced incision
       // blocks generation outright.
+      //
+      // FELINE_UNSUPPORTED is carried through as its own code rather than
+      // flattened into CLINICAL_BLOCK. The two are different things and a
+      // clinician should be able to tell them apart: a dehisced incision is a
+      // finding about this animal that will change, and the missing feline path
+      // is a fact about the product that will not change today.
       return res.status(409).json({
         success: false,
         error: engineResult.errors.join('; '),
-        code: 'CLINICAL_BLOCK',
+        code: engineResult.blockedReason || 'CLINICAL_BLOCK',
         warnings: engineResult.warnings,
       });
     }

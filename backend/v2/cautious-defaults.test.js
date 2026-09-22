@@ -74,7 +74,24 @@ function engineEffect(field, value) {
   };
 }
 
-const proposed = SAFETY_GATES.filter((g) => g.cautious !== null && g.cautious !== undefined);
+/**
+ * Resolve a gate's cautious value for a given case.
+ *
+ * Some are conditional: crate rest and an e-collar are ordinary in the
+ * fortnight after surgery and implausible months later, so they are functions
+ * of how far post-op the patient is. Both branches have to be exercised — a
+ * conditional default is two defaults, and a test that only reads one of them
+ * is testing half the behaviour.
+ */
+const cautiousFor = (gate, postOpDays) =>
+  (typeof gate.cautious === 'function'
+    ? gate.cautious({ postOpDays, patient: {} })
+    : gate.cautious);
+
+/** Gates proposing a value for a patient three days after surgery. */
+const proposed = SAFETY_GATES
+  .map((g) => ({ ...g, cautious: cautiousFor(g, 3) }))
+  .filter((g) => g.cautious !== null && g.cautious !== undefined);
 
 // ---------------------------------------------------------------------------
 // The invariant
@@ -182,6 +199,56 @@ test('complications and incision status propose nothing, on purpose', () => {
       gate.cautious, null,
       `${field} proposes ${JSON.stringify(gate.cautious)}. Read the note above ` +
       `SAFETY_GATES before changing this — there is no honest cautious value here`
+    );
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Post-operative restrictions expire
+// ---------------------------------------------------------------------------
+
+test('crate rest and an e-collar are proposed in the days after surgery', () => {
+  for (const field of ['crateRestRequired', 'eCollarRequired']) {
+    const gate = SAFETY_GATES.find((g) => g.field === field);
+    assert.strictEqual(
+      cautiousFor(gate, 3), true,
+      `${field} must still be proposed three days post-operatively`
+    );
+  }
+});
+
+test('they stop being proposed once the acute window has passed', () => {
+  // Proposing them regardless of time was degenerate, not merely cautious: a
+  // TPLO patient 26 weeks post-op received the same five passive exercises
+  // every week for eight weeks, and another protocol's last week held a single
+  // modality. Answered "no", the same patients got 27 distinct exercises with
+  // real progression.
+  for (const field of ['crateRestRequired', 'eCollarRequired']) {
+    const gate = SAFETY_GATES.find((g) => g.field === field);
+    assert.strictEqual(
+      cautiousFor(gate, 180), null,
+      `${field} is still proposed six months post-operatively. A default that is ` +
+      `obviously wrong every time is one people learn to accept without reading`
+    );
+  }
+});
+
+test('the boundary is 14 days, and day 14 is still acute', () => {
+  for (const field of ['crateRestRequired', 'eCollarRequired']) {
+    const gate = SAFETY_GATES.find((g) => g.field === field);
+    assert.strictEqual(cautiousFor(gate, 14), true, `${field} on day 14`);
+    assert.strictEqual(cautiousFor(gate, 15), null, `${field} on day 15`);
+  }
+});
+
+test('with no surgery date at all they are still proposed', () => {
+  // An undated post-operative record is treated as ACTIVE everywhere else in
+  // this module, because we cannot know it has healed. Same here.
+  for (const field of ['crateRestRequired', 'eCollarRequired']) {
+    const gate = SAFETY_GATES.find((g) => g.field === field);
+    assert.strictEqual(
+      cautiousFor(gate, null), true,
+      `${field} must stay cautious when nobody knows how far post-op this is`
     );
   }
 });

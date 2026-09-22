@@ -99,6 +99,18 @@ function capability(value) {
 }
 
 /**
+ * Is this a cat?
+ *
+ * Deliberately generous. The species column holds "feline", "Feline" and
+ * "cat" across the database, and the cost of the two answers is not
+ * symmetrical: reading a dog as a cat withholds a protocol somebody can ask
+ * about, while reading a cat as a dog prescribes hill walking to a cat.
+ */
+function isFeline(species) {
+  return /fel|cat/i.test(String(species || ''));
+}
+
+/**
  * Split a single stored client name into first and last.
  *
  * The K9 `patients` table has one `client_name` column; the engine wants first
@@ -285,6 +297,42 @@ function runEngine(formData, engine, allExercises) {
       problems.push(`adapter must not pre-set derived flags: ${guard.unexpectedFlags.join(', ')}`);
     }
     throw new Error(`[engine-adapter] contract violation — ${problems.join('; ')}`);
+  }
+
+  // STEP 0 — species.
+  //
+  // THE PROTOCOL ENGINE HAS NO FELINE PATH. `protocol-generator.js` contains
+  // zero references to species and can select none of the fifteen FELINE_*
+  // exercises in the library; the engine contract lists species as
+  // `{ role: "echoed", default: "canine" }`. A cat run through it is handed a
+  // dog's protocol — an acceptance run on 22 Sep 2026 produced hill walking, a
+  // wobble board and cavaletti rails for a domestic shorthair with lumbosacral
+  // spondylosis.
+  //
+  // So it refuses. This is a PRODUCT GATE, not an engine rule, and it sits here
+  // rather than in the route so no caller can route around it.
+  //
+  // The honest position is that the feline path is not built. Generating a
+  // canine protocol and calling it feline would be worse than generating
+  // nothing, and Source of Truth §9-11 forbids exactly that transfer.
+  //
+  // Remove this the day the engine can select feline exercises. Not before.
+  if (isFeline(formData.species)) {
+    return {
+      valid: false,
+      blockedReason: 'FELINE_UNSUPPORTED',
+      errors: [
+        'Feline protocol generation is not available yet. The protocol engine '
+        + 'selects from the canine exercise set only, so generating for a cat '
+        + 'would prescribe canine exercises. The feline exercises in the library '
+        + 'cannot be reached by the generator.',
+      ],
+      warnings: [],
+      derivedFlags: {},
+      protocolType: null,
+      totalWeeks: 0,
+      weeks: [],
+    };
   }
 
   // STEP 1 — validate. This MUTATES formData, setting the severity flags.
