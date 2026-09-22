@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { FiArrowLeft, FiChevronDown, FiChevronRight, FiInfo } from "react-icons/fi";
 import C from "../../constants/colors";
-import { SPECIES, SEX, field, Field, WeightPair, ClinicalBackground } from "./PatientForm";
+import { SPECIES_FOR_NEW_PATIENT, SEX, field, Field, WeightPair, ClinicalBackground } from "./PatientForm";
 
 // ─────────────────────────────────────────────
 // REGISTER A PATIENT
@@ -89,9 +89,14 @@ export default function NewPatient({ onCreate, onCancel, busy }) {
           <input style={field} value={f.name} onChange={set("name")} autoFocus />
         </Field>
 
-        <Field label="Species" required>
+        {/* Canine only. The protocol engine has no feline path, so a cat
+            registered here could be examined, assessed and gated, and then
+            refused at the last step. Said here instead. */}
+        <Field label="Species" hint="Feline rehabilitation is not available yet." required>
           <select style={field} value={f.species} onChange={set("species")}>
-            {SPECIES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+            {SPECIES_FOR_NEW_PATIENT.map((s) => (
+              <option key={s.value} value={s.value}>{s.label}</option>
+            ))}
           </select>
         </Field>
 

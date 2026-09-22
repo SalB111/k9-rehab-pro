@@ -17,10 +17,33 @@ import { lbsToKg, kgToLbs } from "../../constants/weight";
 // quietly drift.
 // ─────────────────────────────────────────────
 
+/**
+ * Species.
+ *
+ * Both values, because an EXISTING record may say Feline and a form that
+ * cannot display what is stored will silently coerce it — which is how a cat
+ * would become a dog the first time somebody opened its record to fix a
+ * typo. Editing uses this list.
+ */
 export const SPECIES = [
   { value: "Canine", label: "Dog" },
   { value: "Feline", label: "Cat" },
 ];
+
+/**
+ * What a NEW patient may be registered as.
+ *
+ * Canine only, from 22 Sep 2026. The protocol engine has no feline path —
+ * `protocol-generator.js` holds zero references to species and can select none
+ * of the fifteen FELINE_* exercises in the library — so a cat registered here
+ * could be examined, assessed and gated, and then refused at the last step.
+ *
+ * The feline exercise set and `beau-feline.js` stay in the backend. Feline
+ * rehabilitation is a proper addition, not a flag to flip, and offering it
+ * before the engine can do it produces canine exercises with a cat's name on
+ * them. Restore this to SPECIES when the engine can select feline work.
+ */
+export const SPECIES_FOR_NEW_PATIENT = SPECIES.filter((s) => s.value === "Canine");
 
 /**
  * Sex, and the reader that copes with what is already stored.
