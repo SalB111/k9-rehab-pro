@@ -122,6 +122,24 @@ export const getIntakeProposal = (patientId) =>
 export const createPatient = (body) =>
   api.post("/patients", body).then((r) => r.data.data || r.data);
 
+/**
+ * Correct a patient record.
+ *
+ * Deliberately the V1 route, the same one createPatient posts to. Patient CRUD
+ * has always lived there; the V2 router owns visits, protocols and gates.
+ *
+ * Until 22 Sep 2026 this route existed with NO caller anywhere in the app — so
+ * a record could be created and never corrected. A wrong weight, a missing
+ * surgery date, a blank affected region and newly started medications were all
+ * permanent. That is why the only real post-operative patient in the database
+ * has `surgery_date: null` and no way to express how far post-op she is.
+ *
+ * Only the fields supplied are written; the route builds its UPDATE from what
+ * it is given, so omitting a key leaves that column alone.
+ */
+export const updatePatient = (id, body) =>
+  api.put(`/patients/${id}`, body).then((r) => r.data.data || r.data);
+
 // ── Reference data ───────────────────────────────────────────────────────────
 
 /** Human labels for the engine's five severity gates. */
@@ -230,6 +248,33 @@ export const NEURO_MOTOR = [
   { value: "Voluntary motor present — ambulatory", label: "Present — ambulatory" },
   { value: "Voluntary motor present — non-ambulatory", label: "Present — non-ambulatory" },
   { value: "0/5 — no voluntary motor", label: "0/5 — no voluntary motor" },
+];
+
+/**
+ * Body condition score, WSAVA 1–9.
+ *
+ * These are the labels the V1 dashboard has always used
+ * (DashboardView.jsx:1336) — reused verbatim rather than reworded, because a
+ * clinician reading "6 — Overweight" on one screen and something else on
+ * another has to work out whether they mean the same thing.
+ *
+ * The column has existed on `patients` since the beginning, defaulting to 5,
+ * with no UI anywhere in the V2 workflow and nothing reading it. It is
+ * recorded and trended here; it does NOT feed the engine, and no exercise is
+ * selected or withheld on it. Making it generative would need published
+ * thresholds, not a rule invented to fill the gap.
+ */
+export const BODY_CONDITION_SCORE = [
+  { value: "", label: "Not recorded" },
+  { value: "1", label: "1 — Emaciated" },
+  { value: "2", label: "2 — Very thin" },
+  { value: "3", label: "3 — Thin" },
+  { value: "4", label: "4 — Underweight" },
+  { value: "5", label: "5 — Ideal" },
+  { value: "6", label: "6 — Overweight" },
+  { value: "7", label: "7 — Heavy" },
+  { value: "8", label: "8 — Obese" },
+  { value: "9", label: "9 — Morbidly obese" },
 ];
 
 /**

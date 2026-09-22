@@ -6,6 +6,7 @@ import ClinicalSnapshot from "./ClinicalSnapshot";
 import TodaysUpdate from "./TodaysUpdate";
 import RecommendationReview from "./RecommendationReview";
 import NewPatient from "./NewPatient";
+import EditPatient from "./EditPatient";
 import SafetyGates from "./SafetyGates";
 import * as v2 from "./v2api";
 
@@ -293,6 +294,32 @@ export default function ClinicalWorkflowView({ setView, patient: initialPatient 
     }
   };
 
+  /**
+   * Save corrections to the patient record.
+   *
+   * Reloads the snapshot afterwards rather than patching local state: the
+   * intake proposal is derived from the record, so changing the condition or
+   * the surgery date changes which safety gates apply. Showing the old
+   * proposal beside a corrected record is how a gate goes missing.
+   */
+  const savePatient = async (changes) => {
+    setBusy(true); setError(null); setNotice(null);
+    try {
+      await v2.updatePatient(patient.id, changes);
+      const fresh = await api.get(`/patients/${patient.id}`).then((r) => r.data.data || r.data);
+      setPatient(fresh);
+      await api.get("/patients").then((r) => setPatients(r.data.data || r.data || []));
+      await loadSnapshot(patient.id);
+      const n = Object.keys(changes).length;
+      setNotice(`${fresh.name}'s record updated — ${n} field${n === 1 ? "" : "s"}.`);
+      setStep("snapshot");
+    } catch (e) {
+      setError(v2.describeError(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
   // ── Visit -> assessment -> measurements -> recommendation ──────────────
   const generate = async () => {
     setBusy(true); setError(null); setNotice(null);
@@ -392,11 +419,22 @@ export default function ClinicalWorkflowView({ setView, patient: initialPatient 
         />
       )}
 
+      {step === "edit-patient" && patient && (
+        <EditPatient
+          patient={patient}
+          activeProtocol={snapshot?.active_protocol}
+          onSave={savePatient}
+          onCancel={() => setStep("snapshot")}
+          busy={busy}
+        />
+      )}
+
       {step === "snapshot" && patient && (
         <>
           <ClinicalSnapshot
             snapshot={snapshot}
             patient={patient}
+            onEditPatient={() => { setError(null); setNotice(null); setStep("edit-patient"); }}
             canRespond={authority?.allowed === true}
             onRespondToRecheck={respondToRecheck}
             onRequestVideo={snapshot?.active_protocol ? requestVideo : null}

@@ -1,6 +1,6 @@
 import React from "react";
 import {
-  FiActivity, FiAlertTriangle, FiArrowDown, FiArrowUp, FiClipboard, FiMinus,
+  FiActivity, FiAlertTriangle, FiArrowDown, FiArrowUp, FiClipboard, FiEdit2, FiMinus,
 } from "react-icons/fi";
 import C from "../../constants/colors";
 import { SAFETY_GATE_LABELS, CAPABILITY_LABELS } from "./v2api";
@@ -70,7 +70,7 @@ function Stat({ label, value, change }) {
 
 export default function ClinicalSnapshot({
   snapshot, patient, canRespond, onRespondToRecheck, onRequestVideo, videoRequests, busy,
-  access, onIssueAccess, issuedCode,
+  access, onIssueAccess, issuedCode, onEditPatient,
 }) {
   if (!snapshot) return null;
 
@@ -121,6 +121,25 @@ export default function ClinicalSnapshot({
             </div>
             {patient?.affected_region && (
               <div style={{ fontSize: 12, color: C.textMid }}>{patient.affected_region}</div>
+            )}
+            {/* Nothing in the app could correct a patient record until
+                22 Sep 2026. The button belongs here because this is the screen
+                where a clinician notices the weight is wrong or the surgery
+                date is missing. */}
+            {onEditPatient && (
+              <button
+                type="button"
+                onClick={onEditPatient}
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 5, marginTop: 10,
+                  padding: "5px 10px", fontSize: 11.5, fontWeight: 600,
+                  borderRadius: 6, cursor: "pointer",
+                  background: "transparent", border: `1px solid ${C.border}`,
+                  color: C.textMid,
+                }}
+              >
+                <FiEdit2 size={11} /> Correct this record
+              </button>
             )}
           </div>
 

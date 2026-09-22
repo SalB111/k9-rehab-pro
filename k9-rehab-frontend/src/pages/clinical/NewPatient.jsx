@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { FiArrowLeft, FiInfo } from "react-icons/fi";
+import { FiArrowLeft, FiChevronDown, FiChevronRight, FiInfo } from "react-icons/fi";
 import C from "../../constants/colors";
-import { lbsToKg, kgToLbs } from "../../constants/weight";
+import { SPECIES, SEX, field, Field, WeightPair, ClinicalBackground } from "./PatientForm";
 
 // ─────────────────────────────────────────────
 // REGISTER A PATIENT
@@ -20,44 +20,6 @@ import { lbsToKg, kgToLbs } from "../../constants/weight";
 // gates and little else, which is safe but close to useless.
 // ─────────────────────────────────────────────
 
-const SPECIES = [
-  { value: "Canine", label: "Dog" },
-  { value: "Feline", label: "Cat" },
-];
-
-const field = {
-  width: "100%", padding: "9px 11px", fontSize: 14,
-  border: `1px solid ${C.border}`, borderRadius: 7,
-  background: C.surface, color: C.text, outline: "none",
-};
-
-// The unit under each weight box. A weight with no unit on screen is how "68"
-// came to mean pounds on one page and kilograms on another.
-const unitTag = {
-  fontSize: 10.5, fontWeight: 700, letterSpacing: 0.6, textTransform: "uppercase",
-  color: C.textLight, marginTop: 3, textAlign: "center",
-};
-
-function Field({ label, hint, required, children }) {
-  return (
-    <label style={{ display: "block" }}>
-      <span style={{
-        display: "block", fontSize: 11, fontWeight: 700, letterSpacing: 0.4,
-        textTransform: "uppercase", color: C.textMid, marginBottom: 5,
-      }}>
-        {label}
-        {required && <span style={{ color: C.red, marginLeft: 3 }}>*</span>}
-      </span>
-      {children}
-      {hint && (
-        <span style={{ display: "block", fontSize: 11, color: C.textLight, marginTop: 4 }}>
-          {hint}
-        </span>
-      )}
-    </label>
-  );
-}
-
 export default function NewPatient({ onCreate, onCancel, busy }) {
   const [f, setF] = useState({
     // `weight` is POUNDS and is what gets saved. `weight_kg` is the converted
@@ -66,27 +28,12 @@ export default function NewPatient({ onCreate, onCancel, busy }) {
     name: "", species: "Canine", breed: "", age: "", weight: "", weight_kg: "",
     sex: "", condition: "", affected_region: "", surgery_date: "",
     client_name: "",
+    // Engine inputs, optional at registration. See ClinicalBackground.
+    current_medications: "", medical_history: "", special_instructions: "",
   });
   const set = (k) => (e) => setF((p) => ({ ...p, [k]: e.target.value }));
-
-  /**
-   * Keep the two weight boxes agreeing.
-   *
-   * The typed box keeps exactly what was typed — converting it back and forth
-   * on every keystroke fights the person entering it. The OTHER box is
-   * derived. Anything that is not a positive number blanks the other box
-   * rather than leaving a stale conversion sitting next to it, because two
-   * boxes showing contradictory weights is worse than one showing none.
-   */
-  const setWeight = (unit, raw) =>
-    setF((p) => {
-      if (unit === "lbs") {
-        const kg = lbsToKg(raw);
-        return { ...p, weight: raw, weight_kg: kg === null ? "" : String(kg) };
-      }
-      const lbs = kgToLbs(raw);
-      return { ...p, weight_kg: raw, weight: lbs === null ? "" : String(lbs) };
-    });
+  const patch = (p2) => setF((p) => ({ ...p, ...p2 }));
+  const [showBackground, setShowBackground] = useState(false);
 
   const missing = ["name", "breed", "age", "weight", "condition"].filter((k) => !String(f[k]).trim());
   const canSubmit = missing.length === 0 && !busy;
@@ -156,40 +103,11 @@ export default function NewPatient({ onCreate, onCancel, busy }) {
           <input style={field} type="number" step="0.1" min="0" value={f.age} onChange={set("age")} />
         </Field>
 
-        {/* Two boxes, one fact. Type into whichever unit the scale reads and
-            the other fills itself — nobody should be doing arithmetic at the
-            front desk, and a weight converted in someone's head is a weight
-            that can be wrong. Pounds are what get saved; see constants/weight.js. */}
-        <Field label="Weight" hint="Enter either — the other converts. Pounds are recorded." required>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-            <div>
-              <input
-                style={field} type="number" step="0.1" min="0" placeholder="lbs"
-                aria-label="Weight in pounds"
-                value={f.weight}
-                onChange={(e) => setWeight("lbs", e.target.value)}
-              />
-              <div style={unitTag}>lbs</div>
-            </div>
-            <div>
-              <input
-                style={field} type="number" step="0.1" min="0" placeholder="kg"
-                aria-label="Weight in kilograms"
-                value={f.weight_kg}
-                onChange={(e) => setWeight("kg", e.target.value)}
-              />
-              <div style={unitTag}>kg</div>
-            </div>
-          </div>
-        </Field>
+        <WeightPair lbs={f.weight} kg={f.weight_kg} onChange={patch} required />
 
         <Field label="Sex">
           <select style={field} value={f.sex} onChange={set("sex")}>
-            <option value="">Not stated</option>
-            <option value="Male">Male</option>
-            <option value="Male Neutered">Male neutered</option>
-            <option value="Female">Female</option>
-            <option value="Female Spayed">Female spayed</option>
+            {SEX.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
         </Field>
       </div>
@@ -219,6 +137,35 @@ export default function NewPatient({ onCreate, onCancel, busy }) {
             <input style={field} value={f.client_name} onChange={set("client_name")} />
           </Field>
         </div>
+      </div>
+
+      {/* Optional, and collapsed. These three are engine inputs — they feed the
+          contraindication scan — and no screen has ever collected them, so the
+          scan has been running over empty strings for every patient registered
+          here. Whoever is booking the patient in usually will not have them;
+          the edit surface is where they normally get filled in. Offered here so
+          the gap stops being structural, closed so registration stays short. */}
+      <div style={{ border: `1px solid ${C.border}`, borderRadius: 8, marginBottom: 16, overflow: "hidden" }}>
+        <button
+          type="button"
+          onClick={() => setShowBackground((o) => !o)}
+          style={{
+            width: "100%", display: "flex", alignItems: "center", gap: 8,
+            padding: "10px 14px", background: C.bg, border: "none",
+            cursor: "pointer", textAlign: "left",
+          }}
+        >
+          {showBackground ? <FiChevronDown size={14} /> : <FiChevronRight size={14} />}
+          <span style={{ fontSize: 13, fontWeight: 600, color: C.navy }}>Clinical background</span>
+          <span style={{ fontSize: 11, color: C.textLight, marginLeft: "auto" }}>
+            optional · medications · history · instructions
+          </span>
+        </button>
+        {showBackground && (
+          <div style={{ padding: 14 }}>
+            <ClinicalBackground values={f} onChange={patch} />
+          </div>
+        )}
       </div>
 
       {/* Said here rather than discovered later: a surgical case with no date

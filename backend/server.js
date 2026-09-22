@@ -177,12 +177,24 @@ function validatePatientPayload(body, { requireName = false } = {}) {
     if (typeof v !== "string") return `${k} must be a string`;
     if (v.length > cap) return `${k} exceeds max length (${cap})`;
   }
-  for (const k of ["age", "weight", "lameness_grade", "body_condition_score", "pain_level"]) {
+  // Per-field ranges, not one blanket 0-1000. These are clinical scales with
+  // published bounds: a body condition score of 40 or a pain score of 87 is a
+  // typo, and accepting it stores a number no chart can be read against.
+  // Widened from the blanket check on 22 Sep 2026, when the patient record
+  // became editable and these stopped being write-once.
+  const RANGES = {
+    age:                  [0, 40],    // years
+    weight:               [0, 400],   // POUNDS — see constants/weight.js
+    lameness_grade:       [0, 5],
+    body_condition_score: [1, 9],     // WSAVA
+    pain_level:           [0, 10],
+  };
+  for (const [k, [lo, hi]] of Object.entries(RANGES)) {
     const v = body[k];
     if (v === undefined || v === null || v === "") continue;
     const n = Number(v);
     if (!Number.isFinite(n)) return `${k} must be a number`;
-    if (n < 0 || n > 1000) return `${k} out of range`;
+    if (n < lo || n > hi) return `${k} must be between ${lo} and ${hi}`;
   }
   const dd = body.dashboard_data;
   if (dd !== undefined) {

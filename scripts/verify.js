@@ -43,6 +43,10 @@ const CHECKS = [
   // no value" rule, and the single definition of the factor.
   { name: 'K9 · weight units',         cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/weight-units.test.js'],
     ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
+  // The patient record became editable on 22 Sep 2026. Guards the "only what
+  // changed is sent" diff, pounds as the stored unit, and the clinical ranges.
+  { name: 'K9 · patient edit',         cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/patient-edit.test.js'],
+    ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
   // Runs the proposal's "most cautious" gate values through the real engine.
   // Fails if one of them restricts nothing — four of twelve did.
   { name: 'K9 · cautious defaults',    cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/cautious-defaults.test.js'],
