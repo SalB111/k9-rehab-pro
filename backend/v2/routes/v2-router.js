@@ -26,6 +26,7 @@ const homeStore = require('../home-store');
 const clinicStore = require('../clinic-store');
 const adapter = require('../engine-adapter');
 const authority = require('../authority');
+const intakeProposal = require('../intake-proposal');
 const ownerAuth = require('../owner-auth');
 const { requireRole, requireApprovalAuthority } = require('../middleware/require-role');
 const { route } = require('../http-errors');
@@ -167,6 +168,51 @@ function createV2Router(deps) {
   // -------------------------------------------------------------------------
   // Recommendation — visit + patient + clinic -> engine -> persisted version
   // -------------------------------------------------------------------------
+
+  /**
+   * What the system already knows, so a clinician verifies instead of types.
+   *
+   * Returns the engine's inputs pre-filled from the patient record, the
+   * clinic's equipment profile, and stated rules - plus the list of safety
+   * gates that actually apply to this case and must be confirmed by a person.
+   *
+   * Nothing here is authoritative. It is a proposal: the clinician's
+   * assessment still writes the values, and the gates still have to be ticked
+   * before a protocol built on them can be approved.
+   */
+  router.get('/patients/:id/intake-proposal', route(async (req, res) => {
+    const patientId = Number(req.params.id);
+    const patient = await getPatient(db, patientId);
+    if (!patient) {
+      return res.status(404).json({ success: false, error: 'Patient not found', code: 'NOT_FOUND' });
+    }
+
+    const clinicId = await resolveClinicId(req, db);
+    const capabilities = await clinicStore.getCapabilities(db, clinicId);
+
+    // The last approved protocol's inputs seed the gates. Evidence, not
+    // authority - every gate still comes back with mustConfirm set.
+    let priorInputs = null;
+    try {
+      const prior = await db.get(
+        `SELECT pv.engine_input_json AS j
+           FROM protocol_versions pv
+           JOIN protocols p ON p.id = pv.protocol_id
+          WHERE p.patient_id = ? AND pv.status = 'APPROVED'
+          ORDER BY pv.id DESC LIMIT 1`,
+        [patientId]
+      );
+      if (prior && prior.j) priorInputs = JSON.parse(prior.j);
+    } catch { priorInputs = null; }
+
+    const result = intakeProposal.proposeEngineInputs({
+      patient,
+      clinicInputs: clinicStore.toEngineInputs(capabilities),
+      priorInputs,
+    });
+
+    res.json({ success: true, data: result });
+  }));
 
   router.post('/visits/:id/recommendation', route(async (req, res) => {
     const visitId = Number(req.params.id);

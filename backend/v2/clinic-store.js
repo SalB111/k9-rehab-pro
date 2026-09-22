@@ -128,6 +128,26 @@ function toClinicState(capabilityRecord) {
 }
 
 /**
+ * The same capability state, keyed by ENGINE input name.
+ *
+ * toClinicState() returns capability keys (modality_laser) because that is what
+ * the visit -> engine pipeline carries until the adapter maps it. Anything
+ * building engine inputs directly needs them the other way round, and getting
+ * it wrong is silent: the engine simply never sees the modality and withholds
+ * the therapy, which is the fails-restrictive direction with no error anywhere.
+ *
+ * The map lives here, so this conversion does too.
+ */
+function toEngineInputs(capabilityRecord) {
+  const state = toClinicState(capabilityRecord);
+  const out = {};
+  for (const [capKey, engineKey] of Object.entries(CAPABILITY_TO_ENGINE_INPUT)) {
+    out[engineKey] = state[capKey];
+  }
+  return out;
+}
+
+/**
  * Guard against the capability set drifting from the engine's enablement gates.
  *
  * The engine contract marks these as `fails_restrictive_if_omitted`. If the
@@ -158,6 +178,7 @@ module.exports = {
   getCapabilities,
   setCapabilities,
   toClinicState,
+  toEngineInputs,
   assertCoversEngineGates,
   toTriState,
   fromTriState,
