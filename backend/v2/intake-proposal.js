@@ -43,6 +43,8 @@
 
 'use strict';
 
+const dashboardBridge = require('./dashboard-bridge');
+
 /** How a proposed value got its value. Shown to the clinician, not decorative. */
 const SOURCE = {
   RECORD: 'RECORD',   // read from the patient record
@@ -209,27 +211,78 @@ function proposeEngineInputs({ patient, clinicInputs = {}, priorInputs = null } 
     throw err;
   }
 
-  const { first, last } = splitClientName(patient.client_name);
-  const postOpDays = daysSince(patient.surgery_date);
+  // ── The V1 clinical record ───────────────────────────────────────────────
+  //
+  // The practice keeps a second, fuller record of the same patient in
+  // `dashboard_data`, and until 22 Sep 2026 nothing read it. See
+  // dashboard-bridge.js for what it holds and how it is mapped.
+  //
+  // It FILLS GAPS ONLY. A column that holds a real value wins, because it is
+  // what somebody most recently entered in this workflow. Where the column is
+  // empty the V1 record answers, and every value it answers with is recorded
+  // in `why` so the clinician can see it came from the chart rather than from
+  // today's examination.
+  //
+  // Zero is not a real value for age or weight. A live record held age 0 on a
+  // ten-year-old dog while the chart said 10, and treating 0 as "filled in" is
+  // how it stayed that way.
+  const v1 = dashboardBridge.readDashboard(patient);
   const why = {};
+
+  const filled = (columnValue, isNumeric) => {
+    if (columnValue === null || columnValue === undefined) return false;
+    if (String(columnValue).trim() === '') return false;
+    if (isNumeric && Number(columnValue) === 0) return false;
+    return true;
+  };
+
+  // The patient row as the proposal should read it: the columns, with the V1
+  // record answering where they are silent. Everything below — the derived
+  // treatment approach, the phase calculation, which safety gates apply —
+  // reads THIS rather than the raw row, because a surgery date recovered from
+  // the chart has to raise the post-operative gates too.
+  const effective = { ...patient };
+  const FILL = [
+    ['condition', 'diagnosis'], ['affected_region', 'affectedRegion'],
+    ['surgery_date', 'surgeryDate'], ['medical_history', 'medicalHistory'],
+    ['current_medications', 'currentMedications'],
+    ['special_instructions', 'specialInstructions'],
+    ['pain_level', 'painScore', true], ['lameness_grade', 'lamenessGrade', true],
+    ['mobility_level', 'mobilityLevel'], ['breed', 'breed'],
+    ['age', 'age', true], ['weight', 'weight', true],
+  ];
+  const recovered = [];
+  for (const [column, engineKey, numeric] of FILL) {
+    if (filled(patient[column], numeric)) continue;
+    const value = v1.values[engineKey];
+    if (value === undefined || value === null) continue;
+    effective[column] = value;
+    recovered.push(engineKey);
+    const prov = v1.provenance[engineKey];
+    why[engineKey] = `Not in the patient record. Read from this practice's clinical `
+      + `record — ${prov ? prov.key : 'V1'}.`;
+  }
+
+  const { first, last } = splitClientName(effective.client_name);
+  const postOpDays = daysSince(effective.surgery_date);
 
   // ── From the record. No clinician action. ────────────────────────────────
   const proposed = {
-    patientName: patient.name || '',
+    patientName: effective.name || '',
     clientFirstName: first,
     clientLastName: last,
-    diagnosis: patient.condition || '',
-    affectedRegion: patient.affected_region || null,
-    surgeryDate: patient.surgery_date || null,
-    medicalHistory: patient.medical_history || '',
-    currentMedications: patient.current_medications || '',
-    specialInstructions: patient.special_instructions || '',
-    painScore: patient.pain_level ?? null,
-    painLevel: patient.pain_level ?? null,
-    lamenessGrade: patient.lameness_grade ?? null,
-    mobilityLevel: patient.mobility_level || null,
-    species: patient.species || 'Canine',
-    breed: patient.breed || '',
+    diagnosis: effective.condition || '',
+    affectedRegion: effective.affected_region || null,
+    surgeryDate: effective.surgery_date || null,
+    medicalHistory: effective.medical_history || '',
+    currentMedications: effective.current_medications || '',
+    specialInstructions: effective.special_instructions || '',
+    painScore: effective.pain_level ?? null,
+    painLevel: effective.pain_level ?? null,
+    lamenessGrade: effective.lameness_grade ?? null,
+    mobilityLevel: effective.mobility_level || null,
+    species: effective.species || 'Canine',
+    breed: effective.breed || '',
   };
 
   // ── From the clinic. A property of the practice, not the animal. ─────────
@@ -243,13 +296,13 @@ function proposeEngineInputs({ patient, clinicInputs = {}, priorInputs = null } 
   // because the date field was empty - and treatment approach routes the
   // engine down a different protocol path, so that is not a cosmetic miss.
   const surgicalPresentation = has(
-    `${patient.condition || ''} ${patient.affected_region || ''}`,
+    `${effective.condition || ''} ${effective.affected_region || ''}`,
     'post-op', 'postop', 'post op', 'tplo', 'tta', 'repair', 'osteotomy',
     'ectomy', 'otomy', 'arthrodesis', 'amputation', 'stabilisation', 'stabilization'
   );
-  if (patient.surgery_date) {
+  if (effective.surgery_date) {
     proposed.treatmentApproach = 'Surgical';
-    why.treatmentApproach = `A surgery date of ${patient.surgery_date} is on the record.`;
+    why.treatmentApproach = `A surgery date of ${effective.surgery_date} is on the record.`;
   } else if (surgicalPresentation) {
     proposed.treatmentApproach = 'Surgical';
     why.treatmentApproach = 'The presentation names a surgical procedure, though no date is recorded.';
@@ -275,7 +328,21 @@ function proposeEngineInputs({ patient, clinicInputs = {}, priorInputs = null } 
   }
 
   // ── Safety gates. Proposed cautiously, confirmed by a person. ────────────
-  const applicable = applicableGates(patient);
+  // THE UNION IS DELIBERATE, AND IT IS A SAFETY RULE.
+  //
+  // Recovering data from the V1 record can RECLASSIFY a patient: finding a
+  // surgery date turned one live record from Conservative to Surgical, which
+  // correctly gained four post-operative gates — and silently dropped the
+  // muscle-strength gate, because that classification does not ask for it.
+  //
+  // Losing a gate is the fails-unsafe direction, and this module's own rule is
+  // that a gate shown unnecessarily costs a clinician two seconds while a gate
+  // hidden wrongly costs them the restriction. So filling a gap may only ADD
+  // questions. Anything the raw record would have asked is still asked.
+  const applicable = new Set([
+    ...applicableGates(patient),
+    ...applicableGates(effective),
+  ]);
   const gates = [];
 
   for (const gate of SAFETY_GATES) {
@@ -287,20 +354,47 @@ function proposeEngineInputs({ patient, clinicInputs = {}, priorInputs = null } 
     const carried = priorInputs && priorInputs[gate.field] !== undefined
       ? priorInputs[gate.field] : undefined;
 
-    const value = carried !== undefined ? carried : gate.cautious;
+    // The V1 clinical record is the same class of evidence, one rank below.
+    //
+    // THIS IS THE CONSEQUENTIAL LINE IN THE WHOLE BRIDGE, so it is worth being
+    // plain about what it does. For a gate the record answers, the clinician is
+    // now shown the CHART VALUE instead of the most cautious one. That is
+    // sometimes less restrictive: a chart reading "Full weight bearing" is
+    // proposed as FWB where the cautious default was NWB.
+    //
+    // It is justified on the same ground as `carried`, and on no other: it is a
+    // finding a clinician recorded, it is labelled with where it came from, and
+    // it STILL REQUIRES CONFIRMATION before anything can be approved. What it is
+    // not is an examination of the animal today, and the wording says so.
+    //
+    // The alternative — always showing the cautious default even when the chart
+    // answers — was rejected because a gate that is obviously wrong every time
+    // is a gate people learn to click through, and that costs more safety than
+    // it buys.
+    const fromV1 = carried === undefined && v1.values[gate.field] !== undefined
+      ? v1.values[gate.field] : undefined;
+
+    const value = carried !== undefined ? carried
+      : fromV1 !== undefined ? fromV1
+        : gate.cautious;
     proposed[gate.field] = relevant ? value : null;
 
     if (relevant) {
+      const prov = fromV1 !== undefined ? v1.provenance[gate.field] : null;
       gates.push({
         field: gate.field,
         label: gate.label,
         proposed: value,
         source: SOURCE.GATE,
         carriedForward: carried !== undefined,
+        fromClinicalRecord: fromV1 !== undefined,
         mustConfirm: true,
         why: carried !== undefined
           ? 'Carried from the last approved protocol. Confirm it still holds.'
-          : 'Not derivable from the record — proposed at its most cautious value.',
+          : fromV1 !== undefined
+            ? `Recorded in this practice's clinical record as "${prov ? prov.raw : value}". `
+              + 'That is a previous finding, not today\'s examination — confirm it still holds.'
+            : 'Not derivable from the record — proposed at its most cautious value.',
       });
     }
   }
@@ -308,7 +402,7 @@ function proposeEngineInputs({ patient, clinicInputs = {}, priorInputs = null } 
   // A post-operative description with no date: the phase calculation has
   // nothing to work from, so say so rather than quietly assuming remodelling.
   const undatedSurgery = postOpDays === null && has(
-    `${patient.condition || ''} ${patient.affected_region || ''}`,
+    `${effective.condition || ''} ${effective.affected_region || ''}`,
     'post-op', 'postop', 'post op', 'tplo', 'tta', 'repair', 'osteotomy',
     'ectomy', 'otomy', 'arthrodesis', 'amputation'
   );
@@ -324,6 +418,15 @@ function proposeEngineInputs({ patient, clinicInputs = {}, priorInputs = null } 
     derived: 3,
     gatesApplicable: gates.length,
     gatesSkipped: SAFETY_GATES.length - gates.length,
+    // What the patient columns did not hold and the V1 clinical record did.
+    // Reported so the count is visible rather than inferred from the `why`
+    // entries, and so a clinic can see how much of its record was stranded.
+    fromClinicalRecord: recovered,
+    clinicalRecordPresent: v1.present,
+    // Where the two records disagree. Surfaced, never resolved: which is right
+    // is a clinical question, and a precedence rule buried in a mapper is not
+    // the place to answer it.
+    conflicts: dashboardBridge.disagreements(patient, dashboardBridge.COMPARABLE),
     why,
   };
 

@@ -326,6 +326,171 @@ t('no proposal ever leaves an applicable restriction permissive', () => {
   }
 });
 
+// ── The V1 clinical record, wired in ───────────────────────────────────────
+//
+// The practice keeps a fuller record of the same patient in `dashboard_data`
+// and nothing read it until 22 Sep 2026. It now fills gaps in the proposal.
+// The rules it must obey are all one rule: filling a gap may make the picture
+// MORE complete and may make the gate list LONGER, and may never do either in
+// reverse.
+
+const V1 = (extra = {}) => JSON.stringify({
+  'treatment::Weight Bearing Status': 'Partial weight bearing (PWB)',
+  'treatment::Incision Status': 'Fully healed / staples removed',
+  'assessment::Deep Pain Perception': 'Present — bilateral',
+  'assessment::Relevant Medical & Surgical History': 'TPLO 2026-03-21, uneventful.',
+  'assessment::Current Pain Medications': 'Gabapentin and Carprofen',
+  'client::Age (years)': '10',
+  'treatment::Surgery Date': '2026-03-21',
+  ...extra,
+});
+
+t('a gap in the columns is filled from the clinical record', () => {
+  const { proposed, summary } = proposeEngineInputs({
+    patient: patient({ condition: 'TPLO Post-Op', medical_history: null, current_medications: null }),
+  });
+  assert.equal(proposed.medicalHistory, '');
+  const withV1 = proposeEngineInputs({
+    patient: patient({
+      condition: 'TPLO Post-Op', medical_history: null, current_medications: null,
+      dashboard_data: V1(),
+    }),
+  });
+  assert.match(withV1.proposed.medicalHistory, /TPLO 2026-03-21/);
+  assert.equal(withV1.proposed.currentMedications, 'Gabapentin and Carprofen');
+  assert.ok(summary.fromClinicalRecord.length === 0, 'no record, nothing recovered');
+  assert.ok(withV1.summary.fromClinicalRecord.includes('medicalHistory'));
+});
+
+t('a column that holds a value is never overwritten by the clinical record', () => {
+  // Gaps only. The column is what somebody most recently entered in this
+  // workflow, and the V1 record may be older.
+  const { proposed } = proposeEngineInputs({
+    patient: patient({
+      condition: 'TPLO Post-Op',
+      medical_history: 'What the clinician typed here today.',
+      dashboard_data: V1(),
+    }),
+  });
+  assert.equal(proposed.medicalHistory, 'What the clinician typed here today.');
+});
+
+t('a stored zero is a gap, not a value', () => {
+  // A live record held age 0 on a ten-year-old dog whose chart said 10.
+  const { proposed, summary } = proposeEngineInputs({
+    patient: patient({ age: 0, dashboard_data: V1() }),
+  });
+  assert.equal(proposed.age ?? null, null, 'age is echoed, not proposed — but the record is filled');
+  assert.ok(summary.fromClinicalRecord.includes('age'), 'an age of 0 must be recovered');
+});
+
+t('every value recovered from the clinical record says so', () => {
+  const { summary } = proposeEngineInputs({
+    patient: patient({ condition: 'TPLO Post-Op', medical_history: null, dashboard_data: V1() }),
+  });
+  for (const field of summary.fromClinicalRecord) {
+    assert.ok(
+      summary.why[field] && /clinical record/i.test(summary.why[field]),
+      `${field} was recovered without saying where from`
+    );
+  }
+});
+
+t('a safety gate answered by the clinical record STILL requires confirmation', () => {
+  // The whole justification for using the chart value rather than the cautious
+  // default. If this ever stops being true, the bridge has to be unwired.
+  const { gates } = proposeEngineInputs({
+    patient: patient({ condition: 'TPLO Post-Op', surgery_date: daysAgo(30), dashboard_data: V1() }),
+  });
+  const wb = gates.find((g) => g.field === 'weightBearingStatus');
+  assert.ok(wb, 'weight bearing must be asked for a post-operative patient');
+  assert.equal(wb.proposed, 'PWB', 'the chart value is proposed');
+  assert.equal(wb.fromClinicalRecord, true, 'and it is labelled as coming from the chart');
+  assert.equal(wb.mustConfirm, true, 'and it is still confirmed by a person');
+  assert.match(wb.why, /not today's examination/i,
+    'the wording must not let a previous finding read as an examination today');
+});
+
+t('the last approved protocol outranks the clinical record', () => {
+  const { gates } = proposeEngineInputs({
+    patient: patient({ condition: 'TPLO Post-Op', surgery_date: daysAgo(30), dashboard_data: V1() }),
+    priorInputs: { weightBearingStatus: 'TTWB' },
+  });
+  const wb = gates.find((g) => g.field === 'weightBearingStatus');
+  assert.equal(wb.proposed, 'TTWB', 'the last approved value is the more recent clinical decision');
+  assert.equal(wb.carriedForward, true);
+  assert.ok(!wb.fromClinicalRecord, 'and it is not mislabelled as coming from the chart');
+});
+
+t('filling a gap never removes a safety gate', () => {
+  // Recovering a surgery date RECLASSIFIES a patient — one live record went
+  // from Conservative to Surgical, correctly gaining four post-operative gates
+  // and silently dropping the muscle-strength gate, because that
+  // classification does not ask for it. Losing a gate is the fails-unsafe
+  // direction, so the applicable set is the UNION of both readings.
+  // Modelled exactly on the record that exposed this. The V1 blob supplies ONLY
+  // a surgery date and a history that names no procedure — an earlier version of
+  // this test handed over a history reading "TPLO 2026-03-21", which kept the
+  // muscle-strength gate alive through the diagnosis text and hid the drop.
+  const raw = patient({
+    condition: 'Rehabilitation', affected_region: null, surgery_date: null,
+    mobility_level: '', medical_history: null, lameness_grade: 0,
+  });
+  const before = proposeEngineInputs({ patient: raw });
+  const after = proposeEngineInputs({
+    patient: {
+      ...raw,
+      dashboard_data: JSON.stringify({
+        'treatment::Surgery Date': daysAgo(30),
+        'assessment::Relevant Medical & Surgical History': 'no previous injury',
+      }),
+    },
+  });
+  assert.ok(
+    before.gates.some((g) => g.field === 'mmtGrade'),
+    'the fixture must ask mmtGrade before the record is read, or this tests nothing'
+  );
+  const beforeFields = before.gates.map((g) => g.field);
+  const afterFields = new Set(after.gates.map((g) => g.field));
+  for (const f of beforeFields) {
+    assert.ok(
+      afterFields.has(f),
+      `${f} stopped being asked once the clinical record was read. Filling a gap ` +
+      `may only ADD questions`
+    );
+  }
+  assert.ok(after.gates.length > before.gates.length, 'and it should have added some');
+});
+
+t('a patient with no clinical record behaves exactly as before', () => {
+  const over = { condition: 'TPLO Post-Op', surgery_date: daysAgo(10) };
+  const a = proposeEngineInputs({ patient: patient(over) });
+  const b = proposeEngineInputs({ patient: patient({ ...over, dashboard_data: '{}' }) });
+  assert.deepEqual(a.proposed, b.proposed, 'an empty record must change nothing');
+  assert.deepEqual(a.gates.map((g) => g.field), b.gates.map((g) => g.field));
+  assert.equal(b.summary.clinicalRecordPresent, false);
+});
+
+t('a corrupt clinical record does not break the proposal', () => {
+  for (const bad of ['{not json', 'null', '', '[]']) {
+    const { proposed, gates } = proposeEngineInputs({
+      patient: patient({ condition: 'TPLO Post-Op', dashboard_data: bad }),
+    });
+    assert.ok(proposed.patientName, `${JSON.stringify(bad)} broke the proposal`);
+    assert.ok(Array.isArray(gates));
+  }
+});
+
+t('a disagreement between the two records is reported, not resolved', () => {
+  const { proposed, summary } = proposeEngineInputs({
+    patient: patient({ age: 6, dashboard_data: V1() }),
+  });
+  const age = summary.conflicts.find((c) => c.field === 'Age');
+  assert.ok(age, 'a column of 6 against a record of 10 must be reported');
+  assert.equal(age.column, '6');
+  assert.equal(age.v1Record, '10');
+});
+
 // ── Report ─────────────────────────────────────────────────────────────────
 for (const { name, err } of failures) {
   console.error(`\n  FAIL  ${name}`);
