@@ -51,6 +51,11 @@ const CHECKS = [
   // Fails if one of them restricts nothing — four of twelve did.
   { name: 'K9 · cautious defaults',    cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/cautious-defaults.test.js'],
     ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
+  // Reads the V1 clinical record and maps it onto engine inputs. Tests run
+  // every option DashboardView can produce through the mapper and then through
+  // the real engine — the V1 record is where the clinical detail actually is.
+  { name: 'K9 · dashboard bridge',     cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/dashboard-bridge.test.js'],
+    ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
   { name: 'K9 · frontend build',       cwd: path.join(K9, 'k9-rehab-frontend'), cmd: 'npx', args: ['--no-install', 'vite', 'build'],
     ok: (out) => /built in/.test(out) && !/error/i.test(out) },
   { name: 'B.E.A.U. · tests',          cwd: BEAU, cmd: 'npm', args: ['test'],
