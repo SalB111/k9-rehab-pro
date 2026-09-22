@@ -5,7 +5,7 @@ import C from "../../constants/colors";
 import S from "../../constants/styles";
 import SectionHead from "./SectionHead";
 import StepNavButtons from "./StepNavButtons";
-import { CONDITIONS, FELINE_DIAGNOSES } from "./constants";
+import { CONDITIONS, FELINE_DIAGNOSES } from "../../constants/clinical";
 import { useTr } from "../../i18n/useTr";
 
 const navyCard = { background: C.navy, border: `1px solid ${C.navy}`, borderRadius: 10, padding: "16px 20px", marginBottom: 12, color: "#fff" };

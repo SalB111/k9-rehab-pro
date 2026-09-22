@@ -7,7 +7,7 @@ import { useTr } from "../i18n/useTr";
 
 // ── Decomposed sub-components ──
 import useIntakeForm from "./generator/useIntakeForm";
-import { DEMO_PATIENT } from "./generator/constants";
+import { DEMO_PATIENT } from "../constants/clinical";
 import WizardProgress from "./generator/WizardProgress";
 import Step1ClientPatient from "./generator/Step1ClientPatient";
 import Step2ClinicalAssessment from "./generator/Step2ClinicalAssessment";

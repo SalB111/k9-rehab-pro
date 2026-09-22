@@ -6,7 +6,6 @@ import Sidebar from "./components/Sidebar";
 import LoginView from "./pages/LoginView";
 import WelcomeSplash from "./pages/WelcomeSplash";
 
-const GeneratorView = lazy(() => import("./pages/GeneratorView"));
 const DashboardView = lazy(() => import("./pages/DashboardView"));
 const ExercisesView = lazy(() => import("./pages/ExercisesView"));
 const SessionsView = lazy(() => import("./pages/SessionsView"));
@@ -108,15 +107,11 @@ export default function App() {
         return <ClinicalAdminView setView={setView} />;
       case "clinical":
         return <ClinicalWorkflowView setView={setView} patient={selectedPatient} />;
+      // The seven-step wizard is retired — see src/_parked/. Anything still
+      // asking for it lands on the clinical workflow, which is where
+      // registering a patient and building a protocol now happen.
       case "generator":
-        return (
-          <GeneratorView
-            key={genKey}
-            initialStep={genInitialStep}
-            brand={brand}
-            setView={setView}
-          />
-        );
+        return <ClinicalWorkflowView setView={setView} patient={selectedPatient} />;
       case "exercises":
         return (
           <ExercisesView

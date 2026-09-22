@@ -10,7 +10,7 @@ import {
 import C from "../constants/colors";
 import S from "../constants/styles";
 import { useToast } from "../components/Toast";
-import { BREEDS, FELINE_BREEDS } from "./generator/constants";
+import { BREEDS, FELINE_BREEDS } from "../constants/clinical";
 import { useTr } from "../i18n/useTr";
 
 // ─────────────────────────────────────────────

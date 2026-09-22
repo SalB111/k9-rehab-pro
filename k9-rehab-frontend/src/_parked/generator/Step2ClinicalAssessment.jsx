@@ -8,7 +8,7 @@ import StepNavButtons from "./StepNavButtons";
 import {
   CONDITIONS, REGIONS, NEURO_DIAGNOSES, GAIT_DESCRIPTORS,
   POSTURE_FINDINGS, FELINE_DIAGNOSES,
-} from "./constants";
+} from "../../constants/clinical";
 import { useTr } from "../../i18n/useTr";
 
 // ── Reusable Section wrapper (color-coded left border, white background) ──

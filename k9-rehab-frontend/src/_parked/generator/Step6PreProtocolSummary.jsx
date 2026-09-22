@@ -4,7 +4,7 @@ import C from "../../constants/colors";
 import S from "../../constants/styles";
 import SectionHead from "./SectionHead";
 import StepNavButtons from "./StepNavButtons";
-import { CONDITIONS, FELINE_DIAGNOSES } from "./constants";
+import { CONDITIONS, FELINE_DIAGNOSES } from "../../constants/clinical";
 import { useTr } from "../../i18n/useTr";
 
 // ── Summary card ──

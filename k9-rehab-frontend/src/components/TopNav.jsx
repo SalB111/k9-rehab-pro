@@ -28,8 +28,8 @@ export default function TopNav({ brand, setView }) {
         }
       `}</style>
 
-      <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => setView("generator"))(e); } }}
-        onClick={() => setView("generator")}
+      <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => setView("dashboard"))(e); } }}
+        onClick={() => setView("dashboard")}
         style={{
           display: "flex",
           alignItems: "center",

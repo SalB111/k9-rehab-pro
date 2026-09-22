@@ -5,7 +5,7 @@ import C from "../../constants/colors";
 import S from "../../constants/styles";
 import SectionHead from "./SectionHead";
 import StepNavButtons from "./StepNavButtons";
-import { BREEDS, FELINE_BREEDS, FELINE_HCM_BREEDS, HOSPITALS } from "./constants";
+import { BREEDS, FELINE_BREEDS, FELINE_HCM_BREEDS, HOSPITALS } from "../../constants/clinical";
 import { useTr } from "../../i18n/useTr";
 
 // ── Phone auto-format ──

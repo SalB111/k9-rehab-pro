@@ -496,11 +496,12 @@ function ExercisesView({ setView, setGenKey, setGenInitialStep }) {
   // user clicks "View Targeted Muscles"). Uses the original AnatomyViewer3D
   // Three.js component restored from commit 2119071.
 
+  // The seven-step wizard is retired (src/_parked/). Building a protocol now
+  // starts from the patient, not from an exercise: the clinical workflow
+  // proposes the whole picture and the clinician confirms it.
   const goToGenerator = () => {
     if (!setView) return;
-    setGenKey(k => k + 1);
-    setGenInitialStep(1);
-    setView("generator");
+    setView("clinical");
   };
 
   useEffect(() => {

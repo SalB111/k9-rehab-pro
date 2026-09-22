@@ -66,11 +66,13 @@ export default function Sidebar({ view, setView, currentUser, onLogout, hospital
       <div className="px-3 mt-2 mb-2">
         <button
           onClick={() => {
-            try { localStorage.setItem("beau_open_block", "client"); } catch {}
-            setView("dashboard");
-            // Fire event so DashboardView opens the Client block even if
-            // we're already on the dashboard (setView no-op otherwise).
-            try { window.dispatchEvent(new Event("k9-open-block")); } catch {}
+            // Registering a patient is eight fields in the clinical workflow
+            // now; the seven-step wizard is parked (src/_parked/). The flag
+            // opens it straight on the form rather than the patient picker,
+            // and the event covers the case where we are already there.
+            try { localStorage.setItem("k9_open_new_patient", "1"); } catch {}
+            setView("clinical");
+            try { window.dispatchEvent(new Event("k9-new-patient")); } catch {}
           }}
           className={`
             w-full flex items-center justify-center gap-2 py-2.5 rounded-lg

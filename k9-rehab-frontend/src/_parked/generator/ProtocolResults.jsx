@@ -11,7 +11,7 @@ import StoryboardPlayer from "../../components/StoryboardPlayer";
 import StoryboardPacket from "../../components/StoryboardPacket";
 import BeauBrainPanel from "../../components/BeauBrainPanel";
 import AnatomyViewer3D from "../../components/AnatomyViewer3D";
-import { CLINIC_ONLY_CODES } from "./constants";
+import { CLINIC_ONLY_CODES } from "../../constants/clinical";
 import { useTr } from "../../i18n/useTr";
 
 const PrintableHandout = React.lazy(() => import("../../components/handout/PrintableHandout"));

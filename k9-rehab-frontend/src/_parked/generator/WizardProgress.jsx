@@ -1,7 +1,7 @@
 import React from "react";
 import { FiCheckCircle } from "react-icons/fi";
 import S from "../../constants/styles";
-import { WIZARD_STEPS } from "./constants";
+import { WIZARD_STEPS } from "../../constants/clinical";
 import { useTr } from "../../i18n/useTr";
 
 export default function WizardProgress({ wizardStep, goToStep }) {

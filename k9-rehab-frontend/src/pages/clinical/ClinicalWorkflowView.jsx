@@ -80,7 +80,17 @@ function assessmentFromProposal(proposal) {
 }
 
 export default function ClinicalWorkflowView({ setView, patient: initialPatient }) {
-  const [step, setStep] = useState(initialPatient ? "snapshot" : "patient");
+  const [step, setStep] = useState(() => {
+    // The sidebar's "New patient" button asks for the registration form
+    // directly. Read once and clear, so a later visit lands on the picker.
+    try {
+      if (localStorage.getItem("k9_open_new_patient")) {
+        localStorage.removeItem("k9_open_new_patient");
+        return "new-patient";
+      }
+    } catch { /* private browsing — fall through */ }
+    return initialPatient ? "snapshot" : "patient";
+  });
   const [patients, setPatients] = useState([]);
   const [patient, setPatient] = useState(initialPatient || null);
   const [snapshot, setSnapshot] = useState(null);
@@ -100,6 +110,17 @@ export default function ClinicalWorkflowView({ setView, patient: initialPatient 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
   const [notice, setNotice] = useState(null);
+
+  // Already on this screen when the sidebar button is pressed: setView is a
+  // no-op, so the event is what moves us.
+  useEffect(() => {
+    const onNew = () => {
+      try { localStorage.removeItem("k9_open_new_patient"); } catch { /* ignore */ }
+      setError(null); setNotice(null); setStep("new-patient");
+    };
+    window.addEventListener("k9-new-patient", onNew);
+    return () => window.removeEventListener("k9-new-patient", onNew);
+  }, []);
 
   // ── Load patients + this user's approval authority once ────────────────
   useEffect(() => {
