@@ -1,8 +1,21 @@
 // ============================================================================
 // EVIDENCE-BASED REFERENCES — K9-REHAB-PRO
 // Peer-Reviewed Research Citations
-// Based on Dr. Denis Millis, Dr. Darryl Levine, Dr. David Marcellin-Little
-// and colleagues — the founding authorities of canine rehabilitation medicine
+// Citations drawn from the published work of Dr. Darryl Millis, Dr. David
+// Levine, Dr. David Marcellin-Little and colleagues.
+//
+// Corrected 22 Sep 2026. This header read "Dr. Denis Millis, Dr. Darryl
+// Levine" — wrong on both, with Darryl transposed onto Levine. In a citations
+// file that is the defect Source of Truth §7 names directly: never fabricate
+// an author. The formal records below were always right (Millis DL, Levine D);
+// only this header was wrong, which is how it survived unnoticed.
+//
+// Authority for the spelling: SOURCE-OF-TRUTH.md §2, and the SOURCES registry
+// in docs/audit-2026-08-13/evidence-schema.js. They agree.
+//
+// "Citations drawn from" replaces "Based on" deliberately — §2 forbids
+// implying these authors endorsed, validated or participated in this product.
+// Their work is cited here. They have no involvement in it.
 // ============================================================================
 
 const CORE_REFERENCES = {

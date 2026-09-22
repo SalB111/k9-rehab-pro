@@ -1,7 +1,10 @@
 // ============================================================================
 // EXERCISE DATABASE EXPANSION - PART 7
 // K9-REHAB-PRO - 80 ADDITIONAL VET-APPROVED EXERCISES
-// Following Dr. Denis Millis & Dr. Darryl Levine Standards
+// Exercises informed by the published work of Dr. Darryl Millis and
+// Dr. David Levine. Cited, not endorsed by them — see Source of Truth §2.
+// (Name spelling corrected 22 Sep 2026; this header read "Denis Millis"
+// and "Darryl Levine", wrong on both, with Darryl transposed onto Levine.)
 // Certified Canine Rehabilitation Protocols
 // ============================================================================
 

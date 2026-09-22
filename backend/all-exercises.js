@@ -3,7 +3,10 @@
 // K9-REHAB-PRO - Complete Exercise Database
 // ACVSMR-Aligned | Evidence-Based | Zero Duplicates
 // ============================================================================
-// Following Dr. Denis Millis & Dr. Darryl Levine Standards
+// Exercises informed by the published work of Dr. Darryl Millis and
+// Dr. David Levine. Cited, not endorsed by them — see Source of Truth §2.
+// (Name spelling corrected 22 Sep 2026; this header read "Denis Millis"
+// and "Darryl Levine", wrong on both, with Darryl transposed onto Levine.)
 // Certified Canine Rehabilitation Practitioner (CCRP) Guidelines
 // Evidence-Based Veterinary Physical Rehabilitation
 // ============================================================================
