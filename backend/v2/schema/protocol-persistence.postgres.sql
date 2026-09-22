@@ -48,6 +48,10 @@ CREATE TABLE IF NOT EXISTS v2_protocol_versions (
   status                    TEXT NOT NULL DEFAULT 'DRAFT',
 
   engine_input_json         JSONB NOT NULL,
+  -- Which safety gates applied to this case, recorded when the version was
+  -- generated. Approval refuses until every one carries a clinician's
+  -- confirmation, so a protocol cannot be signed on values nobody looked at.
+  safety_gates_json         JSONB,
   derived_flags_json        JSONB NOT NULL,
   engine_warnings_json      JSONB,
 

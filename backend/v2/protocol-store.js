@@ -36,6 +36,7 @@
 const crypto = require('crypto');
 const authority = require('./authority');
 const hepSelection = require('./hep-selection');
+const intakeProposal = require('./intake-proposal');
 
 // ---------------------------------------------------------------------------
 // States and roles
@@ -102,6 +103,7 @@ const ERR = {
   FORBIDDEN: 'FORBIDDEN',
   ILLEGAL_TRANSITION: 'ILLEGAL_TRANSITION',
   NOT_APPROVED: 'NOT_APPROVED',
+  GATES_UNCONFIRMED: 'GATES_UNCONFIRMED',
   INTEGRITY: 'INTEGRITY',
   INVALID: 'INVALID',
 };
@@ -263,14 +265,19 @@ async function createVersion(db, { protocolId, engineInput, engineResult, actor,
 
   const result = await db.run(
     `INSERT INTO protocol_versions
-       (protocol_id, version_number, status, engine_input_json, derived_flags_json,
-        engine_warnings_json, protocol_type, total_weeks, frequency, created_by)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       (protocol_id, version_number, status, engine_input_json, safety_gates_json,
+        derived_flags_json, engine_warnings_json, protocol_type, total_weeks,
+        frequency, created_by)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       protocolId,
       versionNumber,
       initialStatus,
       JSON.stringify(engineInput),
+      // Pinned now, not recomputed at approval. If the rules change between
+      // generation and signature, the clinician still confirms the gates this
+      // protocol was actually built on.
+      JSON.stringify([...intakeProposal.gatesFromEngineInput(engineInput)]),
       JSON.stringify(engineResult.derivedFlags || {}),
       JSON.stringify(engineResult.warnings || []),
       engineResult.protocolType ?? null,
@@ -398,6 +405,10 @@ async function getVersion(db, versionId) {
     engine_input: JSON.parse(version.engine_input_json),
     derived_flags: JSON.parse(version.derived_flags_json),
     engine_warnings: version.engine_warnings_json ? JSON.parse(version.engine_warnings_json) : [],
+    // The safety gates this version was built on. A reviewer needs to see
+    // which ones they are being asked to confirm, and approval refuses until
+    // each carries a confirmation.
+    safety_gates: version.safety_gates_json ? JSON.parse(version.safety_gates_json) : [],
     exercises,
     restrictions,
     approval: approval || null,
@@ -471,6 +482,7 @@ async function setStatus(db, versionId, nextStatus, actor) {
       ERR.ILLEGAL_TRANSITION
     );
   }
+
   await db.run(`UPDATE protocol_versions SET status = ? WHERE id = ?`, [nextStatus, versionId]);
   await db.run(`UPDATE protocols SET status = ? WHERE id = ?`, [nextStatus, version.protocol_id]);
   await audit(db, {
@@ -596,7 +608,7 @@ function canApprove(actor) {
  * revokes its active B.E.A.U. handoff, so a patient never holds two live
  * prescriptions.
  */
-async function approveVersion(db, { versionId, actor, note }) {
+async function approveVersion(db, { versionId, actor, note, gateConfirmations: approvalGateConfirmations }) {
   requireActor(actor);
   const version = await getVersion(db, versionId);
 
@@ -625,6 +637,7 @@ async function approveVersion(db, { versionId, actor, note }) {
   if (version.status === VERSION_STATUS.APPROVED || version.status === VERSION_STATUS.HANDED_OFF) {
     throw new ProtocolStoreError(`Version ${versionId} is already approved`, ERR.IMMUTABLE);
   }
+
   const allowed = ALLOWED_TRANSITIONS[version.status] || [];
   if (!allowed.includes(VERSION_STATUS.APPROVED)) {
     throw new ProtocolStoreError(
@@ -632,6 +645,46 @@ async function approveVersion(db, { versionId, actor, note }) {
         `Move it to REVIEW first.`,
       ERR.ILLEGAL_TRANSITION
     );
+  }
+
+  // ── Safety gates must be confirmed by a person ──────────────────────────
+  //
+  // The intake proposal fills these in at their most cautious value so a
+  // clinician verifies rather than types. That only means something if
+  // something refuses when nobody verified. A screen that displayed a gate is
+  // not the same as a clinician who confirmed it, and the difference is
+  // invisible by the time a protocol reaches a pet owner.
+  //
+  // Enforced here rather than in the route or the UI: this is the last point
+  // before a protocol acquires a signature, and every path to approval passes
+  // through it.
+  let requiredGates = [];
+  try {
+    requiredGates = JSON.parse(version.safety_gates_json || '[]');
+  } catch { requiredGates = []; }
+
+  if (requiredGates.length) {
+    const confirmations = (note && typeof note === 'object' && note.gateConfirmations)
+      || approvalGateConfirmations
+      || {};
+    const outstanding = requiredGates.filter((f) => confirmations[f] !== true);
+    if (outstanding.length) {
+      await audit(db, {
+        protocolId: version.protocol_id,
+        versionId,
+        action: AUDIT.APPROVAL_REJECTED,
+        actor,
+        detail: { reason: 'GATES_UNCONFIRMED', outstanding },
+      });
+      const err = new ProtocolStoreError(
+        `Cannot approve: ${outstanding.length} safety gate` +
+          `${outstanding.length === 1 ? '' : 's'} not confirmed — ` +
+          outstanding.join(', '),
+        ERR.GATES_UNCONFIRMED
+      );
+      err.outstanding = outstanding;
+      throw err;
+    }
   }
 
   const contentHash = hashContent(versionContent(version));

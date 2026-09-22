@@ -286,6 +286,26 @@ function proposeEngineInputs({ patient, clinicInputs = {}, priorInputs = null } 
 }
 
 /**
+ * The applicable gates for a protocol version, derived from the engine input
+ * that produced it.
+ *
+ * `applicableGates` reads a patient row; a stored version holds engine-shaped
+ * input. Same facts, different key names, so this translates rather than
+ * duplicating the rules — one place decides what applies.
+ */
+function gatesFromEngineInput(engineInput = {}) {
+  return applicableGates({
+    id: 1,
+    condition: engineInput.diagnosis || '',
+    affected_region: engineInput.affectedRegion || '',
+    medical_history: engineInput.medicalHistory || '',
+    surgery_date: engineInput.surgeryDate || null,
+    mobility_level: engineInput.mobilityLevel || '',
+    lameness_grade: engineInput.lamenessGrade ?? null,
+  });
+}
+
+/**
  * Has every applicable gate been confirmed?
  *
  * The UI shows the gates; this decides. A protocol must not reach approval on
@@ -303,6 +323,7 @@ module.exports = {
   SOURCE,
   SAFETY_GATES,
   applicableGates,
+  gatesFromEngineInput,
   proposeEngineInputs,
   unconfirmedGates,
   splitClientName,

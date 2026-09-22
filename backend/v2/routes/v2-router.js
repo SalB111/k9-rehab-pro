@@ -433,6 +433,9 @@ function createV2Router(deps) {
     const version = await store.approveVersion(db, {
       versionId: Number(req.params.id),
       note: req.body.note,
+      // Which safety gates the clinician confirmed. The store refuses the
+      // approval if any gate this version was built on is missing.
+      gateConfirmations: req.body.gate_confirmations,
       actor: req.user,
     });
     res.json({ success: true, data: version });

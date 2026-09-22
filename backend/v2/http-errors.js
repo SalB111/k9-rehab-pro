@@ -25,6 +25,10 @@ const STATUS_BY_CODE = {
   [ERR.ILLEGAL_TRANSITION]: 409,
   [ERR.NOT_APPROVED]: 409,
   [ERR.INTEGRITY]: 409,
+  // 409 as well: the protocol is fine and the clinician is permitted, but a
+  // safety gate this version was built on has not been confirmed. The UI's
+  // response is to show which gates are outstanding, not to reject the form.
+  [ERR.GATES_UNCONFIRMED]: 409,
 };
 
 function statusFor(err) {

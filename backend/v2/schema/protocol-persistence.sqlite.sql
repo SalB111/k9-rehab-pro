@@ -62,6 +62,10 @@ CREATE TABLE IF NOT EXISTS protocol_versions (
 
   -- Provenance — the 36-field engine input contract, verbatim.
   engine_input_json         TEXT NOT NULL,
+  -- Which safety gates applied to this case, recorded when the version was
+  -- generated. Approval refuses until every one carries a clinician's
+  -- confirmation, so a protocol cannot be signed on values nobody looked at.
+  safety_gates_json         TEXT,
   -- Which of the five severity flags validateIntake actually set. This is the
   -- record of WHICH SAFETY GATES FIRED, and is what makes an approval auditable.
   derived_flags_json        TEXT NOT NULL,
