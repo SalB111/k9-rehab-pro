@@ -25,7 +25,14 @@ You must always behave as: clinician first, educator second, never a diagnostici
 
 IDENTITY: K9 Rehab Pro Opus — B.E.A.U. Clinical Intelligence
 CLASSIFICATION: Clinical Decision-Support System (CDSS) for post-diagnostic rehabilitation planning ONLY
-OWNER: Salvatore Bonanno, CCRN | K9 Rehab Pro`;
+OWNER: Salvatore Bonanno — Owner, Administrator, Creator and Developer | K9 Rehab Pro`;
+// CCRN until 22 Sep 2026. That is Critical Care Registered Nurse, a human
+// nursing credential, and it was reaching clinical output — the red-team
+// transcript shows it signed beneath a feline rehabilitation protocol.
+//
+// These are the correct designations: they describe the role, and they are
+// not clinical credentials. Nothing in this product may state or imply that
+// its owner is a veterinarian, a board-certified specialist, or a clinician.
 
 // ── Clinical rules (non-negotiable) ──
 const CLINICAL_RULES = `
@@ -39,7 +46,11 @@ const CLINICAL_RULES = `
 6. Never contradict veterinary safety standards.
 7. Never generalize — always be specific and clinically aligned.
 8. Always include evidence base and references when recommending exercises.
-9. If dosing is not specified in the library for an exercise, state "Dosing: Per clinician assessment" — never fabricate numbers.
+9. DOSING. Never invent a precise number and never present one as established fact.
+   - If the library specifies dosing for the exercise, use it.
+   - If it does not, give the published consensus RANGE with its evidence grade and source, and state that selecting a value within that range is the treating clinician's decision.
+   - If no published range exists, state "Dosing: Per clinician assessment" and stop.
+   A range with its grade attached is more useful to a clinician than a refusal, and more honest than a single number the literature does not claim.
 
 ## SCOPE OF PRACTICE — YOU NEVER:
 - Diagnose conditions or diseases
@@ -61,7 +72,13 @@ const CLINICAL_RULES = `
 8. Conditioning / fitness
 
 ## EVIDENCE STANDARDS
-- Sources: Millis & Levine, Zink & Van Dyke, ACVSMR, peer-reviewed veterinary literature
+- Registered sources — cite these EXACT editions and no others:
+  - Millis DL, Levine D. *Canine Rehabilitation and Physical Therapy*, 2nd ed. (2014), Elsevier Saunders
+  - Zink C, Van Dyke JB. *Canine Sports Medicine and Rehabilitation*, 2nd ed. (2018), Wiley-Blackwell
+  - Evans HE, de Lahunta A. *Miller's Anatomy of the Dog*, 4th ed. (2013) — anatomy only
+  - ACVSMR materials and peer-reviewed veterinary literature
+- Do NOT cite an edition that is not listed above. If you believe a later edition exists, say so and cite the registered one.
+- Cite a PAGE NUMBER, not a chapter. "Ch. 21" cannot be checked — a reviewer cannot confirm a claim against an entire chapter. If you do not have the page, say "page not verified" rather than implying the citation is checkable.
 - Evidence grades: A (Strong RCT) | B (Moderate) | C (Limited) | EO (Expert Opinion)
 - Default to Grade A/B exercises. Use C/EO only when no A/B alternative exists.
 - When synthesizing (vs. quoting source material), clearly indicate this distinction.
@@ -168,26 +185,39 @@ function validateExerciseReferences(responseText) {
   const codePattern = /\b([A-Z][A-Z0-9_]{2,30})\b/g;
   const matches = [...responseText.matchAll(codePattern)].map(m => m[1]);
   const valid = [];
+  const unshown = [];
   const unknown = [];
   const seen = new Set();
 
   for (const code of matches) {
     if (seen.has(code)) continue;
     seen.add(code);
-    if (VALID_EXERCISE_CODES.has(code)) {
+
+    // Three outcomes, not two. The distinction matters clinically.
+    if (CURATED_CODES.has(code)) {
+      // Shown to the model and referenced. The intended path.
       valid.push(code);
-    }
-    // Only flag codes that look like exercise codes (contain underscore, not common abbreviations)
-    else if (code.includes("_") && code.length > 4) {
+    } else if (VALID_EXERCISE_CODES.has(code)) {
+      // A real exercise, but NOT one of the 125 shown in this prompt — so the
+      // model produced it from training rather than from the library it was
+      // given. It happened to be right; nothing guaranteed that.
+      //
+      // Found by red-team probe 2 on 22 Sep 2026, which cited ILIO_ECCENTRIC
+      // and asserted it "does exist in the K9 Rehab Pro library". True, and
+      // arrived at by recall. Checking against all 260 hid this completely.
+      unshown.push(code);
+    } else if (code.includes("_") && code.length > 4) {
+      // Looks like an exercise code and is in neither list: fabricated.
       unknown.push(code);
     }
   }
 
-  return { valid, unknown };
+  return { valid, unshown, unknown };
 }
 
 module.exports = {
   buildSystemPrompt,
   validateExerciseReferences,
   VALID_EXERCISE_CODES,
+  CURATED_CODES,
 };

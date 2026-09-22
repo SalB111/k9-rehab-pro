@@ -195,9 +195,40 @@ async function handleChat(req, res) {
 
     stream.on("end", () => {
       // ── Pipeline Step 5: Post-generation validation ──
-      const { unknown } = validateExerciseReferences(fullText);
+      //
+      // This used to console.warn and nothing else. A fabricated exercise code
+      // reached the clinician's screen while the warning went to a server log
+      // nobody was reading — the check ran, and protected no one.
+      //
+      // It now reaches the client as well. The clinician is the person who can
+      // act on it, and they cannot act on what they are not told.
+      const { unshown, unknown } = validateExerciseReferences(fullText);
+
       if (unknown.length > 0) {
-        console.warn(`[B.E.A.U.] Unknown exercise codes in response: ${unknown.join(", ")}`);
+        // Not in the library at all. The response named something that does
+        // not exist, and the clinician must not act on it.
+        console.warn(`[B.E.A.U.] FABRICATED exercise codes: ${unknown.join(", ")}`);
+        safeWrite(`data: ${JSON.stringify({
+          type: "validation",
+          severity: "error",
+          codes: unknown,
+          text: `Not in the exercise library: ${unknown.join(", ")}. `
+              + `Do not action these without verifying them against the library.`,
+        })}\n\n`);
+      }
+
+      if (unshown.length > 0) {
+        // Real exercises, but not among those supplied to the model for this
+        // response — recalled rather than retrieved. Worth surfacing: correct
+        // this time is not the same as reliable.
+        console.warn(`[B.E.A.U.] Codes recalled, not supplied: ${unshown.join(", ")}`);
+        safeWrite(`data: ${JSON.stringify({
+          type: "validation",
+          severity: "notice",
+          codes: unshown,
+          text: `${unshown.join(", ")} exist in the library but were not among `
+              + `the exercises supplied for this answer. Verify before use.`,
+        })}\n\n`);
       }
 
       safeWrite(`data: ${JSON.stringify({ type: "done" })}\n\n`);
