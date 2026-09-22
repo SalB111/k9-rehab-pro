@@ -158,6 +158,26 @@ useEffect(() => {
               } else if (d.type === "error") {
                 full += `\n\n**${tr("Error")}:** ${d.text}`;
                 setStream(full);
+              } else if (d.type === "validation" && d.text) {
+                // Post-generation exercise-code check from the server.
+                //
+                // Appended to the message body rather than shown as a toast,
+                // deliberately: it is saved with the session, so the warning
+                // stays attached to the answer it concerns. A toast would be
+                // gone by the time anyone read the protocol back.
+                //
+                // "error" means a code exists in no library and must not be
+                // actioned. "notice" means the code is real but was not among
+                // those supplied for this answer — correct this time is not
+                // the same as reliable.
+                // The server's text already states the problem in full, so
+                // the heading is a severity marker only — repeating the
+                // sentence reads like a stutter and buries the codes.
+                const mark = d.severity === "error"
+                  ? `🚩 **${tr("Do not action")}**`
+                  : `⚠️ **${tr("Verify before use")}**`;
+                full += `\n\n---\n\n${mark} — ${d.text}`;
+                setStream(full);
               }
             } catch {}
           }
