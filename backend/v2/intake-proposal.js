@@ -57,11 +57,41 @@ const SOURCE = {
  *
  * `cautious` is what the field is proposed as when nothing in the record
  * settles it — always the value that restricts most, never the permissive one.
+ *
+ * TWO RULES, both learned the hard way on 22 Sep 2026 when every value here
+ * was run through the real engine for the first time:
+ *
+ *   1. A `cautious` value is a TOKEN THE ENGINE MATCHES, not a description.
+ *      Four of the twelve read perfectly to a clinician and did nothing at
+ *      all. 'Non-weight-bearing' is not the key — 'NWB' is — so the most
+ *      restricted weight-bearing state a patient can be in applied zero
+ *      exclusions. 'Not healed' matched neither the block scan nor an
+ *      exclusion key. 'Non-ambulatory' matched none of the neuro tokens. And
+ *      `complicationsNoted: true` is a boolean handed to `.toLowerCase()`,
+ *      which throws.
+ *
+ *      Anything non-null here must come from the same vocabularies the form
+ *      offers (k9-rehab-frontend/src/pages/clinical/v2api.js). The test
+ *      v2/cautious-defaults.test.js fails if one of them is inert.
+ *
+ *   2. WHERE NO HONEST CAUTIOUS VALUE EXISTS, PROPOSE NOTHING.
+ *      `complicationsNoted` and `incisionStatus` are null for that reason,
+ *      not by oversight. Any value that trips the complication scan asserts a
+ *      complication that may not exist, and the only genuinely cautious
+ *      incision values — Dehiscence, Infection — hard-block generation, so
+ *      proposing one would stop every post-operative patient before the
+ *      clinician had looked. mmtGrade, ivddGrade and oaStage already work
+ *      this way: the gate is shown, nothing is filled in, and the clinician
+ *      states it.
+ *
+ *      A blank a clinician must fill is safer than a fabricated value that
+ *      looks answered. "true" sitting in a complications box is not caution;
+ *      it is a field nobody will look at twice.
  */
 const SAFETY_GATES = [
-  { field: 'weightBearingStatus', label: 'Weight-bearing status',   cautious: 'Non-weight-bearing' },
-  { field: 'incisionStatus',      label: 'Incision status',          cautious: 'Not healed' },
-  { field: 'complicationsNoted',  label: 'Post-operative complications', cautious: true },
+  { field: 'weightBearingStatus', label: 'Weight-bearing status',   cautious: 'NWB' },
+  { field: 'incisionStatus',      label: 'Incision status',          cautious: null },
+  { field: 'complicationsNoted',  label: 'Post-operative complications', cautious: null },
   { field: 'crateRestRequired',   label: 'Crate rest required',      cautious: true },
   { field: 'eCollarRequired',     label: 'E-collar required',        cautious: true },
   { field: 'mmtGrade',            label: 'Muscle strength (MMT)',    cautious: null },
@@ -70,7 +100,7 @@ const SAFETY_GATES = [
   { field: 'neuroProprioception', label: 'Proprioception',           cautious: 'Absent' },
   { field: 'neuroWithdrawal',     label: 'Withdrawal reflex',        cautious: 'Absent' },
   { field: 'neuroDeepPain',       label: 'Deep pain sensation',      cautious: 'Absent' },
-  { field: 'neuroMotorGrade',     label: 'Motor function',           cautious: 'Non-ambulatory' },
+  { field: 'neuroMotorGrade',     label: 'Motor function',           cautious: '0/5 — no voluntary motor' },
 ];
 
 const has = (text, ...words) => {

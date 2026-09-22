@@ -43,6 +43,10 @@ const CHECKS = [
   // no value" rule, and the single definition of the factor.
   { name: 'K9 · weight units',         cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/weight-units.test.js'],
     ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
+  // Runs the proposal's "most cautious" gate values through the real engine.
+  // Fails if one of them restricts nothing — four of twelve did.
+  { name: 'K9 · cautious defaults',    cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/cautious-defaults.test.js'],
+    ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
   { name: 'K9 · frontend build',       cwd: path.join(K9, 'k9-rehab-frontend'), cmd: 'npx', args: ['--no-install', 'vite', 'build'],
     ok: (out) => /built in/.test(out) && !/error/i.test(out) },
   { name: 'B.E.A.U. · tests',          cwd: BEAU, cmd: 'npm', args: ['test'],

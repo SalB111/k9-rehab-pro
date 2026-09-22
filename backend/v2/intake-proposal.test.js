@@ -222,11 +222,34 @@ t('every applicable gate is proposed at its most cautious value', () => {
   const { proposed, gates } = proposeEngineInputs({
     patient: patient({ condition: 'TPLO, left stifle', surgery_date: daysAgo(3) }),
   });
-  assert.equal(proposed.weightBearingStatus, 'Non-weight-bearing');
-  assert.equal(proposed.incisionStatus, 'Not healed');
-  assert.equal(proposed.complicationsNoted, true);
+  // Engine TOKENS, not descriptions. These assertions read worse than the
+  // ones they replaced — 'Non-weight-bearing' and 'Not healed' were plain
+  // English — and that was exactly the problem: neither was a value the
+  // engine matched, so the most cautious state a patient could be in applied
+  // no restriction at all. See the note above SAFETY_GATES, and
+  // cautious-defaults.test.js, which runs each of these through the engine.
+  assert.equal(proposed.weightBearingStatus, 'NWB');
   assert.equal(proposed.crateRestRequired, true);
   assert.ok(gates.every((g) => g.mustConfirm), 'every returned gate requires confirmation');
+});
+
+t('a gate with no honest cautious value is raised empty, not skipped', () => {
+  // incisionStatus and complicationsNoted propose nothing on purpose: any
+  // complications string asserts a complication that may not exist, and the
+  // only cautious incision values hard-block generation outright.
+  //
+  // The risk of that decision is the gate quietly disappearing along with its
+  // value, which would turn "we did not fill this in" into "we did not ask".
+  // This is the test that stops it.
+  const { proposed, gates } = proposeEngineInputs({
+    patient: patient({ condition: 'TPLO, left stifle', surgery_date: daysAgo(3) }),
+  });
+  for (const field of ['incisionStatus', 'complicationsNoted']) {
+    assert.equal(proposed[field], null, `${field} must arrive empty, not fabricated`);
+    const gate = gates.find((g) => g.field === field);
+    assert.ok(gate, `${field} proposes no value and MUST still be raised as a gate`);
+    assert.ok(gate.mustConfirm, `${field} must still require confirmation`);
+  }
 });
 
 t('gates that do not apply are nulled, not left at a cautious value', () => {
@@ -240,9 +263,13 @@ t('gates that do not apply are nulled, not left at a cautious value', () => {
 t('a prior protocol seeds the gate but does not excuse confirming it', () => {
   const { proposed, gates } = proposeEngineInputs({
     patient: patient({ condition: 'TPLO, left stifle', surgery_date: daysAgo(30) }),
-    priorInputs: { weightBearingStatus: 'Partial weight-bearing' },
+    // 'PWB', not 'Partial weight-bearing'. Prior inputs come from an
+    // APPROVED protocol, which came from the form — so they are engine
+    // tokens. A fixture carrying prose here would pass while the real value
+    // it stands in for behaves completely differently in the engine.
+    priorInputs: { weightBearingStatus: 'PWB' },
   });
-  assert.equal(proposed.weightBearingStatus, 'Partial weight-bearing');
+  assert.equal(proposed.weightBearingStatus, 'PWB');
   const wb = gates.find((g) => g.field === 'weightBearingStatus');
   assert.equal(wb.carriedForward, true);
   assert.equal(wb.mustConfirm, true, 'a carried value still needs confirming — the animal may have changed');
