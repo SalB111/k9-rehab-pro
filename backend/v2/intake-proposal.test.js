@@ -69,6 +69,22 @@ t('an IVDD case asks the neurological set and the grade', () => {
   }
 });
 
+t('lumbosacral disease and spondylosis reach the neurological gates', () => {
+  // Sal's clinical call: lumbosacral spondylosis compresses the cauda equina,
+  // so the neuro findings are live questions even when the record reads as a
+  // degenerative or orthopaedic problem.
+  for (const dx of ['Lumbosacral Spondylosis with Mobility Deficit',
+                    'Lumbosacral stenosis',
+                    'Spondylosis deformans, caudal lumbar spine']) {
+    const g = applicableGates(patient({ condition: dx, surgery_date: null }));
+    for (const f of ['neuroProprioception', 'neuroWithdrawal', 'neuroDeepPain',
+                     'neuroMotorGrade', 'mmtGrade']) {
+      assert.ok(g.has(f), `"${dx}" should ask ${f}`);
+    }
+    assert.ok(!g.has('incisionStatus'), `"${dx}" is not post-operative`);
+  }
+});
+
 t('an arthritic case asks OA stage and nothing post-operative', () => {
   const g = applicableGates(patient({ condition: 'Bilateral hip osteoarthritis', lameness_grade: 1 }));
   assert.ok(g.has('oaStage'));

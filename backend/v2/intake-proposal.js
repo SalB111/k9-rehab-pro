@@ -119,8 +119,13 @@ function applicableGates(patient) {
                                'arthrodesis', 'amputation', 'stabilisation', 'stabilization');
   const recentSurgery = datedRecent || (surgicalText && postOpDays === null);
 
+  // Lumbosacral disease and spondylosis are here on Sal's call: lumbosacral
+  // spondylosis compresses the cauda equina, so proprioceptive deficit, a lost
+  // withdrawal reflex and motor weakness are all live questions even when the
+  // record describes it as an orthopaedic or degenerative problem.
   const neuro = has(dx, 'ivdd', 'disc', 'myelopath', 'neuro', 'paresis', 'paralys',
-                        'fce', 'wobbler', 'cauda equina', 'nerve', 'spinal');
+                        'fce', 'wobbler', 'cauda equina', 'nerve', 'spinal',
+                        'lumbosacral', 'spondylosis', 'radiculopath');
   const ivdd = has(dx, 'ivdd', 'disc', 'hansen');
   const arthritic = has(dx, 'arthr', 'oa ', 'osteoarth', 'djd', 'degenerative joint');
   const ortho = has(dx, 'ccl', 'cruciate', 'tplo', 'tta', 'patell', 'hip', 'elbow',
