@@ -1,6 +1,7 @@
 {
   "scripts": {
-    "hooks:install": "git config core.hooksPath .githooks"
+    "hooks:install": "git config core.hooksPath .githooks",
+    "verify": "node scripts/verify.js"
   },
   "dependencies": {
     "chokidar": "^5.0.0"
