@@ -61,6 +61,11 @@ const CHECKS = [
   // generate and be wrong", and a clinician reads it before a visit.
   { name: 'K9 · record gaps',          cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/patient-gaps.test.js'],
     ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
+  // The V1 clinical record and the V2 columns are two records of one animal.
+  // This is the reconciler both screens write through; the direction rule in it
+  // is a safety rule, not a preference.
+  { name: 'K9 · record sync',          cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/record-sync.test.js'],
+    ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
   { name: 'K9 · frontend build',       cwd: path.join(K9, 'k9-rehab-frontend'), cmd: 'npx', args: ['--no-install', 'vite', 'build'],
     ok: (out) => /built in/.test(out) && !/error/i.test(out) },
   { name: 'B.E.A.U. · tests',          cwd: BEAU, cmd: 'npm', args: ['test'],

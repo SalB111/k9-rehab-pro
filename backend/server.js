@@ -25,6 +25,9 @@ const path = require("path");
 
 const db = require("./db-provider");
 const { all, get, run } = require("./db-provider");
+// Keeps the V1 clinical record and the V2 columns from drifting apart. Both
+// screens save through PUT /api/patients/:id, so both go through this.
+const recordSync = require("./v2/record-sync");
 const authRoutes = require("./auth-routes");
 const requireAuth = require("./middleware/requireAuth");
 const { requireRole } = require("./auth");
@@ -258,14 +261,52 @@ app.put("/api/patients/:id", requireAuth, async (req, res) => {
       pain_level, mobility_level, current_medications, medical_history,
       special_instructions, client_name, client_email, client_phone, referring_vet,
     };
+    // ── Keep the two records of this patient in step ────────────────────────
+    //
+    // The V1 dashboard writes a clinical record into `dashboard_data`; the V2
+    // workflow and the protocol engine read flat columns. Nothing reconciled
+    // them, so they drifted — one record said a dog was six years old and
+    // 68 lbs while the other said two and 64, and a ten-year-old Australian
+    // Shepherd was recorded as aged 0.
+    //
+    // Both screens save through THIS route, so this is where it is fixed. See
+    // v2/record-sync.js for the direction rule: plain facts sync both ways,
+    // clinical vocabularies only ever V1 -> column, because writing a column
+    // value into a V1 dropdown that has no such option renders it blank.
+    //
+    // The request always wins. Sync fills gaps and propagates the edit that
+    // was just made; it never overrules two values that are both filled in,
+    // because choosing between those is a clinical judgement.
+    let blobToStore = dashboard_data;
+    try {
+      const existing = await get("SELECT * FROM patients WHERE id = ?", [req.params.id]);
+      if (existing) {
+        const sync = recordSync.reconcile({
+          existing, updates: optional, incomingBlob: dashboard_data,
+        });
+        for (const [k, v] of Object.entries(sync.columns)) {
+          if (optional[k] === undefined) optional[k] = v;
+        }
+        if (sync.dashboardData) blobToStore = sync.dashboardData;
+      }
+    } catch (e) {
+      // Reconciliation improves the write; it must never gate it. A clinician
+      // correcting a weight is not blocked because the other record would not
+      // parse.
+      console.warn("[patients] record sync skipped:", e.message);
+    }
+
     for (const [k, v] of Object.entries(optional)) {
       if (v !== undefined) { fields.push(`${k}=?`); values.push(v); }
     }
     // Dashboard data — JSON blob of all block form fields
-    if (dashboard_data !== undefined) {
+    if (blobToStore !== undefined) {
       fields.push("dashboard_data=?");
-      values.push(typeof dashboard_data === "string" ? dashboard_data : JSON.stringify(dashboard_data));
-      // Increment visit count and update last visit date
+      values.push(typeof blobToStore === "string" ? blobToStore : JSON.stringify(blobToStore));
+    }
+    // A visit is what the V1 dashboard records. A column correction is not one,
+    // and counting it as a visit inflates the patient's history.
+    if (dashboard_data !== undefined) {
       fields.push("visit_count = COALESCE(visit_count, 0) + 1");
       fields.push("last_visit_date = datetime('now')");
     }
