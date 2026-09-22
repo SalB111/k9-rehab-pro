@@ -119,6 +119,36 @@ async function handleChat(req, res) {
     }
 
     // ── Pipeline Step 4: Stream from Anthropic ──
+    //
+    // DELIBERATELY NOT PROMPT-CACHED. This looks like an obvious saving and it
+    // is not. Investigated 22 Sep 2026; leaving this note so the same proposal
+    // is not made again.
+    //
+    // Two placements were possible and both were rejected:
+    //
+    //   1. A breakpoint above the patient block caches only BASE_IDENTITY and
+    //      CLINICAL_RULES. Measured at 841 tokens via count_tokens, and tested
+    //      against claude-sonnet-4-6: two identical calls both returned
+    //      cache_creation=0, cache_read=0. It is under the model's minimum
+    //      cacheable prefix, so a breakpoint there does nothing at all.
+    //
+    //   2. Reordering so the stable blocks come first would cache ~5,500
+    //      tokens — but it puts the exercise library ahead of the patient.
+    //      That inverts the clinical reasoning sequence in the Source of
+    //      Truth §10 (patient -> assessment -> ... -> exercise selection).
+    //      Rejected by Sal on exactly that ground.
+    //
+    // What actually prevents caching is neither of those: `additionalContext`
+    // is RAG retrieved against the LAST USER MESSAGE, so the system prompt
+    // differs on every turn even within one consult. Moving it into `messages`
+    // would cache the full ~6,800-token prompt per patient (verified: turn 1
+    // write=6790, turn 2 read=6790, a 90% saving from turn 2 onward).
+    //
+    // That was rejected too, and for the better reason: retrieved evidence
+    // delivered as conversation content does not carry the same weight as
+    // evidence delivered as system instruction. The wording would be
+    // identical; its standing would not. Grounding quality outranks input
+    // cost, so this call pays full price on purpose.
     const stream = await client.messages.stream({
       model: "claude-sonnet-4-6",
       max_tokens: 4096,
