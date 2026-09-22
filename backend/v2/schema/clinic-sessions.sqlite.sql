@@ -11,7 +11,7 @@
 --   2. IN-CLINIC    — the veterinarian prescribes exercises and modalities; the
 --                     CCRT/CCRP delivers them in practice and records how the
 --                     patient did. THIS FILE.
---   3. HOME (HEP)   — the owner performs the approved home programme.
+--   3. HOME (HEP)   — the owner performs the approved home program.
 --
 -- The in-clinic stream is where a rehab practice actually spends its day, and
 -- it is where a deteriorating patient is noticed first — the CCRT sees the dog

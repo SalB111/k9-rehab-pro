@@ -42,7 +42,7 @@ function createBeauRouter({ db, express, jwt, secret, requireAuth }) {
   const guard = ownerAuth.allowOwnerOrClinician({ jwt, secret, requireAuth, db });
 
   /**
-   * Whether this patient is under an active approved home programme.
+   * Whether this patient is under an active approved home program.
    *
    * This exists for ONE consumer: B.E.A.U. at Home's own server, which must
    * refuse to generate exercises for a patient a veterinarian is already
@@ -55,7 +55,7 @@ function createBeauRouter({ db, express, jwt, secret, requireAuth }) {
    * to a place that has no business holding it.
    *
    * `total_weeks` and `effective_date` are included because the consumer needs
-   * to know when the programme's own window closes. A protocol is not
+   * to know when the program's own window closes. A protocol is not
    * indefinite, and a lock with no horizon becomes a lock nobody can lift.
    */
   router.get('/hep-status', guard, route(async (req, res) => {
@@ -97,13 +97,13 @@ function createBeauRouter({ db, express, jwt, secret, requireAuth }) {
   }));
 
   /**
-   * Today's programme, shaped for the person doing it.
+   * Today's program, shaped for the person doing it.
    *
    * Restrictions and stop conditions travel with it. An owner following
    * exercises without knowing when to stop is the situation the whole red-flag
    * mechanism exists to prevent.
    */
-  router.get('/my-programme', guard, route(async (req, res) => {
+  router.get('/my-program', guard, route(async (req, res) => {
     const patientId = ownerAuth.patientIdFor(req);
     if (!patientId) {
       return res.status(400).json({ success: false, code: 'INVALID', error: 'No patient in scope' });
@@ -117,7 +117,7 @@ function createBeauRouter({ db, express, jwt, secret, requireAuth }) {
     if (!handoff) {
       return res.status(404).json({
         success: false, code: 'NOT_FOUND',
-        error: 'There is no home programme for this patient yet. Your clinic will send one.',
+        error: 'There is no home program for this patient yet. Your clinic will send one.',
       });
     }
 
@@ -125,7 +125,7 @@ function createBeauRouter({ db, express, jwt, secret, requireAuth }) {
     const patient = await db.get(`SELECT id, name, breed FROM patients WHERE id = ?`, [patientId]);
     const videos = await homeStore.listVideoRequests(db, { patientId, status: 'REQUESTED' });
 
-    // Which week the programme is in. An owner should be shown today's work,
+    // Which week the program is in. An owner should be shown today's work,
     // not four weeks of exercises at once — a protocol progresses deliberately,
     // and week 4 handed to someone in week 1 is a patient doing loading work
     // they have not been cleared for.
@@ -148,7 +148,7 @@ function createBeauRouter({ db, express, jwt, secret, requireAuth }) {
         frequency: payload.frequency,
         total_weeks: payload.total_weeks,
         current_week: currentWeek,
-        // What to do now. The full programme is still available below so an
+        // What to do now. The full program is still available below so an
         // owner can see where this is going, but `exercises` is today's work.
         exercises: thisWeek.length ? thisWeek : (payload.exercises || []),
         all_weeks: payload.exercises,

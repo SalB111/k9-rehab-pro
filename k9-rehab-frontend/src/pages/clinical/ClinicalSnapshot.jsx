@@ -5,7 +5,7 @@ import {
 import C from "../../constants/colors";
 import { SAFETY_GATE_LABELS, CAPABILITY_LABELS } from "./v2api";
 import ClinicalAlerts from "./ClinicalAlerts";
-import HomeProgramme from "./HomeProgramme";
+import HomeProgram from "./HomeProgram";
 
 // ─────────────────────────────────────────────
 // CLINICAL SNAPSHOT
@@ -217,7 +217,7 @@ export default function ClinicalSnapshot({
 
       {/* ── What came back from home ─────────────────────────────────────── */}
       {home && (
-        <HomeProgramme
+        <HomeProgram
           home={home}
           videoRequests={videoRequests}
           onRequestVideo={onRequestVideo}

@@ -43,40 +43,80 @@ const EMPTY_ASSESSMENT = {
 };
 
 /**
- * Turn an intake proposal into a pre-filled assessment.
+ * Assessment field  ->  engine input.
  *
- * The proposal speaks the engine's language (weightBearingStatus); the
- * assessment form speaks the record's (weight_bearing_status). Same facts,
- * two vocabularies, and this is the seam between them.
+ * The proposal speaks the engine's language (weightBearingStatus); the form
+ * speaks the record's (weight_bearing_status). Same facts, two vocabularies,
+ * and this is the only place that knows both — the pre-fill and the source
+ * badges are derived from it, so they cannot drift apart.
+ */
+const FIELD_TO_ENGINE = {
+  pain_score: "painScore",
+  lameness_grade: "lamenessGrade",
+  mobility_level: "mobilityLevel",
+  treatment_approach: "treatmentApproach",
+  weight_bearing_status: "weightBearingStatus",
+  mmt_grade: "mmtGrade",
+  ivdd_grade: "ivddGrade",
+  oa_stage: "oaStage",
+  neuro_proprioception: "neuroProprioception",
+  neuro_withdrawal: "neuroWithdrawal",
+  neuro_deep_pain: "neuroDeepPain",
+  neuro_motor_grade: "neuroMotorGrade",
+  incision_status: "incisionStatus",
+  complications_noted: "complicationsNoted",
+  crate_rest_required: "crateRestRequired",
+  e_collar_required: "eCollarRequired",
+};
+
+/**
+ * Pre-fill today's assessment from the proposal.
  *
- * Only fields the proposal actually settled are carried across. A gate the
- * proposal could not derive stays null here rather than arriving as a
- * confident-looking default — "Not assessed" is a truthful thing for a
- * clinician to see, and a wrong value that looks filled-in is not.
+ * Only fields the proposal actually settled are carried across. A gate it
+ * could not derive stays null rather than arriving as a confident-looking
+ * default — "Not assessed" is a truthful thing for a clinician to see, and a
+ * wrong value that looks filled-in is not.
  */
 function assessmentFromProposal(proposal) {
   const p = (proposal && proposal.proposed) || {};
-  const pick = (v) => (v === undefined ? null : v);
+  const out = { ...EMPTY_ASSESSMENT };
+  for (const [formKey, engineKey] of Object.entries(FIELD_TO_ENGINE)) {
+    out[formKey] = p[engineKey] === undefined ? null : p[engineKey];
+  }
+  return out;
+}
 
-  return {
-    ...EMPTY_ASSESSMENT,
-    pain_score: pick(p.painScore),
-    lameness_grade: pick(p.lamenessGrade),
-    mobility_level: pick(p.mobilityLevel),
-    treatment_approach: pick(p.treatmentApproach),
-    weight_bearing_status: pick(p.weightBearingStatus),
-    mmt_grade: pick(p.mmtGrade),
-    ivdd_grade: pick(p.ivddGrade),
-    oa_stage: pick(p.oaStage),
-    neuro_proprioception: pick(p.neuroProprioception),
-    neuro_withdrawal: pick(p.neuroWithdrawal),
-    neuro_deep_pain: pick(p.neuroDeepPain),
-    neuro_motor_grade: pick(p.neuroMotorGrade),
-    incision_status: pick(p.incisionStatus),
-    complications_noted: pick(p.complicationsNoted),
-    crate_rest_required: pick(p.crateRestRequired),
-    e_collar_required: pick(p.eCollarRequired),
-  };
+/**
+ * Where each pre-filled value came from, and why.
+ *
+ * A clinician correcting a value should be able to see at a glance whether
+ * they are overriding the record, a rule, or a cautious placeholder nobody
+ * has looked at yet. Those are three different acts and they deserve three
+ * different labels.
+ */
+function sourcesFromProposal(proposal) {
+  if (!proposal) return {};
+  const why = (proposal.summary && proposal.summary.why) || {};
+  const gateByField = new Map((proposal.gates || []).map((g) => [g.field, g]));
+  const out = {};
+
+  for (const [formKey, engineKey] of Object.entries(FIELD_TO_ENGINE)) {
+    const gate = gateByField.get(engineKey);
+    if (gate) {
+      out[formKey] = {
+        source: "gate",
+        why: gate.why,
+        carried: gate.carriedForward === true,
+      };
+    } else if (why[engineKey]) {
+      out[formKey] = { source: "derived", why: why[engineKey] };
+    } else if (proposal.proposed && proposal.proposed[engineKey] !== null
+               && proposal.proposed[engineKey] !== undefined
+               && proposal.proposed[engineKey] !== "") {
+      out[formKey] = { source: "record", why: "Read from the patient record." };
+    }
+  }
+  return out;
 }
 
 export default function ClinicalWorkflowView({ setView, patient: initialPatient }) {
@@ -376,6 +416,7 @@ export default function ClinicalWorkflowView({ setView, patient: initialPatient 
           <TodaysUpdate
             assessment={assessment}
             setAssessment={setAssessment}
+            sources={sourcesFromProposal(proposal)}
             measurements={measurements}
             setMeasurements={setMeasurements}
             hasBaseline={snapshot?.has_baseline}

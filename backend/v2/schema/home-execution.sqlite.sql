@@ -29,10 +29,10 @@
 -- ===========================================================================
 
 -- ---------------------------------------------------------------------------
--- home_sessions — one attempt at the home programme.
+-- home_sessions — one attempt at the home program.
 --
 -- Status carries the adherence signal directly: STARTED means the owner opened
--- the programme and began, ABANDONED means they began and stopped. A protocol
+-- the program and began, ABANDONED means they began and stopped. A protocol
 -- that is repeatedly abandoned needs simplifying, not progressing — and only
 -- the distinction between "never started" and "started and gave up" tells a
 -- clinician which.
@@ -200,7 +200,7 @@ CREATE INDEX IF NOT EXISTS idx_vr_status ON video_requests(status);
 -- ---------------------------------------------------------------------------
 -- home_engagement — did the client open the app at all.
 --
--- Distinct from adherence on purpose. An owner who opens the programme and does
+-- Distinct from adherence on purpose. An owner who opens the program and does
 -- not start it has a different problem from one who never opens it: the first
 -- is usually difficulty or confusion, the second is usually that nobody
 -- explained why it matters. The clinical response differs, so the signal has to
@@ -220,14 +220,14 @@ CREATE INDEX IF NOT EXISTS idx_he_patient_id ON home_engagement(patient_id);
 CREATE INDEX IF NOT EXISTS idx_he_occurred ON home_engagement(occurred_at DESC);
 
 -- ---------------------------------------------------------------------------
--- home_access — how an owner reaches their dog's programme.
+-- home_access — how an owner reaches their dog's program.
 --
 -- Pet owners do not get clinician accounts. They receive a code from the
 -- practice, and that code resolves to one patient.
 --
 -- Tied to the PATIENT rather than to a handoff, deliberately: a protocol is
 -- revised often, and forcing a new code on every revision would mean an owner
--- losing access precisely when their programme changed. Revoking is explicit.
+-- losing access precisely when their program changed. Revoking is explicit.
 --
 -- The code is compared as a hash, not stored in the clear, for the same reason
 -- passwords are: whoever can read the database should not be able to walk into

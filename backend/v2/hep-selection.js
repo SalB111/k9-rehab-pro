@@ -3,7 +3,7 @@
  *
  * The engine returns everything clinically relevant for a phase — 8 to 12
  * exercises a week. Two separate things have to happen before that becomes a
- * home programme:
+ * home program:
  *
  *   1. VENUE. Some of what the engine prescribes is clinic-delivered. A Class IV
  *      therapeutic laser and neuromuscular e-stim require a trained operator,
@@ -11,7 +11,7 @@
  *      not a usability problem, it is a safety one. Those belong in the
  *      in-clinic protocol the CCRT delivers, never in the HEP.
  *
- *   2. VOLUME. Of what remains, a realistic home programme is three to five
+ *   2. VOLUME. Of what remains, a realistic home program is three to five
  *      exercises. A vet-approved HEP an owner will not complete is clinically
  *      worse than a shorter one they will — adherence, not protocol richness,
  *      is the binding constraint in home rehabilitation.
@@ -77,7 +77,7 @@ function asList(value) {
  * Where can this exercise safely be performed?
  *
  * Returns the venue and the reason, because "why is laser not in the home
- * programme" is a question a clinician is entitled to a straight answer to.
+ * program" is a question a clinician is entitled to a straight answer to.
  */
 function classifyVenue(exercise) {
   const code = String(exercise.exercise_code || exercise.code || '').toUpperCase();
@@ -109,7 +109,7 @@ function classifyVenue(exercise) {
 const DIFFICULTY_SCORE = { easy: 3, moderate: 2, advanced: 0 };
 
 /**
- * Score an exercise for inclusion in a home programme.
+ * Score an exercise for inclusion in a home program.
  *
  * Every factor is stated in the returned reasons. A ranking a clinician cannot
  * interrogate is one they cannot safely trust, and this proposes a prescription.
@@ -119,7 +119,7 @@ function scoreForHome(exercise, context = {}) {
   let score = 0;
 
   // Foundational work first. An owner attempting an advanced exercise
-  // unsupervised is where home programmes go wrong.
+  // unsupervised is where home programs go wrong.
   const difficulty = String(exercise.difficulty_level || '').toLowerCase();
   const difficultyScore = DIFFICULTY_SCORE[difficulty];
   if (difficultyScore !== undefined) {
@@ -153,7 +153,7 @@ function scoreForHome(exercise, context = {}) {
 }
 
 /**
- * Propose a home programme for one week.
+ * Propose a home program for one week.
  *
  * @param {Array}  exercises  one week's exercises, already safety-filtered by the engine
  * @param {object} options.context      { affectedRegion }
@@ -164,7 +164,7 @@ function scoreForHome(exercise, context = {}) {
  *   home   — ranked, with `home_selected` set on the pre-selected ones
  *   clinic — everything that cannot go home, with the reason
  */
-function proposeHomeProgramme(exercises, options = {}) {
+function proposeHomeProgram(exercises, options = {}) {
   const { context = {}, proposeCount = 8, selectCount = 4 } = options;
 
   const clinic = [];
@@ -216,5 +216,5 @@ module.exports = {
   CLINIC_EQUIPMENT_TERMS,
   classifyVenue,
   scoreForHome,
-  proposeHomeProgramme,
+  proposeHomeProgram,
 };

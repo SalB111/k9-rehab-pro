@@ -193,7 +193,7 @@ export const getClinicSession = (sessionId) =>
 export const reviewClinicSession = (sessionId, note) =>
   api.post(`/v2/sessions/${sessionId}/review`, { note }).then(unwrap);
 
-// ── Home programme ───────────────────────────────────────────────────────────
+// ── Home program ───────────────────────────────────────────────────────────
 
 export const getAdherence = (patientId) =>
   api.get(`/v2/patients/${patientId}/adherence`).then(unwrap);

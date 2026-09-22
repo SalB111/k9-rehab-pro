@@ -4,7 +4,7 @@ import C from "../../constants/colors";
 import { DIFFICULTY_LABELS } from "./v2api";
 
 // ─────────────────────────────────────────────
-// HOME PROGRAMME — what came back from the client
+// HOME PROGRAM — what came back from the client
 //
 // Deliberately styled apart from the clinical sections. Everything here is
 // observed by a pet owner, and an owner's pain estimate is not a clinician's
@@ -36,7 +36,7 @@ function Figure({ label, value, sub, tone }) {
   );
 }
 
-export default function HomeProgramme({ home, videoRequests = [], onRequestVideo, access, onIssueAccess, issuedCode }) {
+export default function HomeProgram({ home, videoRequests = [], onRequestVideo, access, onIssueAccess, issuedCode }) {
   if (!home) return null;
 
   const { adherence, engagement } = home;
@@ -47,7 +47,7 @@ export default function HomeProgramme({ home, videoRequests = [], onRequestVideo
       <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
         <FiHome size={15} style={{ color: C.purple }} />
         <span style={{ fontSize: 13, fontWeight: 700, color: C.navy, textTransform: "uppercase", letterSpacing: 0.5 }}>
-          Home programme
+          Home program
         </span>
         {/* Stated up front, not buried. */}
         <span
@@ -177,7 +177,7 @@ export default function HomeProgramme({ home, videoRequests = [], onRequestVideo
               {access
                 ? `Client access active — code ending ${access.code_hint}` +
                   (access.last_used_at ? ` · last used ${access.last_used_at}` : " · never used")
-                : "No client access yet. The owner cannot open their programme."}
+                : "No client access yet. The owner cannot open their program."}
             </span>
             {onIssueAccess && (
               <button

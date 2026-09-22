@@ -300,7 +300,7 @@ async function createVersion(db, { protocolId, engineInput, engineResult, actor,
       .filter((ex) => ex && ex.code)
       .map((ex) => ({ ...ex, exercise_code: ex.code, exercise_name: ex.name }));
 
-    const proposal = hepSelection.proposeHomeProgramme(rawExercises, {
+    const proposal = hepSelection.proposeHomeProgram(rawExercises, {
       context: { affectedRegion },
     });
     const decisionByCode = new Map();
@@ -943,7 +943,7 @@ function buildHepPayload(protocol, version) {
       approver_username: version.approval.approver_username,
       approver_role: version.approval.approver_role,
       // The basis and credential the approval rested on. An owner is entitled
-      // to know their dog's home programme was authorized by a veterinarian or
+      // to know their dog's home program was authorized by a veterinarian or
       // a certified rehabilitation practitioner, and which.
       approval_basis: version.approval.approval_basis,
       approver_credential: version.approval.approver_credential,

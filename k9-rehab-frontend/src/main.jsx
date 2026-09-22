@@ -8,7 +8,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./components/ThemeProvider";
 
 /**
- * The client app moved to B.E.A.U. at Home (beauaihome, /programme).
+ * The client app moved to B.E.A.U. at Home (beauaihome, /program).
  *
  * /home is kept as a redirect rather than a second copy: two implementations of
  * a clinical screen drift, and the one a client is actually using would stop
@@ -16,7 +16,7 @@ import { ThemeProvider } from "./components/ThemeProvider";
  */
 if (window.location.pathname.replace(/\/+$/, "") === "/home") {
   window.location.replace(
-    import.meta.env.VITE_BEAU_HOME_URL || "https://beauaihome.vercel.app/programme"
+    import.meta.env.VITE_BEAU_HOME_URL || "https://beauaihome.vercel.app/program"
   );
 }
 

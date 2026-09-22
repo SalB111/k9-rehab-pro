@@ -70,7 +70,7 @@ async function audit(db, { patientId, versionId, action, actor, detail }) {
 /**
  * Record that the client interacted with the app.
  *
- * Deliberately separate from adherence. An owner who opens the programme and
+ * Deliberately separate from adherence. An owner who opens the program and
  * never starts it has a different problem from one who never opens it at all:
  * the first is usually difficulty or confusion, the second is usually that
  * nobody explained why it matters. Those call for different conversations.
@@ -119,7 +119,7 @@ async function startHomeSession(db, { patientId, sessionDate, weekNumber }) {
   );
   if (!handoff) {
     throw new ProtocolStoreError(
-      `No active home exercise programme for this patient. A veterinarian must approve ` +
+      `No active home exercise program for this patient. A veterinarian must approve ` +
         `and send one before home sessions can be recorded.`,
       ERR.NOT_APPROVED
     );
@@ -176,7 +176,7 @@ function assertOpen(session) {
   }
 }
 
-/** Log one exercise as the owner works through the programme. */
+/** Log one exercise as the owner works through the program. */
 async function logExercise(db, { sessionId, exerciseRowId, log }) {
   const session = await getHomeSession(db, sessionId);
   assertOpen(session);
@@ -481,7 +481,7 @@ async function reviewVideo(db, { requestId, actor, note }) {
 /**
  * What a clinician needs to see before deciding the next protocol.
  *
- * Reported, not interpreted. Low adherence usually means the programme needs
+ * Reported, not interpreted. Low adherence usually means the program needs
  * simplifying rather than progressing — but that is a clinical judgement, so
  * this states the numbers and leaves the conclusion to the clinician.
  */

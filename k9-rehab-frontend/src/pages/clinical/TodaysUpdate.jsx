@@ -25,11 +25,54 @@ const labelStyle = {
   textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 4, display: "block",
 };
 
-function Field({ label, hint, children }) {
+/**
+ * Where a pre-filled value came from.
+ *
+ * Three different things are being said here and they are not
+ * interchangeable. FROM RECORD means the system read it. DERIVED means a
+ * rule produced it and the rule is stated. CONFIRM means nobody has looked
+ * at it yet and the value shown is the most cautious one available — that
+ * one is not a reassurance, it is a request.
+ */
+const SOURCE_STYLE = {
+  record:  { label: "From record", bg: C.tealLight,   fg: C.tealDark },
+  derived: { label: "Derived",     bg: C.purpleBg,    fg: C.purple },
+  gate:    { label: "Confirm",     bg: C.amberBg,     fg: C.amber },
+};
+
+function SourceBadge({ source, why, carried }) {
+  const style = SOURCE_STYLE[source];
+  if (!style) return null;
+  return (
+    <span
+      title={why || undefined}
+      style={{
+        fontSize: 9.5, fontWeight: 700, letterSpacing: 0.4,
+        textTransform: "uppercase", padding: "1.5px 6px",
+        borderRadius: 4, background: style.bg, color: style.fg,
+        cursor: why ? "help" : "default", whiteSpace: "nowrap",
+      }}
+    >
+      {carried ? "Last protocol" : style.label}
+    </span>
+  );
+}
+
+function Field({ label, hint, children, source, why, carried }) {
   return (
     <div>
-      <label style={labelStyle}>{label}</label>
+      <label style={{ ...labelStyle, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+        <span>{label}</span>
+        <SourceBadge source={source} why={why} carried={carried} />
+      </label>
       {children}
+      {/* The rule, in the clinician's own sightline. A badge that only says
+          "derived" invites the question this answers. */}
+      {why && source !== "record" && (
+        <div style={{ fontSize: 10.5, color: C.textLight, marginTop: 3, fontStyle: "italic", lineHeight: 1.45 }}>
+          {why}
+        </div>
+      )}
       {hint && <div style={{ fontSize: 11, color: C.textLight, marginTop: 3 }}>{hint}</div>}
     </div>
   );
@@ -75,7 +118,15 @@ const MEASURE_KEYS = [
 
 export default function TodaysUpdate({
   assessment, setAssessment, measurements, setMeasurements, hasBaseline,
+  sources = {},
 }) {
+  // Spread onto a <Field> so every field states its own provenance without
+  // each call site repeating three props.
+  const src = (key) => ({
+    source: sources[key]?.source,
+    why: sources[key]?.why,
+    carried: sources[key]?.carried,
+  });
   const set = (key) => (value) =>
     setAssessment((a) => ({ ...a, [key]: value === "" ? null : value }));
 
@@ -98,7 +149,7 @@ export default function TodaysUpdate({
     <div style={{ display: "grid", gap: 16 }}>
       {/* ── Core: what almost every visit needs ───────────────────────────── */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: 14 }}>
-        <Field label="Pain (0–10)" hint="8 or above routes to comfort care">
+        <Field label="Pain (0–10)" hint="8 or above routes to comfort care" {...src("pain_score")}>
           <input
             type="number" min="0" max="10" style={field}
             value={assessment.pain_score ?? ""}
@@ -106,7 +157,7 @@ export default function TodaysUpdate({
           />
         </Field>
 
-        <Field label="Lameness (0–5)" hint="5 = non-weight-bearing">
+        <Field label="Lameness (0–5)" hint="5 = non-weight-bearing" {...src("lameness_grade")}>
           <input
             type="number" min="0" max="5" style={field}
             value={assessment.lameness_grade ?? ""}
@@ -114,7 +165,7 @@ export default function TodaysUpdate({
           />
         </Field>
 
-        <Field label="Weight bearing">
+        <Field label="Weight bearing" {...src("weight_bearing_status")}>
           <Select
             value={assessment.weight_bearing_status}
             onChange={set("weight_bearing_status")}
@@ -122,7 +173,7 @@ export default function TodaysUpdate({
           />
         </Field>
 
-        <Field label="Mobility">
+        <Field label="Mobility" {...src("mobility_level")}>
           <input
             style={field} placeholder="e.g. Ambulatory"
             value={assessment.mobility_level ?? ""}
@@ -132,6 +183,7 @@ export default function TodaysUpdate({
 
         <Field
           label="Treatment approach"
+          {...src("treatment_approach")}
           hint="Drives the protocol path — surgical and conservative differ"
         >
           <Select
@@ -234,14 +286,14 @@ export default function TodaysUpdate({
       {/* ── Collapsed: drives real safety gates when present ───────────────── */}
       <Collapsible title="Clinical grading scales" subtitle="MMT · IVDD · OA">
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 14 }}>
-          <Field label="MMT (0–5)" hint="≤1 restricts to passive work">
+          <Field label="MMT (0–5)" hint="≤1 restricts to passive work" {...src("mmt_grade")}>
             <input
               type="number" min="0" max="5" style={field}
               value={assessment.mmt_grade ?? ""}
               onChange={(e) => setNum("mmt_grade")(e.target.value)}
             />
           </Field>
-          <Field label="IVDD grade" hint="IV or V locks to Phase 1 neuro">
+          <Field label="IVDD grade" hint="IV or V locks to Phase 1 neuro" {...src("ivdd_grade")}>
             <Select
               value={assessment.ivdd_grade}
               onChange={set("ivdd_grade")}
@@ -250,7 +302,7 @@ export default function TodaysUpdate({
               }))}
             />
           </Field>
-          <Field label="OA stage (0–4)" hint="4 excludes impact loading">
+          <Field label="OA stage (0–4)" hint="4 excludes impact loading" {...src("oa_stage")}>
             <input
               type="number" min="0" max="4" style={field}
               value={assessment.oa_stage ?? ""}
@@ -268,7 +320,7 @@ export default function TodaysUpdate({
             ["neuro_deep_pain", "Deep pain"],
             ["neuro_motor_grade", "Motor grade"],
           ].map(([key, label]) => (
-            <Field key={key} label={label}>
+            <Field key={key} label={label} {...src(key)}>
               <input
                 style={field} placeholder="e.g. Present / Delayed / Absent"
                 value={assessment[key] ?? ""}
@@ -281,14 +333,14 @@ export default function TodaysUpdate({
 
       <Collapsible title="Post-operative status & restrictions" subtitle="a compromised incision blocks generation">
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 14 }}>
-          <Field label="Incision status" hint="Dehisced / infected / open / draining blocks the protocol">
+          <Field label="Incision status" hint="Dehisced / infected / open / draining blocks the protocol" {...src("incision_status")}>
             <input
               style={field} placeholder="e.g. Healing"
               value={assessment.incision_status ?? ""}
               onChange={(e) => set("incision_status")(e.target.value)}
             />
           </Field>
-          <Field label="Complications noted">
+          <Field label="Complications noted" {...src("complications_noted")}>
             <input
               style={field}
               value={assessment.complications_noted ?? ""}

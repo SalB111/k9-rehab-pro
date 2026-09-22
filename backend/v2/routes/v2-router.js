@@ -650,7 +650,7 @@ function createV2Router(deps) {
   }));
 
   /**
-   * The clinic reading a patient's live home programme.
+   * The clinic reading a patient's live home program.
    *
    * Clinician-only, and on the clinical router rather than the owner one: it
    * lived under /beau by naming coincidence, which made a clinical route
@@ -661,7 +661,7 @@ function createV2Router(deps) {
     if (!handoff) {
       return res.status(404).json({
         success: false, code: 'NOT_FOUND',
-        error: 'No active home exercise programme for this patient',
+        error: 'No active home exercise program for this patient',
       });
     }
     res.json({ success: true, data: handoff });
