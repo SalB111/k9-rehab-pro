@@ -178,6 +178,18 @@ t('treatment approach follows the surgery date, and says why', () => {
   assert.equal(b.proposed.treatmentApproach, 'Conservative');
 });
 
+t('an undated surgical presentation is Surgical, not Conservative', () => {
+  // Found in the UI: "TPLO Post-Op" with surgery_date NULL pre-filled the
+  // assessment as Conservative, which routes the engine down a different
+  // protocol path. Same root cause as the missing post-operative gates.
+  const a = proposeEngineInputs({ patient: patient({ condition: 'TPLO Post-Op', surgery_date: null }) });
+  assert.equal(a.proposed.treatmentApproach, 'Surgical');
+  assert.match(a.summary.why.treatmentApproach, /names a surgical procedure/i);
+
+  const b = proposeEngineInputs({ patient: patient({ condition: 'Bilateral Hip Osteoarthritis', surgery_date: null }) });
+  assert.equal(b.proposed.treatmentApproach, 'Conservative');
+});
+
 t('clinic capabilities pass through, tri-state intact', () => {
   const { proposed } = proposeEngineInputs({
     patient: patient(),

@@ -1,10 +1,12 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { FiAlertCircle, FiArrowLeft, FiCheck, FiRefreshCw, FiSettings } from "react-icons/fi";
+import { FiAlertCircle, FiArrowLeft, FiCheck, FiPlus, FiRefreshCw, FiSettings } from "react-icons/fi";
 import api from "../../api/axios";
 import C from "../../constants/colors";
 import ClinicalSnapshot from "./ClinicalSnapshot";
 import TodaysUpdate from "./TodaysUpdate";
 import RecommendationReview from "./RecommendationReview";
+import NewPatient from "./NewPatient";
+import SafetyGates from "./SafetyGates";
 import * as v2 from "./v2api";
 
 // ─────────────────────────────────────────────
@@ -13,10 +15,13 @@ import * as v2 from "./v2api";
 //   Select patient -> Snapshot -> Today's update -> Recommendation
 //                  -> Review -> Approve -> Send home
 //
-// Replaces the seven-step wizard for an EXISTING patient. The wizard remains
-// for registering a new one — nothing here removes it.
+// Replaces the seven-step wizard outright. Registering a patient is eight
+// fields here; the wizard asked 186 before a protocol appeared.
 //
 // The clinician is never asked to re-enter what the record already knows.
+// Everything the engine needs beyond those eight fields is proposed from the
+// record and the clinic's equipment profile, and the safety gates — the
+// values that fail UNSAFE if omitted — are confirmed rather than typed.
 // ─────────────────────────────────────────────
 
 const STEPS = [
@@ -37,6 +42,43 @@ const EMPTY_ASSESSMENT = {
   overall_change: null, clinical_observation: null,
 };
 
+/**
+ * Turn an intake proposal into a pre-filled assessment.
+ *
+ * The proposal speaks the engine's language (weightBearingStatus); the
+ * assessment form speaks the record's (weight_bearing_status). Same facts,
+ * two vocabularies, and this is the seam between them.
+ *
+ * Only fields the proposal actually settled are carried across. A gate the
+ * proposal could not derive stays null here rather than arriving as a
+ * confident-looking default — "Not assessed" is a truthful thing for a
+ * clinician to see, and a wrong value that looks filled-in is not.
+ */
+function assessmentFromProposal(proposal) {
+  const p = (proposal && proposal.proposed) || {};
+  const pick = (v) => (v === undefined ? null : v);
+
+  return {
+    ...EMPTY_ASSESSMENT,
+    pain_score: pick(p.painScore),
+    lameness_grade: pick(p.lamenessGrade),
+    mobility_level: pick(p.mobilityLevel),
+    treatment_approach: pick(p.treatmentApproach),
+    weight_bearing_status: pick(p.weightBearingStatus),
+    mmt_grade: pick(p.mmtGrade),
+    ivdd_grade: pick(p.ivddGrade),
+    oa_stage: pick(p.oaStage),
+    neuro_proprioception: pick(p.neuroProprioception),
+    neuro_withdrawal: pick(p.neuroWithdrawal),
+    neuro_deep_pain: pick(p.neuroDeepPain),
+    neuro_motor_grade: pick(p.neuroMotorGrade),
+    incision_status: pick(p.incisionStatus),
+    complications_noted: pick(p.complicationsNoted),
+    crate_rest_required: pick(p.crateRestRequired),
+    e_collar_required: pick(p.eCollarRequired),
+  };
+}
+
 export default function ClinicalWorkflowView({ setView, patient: initialPatient }) {
   const [step, setStep] = useState(initialPatient ? "snapshot" : "patient");
   const [patients, setPatients] = useState([]);
@@ -50,6 +92,10 @@ export default function ClinicalWorkflowView({ setView, patient: initialPatient 
   const [videoRequests, setVideoRequests] = useState([]);
   const [access, setAccess] = useState(null);
   const [issuedCode, setIssuedCode] = useState(null);
+
+  // What the system already knows, and which gates need a person.
+  const [proposal, setProposal] = useState(null);
+  const [gateConfirmations, setGateConfirmations] = useState({});
 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
@@ -145,13 +191,39 @@ export default function ClinicalWorkflowView({ setView, patient: initialPatient 
     if (patient?.id) loadSnapshot(patient.id);
   }, [patient?.id, loadSnapshot]);
 
-  const selectPatient = (p) => {
+  const selectPatient = async (p) => {
     setPatient(p);
     setVersion(null);
-    setAssessment(EMPTY_ASSESSMENT);
     setMeasurements([]);
     setIssuedCode(null);
+    setGateConfirmations({});
+    setAssessment(EMPTY_ASSESSMENT);
     setStep("snapshot");
+
+    // Pre-fill today's assessment from what the record already supports, so
+    // the clinician corrects rather than types. Failure is not fatal: they
+    // simply get the empty form they had before.
+    try {
+      const prop = await v2.getIntakeProposal(p.id);
+      setProposal(prop);
+      setAssessment(assessmentFromProposal(prop));
+    } catch {
+      setProposal(null);
+    }
+  };
+
+  const createPatient = async (body) => {
+    setBusy(true); setError(null);
+    try {
+      const created = await v2.createPatient(body);
+      await api.get("/patients").then((r) => setPatients(r.data.data || r.data || []));
+      await selectPatient(created);
+      setNotice(`${created.name} registered. Confirm the clinical picture below.`);
+    } catch (e) {
+      setError(v2.describeError(e));
+    } finally {
+      setBusy(false);
+    }
   };
 
   // ── Visit -> assessment -> measurements -> recommendation ──────────────
@@ -190,7 +262,7 @@ export default function ClinicalWorkflowView({ setView, patient: initialPatient 
   const approve = async (note) => {
     setBusy(true); setError(null);
     try {
-      setVersion(await v2.approveVersion(version.id, note));
+      setVersion(await v2.approveVersion(version.id, note, gateConfirmations));
       setNotice("Protocol approved and recorded.");
       loadSnapshot(patient.id);
     } catch (e) {
@@ -238,7 +310,19 @@ export default function ClinicalWorkflowView({ setView, patient: initialPatient 
       )}
 
       {step === "patient" && (
-        <PatientPicker patients={patients} onSelect={selectPatient} />
+        <PatientPicker
+          patients={patients}
+          onSelect={selectPatient}
+          onNew={() => { setError(null); setNotice(null); setStep("new-patient"); }}
+        />
+      )}
+
+      {step === "new-patient" && (
+        <NewPatient
+          onCreate={createPatient}
+          onCancel={() => setStep("patient")}
+          busy={busy}
+        />
       )}
 
       {step === "snapshot" && patient && (
@@ -286,6 +370,15 @@ export default function ClinicalWorkflowView({ setView, patient: initialPatient 
 
       {step === "review" && version && (
         <>
+          <SafetyGates
+            gates={version?.safety_gates || []}
+            values={version?.engine_input || {}}
+            confirmed={gateConfirmations}
+            readOnly={version?.status === "APPROVED" || version?.status === "HANDED_OFF"}
+            onConfirm={(field, on) =>
+              setGateConfirmations((prev) => ({ ...prev, [field]: on }))
+            }
+          />
           <RecommendationReview
             version={version}
             authority={authority}
@@ -370,7 +463,7 @@ function StepBar({ step, setStep, hasPatient, hasVersion }) {
   );
 }
 
-function PatientPicker({ patients, onSelect }) {
+function PatientPicker({ patients, onSelect, onNew }) {
   const [q, setQ] = useState("");
   const filtered = patients.filter((p) =>
     `${p.name} ${p.breed} ${p.condition} ${p.client_name}`.toLowerCase().includes(q.toLowerCase())
@@ -378,6 +471,20 @@ function PatientPicker({ patients, onSelect }) {
 
   return (
     <div>
+      {onNew && (
+        <button
+          onClick={onNew}
+          style={{
+            width: "100%", padding: "11px 14px", marginBottom: 12,
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+            fontSize: 14, fontWeight: 700, cursor: "pointer",
+            border: "none", borderRadius: 8, background: C.teal, color: "#fff",
+          }}
+        >
+          <FiPlus size={15} /> Register a new patient
+        </button>
+      )}
+
       <input
         placeholder="Search patients…"
         value={q}

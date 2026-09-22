@@ -73,8 +73,18 @@ export const addExercise = (versionId, exercise) =>
 export const removeExercise = (versionId, rowId, reason) =>
   api.delete(`/v2/versions/${versionId}/exercises/${rowId}`, { params: { reason } }).then(unwrap);
 
-export const approveVersion = (versionId, note) =>
-  api.post(`/v2/versions/${versionId}/approve`, { note }).then(unwrap);
+/**
+ * Approve a version.
+ *
+ * `gateConfirmations` is a map of engine field -> true for every safety gate
+ * this version was built on. The server refuses the approval if any is
+ * missing, so this is not optional decoration - see protocol-store.
+ */
+export const approveVersion = (versionId, note, gateConfirmations) =>
+  api.post(`/v2/versions/${versionId}/approve`, {
+    note,
+    gate_confirmations: gateConfirmations || {},
+  }).then(unwrap);
 
 export const handoffVersion = (versionId) =>
   api.post(`/v2/versions/${versionId}/handoff`).then(unwrap);
@@ -92,6 +102,25 @@ export const getClinicCapabilities = () =>
 
 export const setClinicCapabilities = (capabilities) =>
   api.put(`/v2/clinic/capabilities`, capabilities).then(unwrap);
+
+/**
+ * What the system already knows about this patient, shaped as engine inputs.
+ *
+ * Returns every value pre-filled from the record, the clinic's equipment
+ * profile and stated rules, plus `gates` - the safety gates that apply to this
+ * case and must be confirmed by a person before approval.
+ */
+export const getIntakeProposal = (patientId) =>
+  api.get(`/v2/patients/${patientId}/intake-proposal`).then((r) => r.data.data);
+
+/**
+ * Register a patient.
+ *
+ * Deliberately small. Everything the engine needs beyond this is proposed
+ * from the record rather than typed - see the intake proposal.
+ */
+export const createPatient = (body) =>
+  api.post("/patients", body).then((r) => r.data.data || r.data);
 
 // ── Reference data ───────────────────────────────────────────────────────────
 

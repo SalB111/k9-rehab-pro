@@ -208,10 +208,25 @@ function proposeEngineInputs({ patient, clinicInputs = {}, priorInputs = null } 
   for (const [key, value] of Object.entries(clinicInputs)) proposed[key] = value;
 
   // ── Derived, each from a rule a clinician can check. ─────────────────────
-  proposed.treatmentApproach = patient.surgery_date ? 'Surgical' : 'Conservative';
-  why.treatmentApproach = patient.surgery_date
-    ? `A surgery date of ${patient.surgery_date} is on the record.`
-    : 'No surgery date on the record.';
+  // Same evidence as the gates, and for the same reason. Keying this off the
+  // surgery date alone called a record reading "TPLO Post-Op" Conservative,
+  // because the date field was empty - and treatment approach routes the
+  // engine down a different protocol path, so that is not a cosmetic miss.
+  const surgicalPresentation = has(
+    `${patient.condition || ''} ${patient.affected_region || ''}`,
+    'post-op', 'postop', 'post op', 'tplo', 'tta', 'repair', 'osteotomy',
+    'ectomy', 'otomy', 'arthrodesis', 'amputation', 'stabilisation', 'stabilization'
+  );
+  if (patient.surgery_date) {
+    proposed.treatmentApproach = 'Surgical';
+    why.treatmentApproach = `A surgery date of ${patient.surgery_date} is on the record.`;
+  } else if (surgicalPresentation) {
+    proposed.treatmentApproach = 'Surgical';
+    why.treatmentApproach = 'The presentation names a surgical procedure, though no date is recorded.';
+  } else {
+    proposed.treatmentApproach = 'Conservative';
+    why.treatmentApproach = 'No surgery date, and the presentation names no procedure.';
+  }
 
   // Protocol shape follows how far into recovery the animal is. These are
   // starting points the clinician adjusts, not restrictions, so a wrong guess
