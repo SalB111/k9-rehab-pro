@@ -138,6 +138,12 @@ export default function ClinicalWorkflowView({ setView, patient: initialPatient 
 
   const [assessment, setAssessment] = useState(EMPTY_ASSESSMENT);
   const [measurements, setMeasurements] = useState([]);
+  // Length and frequency are the clinician's decision. They were hard-coded
+  // here — 6 weeks, 2x/week, every patient, every time — until 22 Sep 2026.
+  const [protocolParams, setProtocolParams] = useState({
+    length_weeks: v2.PROTOCOL_LENGTH_DEFAULT,
+    frequency: v2.PROTOCOL_FREQUENCY_DEFAULT,
+  });
   const [version, setVersion] = useState(null);
   const [videoRequests, setVideoRequests] = useState([]);
   const [access, setAccess] = useState(null);
@@ -304,8 +310,8 @@ export default function ClinicalWorkflowView({ setView, patient: initialPatient 
       }
 
       const generated = await v2.generateRecommendation(visit.id, {
-        protocol_length_weeks: 6,
-        frequency: "2x/week",
+        protocol_length_weeks: protocolParams.length_weeks,
+        frequency: protocolParams.frequency,
       });
 
       // Generation alone is not review. Move it explicitly so approval is a
@@ -420,6 +426,8 @@ export default function ClinicalWorkflowView({ setView, patient: initialPatient 
             measurements={measurements}
             setMeasurements={setMeasurements}
             hasBaseline={snapshot?.has_baseline}
+            protocolParams={protocolParams}
+            setProtocolParams={setProtocolParams}
           />
           <Actions>
             <button style={btn.primary} onClick={generate} disabled={busy}>

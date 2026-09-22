@@ -161,6 +161,140 @@ export const TREATMENT_APPROACH = [
   { value: "Palliative", label: "Palliative / comfort" },
 ];
 
+// ─────────────────────────────────────────────
+// Controlled clinical vocabularies
+//
+// These four lists were free-text inputs until 22 Sep 2026. That mattered
+// because the engine does not interpret them — it MATCHES them, literally:
+//
+//   protocol-generator.js:596
+//     if (formData.neuroDeepPain.toLowerCase().includes('absent'))
+//       formData._gradeVSupport = true;
+//
+// A clinician typing "Negative", "No DPP", "0", "abs." or "not present" —
+// every one of which means absent deep pain to a person — produced NO Grade V
+// lock. The safety gate confirmed that the clinician had STATED the value; it
+// could not confirm that the engine had PARSED it.
+//
+// So every `value` below is chosen to satisfy the engine's own matcher, and
+// every `label` is chosen to read correctly to a clinician. Where those two
+// requirements pull apart, the value wins and the label carries the meaning.
+//
+// DO NOT edit a `value` without checking it against the matcher it feeds.
+// The labels are free.
+// ─────────────────────────────────────────────
+
+/**
+ * Proprioception and withdrawal.
+ *
+ * The engine joins all four neuro fields and scans the result for
+ * 'absent' | 'none' | '0/5' | 'grade 0' to raise its red flag
+ * (protocol-generator.js:591-595). "Delayed" and "Decreased" deliberately
+ * match none of those: a delayed response is a finding, not an absence, and
+ * must not raise a flag that says function is gone.
+ */
+export const NEURO_RESPONSE = [
+  { value: "", label: "Not assessed" },
+  { value: "Present", label: "Present" },
+  { value: "Delayed", label: "Delayed" },
+  { value: "Decreased", label: "Decreased" },
+  { value: "Absent", label: "Absent" },
+];
+
+/**
+ * Deep pain perception. Its own list, deliberately shorter.
+ *
+ * DPP is clinically binary — it is present or it is not, and a Grade V
+ * diagnosis turns on exactly that. Offering "Decreased" here would invite a
+ * clinician to record a middle state the engine cannot act on and the
+ * literature does not describe.
+ *
+ * "Absent" is the only value that sets _gradeVSupport.
+ */
+export const DEEP_PAIN = [
+  { value: "", label: "Not assessed" },
+  { value: "Present", label: "Present" },
+  { value: "Absent", label: "Absent — no deep pain perception" },
+];
+
+/**
+ * Voluntary motor function.
+ *
+ * "0/5" in the value is load-bearing: it is one of the four tokens the
+ * engine's neuro scan matches. The ambulatory/non-ambulatory distinction
+ * carries no engine meaning today and is recorded because it is what a
+ * clinician actually assesses.
+ */
+export const NEURO_MOTOR = [
+  { value: "", label: "Not assessed" },
+  { value: "Voluntary motor present — ambulatory", label: "Present — ambulatory" },
+  { value: "Voluntary motor present — non-ambulatory", label: "Present — non-ambulatory" },
+  { value: "0/5 — no voluntary motor", label: "0/5 — no voluntary motor" },
+];
+
+/**
+ * Incision status.
+ *
+ * These four values are the EXACT keys of INCISION_EXCLUSIONS in
+ * protocol-generator.js. The engine looks this field up as a key — not a
+ * substring — so a value that is not one of these withholds no exercises at
+ * all, however clearly it describes a compromised incision to a person.
+ *
+ * "Healing normally" is deliberately not a key: a normal incision should
+ * exclude nothing, and it must not match the hard-block scan either.
+ *
+ * Dehiscence and Infection both stop generation outright. That took a fix on
+ * 22 Sep 2026 — the scan matched 'infected' while the key was 'Infection', so
+ * the two consumers of this one field disagreed about the same patient. See
+ * the note at protocol-generator.js validateIntake().
+ */
+export const INCISION_STATUS = [
+  { value: "", label: "Not assessed" },
+  { value: "Healing normally", label: "Healing normally" },
+  { value: "Mild Swelling", label: "Mild swelling" },
+  { value: "Seroma", label: "Seroma" },
+  { value: "Infection", label: "Infection — blocks generation" },
+  { value: "Dehiscence", label: "Dehiscence — blocks generation" },
+];
+
+/**
+ * Yes / No / Not assessed.
+ *
+ * Crate rest and e-collar were checkboxes, which cannot express three states.
+ * An unticked box read as "no" to the clinician while null was what got
+ * stored, and both are in the engine's `fails_unsafe_if_omitted` set — so the
+ * restriction never fired and nothing anywhere said so. A control that cannot
+ * represent "nobody has looked at this yet" will report that state as safe.
+ */
+export const TRISTATE = [
+  { value: "", label: "Not assessed" },
+  { value: "true", label: "Yes" },
+  { value: "false", label: "No" },
+];
+
+/**
+ * Session frequency. Free-form in the engine — it is echoed into the protocol
+ * rather than parsed — so these are the common clinic cadences, not a
+ * constraint.
+ */
+export const PROTOCOL_FREQUENCY = [
+  { value: "1x/week", label: "1× / week" },
+  { value: "2x/week", label: "2× / week" },
+  { value: "3x/week", label: "3× / week" },
+  { value: "Daily", label: "Daily" },
+];
+
+/**
+ * The engine's own documented default protocol length, in weeks
+ * (contracts/k9-engine-input-contract.json → route_level_inputs.protocolLength).
+ *
+ * The workflow hard-coded 6 here until 22 Sep 2026, so every protocol the V2
+ * screen ever produced was six weeks at 2x/week regardless of the case, and no
+ * clinician chose either number.
+ */
+export const PROTOCOL_LENGTH_DEFAULT = 8;
+export const PROTOCOL_FREQUENCY_DEFAULT = "2x/week";
+
 export const CAPABILITY_LABELS = {
   aquatic_access: "Aquatic access",
   modality_uwtm: "Underwater treadmill",

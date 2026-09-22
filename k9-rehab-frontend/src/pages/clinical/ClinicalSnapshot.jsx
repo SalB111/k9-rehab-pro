@@ -4,6 +4,7 @@ import {
 } from "react-icons/fi";
 import C from "../../constants/colors";
 import { SAFETY_GATE_LABELS, CAPABILITY_LABELS } from "./v2api";
+import { formatWeight } from "../../constants/weight";
 import ClinicalAlerts from "./ClinicalAlerts";
 import HomeProgram from "./HomeProgram";
 
@@ -111,7 +112,7 @@ export default function ClinicalSnapshot({
               {patient?.name || snapshot.patient?.name || "Patient"}
             </div>
             <div style={{ fontSize: 13, color: C.textMid, marginTop: 2 }}>
-              {[patient?.breed, patient?.age && `${patient.age}y`, patient?.weight && `${patient.weight}kg`]
+              {[patient?.breed, patient?.age && `${patient.age}y`, formatWeight(patient?.weight)]
                 .filter(Boolean)
                 .join(" · ")}
             </div>

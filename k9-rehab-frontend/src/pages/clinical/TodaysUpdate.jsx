@@ -1,7 +1,11 @@
 import React, { useState } from "react";
 import { FiChevronDown, FiChevronRight, FiPlus, FiTrash2 } from "react-icons/fi";
 import C from "../../constants/colors";
-import { WEIGHT_BEARING, OVERALL_CHANGE, TREATMENT_APPROACH } from "./v2api";
+import {
+  WEIGHT_BEARING, OVERALL_CHANGE, TREATMENT_APPROACH,
+  NEURO_RESPONSE, DEEP_PAIN, NEURO_MOTOR, TRISTATE, PROTOCOL_FREQUENCY,
+  INCISION_STATUS,
+} from "./v2api";
 
 // ─────────────────────────────────────────────
 // TODAY'S CLINICAL UPDATE
@@ -118,6 +122,7 @@ const MEASURE_KEYS = [
 
 export default function TodaysUpdate({
   assessment, setAssessment, measurements, setMeasurements, hasBaseline,
+  protocolParams, setProtocolParams,
   sources = {},
 }) {
   // Spread onto a <Field> so every field states its own provenance without
@@ -132,6 +137,21 @@ export default function TodaysUpdate({
 
   const setNum = (key) => (value) =>
     setAssessment((a) => ({ ...a, [key]: value === "" ? null : Number(value) }));
+
+  // Tri-state. The select carries strings because that is what a <select>
+  // holds; the record carries true/false/null because that is what the three
+  // clinical states are. "" is not false — it is "nobody has looked".
+  const setBool = (key) => (value) =>
+    setAssessment((a) => ({
+      ...a,
+      [key]: value === "" ? null : value === "true",
+    }));
+
+  const boolValue = (key) =>
+    assessment[key] === true ? "true" : assessment[key] === false ? "false" : "";
+
+  const setParam = (key) => (value) =>
+    setProtocolParams((p) => ({ ...p, [key]: value }));
 
   const addMeasurement = () =>
     setMeasurements((m) => [
@@ -314,18 +334,17 @@ export default function TodaysUpdate({
 
       <Collapsible title="Neurological examination" subtitle="absent deep pain restricts to passive care">
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 14 }}>
+          {/* Controlled, not free text. The engine matches these strings
+              literally — see the note above the vocabularies in v2api.js. */}
           {[
-            ["neuro_proprioception", "Proprioception"],
-            ["neuro_withdrawal", "Withdrawal"],
-            ["neuro_deep_pain", "Deep pain"],
-            ["neuro_motor_grade", "Motor grade"],
-          ].map(([key, label]) => (
-            <Field key={key} label={label} {...src(key)}>
-              <input
-                style={field} placeholder="e.g. Present / Delayed / Absent"
-                value={assessment[key] ?? ""}
-                onChange={(e) => set(key)(e.target.value)}
-              />
+            ["neuro_proprioception", "Proprioception", NEURO_RESPONSE, null],
+            ["neuro_withdrawal", "Withdrawal", NEURO_RESPONSE, null],
+            ["neuro_deep_pain", "Deep pain", DEEP_PAIN,
+              "Absent restricts the protocol to passive supportive care."],
+            ["neuro_motor_grade", "Motor grade", NEURO_MOTOR, null],
+          ].map(([key, label, options, hint]) => (
+            <Field key={key} label={label} hint={hint} {...src(key)}>
+              <Select value={assessment[key]} onChange={set(key)} options={options} />
             </Field>
           ))}
         </div>
@@ -333,11 +352,14 @@ export default function TodaysUpdate({
 
       <Collapsible title="Post-operative status & restrictions" subtitle="a compromised incision blocks generation">
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 14 }}>
-          <Field label="Incision status" hint="Dehisced / infected / open / draining blocks the protocol" {...src("incision_status")}>
-            <input
-              style={field} placeholder="e.g. Healing"
-              value={assessment.incision_status ?? ""}
-              onChange={(e) => set("incision_status")(e.target.value)}
+          {/* Controlled: the engine looks this up as an exact key, so free
+              text described a compromised incision to the clinician and
+              withheld nothing from the protocol. */}
+          <Field label="Incision status" hint="Dehiscence and infection stop generation." {...src("incision_status")}>
+            <Select
+              value={assessment.incision_status}
+              onChange={set("incision_status")}
+              options={INCISION_STATUS}
             />
           </Field>
           <Field label="Complications noted" {...src("complications_noted")}>
@@ -355,20 +377,48 @@ export default function TodaysUpdate({
             />
           </Field>
         </div>
-        <div style={{ display: "flex", gap: 20 }}>
+        {/* Three states, not two. An unticked checkbox reported "no" to the
+            clinician and stored null, and the engine treats null and false
+            alike — so the restriction never fired and the screen looked
+            answered. Both of these are in `fails_unsafe_if_omitted`. */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 14 }}>
           {[
-            ["crate_rest_required", "Crate rest required"],
-            ["e_collar_required", "E-collar required"],
-          ].map(([key, label]) => (
-            <label key={key} style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 13, cursor: "pointer" }}>
-              <input
-                type="checkbox"
-                checked={assessment[key] === true}
-                onChange={(e) => set(key)(e.target.checked)}
-              />
-              {label}
-            </label>
+            ["crate_rest_required", "Crate rest required",
+              "Excludes free movement and independent ambulation."],
+            ["e_collar_required", "E-collar required",
+              "Excludes exercises needing head and neck freedom."],
+          ].map(([key, label, hint]) => (
+            <Field key={key} label={label} hint={hint} {...src(key)}>
+              <Select value={boolValue(key)} onChange={setBool(key)} options={TRISTATE} />
+            </Field>
           ))}
+        </div>
+      </Collapsible>
+
+      {/* ── This protocol ─────────────────────────────────────────────────
+          Length and frequency were hard-coded to 6 weeks / 2x per week in
+          ClinicalWorkflowView until 22 Sep 2026, so every protocol the V2
+          screen produced carried those numbers regardless of the case and no
+          clinician had chosen either one. The engine's own documented default
+          is 8 weeks. */}
+      <Collapsible title="This protocol" subtitle="length · frequency">
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 14 }}>
+          <Field label="Length (weeks)" hint="The engine's default is 8.">
+            <input
+              type="number" min="1" max="52" style={field}
+              value={protocolParams.length_weeks ?? ""}
+              onChange={(e) =>
+                setParam("length_weeks")(e.target.value === "" ? null : Number(e.target.value))
+              }
+            />
+          </Field>
+          <Field label="Frequency" hint="Echoed into the protocol, not parsed.">
+            <Select
+              value={protocolParams.frequency}
+              onChange={setParam("frequency")}
+              options={PROTOCOL_FREQUENCY}
+            />
+          </Field>
         </div>
       </Collapsible>
     </div>

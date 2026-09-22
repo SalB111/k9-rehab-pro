@@ -13,6 +13,26 @@ const CURATED_EXERCISE_NAMES = ALL_EXERCISES
   .map(ex => `${ex.code}: ${ex.name} [${ex.category}] [${ex.difficulty_level || "Moderate"}]`)
   .join("\n");
 
+/**
+ * The patient's weight, in both units, for the prompt.
+ *
+ * `patients.weight` is POUNDS (see k9-rehab-frontend/src/constants/weight.js,
+ * which holds the canonical note and the same factor for the UI side — this
+ * is a deliberate mirror across the frontend/backend boundary, not a second
+ * source of truth).
+ *
+ * Both units are given because every source this model is instructed to cite
+ * is metric. Handing it pounds alone leaves it converting silently, and a
+ * dosing threshold recalled in kilograms against a number read as pounds is a
+ * mistake nothing downstream would catch.
+ */
+const LB_PER_KG = 2.20462;
+function weightLine(weightLbs) {
+  const n = typeof weightLbs === "number" ? weightLbs : parseFloat(weightLbs);
+  if (!Number.isFinite(n) || n <= 0) return "Unknown";
+  return `${Math.round(n * 10) / 10} lbs (${Math.round((n / LB_PER_KG) * 10) / 10} kg)`;
+}
+
 // ── Base identity prompt (from Notion master spec) ──
 // Rewritten 22 Sep 2026 under Source of Truth §2 (attribution prohibition),
 // §12 (human oversight) and §20 (clinical language standard).
@@ -136,7 +156,7 @@ function buildSystemPrompt(patient, additionalContext = "") {
 - **Name:** ${patient.name}
 - **Breed:** ${patient.breed || "Not specified"}
 - **Age:** ${patient.age || "Unknown"}
-- **Weight:** ${patient.weight || "Unknown"} lbs
+- **Weight:** ${weightLine(patient.weight)}
 - **Sex:** ${patient.sex || "Not specified"}
 - **Diagnosis:** ${patient.diagnosis || patient.condition || "Not specified"}
 - **Affected Region:** ${patient.affected_region || patient.affectedRegion || "Not specified"}

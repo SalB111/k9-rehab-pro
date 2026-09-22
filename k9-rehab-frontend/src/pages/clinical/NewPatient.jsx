@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { FiArrowLeft, FiInfo } from "react-icons/fi";
 import C from "../../constants/colors";
+import { lbsToKg, kgToLbs } from "../../constants/weight";
 
 // ─────────────────────────────────────────────
 // REGISTER A PATIENT
@@ -30,6 +31,13 @@ const field = {
   background: C.surface, color: C.text, outline: "none",
 };
 
+// The unit under each weight box. A weight with no unit on screen is how "68"
+// came to mean pounds on one page and kilograms on another.
+const unitTag = {
+  fontSize: 10.5, fontWeight: 700, letterSpacing: 0.6, textTransform: "uppercase",
+  color: C.textLight, marginTop: 3, textAlign: "center",
+};
+
 function Field({ label, hint, required, children }) {
   return (
     <label style={{ display: "block" }}>
@@ -52,11 +60,33 @@ function Field({ label, hint, required, children }) {
 
 export default function NewPatient({ onCreate, onCancel, busy }) {
   const [f, setF] = useState({
-    name: "", species: "Canine", breed: "", age: "", weight: "",
+    // `weight` is POUNDS and is what gets saved. `weight_kg` is the converted
+    // view of the same fact — it exists so the form can show both, and it is
+    // stripped before submit so it can never be mistaken for a second value.
+    name: "", species: "Canine", breed: "", age: "", weight: "", weight_kg: "",
     sex: "", condition: "", affected_region: "", surgery_date: "",
     client_name: "",
   });
   const set = (k) => (e) => setF((p) => ({ ...p, [k]: e.target.value }));
+
+  /**
+   * Keep the two weight boxes agreeing.
+   *
+   * The typed box keeps exactly what was typed — converting it back and forth
+   * on every keystroke fights the person entering it. The OTHER box is
+   * derived. Anything that is not a positive number blanks the other box
+   * rather than leaving a stale conversion sitting next to it, because two
+   * boxes showing contradictory weights is worse than one showing none.
+   */
+  const setWeight = (unit, raw) =>
+    setF((p) => {
+      if (unit === "lbs") {
+        const kg = lbsToKg(raw);
+        return { ...p, weight: raw, weight_kg: kg === null ? "" : String(kg) };
+      }
+      const lbs = kgToLbs(raw);
+      return { ...p, weight_kg: raw, weight: lbs === null ? "" : String(lbs) };
+    });
 
   const missing = ["name", "breed", "age", "weight", "condition"].filter((k) => !String(f[k]).trim());
   const canSubmit = missing.length === 0 && !busy;
@@ -64,8 +94,11 @@ export default function NewPatient({ onCreate, onCancel, busy }) {
   function submit(e) {
     e.preventDefault();
     if (!canSubmit) return;
+    // weight_kg is a display convenience, not a field on the record. Dropping
+    // it here is what keeps pounds the single stored unit.
+    const { weight_kg, ...record } = f;
     onCreate({
-      ...f,
+      ...record,
       age: Number(f.age),
       weight: Number(f.weight),
       // An empty date must not reach the record as "" — the proposal reads a
@@ -123,8 +156,31 @@ export default function NewPatient({ onCreate, onCancel, busy }) {
           <input style={field} type="number" step="0.1" min="0" value={f.age} onChange={set("age")} />
         </Field>
 
-        <Field label="Weight" hint="Kilograms." required>
-          <input style={field} type="number" step="0.1" min="0" value={f.weight} onChange={set("weight")} />
+        {/* Two boxes, one fact. Type into whichever unit the scale reads and
+            the other fills itself — nobody should be doing arithmetic at the
+            front desk, and a weight converted in someone's head is a weight
+            that can be wrong. Pounds are what get saved; see constants/weight.js. */}
+        <Field label="Weight" hint="Enter either — the other converts. Pounds are recorded." required>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+            <div>
+              <input
+                style={field} type="number" step="0.1" min="0" placeholder="lbs"
+                aria-label="Weight in pounds"
+                value={f.weight}
+                onChange={(e) => setWeight("lbs", e.target.value)}
+              />
+              <div style={unitTag}>lbs</div>
+            </div>
+            <div>
+              <input
+                style={field} type="number" step="0.1" min="0" placeholder="kg"
+                aria-label="Weight in kilograms"
+                value={f.weight_kg}
+                onChange={(e) => setWeight("kg", e.target.value)}
+              />
+              <div style={unitTag}>kg</div>
+            </div>
+          </div>
         </Field>
 
         <Field label="Sex">

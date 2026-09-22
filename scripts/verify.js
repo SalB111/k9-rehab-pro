@@ -34,6 +34,15 @@ const CHECKS = [
     ok: (out) => /All suites passed/.test(out) && !/suite\(s\) FAILED/.test(out) },
   { name: 'K9 · intake proposal',      cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/intake-proposal.test.js'],
     ok: (out) => /^ok\s/m.test(out) && !/FAILED/.test(out) },
+  // Reads the vocabularies out of the UI source and runs them through the real
+  // engine. It fails when a `value` in v2api.js stops matching the engine
+  // matcher it feeds — which is a silent safety regression everywhere else.
+  { name: 'K9 · clinical vocabulary',  cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/clinical-vocabulary.test.js'],
+    ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
+  // Pounds are the stored unit. Guards the conversion, the "not a weight ->
+  // no value" rule, and the single definition of the factor.
+  { name: 'K9 · weight units',         cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/weight-units.test.js'],
+    ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
   { name: 'K9 · frontend build',       cwd: path.join(K9, 'k9-rehab-frontend'), cmd: 'npx', args: ['--no-install', 'vite', 'build'],
     ok: (out) => /built in/.test(out) && !/error/i.test(out) },
   { name: 'B.E.A.U. · tests',          cwd: BEAU, cmd: 'npm', args: ['test'],

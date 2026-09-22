@@ -600,8 +600,27 @@ function validateIntake(formData) {
   }
 
   // RED-FLAG: Post-op complication detection
+  //
+  // 'infect', not 'infected', since 22 Sep 2026.
+  //
+  // incisionStatus has TWO consumers and they disagreed. This scan matched
+  // 'infected'; getExcludedCodes() looks the same field up as an exact key in
+  // INCISION_EXCLUSIONS, where the key is 'Infection'. "Infection" does not
+  // contain "infected", so selecting it applied the exclusion set and did NOT
+  // raise the hard error — while free text "Infected" did the opposite. One
+  // field, one clinical state, two spellings, two different outcomes.
+  //
+  // That blocked replacing the free-text input with a controlled list: any
+  // dropdown offering "Infection" would have silently removed the hard block
+  // a clinician gets today by typing "Infected". Matching the stem makes both
+  // consumers agree on the same value.
+  //
+  // Note these are deliberately loose substrings: "No dehiscence" matches
+  // 'dehisc' and blocks, as it always has. Over-blocking on a negation is
+  // safe and visible — the clinician sees the refusal and corrects it.
+  // Under-blocking is neither.
   const incision = (formData.incisionStatus || '').toLowerCase();
-  if (incision.includes('dehisc') || incision.includes('infected') || incision.includes('open') || incision.includes('draining')) {
+  if (incision.includes('dehisc') || incision.includes('infect') || incision.includes('open') || incision.includes('draining')) {
     errors.push(`Post-operative complication detected (incision: ${formData.incisionStatus}). Resolve surgical site issue before initiating rehabilitation.`);
   }
 

@@ -225,6 +225,24 @@ function createV2Router(deps) {
     const clinicId = await resolveClinicId(req, db);
     const capabilities = await clinicStore.getCapabilities(db, clinicId);
 
+    // Protocol length became clinician-settable on 22 Sep 2026 (it was hard
+    // -coded to 6 in the frontend before that). The engine computes
+    // `parseInt(protocolLength, 10) || 8`, which accepts any integer it is
+    // given — so 999 builds a 999-week protocol and 0 falls through to the
+    // default without saying so. Absent is fine and means "use the engine's
+    // default"; present and out of range is a mistake worth refusing.
+    const rawLength = req.body.protocol_length_weeks;
+    if (rawLength !== undefined && rawLength !== null && rawLength !== '') {
+      const weeks = Number(rawLength);
+      if (!Number.isInteger(weeks) || weeks < 1 || weeks > 52) {
+        return res.status(400).json({
+          success: false,
+          error: 'Protocol length must be a whole number of weeks between 1 and 52.',
+          code: 'INVALID',
+        });
+      }
+    }
+
     const state = visitStore.toV2State(db, {
       patient,
       visit,
