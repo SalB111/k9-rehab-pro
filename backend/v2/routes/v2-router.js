@@ -557,10 +557,29 @@ function createV2Router(deps) {
     res.json({ success: true, data: await clinicStore.getCapabilities(db, clinicId) });
   }));
 
+  /**
+   * The practice's equipment. One record, two shapes in.
+   *
+   *   { modality_laser: true, ... }        the V2 admin screen's toggles
+   *   { equipment: { "TENS Unit": true } } the V1 dashboard's 43-item checklist
+   *
+   * Both are accepted because both screens now write the same row. The older
+   * shape is the whole body, so a body carrying `equipment` is read as the
+   * checklist form and anything else alongside it is still read as
+   * capabilities — that keeps the V2 screen working unchanged.
+   *
+   * Whichever arrives, clinic-store derives the ten engine booleans from the
+   * checklist, so the two halves of the record cannot drift apart again.
+   */
   router.put('/clinic/capabilities', requireRole('admin', 'veterinarian', 'vet'), route(async (req, res) => {
     const clinicId = await resolveClinicId(req, db);
+    const body = req.body || {};
+    const { equipment, ...rest } = body;
     const result = await clinicStore.setCapabilities(db, {
-      clinicId, capabilities: req.body, actor: req.user,
+      clinicId,
+      capabilities: rest,
+      equipment: equipment && typeof equipment === 'object' ? equipment : undefined,
+      actor: req.user,
     });
     res.json({ success: true, data: result });
   }));

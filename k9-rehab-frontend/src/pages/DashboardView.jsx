@@ -1901,39 +1901,121 @@ function MetricsPanel() {
 }
 
 // ── CLINIC EQUIPMENT ──────────────────────────────────────────────────────────
+/**
+ * CLINIC EQUIPMENT
+ *
+ * Reads and writes the PRACTICE's equipment record, not this patient's form.
+ *
+ * Until 24 Sep 2026 this panel wrote through DashFormContext, which meant every
+ * checkbox landed in `patients.dashboard_data` — so every patient carried a
+ * private, partial copy of the clinic's equipment list. Five patients in this
+ * database had answered 9, 19, 14, 13 and 12 of the 43 items. Meanwhile V2 kept
+ * one row per clinic and the protocol engine read only that, so the fuller list
+ * here never reached the engine and the engine's answer never reached this
+ * screen.
+ *
+ * One row now, shared with the V2 access screen. The checklist itself is served
+ * by the API rather than held here, so there is no second copy of the list to
+ * drift from the map that turns items into engine capabilities.
+ */
 function EquipmentPanel() {
-  const cats = [
-    { cat:"Hydrotherapy", defaultOpen:true, items:["Underwater Treadmill (UWTM)","Therapy Pool — Full submersion","Portable Aquatic Tank","Cold Water Spa / Whirlpool"] },
-    { cat:"Land Exercise Equipment", defaultOpen:false, items:["Land Treadmill","Cavaletti Rail Set","Balance Discs — Set","Balance Board / Rocker Board","Wobble Board","Foam Pads / Rolls","Physioroll / Peanut Ball","Resistance Bands / Theraband","Parallel Bars","Exercise Steps / Stairs (clinic)","Ramps","Cone Set","Agility Equipment"] },
-    { cat:"Electrotherapy & Modalities", defaultOpen:false, items:["NMES Unit (Neuromuscular E-Stim)","TENS Unit","Therapeutic Ultrasound","Class IV Therapeutic Laser","Class IIIb Laser","Shockwave Therapy","PEMF (Pulsed Electromagnetic Field)","Cryotherapy Unit","Moist Heat / Hydrocollator","Infrared Therapy"] },
-    { cat:"Manual Therapy & Assessment", defaultOpen:false, items:["Standard Goniometer","Digital Goniometer","Pressure Algometer","Measuring Tape (thigh circumference)","Force Platform / Pressure Walkway","Video Gait Analysis System","Kinematic Analysis System","IRAP / PRP Equipment"] },
-    { cat:"Support & Mobility", defaultOpen:false, items:["Slings — Front end","Slings — Rear end","Full-body Harness","Wheelchairs / Carts","Orthoses / Braces","Non-slip Flooring / Mats","Treatment Table — Adjustable","Treatment Table — Hydraulic"] },
-  ];
-  // ── Wired to DashFormContext so checkbox state persists via save/reload ──
-  // Key format: equipment::<CategoryName>::<ItemName>
-  // Truthy = "true"  Falsy = ""
-  const { data, update } = useContext(DashFormContext);
+  const apiBase = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+  const [state, setState] = useState({ loading: true, error: null, shape: [], equipment: {}, gating: [] });
+  const [saving, setSaving] = useState(null);
+
+  const authHeaders = () => {
+    const token = localStorage.getItem("token");
+    return { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) };
+  };
+
+  useEffect(() => {
+    let live = true;
+    fetch(`${apiBase}/v2/clinic/capabilities`, { headers: authHeaders() })
+      .then(r => r.json())
+      .then(j => {
+        if (!live) return;
+        const d = j.data || {};
+        setState({ loading: false, error: null, shape: d.checklistShape || [], equipment: d.equipment || {}, gating: d.gatingItems || [] });
+      })
+      .catch(e => live && setState(s => ({ ...s, loading: false, error: e.message })));
+    return () => { live = false; };
+  }, [apiBase]);
+
+  // Optimistic, because a checklist that lags a click feels broken — but the
+  // server's answer is what is kept, and a failure puts the tick back.
+  async function toggle(item, next) {
+    const before = state.equipment[item];
+    setState(s => ({ ...s, equipment: { ...s.equipment, [item]: next } }));
+    setSaving(item);
+    try {
+      const res = await fetch(`${apiBase}/v2/clinic/capabilities`, {
+        method: "PUT",
+        headers: authHeaders(),
+        body: JSON.stringify({ equipment: { [item]: next } }),
+      });
+      const j = await res.json();
+      if (!res.ok || !j.success) throw new Error(j.error || `HTTP ${res.status}`);
+      setState(s => ({ ...s, equipment: j.data.equipment || s.equipment, error: null }));
+    } catch (e) {
+      setState(s => ({ ...s, equipment: { ...s.equipment, [item]: before }, error: e.message }));
+    } finally {
+      setSaving(null);
+    }
+  }
+
+  if (state.loading) return <div style={{ fontSize:12, color:C.muted, padding:14 }}>Loading the clinic's equipment…</div>;
+
+  const unanswered = state.shape.flatMap(g => g.items).filter(i => state.equipment[i] === undefined || state.equipment[i] === null).length;
 
   return <>
     <div style={{ fontSize:11, color:C.muted, marginBottom:16, padding:"10px 14px", background:C.blueLt, borderRadius:6, border:`1px solid ${C.blue}33` }}>
-      Check all equipment currently available at this clinic. B.E.A.U. uses this inventory to generate the in-clinic rehabilitation protocol — only available equipment will be prescribed.
+      This is the equipment at <strong>this clinic</strong>, not this patient. It is shared with the
+      clinical workflow&rsquo;s access screen and it is what B.E.A.U. prescribes from — only equipment
+      recorded here is offered.
+      {unanswered > 0 && (
+        <div style={{ marginTop:6 }}>
+          <strong>{unanswered} of {state.shape.flatMap(g => g.items).length} not yet answered.</strong>{" "}
+          An unanswered modality is treated as unavailable, so it is withheld from every protocol
+          until somebody says.
+        </div>
+      )}
     </div>
-    {cats.map(grp=>(
-      <Sec key={grp.cat} title={grp.cat} color={C.teal} colorLt={C.tealLt} collapsible defaultOpen={grp.defaultOpen}>
+
+    {state.error && (
+      <div style={{ fontSize:11.5, color:C.red, marginBottom:12, padding:"8px 12px", background:"#FEF2F2", borderRadius:6 }}>
+        {state.error}
+      </div>
+    )}
+
+    {state.shape.map((grp, gi) => (
+      <Sec key={grp.category} title={grp.category} color={C.teal} colorLt={C.tealLt} collapsible defaultOpen={gi === 0}>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:7 }}>
-          {grp.items.map(item=>{
-            const k = `equipment::${grp.cat}::${item}`;
-            const checked = data[k] === "true";
+          {grp.items.map(item => {
+            const checked = state.equipment[item] === true;
+            const gates = state.gating.includes(item);
+            const busy = saving === item;
             return (
-              <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (()=>update(k, checked ? "" : "true"))(e); } }} key={item} className={`cb-row${checked?" active":""}`} onClick={()=>update(k, checked ? "" : "true")}>
+              <div
+                role="button" tabIndex={0} key={item}
+                className={`cb-row${checked ? " active" : ""}`}
+                style={{ opacity: busy ? 0.55 : 1 }}
+                onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(item, !checked); } }}
+                onClick={() => toggle(item, !checked)}
+              >
                 <input type="checkbox" checked={checked} readOnly style={{ width:15, height:15, accentColor:C.teal, flexShrink:0 }}/>
-                <span style={{ fontSize:11, color:checked?C.teal:C.text }}>{item}</span>
+                <span style={{ fontSize:11, color: checked ? C.teal : C.text }}>
+                  {item}
+                  {/* The ten that actually gate a therapy, marked so a clinician
+                      can see which ticks change what gets prescribed. */}
+                  {gates && <span title="Enables a therapy in the protocol engine" style={{ marginLeft:5, fontSize:9, color:C.teal, opacity:0.8 }}>◆</span>}
+                </span>
               </div>
             );
           })}
         </div>
       </Sec>
     ))}
+
     <Sec title="Other Equipment" color={C.teal} colorLt={C.tealLt} collapsible defaultOpen={true}>
       <F label="Describe any additional equipment not listed above" placeholder="Additional equipment, brand names, unique modalities…" rows={2}/>
     </Sec>

@@ -14,6 +14,10 @@
 'use strict';
 
 const { ProtocolStoreError, ERR } = require('./protocol-store');
+// The 43-item checklist both apps read, and the map from item to capability.
+// Required lazily inside assertCoversEngineGates there to avoid a cycle; here
+// it is a plain dependency.
+const equipment = require('./clinic-equipment');
 
 /**
  * Capability column -> the engine input it feeds.
@@ -61,18 +65,62 @@ async function getCapabilities(db, clinicId) {
   for (const key of CAPABILITY_KEYS) {
     capabilities[key] = row ? fromTriState(row[key]) : null;
   }
+  // The full 43-item checklist, which both apps now read. A clinic whose row
+  // predates the checklist has its ten stored booleans projected back into
+  // checklist form, so the V1 screen shows what is actually known rather than
+  // an empty list that reads as "we own nothing".
+  let checklist = {};
+  if (row && row.equipment_json) {
+    try {
+      const parsed = JSON.parse(row.equipment_json);
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) checklist = parsed;
+    } catch { checklist = {}; }
+  }
+  if (!Object.keys(checklist).length) {
+    checklist = equipment.capabilitiesToChecklist(capabilities);
+  }
+
   return {
     clinic_id: clinicId,
     capabilities,
+    equipment: checklist,
+    // The categories and their items, served rather than duplicated. Both
+    // screens render from this, so there is no second copy of the list to
+    // drift from the one the derivation map is written against.
+    checklistShape: equipment.CHECKLIST,
+    gatingItems: Object.keys(equipment.TO_CAPABILITY),
     unstated: CAPABILITY_KEYS.filter((k) => capabilities[k] === null),
+    // Inventory nobody has answered either way. Not the same as `unstated`:
+    // that is the ten the engine gates on, this is the whole checklist.
+    unansweredItems: equipment.ALL_ITEMS.filter(
+      (i) => checklist[i] === undefined || checklist[i] === null
+    ),
     configured: Boolean(row),
     updated_at: row ? row.updated_at : null,
     updated_by: row ? row.updated_by : null,
   };
 }
 
-/** Upsert capabilities. Only keys present in `input` are changed. */
-async function setCapabilities(db, { clinicId, capabilities, actor }) {
+/**
+ * Upsert the clinic's equipment. Only what is mentioned is changed.
+ *
+ * TWO WAYS IN, ONE RECORD OUT.
+ *
+ *   `equipment` — the 43-item checklist, which is what the V1 dashboard sends.
+ *   `capabilities` — the ten engine booleans, which is what the V2 admin
+ *     screen toggles.
+ *
+ * Whichever arrives, BOTH are written: the checklist is stored, and the ten
+ * columns are DERIVED from it. That derivation is the whole point. The two
+ * records used to be filled independently — V1 into each patient's form blob,
+ * V2 into this row — and they drifted, because nothing made them agree. Now
+ * one cannot move without the other.
+ *
+ * A capability toggled directly is folded back into the checklist first, so
+ * the checklist is always the fuller statement and the columns are always its
+ * projection.
+ */
+async function setCapabilities(db, { clinicId, capabilities, equipment: checklistInput, actor }) {
   if (!clinicId) throw new ProtocolStoreError('clinicId is required', ERR.INVALID);
   if (!actor || !actor.id) {
     throw new ProtocolStoreError('An identified actor is required', ERR.INVALID);
@@ -83,28 +131,55 @@ async function setCapabilities(db, { clinicId, capabilities, actor }) {
   if (unknown.length) {
     throw new ProtocolStoreError(`Unknown capability keys: ${unknown.join(', ')}`, ERR.INVALID);
   }
+  if (checklistInput) {
+    const strays = Object.keys(checklistInput).filter((i) => !equipment.ALL_ITEMS.includes(i));
+    if (strays.length) {
+      throw new ProtocolStoreError(
+        `Unknown equipment items: ${strays.join(', ')}. An item renamed in the `
+        + `checklist needs an alias, not an edit — the stored key is the label.`,
+        ERR.INVALID
+      );
+    }
+  }
 
   const existing = await db.get(`SELECT * FROM clinic_capabilities WHERE clinic_id = ?`, [clinicId]);
 
-  // Absent keys keep their stored value rather than being reset to null — a
-  // partial update must not silently un-state equipment it did not mention.
-  const values = CAPABILITY_KEYS.map((key) =>
-    key in input ? toTriState(input[key]) : existing ? existing[key] : null
-  );
+  // Start from what is already recorded, so a partial update never un-states
+  // equipment it did not mention.
+  const current = await getCapabilities(db, clinicId);
+  const merged = { ...current.equipment };
+  if (checklistInput) Object.assign(merged, checklistInput);
+  // A capability toggled directly lands in the checklist too, or the next read
+  // would project the old checklist back over it.
+  if (Object.keys(input).length) {
+    Object.assign(merged, equipment.capabilitiesToChecklist(
+      Object.fromEntries(Object.entries(input).map(([k, v]) => [k, toTriState(v) === 1 ? true
+        : toTriState(v) === 0 ? false : null]))
+    ));
+  }
+
+  // The ten columns are the checklist's projection, never an independent fact.
+  const derived = equipment.deriveCapabilities(merged);
+  const values = CAPABILITY_KEYS.map((key) => toTriState(derived[key]));
+
+  // Stored together, in one statement, so the checklist and its projection can
+  // never be written apart.
+  const checklistJson = JSON.stringify(merged);
 
   if (existing) {
     await db.run(
       `UPDATE clinic_capabilities
           SET ${CAPABILITY_KEYS.map((k) => `${k} = ?`).join(', ')},
+              equipment_json = ?,
               updated_by = ?, updated_at = CURRENT_TIMESTAMP
         WHERE clinic_id = ?`,
-      [...values, actor.id, clinicId]
+      [...values, checklistJson, actor.id, clinicId]
     );
   } else {
     await db.run(
-      `INSERT INTO clinic_capabilities (clinic_id, ${CAPABILITY_KEYS.join(', ')}, updated_by)
-       VALUES (?, ${CAPABILITY_KEYS.map(() => '?').join(', ')}, ?)`,
-      [clinicId, ...values, actor.id]
+      `INSERT INTO clinic_capabilities (clinic_id, ${CAPABILITY_KEYS.join(', ')}, equipment_json, updated_by)
+       VALUES (?, ${CAPABILITY_KEYS.map(() => '?').join(', ')}, ?, ?)`,
+      [clinicId, ...values, checklistJson, actor.id]
     );
   }
 

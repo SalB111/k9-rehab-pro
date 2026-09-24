@@ -62,6 +62,27 @@ CREATE TABLE IF NOT EXISTS clinic_capabilities (
   modality_cryotherapy    INTEGER,
   modality_heat_therapy   INTEGER,
 
+  -- The full equipment checklist, as the V1 dashboard presents it: 43 items in
+  -- 5 categories, { "<item>": true | false | null }.
+  --
+  -- The ten columns above are the ENGINE'S PROJECTION of this, derived on every
+  -- write in v2/clinic-equipment.js, so the two can never disagree. They stay
+  -- as columns because the engine reads them and a column is cheaper and
+  -- clearer to query than a blob.
+  --
+  -- WHY THIS COLUMN EXISTS. Equipment is a property of the practice, and both
+  -- apps ask about it. V1's panel wrote through the patient form context, so it
+  -- landed in `patients.dashboard_data` and EVERY PATIENT CARRIED A PRIVATE
+  -- COPY of the clinic's equipment list — five patients, five partial answers,
+  -- no reason to agree. V2 kept one row per clinic and the engine read that.
+  -- Neither could see the other, so the fuller V1 checklist never reached the
+  -- engine and the engine's answer never reached the V1 screen.
+  --
+  -- This is where the two records become one. Thirty-three of the items gate
+  -- nothing — cavaletti rails, slings, a goniometer — but a practice needs to
+  -- know what it owns, and recording them five times was never the way.
+  equipment_json          TEXT,
+
   updated_by              INTEGER,
   updated_at              DATETIME DEFAULT CURRENT_TIMESTAMP,
   created_at              DATETIME DEFAULT CURRENT_TIMESTAMP,

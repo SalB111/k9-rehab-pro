@@ -25,6 +25,11 @@ CREATE TABLE IF NOT EXISTS v2_clinic_capabilities (
   modality_cryotherapy    INTEGER,
   modality_heat_therapy   INTEGER,
 
+  -- The full 43-item equipment checklist. The ten columns above are the
+  -- engine's projection of it, derived on every write so they cannot disagree.
+  -- See the sqlite mirror of this file for why it exists.
+  equipment_json          TEXT,
+
   updated_by              BIGINT REFERENCES users(id),
   updated_at              TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   created_at              TIMESTAMPTZ NOT NULL DEFAULT NOW()

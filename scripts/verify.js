@@ -70,6 +70,10 @@ const CHECKS = [
   // The test asserts BOTH directions, and asserts the reason still holds.
   { name: 'K9 · feline gate',          cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/feline-gate.test.js'],
     ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
+  // One equipment record for the practice, shared by both apps. The ten engine
+  // booleans are derived from the checklist so they cannot drift apart again.
+  { name: 'K9 · clinic equipment',     cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/clinic-equipment.test.js'],
+    ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
   { name: 'K9 · frontend build',       cwd: path.join(K9, 'k9-rehab-frontend'), cmd: 'npx', args: ['--no-install', 'vite', 'build'],
     ok: (out) => /built in/.test(out) && !/error/i.test(out) },
   { name: 'B.E.A.U. · tests',          cwd: BEAU, cmd: 'npm', args: ['test'],
