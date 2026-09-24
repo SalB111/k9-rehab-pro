@@ -104,7 +104,7 @@ conversation gets summarised. That is why this is written here.
 | client | **MIXED** — real columns, reconciled by `record-sync`; blob still holds the same facts |
 | **home** | **MERGED (V3)** — `patient_home_environment`; blob no longer read |
 | **goals** | **MERGED (V3)** — `patient_goals` + `patient_goal_items`; reviewable, blob no longer read |
-| diagnostics | **BRIDGED, NOT MERGED** — no table; blob is the only source |
+| **diagnostics** | **MERGED (V3)** — `patient_diagnostic_studies`; a study is a row with a date |
 | assessment, conditioning, global, treatment | untouched |
 
 `dashboard_data` still holds the keys for the blocks not yet migrated. The home
