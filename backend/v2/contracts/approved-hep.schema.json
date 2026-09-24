@@ -45,7 +45,7 @@
     },
     "effective_date": {
       "type": "string",
-      "description": "Timestamp of clinician approval \u2014 the moment the recommendation became a prescription."
+      "description": "Timestamp of clinician approval — the moment the recommendation became a prescription."
     },
     "protocol_type": {
       "type": [
@@ -143,7 +143,7 @@
               "array",
               "null"
             ],
-            "description": "What the exercise requires. This is the input B.E.A.U. computes household substitutions against \u2014 substitution must preserve the movement objective, never change the prescription."
+            "description": "What the exercise requires. This is the input B.E.A.U. computes household substitutions against — substitution must preserve the movement objective, never change the prescription."
           },
           "progression": {
             "type": [
@@ -229,7 +229,7 @@
           "_gradeVSupport"
         ]
       },
-      "description": "Which K9 safety gates fired for this patient. B.E.A.U. must NOT re-derive or re-evaluate these \u2014 clinical reasoning stays in K9 \u2014 but needs them to refuse unsafe household substitutions. Example: with _severeOA active, no substitution may reintroduce impact loading."
+      "description": "Which K9 safety gates fired for this patient. B.E.A.U. must NOT re-derive or re-evaluate these — clinical reasoning stays in K9 — but needs them to refuse unsafe household substitutions. Example: with _severeOA active, no substitution may reintroduce impact loading."
     },
     "approval": {
       "type": "object",
@@ -284,10 +284,17 @@
       }
     },
     "home_environment": {
-      "type": ["object", "null"],
+      "type": [
+        "object",
+        "null"
+      ],
       "description": "The home the adaptation permissions are about, read from the clinician's record. Null means nothing has been recorded — which is NOT a record with empty fields, and does not narrow what B.E.A.U. may do. This is context, not a constraint: nothing here gates exercise selection.",
       "additionalProperties": false,
-      "required": ["stated", "normalized", "uninterpreted"],
+      "required": [
+        "stated",
+        "normalized",
+        "uninterpreted"
+      ],
       "properties": {
         "stated": {
           "type": "object",
@@ -302,42 +309,87 @@
           "description": "Fields that were stated but could not be read. Reported rather than dropped, because an unreadable home fact is a gap in the record and must look like one.",
           "items": {
             "type": "object",
-            "required": ["field", "label", "stated"],
+            "required": [
+              "field",
+              "label",
+              "stated"
+            ],
             "additionalProperties": false,
             "properties": {
-              "field": { "type": "string" },
-              "label": { "type": "string" },
-              "stated": { "type": "string" }
+              "field": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "stated": {
+                "type": "string"
+              }
             }
           }
         },
-        "recorded_at": { "type": ["string", "null"] },
-        "recorded_by": { "type": ["string", "number", "null"] }
+        "recorded_at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "recorded_by": {
+          "type": [
+            "string",
+            "number",
+            "null"
+          ]
+        }
       }
     },
     "goals": {
-      "type": ["object", "null"],
-      "description": "What success looks like for this patient, split by who each goal was written for — not withheld from either. Null means no goals recorded, which is NOT a record with empty fields. Context, not constraint: the engine has no patient-goal input and nothing here gates exercise selection. Practice admin, such as the client's communication preference, is deliberately excluded.",
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "What success looks like, split by who each goal was written for — not withheld from either. Each goal carries its horizon, target date and review status, so B.E.A.U. can show an owner what has already been achieved rather than an undifferentiated list. Null means no goals recorded. Context, not constraint: the engine has no patient-goal input. Practice admin, such as the client's communication preference, is deliberately excluded.",
       "additionalProperties": false,
-      "required": ["primary_goals", "owner_facing", "clinical", "uninterpreted"],
+      "required": [
+        "primary_goals",
+        "owner_facing",
+        "clinical",
+        "uninterpreted"
+      ],
       "properties": {
         "primary_goals": {
           "type": "array",
           "description": "The selected rehabilitation goals, in the order the clinician chose them. Each carries the stated label and its code, so nothing downstream matches on the prose.",
           "items": {
             "type": "object",
-            "required": ["stated", "code"],
+            "required": [
+              "stated",
+              "code"
+            ],
             "additionalProperties": false,
             "properties": {
-              "stated": { "type": "string" },
+              "stated": {
+                "type": "string"
+              },
               "code": {
-                "type": ["string", "null"],
+                "type": [
+                  "string",
+                  "null"
+                ],
                 "description": "Null where the label is not in the vocabulary — expected, since 'Other' invites free text. The goal still travels.",
                 "enum": [
-                  "HOUSEHOLD_FUNCTION", "PAIN_MANAGEMENT", "POST_SURGICAL",
-                  "NEURO_AMBULATION", "WEIGHT_MANAGEMENT", "RANGE_OF_MOTION",
-                  "STRENGTH", "SPORT_RETURN", "SENIOR_WELLNESS", "PALLIATIVE",
-                  "OTHER", null
+                  "HOUSEHOLD_FUNCTION",
+                  "PAIN_MANAGEMENT",
+                  "POST_SURGICAL",
+                  "NEURO_AMBULATION",
+                  "WEIGHT_MANAGEMENT",
+                  "RANGE_OF_MOTION",
+                  "STRENGTH",
+                  "SPORT_RETURN",
+                  "SENIOR_WELLNESS",
+                  "PALLIATIVE",
+                  "OTHER",
+                  null
                 ]
               }
             }
@@ -345,28 +397,173 @@
         },
         "owner_facing": {
           "type": "object",
-          "description": "Goals written in what the dog will be able to do, plus the owner's own words and priorities. Addressed to the owner."
+          "additionalProperties": false,
+          "description": "Goals written in what the dog will be able to do, plus the owner's own words and priorities.",
+          "properties": {
+            "owner_priority": {
+              "type": "string"
+            },
+            "owner_expectations": {
+              "type": "string"
+            },
+            "goals": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "goal",
+                  "horizon",
+                  "target_date",
+                  "status",
+                  "overdue"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "goal": {
+                    "type": "string",
+                    "description": "The goal, in the clinician's or owner's own words."
+                  },
+                  "horizon": {
+                    "type": "string",
+                    "enum": [
+                      "SHORT",
+                      "LONG"
+                    ]
+                  },
+                  "target_date": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "Set by a clinician, never parsed from the goal text. Null means nobody has said when — which is not the same as no deadline mattering."
+                  },
+                  "status": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "enum": [
+                      "MET",
+                      "PARTIALLY_MET",
+                      "NOT_MET",
+                      "REVISED",
+                      "DISCONTINUED",
+                      null
+                    ],
+                    "description": "Null means UNREVIEWED — nobody has looked at this goal yet. That is deliberately NOT 'in progress'."
+                  },
+                  "overdue": {
+                    "type": [
+                      "boolean",
+                      "null"
+                    ],
+                    "description": "Derived from target_date and status on read, never stored. Null when there is no target date, which is 'nobody said when' rather than 'on time'."
+                  }
+                }
+              }
+            }
+          }
         },
         "clinical": {
           "type": "object",
-          "description": "Goals written in clinician measures — ROM in degrees, HCPI thresholds, thigh girth, drawer. Carried so the record is whole, but not addressed to the owner as instructions."
+          "additionalProperties": false,
+          "description": "Goals written in clinician measures — ROM in degrees, HCPI thresholds, thigh girth. Carried so the record is whole, but not addressed to the owner as instructions.",
+          "properties": {
+            "goals": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "goal",
+                  "horizon",
+                  "target_date",
+                  "status",
+                  "overdue"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "goal": {
+                    "type": "string",
+                    "description": "The goal, in the clinician's or owner's own words."
+                  },
+                  "horizon": {
+                    "type": "string",
+                    "enum": [
+                      "SHORT",
+                      "LONG"
+                    ]
+                  },
+                  "target_date": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "Set by a clinician, never parsed from the goal text. Null means nobody has said when — which is not the same as no deadline mattering."
+                  },
+                  "status": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "enum": [
+                      "MET",
+                      "PARTIALLY_MET",
+                      "NOT_MET",
+                      "REVISED",
+                      "DISCONTINUED",
+                      null
+                    ],
+                    "description": "Null means UNREVIEWED — nobody has looked at this goal yet. That is deliberately NOT 'in progress'."
+                  },
+                  "overdue": {
+                    "type": [
+                      "boolean",
+                      "null"
+                    ],
+                    "description": "Derived from target_date and status on read, never stored. Null when there is no target date, which is 'nobody said when' rather than 'on time'."
+                  }
+                }
+              }
+            }
+          }
         },
         "uninterpreted": {
           "type": "array",
           "description": "Primary goals whose label is not in the vocabulary. Reported so a consumer does not mistake a free-text goal for one that failed to match a code.",
           "items": {
             "type": "object",
-            "required": ["field", "label", "stated"],
+            "required": [
+              "field",
+              "label",
+              "stated"
+            ],
             "additionalProperties": false,
             "properties": {
-              "field": { "type": "string" },
-              "label": { "type": "string" },
-              "stated": { "type": "string" }
+              "field": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "stated": {
+                "type": "string"
+              }
             }
           }
         },
-        "recorded_at": { "type": ["string", "null"] },
-        "recorded_by": { "type": ["string", "number", "null"] }
+        "recorded_at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "recorded_by": {
+          "type": [
+            "string",
+            "number",
+            "null"
+          ]
+        }
       }
     },
     "beau_permissions": {
@@ -420,7 +617,7 @@
     },
     "clinic_protocol": {
       "type": "array",
-      "description": "Clinic-delivered work the veterinarian has prescribed for the CCRT/CCRP to perform in practice \u2014 Class IV laser, NMES, underwater treadmill. Carried so B.E.A.U. can show the owner what happens at their appointment. It must NEVER be presented as something to attempt at home.",
+      "description": "Clinic-delivered work the veterinarian has prescribed for the CCRT/CCRP to perform in practice — Class IV laser, NMES, underwater treadmill. Carried so B.E.A.U. can show the owner what happens at their appointment. It must NEVER be presented as something to attempt at home.",
       "items": {
         "type": "object",
         "additionalProperties": false,

@@ -38,7 +38,14 @@ function wrap(raw) {
   return {
     get: async (sql, p = []) => raw.prepare(sql).get(...p),
     all: async (sql, p = []) => raw.prepare(sql).all(...p),
-    run: async (sql, p = []) => raw.prepare(sql).run(...p),
+    // Match the PRODUCTION contract, not node:sqlite's raw shape.
+    // db-providers/sqlite-provider.js resolves { lastID, changes }; node:sqlite
+    // returns { lastInsertRowid, changes }. A wrapper that differs makes these
+    // tests prove something production never does.
+    run: async (sql, p = []) => {
+      const r = raw.prepare(sql).run(...p);
+      return { lastID: Number(r.lastInsertRowid), changes: r.changes };
+    },
   };
 }
 

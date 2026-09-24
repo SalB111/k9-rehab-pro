@@ -29,7 +29,7 @@ const authority = require('../authority');
 const intakeProposal = require('../intake-proposal');
 const patientGaps = require('../patient-gaps');
 const patientHomeStore = require('../patient-home-store');
-const goalsModule = require('../goals');
+const patientGoalsStore = require('../patient-goals-store');
 const ownerAuth = require('../owner-auth');
 const { requireRole, requireApprovalAuthority } = require('../middleware/require-role');
 const { route } = require('../http-errors');
@@ -37,10 +37,13 @@ const { route } = require('../http-errors');
 /**
  * The context a handoff carries: the patient's home, and their goals.
  *
- * `home` comes from `patient_home_environment` — V3, its own table, the source
- * of truth. `goals` still comes from `patients.dashboard_data`, because that
- * block has not been migrated yet; when it is, the blob read below goes with
- * it and this function stops touching V1 storage entirely.
+ * BOTH now come from their own V3 tables — `patient_home_environment` and
+ * `patient_goals` / `patient_goal_items`. This function no longer reads
+ * `patients.dashboard_data` at all, which is what "merged, not bridged" means
+ * in practice: there is one store per fact and the blob is not it.
+ *
+ * Goals travel with their review STATUS, so B.E.A.U. can show an owner what
+ * has already been achieved rather than an undifferentiated list.
  *
  * A failure to read this NEVER blocks a handoff. Both are context for
  * B.E.A.U., not gates on the prescription, and refusing to release an approved
@@ -51,7 +54,7 @@ const { route } = require('../http-errors');
 async function readHandoffContext(db, versionId) {
   try {
     const row = await db.get(
-      `SELECT pr.patient_id AS patientId, p.dashboard_data AS blob
+      `SELECT pr.patient_id AS patientId
          FROM protocol_versions v
          JOIN protocols pr ON pr.id = v.protocol_id
          JOIN patients   p  ON p.id  = pr.patient_id
@@ -61,8 +64,7 @@ async function readHandoffContext(db, versionId) {
     if (!row) return { home: null, goals: null };
     return {
       home: await patientHomeStore.toHepPayload(db, row.patientId),
-      // TODO(V3): goals block — move to its own table, then drop `blob`.
-      goals: goalsModule.toPayload(goalsModule.readFromDashboard(row.blob)),
+      goals: await patientGoalsStore.toHepPayload(db, row.patientId),
     };
   } catch (err) {
     console.error(
@@ -174,6 +176,69 @@ function createV2Router(deps) {
       actor: req.user,
     });
     res.json({ success: true, data });
+  }));
+
+  // -------------------------------------------------------------------------
+  // Goals — V3: `patient_goals` + `patient_goal_items` are the source of truth
+  //
+  // Goals are not four boxes of text any more. Each is an ITEM with a horizon,
+  // a kind, an optional target date and a REVIEW STATUS, so a reassessment can
+  // answer "which goals are due, and which has nobody looked at?".
+  //
+  // A target date is set here by a clinician and is never inferred from the
+  // goal's wording; see goals.js for what happened when that was tried.
+  // -------------------------------------------------------------------------
+
+  router.get('/patients/:id/goals', route(async (req, res) => {
+    res.json({ success: true, data: await patientGoalsStore.getGoals(db, Number(req.params.id)) });
+  }));
+
+  router.put('/patients/:id/goals', route(async (req, res) => {
+    const data = await patientGoalsStore.setGoalSet(db, {
+      patientId: Number(req.params.id),
+      set: req.body.set || req.body,
+      actor: req.user,
+    });
+    res.json({ success: true, data });
+  }));
+
+  router.post('/patients/:id/goals/items', route(async (req, res) => {
+    const id = await patientGoalsStore.addGoalItem(db, {
+      patientId: Number(req.params.id),
+      horizon: req.body.horizon,
+      kind: req.body.kind,
+      goalText: req.body.goal_text,
+      targetDate: req.body.target_date,
+      actor: req.user,
+    });
+    res.status(201).json({
+      success: true,
+      data: await patientGoalsStore.getGoals(db, Number(req.params.id)),
+      id,
+    });
+  }));
+
+  router.put('/goals/items/:itemId', route(async (req, res) => {
+    const row = await patientGoalsStore.updateGoalItem(db, {
+      itemId: Number(req.params.itemId),
+      goalText: req.body.goal_text,
+      targetDate: req.body.target_date,
+      actor: req.user,
+    });
+    res.json({ success: true, data: row });
+  }));
+
+  // The workflow action this block was restructured for. `status: null` clears
+  // a review set in error and returns the goal to unreviewed.
+  router.post('/goals/items/:itemId/review', route(async (req, res) => {
+    const row = await patientGoalsStore.reviewGoalItem(db, {
+      itemId: Number(req.params.itemId),
+      status: req.body.status === undefined ? null : req.body.status,
+      note: req.body.note,
+      visitId: req.body.visit_id,
+      actor: req.user,
+    });
+    res.json({ success: true, data: row });
   }));
 
   // -------------------------------------------------------------------------

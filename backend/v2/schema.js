@@ -25,6 +25,7 @@ const SQLITE_SCHEMAS = [
   // V3: the home block's one real home. Before this, the home environment
   // lived only in `patients.dashboard_data`, keyed by UI label.
   'patient-home.sqlite.sql',
+  'patient-goals.sqlite.sql',
 ];
 
 /** Postgres/Supabase equivalents, same order. Kept in parity by tests/schema-parity.test.js. */
@@ -36,6 +37,7 @@ const POSTGRES_SCHEMAS = [
   'clinic-sessions.postgres.sql',
   'home-execution.postgres.sql',
   'patient-home.postgres.sql',
+  'patient-goals.postgres.sql',
 ];
 
 /**

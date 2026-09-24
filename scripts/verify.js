@@ -88,6 +88,11 @@ const CHECKS = [
   // that every question the dashboard panel offers has somewhere to be stored.
   { name: 'K9 · home store (V3)',      cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/patient-home-store.test.js'],
     ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
+  // V3: goals are a rehabilitation workflow, not four boxes of text. Guards
+  // that unreviewed is never "in progress", that a target date is never
+  // inferred from the goal wording, and that overdue is computed not stored.
+  { name: 'K9 · goals store (V3)',     cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/patient-goals-store.test.js'],
+    ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
   // Imaging and labs, in both the shape the dashboard writes today and the
   // legacy one every seeded record is in. Nothing read either before.
   { name: 'K9 · diagnostics',          cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/diagnostics.test.js'],

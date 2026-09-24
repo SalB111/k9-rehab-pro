@@ -2188,108 +2188,214 @@ function HomePanel() {
 }
 
 // ── GOALS ─────────────────────────────────────────────────────────────────────
+/**
+ * GOALS — a rehabilitation workflow, not four boxes of text
+ *
+ * V3. Reads and writes `patient_goals` and `patient_goal_items` through the V2
+ * API. Those tables are the source of truth; `patients.dashboard_data` is no
+ * longer read for this block.
+ *
+ * WHY THIS LOOKS DIFFERENT FROM THE OLD PANEL
+ *
+ * A rehabilitation goal is not a paragraph. It has a horizon, it is a
+ * clinician's measure or something the animal will be able to DO, it has a
+ * target, and it gets REVIEWED at each reassessment. Four free-text boxes can
+ * record what somebody wrote; they cannot answer the question a clinician
+ * actually asks at a recheck — WHICH GOALS ARE DUE, AND WHICH HAS NOBODY
+ * LOOKED AT? That count is at the top of this panel for exactly that reason.
+ *
+ * A target date is set here, by a clinician. It is NEVER read out of the goal's
+ * wording: tried against these records, a "within N units" pattern read "thigh
+ * circumference within 1 cm bilaterally" and "jump grids (12 in)" as deadlines.
+ * Where the text mentions a period and no date is set, the goal is flagged so
+ * somebody can set one — the screen prompts, it never fills it in.
+ *
+ * An unreviewed goal shows as UNREVIEWED, never as "in progress". "In progress"
+ * is an assumption about work nobody recorded.
+ */
 function GoalsPanel() {
+  const { patientId } = useContext(DashFormContext);
+  const apiBase = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+  const [state, setState] = useState({ loading: true, error: null, data: null });
+  const [busy, setBusy] = useState(null);
+  const [draft, setDraft] = useState({ text: "", horizon: "SHORT", kind: "CLINICAL" });
+
+  const authHeaders = () => {
+    const token = localStorage.getItem("token");
+    return { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) };
+  };
+
+  const load = React.useCallback(() => {
+    if (!patientId) { setState(s => ({ ...s, loading: false })); return; }
+    fetch(`${apiBase}/v2/patients/${patientId}/goals`, { headers: authHeaders() })
+      .then(r => r.json())
+      .then(j => setState({ loading: false, error: null, data: j.data || null }))
+      .catch(e => setState(s => ({ ...s, loading: false, error: e.message })));
+  }, [apiBase, patientId]);
+
+  useEffect(load, [load]);
+
+  async function call(url, method, body, key) {
+    setBusy(key);
+    try {
+      const res = await fetch(`${apiBase}${url}`, {
+        method, headers: authHeaders(), body: body ? JSON.stringify(body) : undefined,
+      });
+      const j = await res.json();
+      if (!res.ok || !j.success) throw new Error(j.error || `HTTP ${res.status}`);
+      setState(s => ({ ...s, error: null }));
+      load();
+    } catch (e) {
+      setState(s => ({ ...s, error: e.message }));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  if (!patientId) {
+    return <div style={{ fontSize:12, color:C.muted, padding:14 }}>Select a patient to record their goals.</div>;
+  }
+  if (state.loading) return <div style={{ fontSize:12, color:C.muted, padding:14 }}>Loading goals…</div>;
+  const d = state.data;
+  if (!d) return <div style={{ fontSize:12, color:C.red, padding:14 }}>{state.error || "No goal record."}</div>;
+
+  const { review, vocabulary } = d;
+  const chip = (label, n, colour) => (
+    <span style={{ padding:"3px 9px", borderRadius:11, background:colour + "1a", color:colour,
+      border:`1px solid ${colour}44`, fontSize:10, fontWeight:700, marginRight:6 }}>{n} {label}</span>
+  );
+
+  const goalRow = (g) => (
+    <div key={g.id} style={{ padding:"10px 12px", border:`1px solid ${C.border}`, borderRadius:6,
+      marginBottom:8, background: g.overdue ? C.redLt : C.white,
+      borderLeft: `3px solid ${g.status === 'MET' ? C.green : g.overdue ? C.red : g.reviewed ? C.blue : C.amber}` }}>
+      <div style={{ fontSize:12, color:C.text, lineHeight:1.5, marginBottom:8 }}>{g.goal_text}</div>
+      <div style={{ display:"flex", flexWrap:"wrap", gap:8, alignItems:"center", fontSize:10 }}>
+        <span style={{ color:C.muted, fontWeight:700 }}>{g.horizon} · {g.kind}</span>
+
+        <select value={g.status || ""} disabled={busy === g.id}
+          onChange={e => call(`/v2/goals/items/${g.id}/review`, "POST",
+            { status: e.target.value || null }, g.id)}
+          style={{ padding:"4px 6px", border:`1px solid ${C.border}`, borderRadius:4, fontSize:10 }}>
+          <option value="">Unreviewed</option>
+          {vocabulary.statuses.map(s => <option key={s} value={s}>{s.replace(/_/g, " ")}</option>)}
+        </select>
+
+        <label style={{ color:C.muted }}>
+          target{" "}
+          <input type="date" value={g.target_date || ""} disabled={busy === g.id}
+            onChange={e => call(`/v2/goals/items/${g.id}`, "PUT", { target_date: e.target.value }, g.id)}
+            style={{ padding:"3px 5px", border:`1px solid ${C.border}`, borderRadius:4, fontSize:10 }}/>
+        </label>
+
+        {g.overdue === true && <span style={{ color:C.red, fontWeight:700 }}>OVERDUE</span>}
+        {!g.reviewed && <span style={{ color:C.amber, fontWeight:700 }}>NOT REVIEWED</span>}
+        {g.mentions_timeframe_without_target && (
+          <span style={{ color:C.muted, fontStyle:"italic" }}>
+            mentions a period — set a target date
+          </span>
+        )}
+      </div>
+      {g.status_note && <div style={{ fontSize:10, color:C.muted, marginTop:6 }}>{g.status_note}</div>}
+    </div>
+  );
+
   return <>
-    <Sec title="Rehabilitation Goals" color="#EC4899" colorLt="#FDF2F8" noTop>
-      <MultiF label="Primary Rehabilitation Goals" options={["Return to normal household activity","Pain management — improve quality of life","Post-surgical recovery — full function","Neurological rehabilitation — ambulation","Weight management — target BCS 5","Improve joint range of motion","Improve muscle mass / strength","Return to sport or working function","Senior wellness / mobility maintenance","Palliative care — comfort focused","Other"]}/>
+    <div style={{ marginBottom:16, padding:"10px 14px", background:C.blueLt, borderRadius:6,
+      border:`1px solid ${C.blue}33` }}>
+      <div style={{ fontSize:11, color:C.muted, marginBottom:8 }}>
+        Goals are reviewed at each reassessment. A goal nobody has looked at shows as
+        <strong> unreviewed</strong> — never as &ldquo;in progress&rdquo;.
+      </div>
+      <div>
+        {chip("goals", review.total, C.blue)}
+        {review.unreviewed > 0 && chip("unreviewed", review.unreviewed, C.amber)}
+        {review.overdue > 0 && chip("overdue", review.overdue, C.red)}
+        {review.met > 0 && chip("met", review.met, C.green)}
+        {review.needs_a_target_date > 0 && chip("need a target date", review.needs_a_target_date, C.muted)}
+      </div>
+    </div>
+
+    {state.error && (
+      <div style={{ fontSize:11, color:C.red, marginBottom:12, padding:"8px 12px", background:C.redLt, borderRadius:5 }}>
+        {state.error}
+      </div>
+    )}
+
+    {["SHORT", "LONG"].map(h => {
+      const items = d.items.filter(i => i.horizon === h);
+      if (!items.length) return null;
+      return (
+        <Sec key={h} title={h === "SHORT" ? "Short-Term Goals" : "Long-Term Goals"}
+          color={C.blue} colorLt={C.blueLt} noTop={h === "SHORT"}>
+          {items.map(goalRow)}
+        </Sec>
+      );
+    })}
+
+    <Sec title="Add a Goal" color={C.teal} colorLt={C.tealLt}>
+      <div style={{ display:"flex", flexWrap:"wrap", gap:8, alignItems:"flex-end" }}>
+        <div style={{ flex:"2 1 280px" }}>
+          <Lbl>Goal</Lbl>
+          <textarea rows={2} value={draft.text}
+            onChange={e => setDraft(x => ({ ...x, text: e.target.value }))}
+            placeholder="e.g. Tolerate a 20-minute leash walk without stopping"
+            style={{ width:"100%", padding:"8px 10px", border:`1px solid ${C.border}`, borderRadius:5, fontSize:12, fontFamily:"inherit" }}/>
+        </div>
+        <div style={{ flex:"1 1 120px" }}>
+          <Lbl>Horizon</Lbl>
+          <select value={draft.horizon} onChange={e => setDraft(x => ({ ...x, horizon: e.target.value }))}
+            style={{ width:"100%", padding:"8px 10px", border:`1px solid ${C.border}`, borderRadius:5, fontSize:12 }}>
+            {vocabulary.horizons.map(o => <option key={o} value={o}>{o}</option>)}
+          </select>
+        </div>
+        <div style={{ flex:"1 1 140px" }}>
+          <Lbl>Kind</Lbl>
+          <select value={draft.kind} onChange={e => setDraft(x => ({ ...x, kind: e.target.value }))}
+            style={{ width:"100%", padding:"8px 10px", border:`1px solid ${C.border}`, borderRadius:5, fontSize:12 }}>
+            {vocabulary.kinds.map(o => <option key={o} value={o}>{o}</option>)}
+          </select>
+        </div>
+        <button disabled={!draft.text.trim() || busy === "add"}
+          onClick={() => call(`/v2/patients/${patientId}/goals/items`, "POST",
+            { goal_text: draft.text, horizon: draft.horizon, kind: draft.kind }, "add")
+            .then(() => setDraft(x => ({ ...x, text: "" })))}
+          style={{ padding:"9px 16px", background:C.blue, color:C.white, border:"none",
+            borderRadius:5, fontSize:11, fontWeight:700, cursor:"pointer",
+            opacity: draft.text.trim() ? 1 : 0.5 }}>
+          Add goal
+        </button>
+      </div>
     </Sec>
 
-    <Sec title="Short-Term Goals" color="#EC4899" colorLt="#FDF2F8">
-      <F label="Short-Term Clinical Goals" placeholder="e.g. Achieve partial weight bearing by week 2, pain score ≤3/10 at rest, full ROM within 10° of normal…" rows={3}/>
-      <F label="Short-Term Functional Goals" placeholder="e.g. Able to navigate 3 steps independently, complete 10-minute leash walk…" rows={2}/>
+    <Sec title="Goal Set" color={C.blue} colorLt={C.blueLt}>
+      <div style={{ fontSize:11, color:C.muted, marginBottom:10 }}>
+        The patient&rsquo;s standing aims and the owner&rsquo;s priorities. These are not
+        reviewed individually — the goals above are.
+      </div>
+      {d.primary_goals.length > 0 && (
+        <div style={{ marginBottom:10 }}>
+          {d.primary_goals.map((g, i) => (
+            <span key={i} style={{ display:"inline-block", padding:"3px 9px", marginRight:6, marginBottom:5,
+              borderRadius:11, background:C.blueLt, color:C.blue, fontSize:10, fontWeight:700,
+              border:`1px solid ${C.blue}33` }}>
+              {g.stated}
+            </span>
+          ))}
+        </div>
+      )}
+      {vocabulary.setFields.filter(f => !f.multi).map(f => (
+        <div key={f.key} style={{ marginBottom:10 }}>
+          <Lbl>{f.label}</Lbl>
+          <textarea rows={2} defaultValue={d.set[f.key] || ""}
+            onBlur={e => e.target.value !== (d.set[f.key] || "")
+              && call(`/v2/patients/${patientId}/goals`, "PUT", { set: { [f.key]: e.target.value } }, f.key)}
+            style={{ width:"100%", padding:"8px 10px", border:`1px solid ${C.border}`, borderRadius:5, fontSize:12, fontFamily:"inherit" }}/>
+        </div>
+      ))}
     </Sec>
-
-    <Sec title="Long-Term Goals" color="#EC4899" colorLt="#FDF2F8">
-      <F label="Long-Term Clinical Goals" placeholder="e.g. Full weight bearing, thigh circumference within 1cm bilaterally, full stifle ROM restored…" rows={3}/>
-      <F label="Long-Term Functional Goals" placeholder="e.g. Return to offleash play, stair climbing without assistance, sport-specific movement…" rows={2}/>
-    </Sec>
-
-    <Sec title="Owner Goals" color="#EC4899" colorLt="#FDF2F8" collapsible defaultOpen={false}>
-      <F label="Owner's Primary Goal (in their own words)" placeholder="What does the owner most want for their pet?…" rows={2}/>
-      <Row>
-        <F label="Owner Priority" options={["Pain relief above all","Fastest possible recovery","Independence at home","Return to sport / activity","Quality of life / comfort","Maximize lifespan"]}/>
-        <F label="Client Communication Preference" options={["Email — protocol PDF","Text — exercise reminders","Phone call follow-up","In-person recheck only","Patient portal / app"]}/>
-      </Row>
-    </Sec>
-    {/* Progress Tracking Schedule moved to Block 10 — Protocol Summary */}
     <ClinicalNotes/>
   </>;
-}
-
-// ── CONDITIONING ──────────────────────────────────────────────────────────────
-// NOTE: B.E.A.U. calls are routed through the backend /api/beau/chat endpoint
-// (never the Anthropic API directly — API keys must stay server-side).
-// callBeau — POSTs to /api/beau/chat and processes the SSE stream.
-// If `onDelta(textChunk, accumulatedText)` is provided, the callback fires
-// for every delta token as it arrives — enables streaming TTS playback that
-// starts within ~1s instead of waiting for the full response.
-// Always returns the full accumulated text when the stream ends.
-async function callBeau(systemPrompt, userMessage, language, onDelta) {
-  const token = localStorage.getItem("token");
-  const apiBase = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
-  const res = await fetch(`${apiBase}/beau/chat`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    body: JSON.stringify({
-      system: systemPrompt,
-      messages: [{ role: "user", content: userMessage }],
-      language: language || "en",
-    }),
-  });
-  if (!res.ok) {
-    if (res.status === 401) {
-      localStorage.removeItem("token");
-      throw new Error("Your session has expired. Please log in again to continue using B.E.A.U.");
-    }
-    throw new Error(`B.E.A.U. API ${res.status}`);
-  }
-
-  // True SSE streaming via ReadableStream reader
-  const reader = res.body?.getReader();
-  if (!reader) {
-    // Browser doesn't support streaming reader — fall back to one-shot text
-    const raw = await res.text();
-    let result = "";
-    for (const line of raw.split("\n")) {
-      if (!line.startsWith("data: ")) continue;
-      try {
-        const parsed = JSON.parse(line.slice(6));
-        if (parsed.type === "delta" && parsed.text) {
-          result += parsed.text;
-          if (onDelta) onDelta(parsed.text, result);
-        }
-      } catch { /* skip */ }
-    }
-    return result || "No response.";
-  }
-
-  const decoder = new TextDecoder();
-  let buffer = "";
-  let result = "";
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-    // SSE lines are separated by \n\n; process each complete event then
-    // keep the trailing partial in the buffer for the next chunk.
-    let nlIdx;
-    while ((nlIdx = buffer.indexOf("\n")) !== -1) {
-      const line = buffer.slice(0, nlIdx);
-      buffer = buffer.slice(nlIdx + 1);
-      if (!line.startsWith("data: ")) continue;
-      try {
-        const parsed = JSON.parse(line.slice(6));
-        if (parsed.type === "delta" && parsed.text) {
-          result += parsed.text;
-          if (onDelta) onDelta(parsed.text, result);
-        }
-      } catch { /* skip non-JSON keep-alive lines */ }
-    }
-  }
-  return result || "No response.";
 }
 
 // Sentence-streaming helper — given an accumulated text string and an index

@@ -24,7 +24,7 @@ const path = require('path');
 const { DatabaseSync } = require('node:sqlite');
 const protocolStore = require('./protocol-store');
 const patientHomeStore = require('./patient-home-store');
-const goalsModule = require('./goals');
+const patientGoalsStore = require('./patient-goals-store');
 const schema = require('./contracts/approved-hep.schema.json');
 
 let passed = 0;
@@ -98,7 +98,7 @@ async function buildRealPayload() {
   const home = protocol.patient_id
     ? await patientHomeStore.toHepPayload(db, protocol.patient_id)
     : null;
-  const goals = goalsModule.toPayload(goalsModule.readFromDashboard(blob));
+  const goals = protocol.patient_id ? await patientGoalsStore.toHepPayload(db, protocol.patient_id) : null;
 
   return protocolStore.buildHepPayload(protocol, { ...full, approval }, { home, goals });
 }
@@ -147,16 +147,22 @@ async function buildRealPayload() {
 
   await test('goals reach the payload for a patient whose goals are recorded', async () => {
     const patient = raw.prepare(
-      `SELECT id, name, dashboard_data FROM patients
-        WHERE dashboard_data LIKE '%goals::Primary Rehabilitation Goals%' ORDER BY id LIMIT 1`
+      `SELECT p.id, p.name FROM patients p
+         JOIN patient_goals g ON g.patient_id = p.id
+        ORDER BY p.id LIMIT 1`
     ).get();
     assert.ok(patient, 'no patient with recorded goals to test against');
 
-    const payload = goalsModule.toPayload(goalsModule.readFromDashboard(patient.dashboard_data));
-    assert.ok(payload, `${patient.name}: goals recorded in V1 but toPayload returned null`);
+    const payload = await patientGoalsStore.toHepPayload(db, patient.id);
+    assert.ok(payload, `${patient.name}: a goals row exists but toHepPayload returned null`);
     assert.ok(payload.primary_goals.length > 0, `${patient.name}: no primary goal reached the payload`);
     assert.ok(payload.primary_goals.every((g) => g.code),
       `${patient.name}: a real goal reached the payload without a code`);
+    // V3: goals travel as reviewable items, not prose.
+    const all = [...payload.owner_facing.goals, ...payload.clinical.goals];
+    assert.ok(all.length > 0, `${patient.name}: no goal ITEMS reached the payload`);
+    assert.ok(all.every((g) => "status" in g && "target_date" in g && "overdue" in g),
+      "every goal must carry its review state");
   });
 
   await test('a context block omitted by the caller is null, never undefined', async () => {

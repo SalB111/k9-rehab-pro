@@ -60,6 +60,96 @@ const PRIMARY_GOAL_CODES = {
 /** V1 stores a multi-select as one string joined by a double pipe. */
 const MULTI_DELIMITER = '||';
 
+// ---------------------------------------------------------------------------
+// V3 — goals as a rehabilitation workflow, not four boxes of text
+//
+// A rehabilitation goal is not a paragraph. It has a HORIZON, it is either a
+// clinician's measure or something the animal will be able to DO, it has a
+// target, and it gets REVIEWED — met, partly met, not met, or revised — at
+// each reassessment. A goal nobody has looked at since it was written is the
+// thing a real workflow has to surface, and four free-text fields cannot.
+// ---------------------------------------------------------------------------
+
+const HORIZON = { SHORT: 'SHORT', LONG: 'LONG' };
+
+/**
+ * Who the goal is written for and in what terms.
+ *
+ * The same split the HEP payload already makes: CLINICAL is degrees of ROM and
+ * HCPI thresholds, FUNCTIONAL is what the dog will be able to do, OWNER is the
+ * owner's own words.
+ */
+const GOAL_KIND = { CLINICAL: 'CLINICAL', FUNCTIONAL: 'FUNCTIONAL', OWNER: 'OWNER' };
+
+/**
+ * Review outcomes.
+ *
+ * `null` is NOT in this list, deliberately, and it is the default: a goal that
+ * has never been reviewed is UNREVIEWED, which is not the same as "in
+ * progress". "In progress" is an assumption about work nobody has recorded,
+ * and assuming it is how a goal quietly stops being looked at. The whole point
+ * of tracking goals is that an unreviewed one shows up as unreviewed.
+ */
+const GOAL_STATUS = {
+  MET: 'MET',
+  PARTIALLY_MET: 'PARTIALLY_MET',
+  NOT_MET: 'NOT_MET',
+  REVISED: 'REVISED',
+  DISCONTINUED: 'DISCONTINUED',
+};
+
+const GOAL_STATUSES = Object.keys(GOAL_STATUS);
+
+/** A goal is still open — it needs review — unless it is one of these. */
+const CLOSED_STATUSES = new Set([GOAL_STATUS.MET, GOAL_STATUS.DISCONTINUED]);
+
+/**
+ * Is this goal overdue?
+ *
+ * Computed, never stored: a stored flag is wrong the day after it is written.
+ * Overdue means a target date has passed and the goal is not closed — an
+ * UNREVIEWED goal past its date is the most overdue thing there is, so a null
+ * status counts.
+ *
+ * Returns null when there is no target date. That is not "on time"; it is
+ * "nobody said when", and a caller that treats it as fine is making the same
+ * mistake as one that reads an unstated capability as absent.
+ */
+function isOverdue(targetDate, status, asOf) {
+  if (!targetDate) return null;
+  const target = new Date(`${String(targetDate).slice(0, 10)}T00:00:00Z`);
+  if (Number.isNaN(target.getTime())) return null;
+  const now = asOf ? new Date(asOf) : new Date();
+  if (Number.isNaN(now.getTime())) return null;
+  if (CLOSED_STATUSES.has(status)) return false;
+  return target.getTime() < now.getTime();
+}
+
+/**
+ * TARGET DATES ARE NEVER PARSED OUT OF THE GOAL TEXT.
+ *
+ * The clinician sets the date. Reading it from the prose looked reasonable
+ * until it was tried against the real records: a regex for "within N units"
+ * matched "thigh circumference within 1 cm bilaterally" and "jump grids
+ * (12 in)" — a tolerance and a jump height — as if they were a fortnight and
+ * twelve months. Two false positives in six matches, on five patients.
+ *
+ * A fabricated deadline on a medical record is worse than no deadline, so this
+ * function only REPORTS that the text appears to mention a timeframe, for the
+ * screen to prompt with. It never returns a date.
+ */
+function mentionsTimeframe(text) {
+  if (!text) return false;
+  const t = String(text);
+  return (
+    // "within 2 weeks", "by 4 weeks", "in 4 weeks"
+    /\b(within|by|in)\s+\d+\s*(day|week|month|year)s?\b/i.test(t)
+    // "(6 months)" — a bare parenthetical period. The UNIT is required, which
+    // is what keeps "jump grids (12 in)" out: inches are not a duration.
+    || /\(\s*\d+\s*(day|week|month|year)s?\s*\)/i.test(t)
+  );
+}
+
 const OWNER = 'owner';
 const CLINICAL = 'clinical';
 const ADMIN = 'admin';
@@ -78,6 +168,7 @@ const FIELDS = [
   },
   {
     key: 'short_term_functional',
+    item: { horizon: HORIZON.SHORT, kind: GOAL_KIND.FUNCTIONAL },
     label: 'Short-term functional goals',
     keys: ['goals::Short-Term Functional Goals'],
     // Written in what the dog will be able to DO. The owner is the one who
@@ -86,12 +177,17 @@ const FIELDS = [
   },
   {
     key: 'long_term_functional',
+    item: { horizon: HORIZON.LONG, kind: GOAL_KIND.FUNCTIONAL },
     label: 'Long-term functional goals',
     keys: ['goals::Long-Term Functional Goals'],
     audience: OWNER,
   },
   {
     key: 'owner_primary_goal',
+    // The owner's own words are a goal to work toward, not a note. "want him
+    // back to normal he used to run extremely fast" is the thing the programme
+    // is for, and it belongs where it can be reviewed.
+    item: { horizon: HORIZON.LONG, kind: GOAL_KIND.OWNER },
     label: "Owner's primary goal, in their own words",
     keys: ["goals::Owner's Primary Goal (in their own words)"],
     audience: OWNER,
@@ -110,12 +206,16 @@ const FIELDS = [
   },
   {
     key: 'quality_of_life',
+    // Written by a clinician but expressed in what the animal can do — rise
+    // unassisted, move comfortably — so it tracks like a functional goal.
+    item: { horizon: HORIZON.LONG, kind: GOAL_KIND.FUNCTIONAL },
     label: 'Quality of life goal',
     keys: ['goals::Quality of Life Goal'],
     audience: OWNER,
   },
   {
     key: 'short_term_clinical',
+    item: { horizon: HORIZON.SHORT, kind: GOAL_KIND.CLINICAL },
     label: 'Short-term clinical goals',
     keys: ['goals::Short-Term Clinical Goals'],
     // Degrees of ROM, HCPI thresholds, thigh girth, drawer. Clinician
@@ -125,6 +225,7 @@ const FIELDS = [
   },
   {
     key: 'long_term_clinical',
+    item: { horizon: HORIZON.LONG, kind: GOAL_KIND.CLINICAL },
     label: 'Long-term clinical goals',
     keys: ['goals::Long-Term Clinical Goals'],
     audience: CLINICAL,
@@ -253,6 +354,13 @@ function toPayload(stated, meta = {}) {
 
 module.exports = {
   FIELDS,
+  HORIZON,
+  GOAL_KIND,
+  GOAL_STATUS,
+  GOAL_STATUSES,
+  CLOSED_STATUSES,
+  isOverdue,
+  mentionsTimeframe,
   FIELD_KEYS,
   BY_KEY,
   V1_KEYS,

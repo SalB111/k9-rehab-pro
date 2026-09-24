@@ -25,11 +25,16 @@ function test(name, fn) {
 const UI_PATH = path.join(__dirname, '..', '..', 'k9-rehab-frontend', 'src', 'pages', 'DashboardView.jsx');
 const DB_PATH = path.join(__dirname, '..', 'k9rehab.db');
 
+/**
+ * The goal vocabulary, from the MODULE.
+ *
+ * Before V3 this was parsed out of DashboardView.jsx, because that was where
+ * the list lived and the risk was this module falling behind the screen. In V3
+ * the module OWNS the vocabulary and the API serves it to the screen, so the
+ * screen has no list to fall behind — and parsing the JSX now finds nothing.
+ */
 function primaryGoalOptionsFromUI() {
-  const src = fs.readFileSync(UI_PATH, 'utf8');
-  const m = src.match(/<MultiF\s+label="Primary Rehabilitation Goals"\s+options=\{\[([^\]]*)\]\}/);
-  assert.ok(m, 'could not find the Primary Rehabilitation Goals options in the dashboard JSX');
-  return m[1].split(',').map((s) => s.trim().replace(/^"|"$/g, '')).filter(Boolean);
+  return Object.keys(goals.PRIMARY_GOAL_CODES);
 }
 
 console.log('\ngoals\n');
@@ -43,14 +48,16 @@ test('every goal the UI offers has a code', () => {
   assert.deepStrictEqual(uncoded, [], `UI options with no code:\n      ${uncoded.join('\n      ')}`);
 });
 
-test('no code exists for a label the UI no longer offers', () => {
-  // An orphan code is a label that was renamed in the UI. Stored values under
-  // the old label still need the code, but a NEW selection never produces it —
-  // so an orphan is a signal to check for stranded data, not dead weight.
-  const options = new Set(primaryGoalOptionsFromUI());
-  const orphans = Object.keys(goals.PRIMARY_GOAL_CODES).filter((k) => !options.has(k));
-  assert.deepStrictEqual(orphans, [],
-    `codes with no matching UI option — was a label renamed?\n      ${orphans.join('\n      ')}`);
+test('every goal label has a DISTINCT code', () => {
+  // Before V3 this checked for a code whose label the UI had dropped. The
+  // module is now the only place either lives, so that comparison would be
+  // against itself. What still matters is that two labels never share a
+  // code — a collision would silently merge two different goals.
+  const entries = Object.entries(goals.PRIMARY_GOAL_CODES);
+  assert.ok(entries.length >= 10, `only ${entries.length} goals in the vocabulary`);
+  const codes = entries.map(([, c]) => c);
+  assert.strictEqual(new Set(codes).size, codes.length,
+    'two labels share a code, so two different goals would be indistinguishable');
 });
 
 test('a label is matched exactly, never by prefix or substring', () => {
