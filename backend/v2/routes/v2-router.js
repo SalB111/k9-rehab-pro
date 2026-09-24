@@ -28,43 +28,45 @@ const adapter = require('../engine-adapter');
 const authority = require('../authority');
 const intakeProposal = require('../intake-proposal');
 const patientGaps = require('../patient-gaps');
-const homeEnvironment = require('../home-environment');
+const patientHomeStore = require('../patient-home-store');
 const goalsModule = require('../goals');
 const ownerAuth = require('../owner-auth');
 const { requireRole, requireApprovalAuthority } = require('../middleware/require-role');
 const { route } = require('../http-errors');
 
 /**
- * The V1-sourced context for a handoff: the patient's home, and their goals.
+ * The context a handoff carries: the patient's home, and their goals.
  *
- * Both live in the same `patients.dashboard_data` blob, so they are read in
- * one query and interpreted once, here — the clinical vocabularies are never
- * string-matched again further downstream.
+ * `home` comes from `patient_home_environment` — V3, its own table, the source
+ * of truth. `goals` still comes from `patients.dashboard_data`, because that
+ * block has not been migrated yet; when it is, the blob read below goes with
+ * it and this function stops touching V1 storage entirely.
  *
  * A failure to read this NEVER blocks a handoff. Both are context for
  * B.E.A.U., not gates on the prescription, and refusing to release an approved
- * protocol because a home field could not be parsed would withhold treatment
+ * protocol because a home field could not be read would withhold treatment
  * over a missing convenience. The failure is logged loudly rather than
  * swallowed, because an unreadable record still needs someone to see it.
  */
 async function readHandoffContext(db, versionId) {
   try {
     const row = await db.get(
-      `SELECT p.dashboard_data AS blob
+      `SELECT pr.patient_id AS patientId, p.dashboard_data AS blob
          FROM protocol_versions v
          JOIN protocols pr ON pr.id = v.protocol_id
          JOIN patients   p  ON p.id  = pr.patient_id
         WHERE v.id = ?`,
       [versionId]
     );
-    const blob = row && row.blob;
+    if (!row) return { home: null, goals: null };
     return {
-      home: homeEnvironment.toPayload(homeEnvironment.readFromDashboard(blob)),
-      goals: goalsModule.toPayload(goalsModule.readFromDashboard(blob)),
+      home: await patientHomeStore.toHepPayload(db, row.patientId),
+      // TODO(V3): goals block — move to its own table, then drop `blob`.
+      goals: goalsModule.toPayload(goalsModule.readFromDashboard(row.blob)),
     };
   } catch (err) {
     console.error(
-      `[v2-router] could not read the V1 record for version ${versionId}: ${err.message}. ` +
+      `[v2-router] could not read the handoff context for version ${versionId}: ${err.message}. ` +
       `Handing off WITHOUT the home environment or the goals — B.E.A.U. will adapt ` +
       `execution knowing neither the home nor what the owner is working toward.`
     );
@@ -145,6 +147,33 @@ function createV2Router(deps) {
         },
       },
     });
+  }));
+
+  // -------------------------------------------------------------------------
+  // Home environment — V3: this table is the source of truth for the block
+  //
+  // Both screens read and write these rows. Before V3 the home lived only in
+  // `patients.dashboard_data`, keyed by the UI's field labels, so renaming a
+  // label stranded the data and nothing could query it.
+  //
+  // `fieldShape` is served rather than held in the screen, for the same reason
+  // the equipment checklist is: one definition, so the form and the normalisers
+  // can never end up reading different vocabularies.
+  // -------------------------------------------------------------------------
+
+  router.get('/patients/:id/home', route(async (req, res) => {
+    res.json({ success: true, data: await patientHomeStore.getHome(db, Number(req.params.id)) });
+  }));
+
+  router.put('/patients/:id/home', route(async (req, res) => {
+    const data = await patientHomeStore.setHome(db, {
+      patientId: Number(req.params.id),
+      // Only what is named changes. The form saves one answer at a time and a
+      // payload carrying one key must not blank the other sixteen.
+      stated: req.body.stated || req.body,
+      actor: req.user,
+    });
+    res.json({ success: true, data });
   }));
 
   // -------------------------------------------------------------------------

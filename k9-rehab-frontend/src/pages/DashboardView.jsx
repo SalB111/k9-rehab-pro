@@ -2023,72 +2023,166 @@ function EquipmentPanel() {
   </>;
 }
 
-// ── HOME EXERCISE PROGRAM ─────────────────────────────────────────────────────
+// ── HOME PROGRAM ──────────────────────────────────────────────────────────────
+/**
+ * HOME PROGRAM — this patient's home environment
+ *
+ * V3. Reads and writes `patient_home_environment` through the V2 API. That
+ * table is the source of truth for the block; `patients.dashboard_data` is no
+ * longer read for it by anything except the one-time migration.
+ *
+ * Until 24 Sep 2026 every answer here landed in that blob, keyed by the field's
+ * LABEL — so renaming a label stranded the data, nothing could query it, and
+ * the same fact living in two places is why `record-sync` had to exist.
+ *
+ * TWO DEFECTS THIS ALSO FIXES
+ *
+ *   1. "Exercise Location" was React state initialised to "". It gated both
+ *      environment sections and was never loaded or saved, so a patient with a
+ *      recorded home opened to an EMPTY panel until somebody re-picked a
+ *      location — and the answer itself was never part of the record.
+ *   2. Four fields this panel offered — outdoor surface, steps, safety and
+ *      items — had nowhere to be stored at all.
+ *
+ * The questions, their options and their grouping are SERVED by the API rather
+ * than held here, so the form and the normalisers cannot drift into reading
+ * different vocabularies.
+ */
 function HomePanel() {
-  const [location, setLocation] = useState("");
+  const { patientId } = useContext(DashFormContext);
+  const apiBase = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+  const [state, setState] = useState({ loading: true, error: null, sections: [], fields: [], stated: {} });
+  const [saving, setSaving] = useState(null);
+  const [draft, setDraft] = useState({});
+
+  const authHeaders = () => {
+    const token = localStorage.getItem("token");
+    return { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) };
+  };
+
+  useEffect(() => {
+    if (!patientId) { setState(s => ({ ...s, loading: false })); return; }
+    let live = true;
+    fetch(`${apiBase}/v2/patients/${patientId}/home`, { headers: authHeaders() })
+      .then(r => r.json())
+      .then(j => {
+        if (!live) return;
+        const d = j.data || {};
+        setState({
+          loading: false, error: null,
+          sections: d.sections || [], fields: d.fieldShape || [], stated: d.stated || {},
+        });
+        setDraft({});
+      })
+      .catch(e => live && setState(s => ({ ...s, loading: false, error: e.message })));
+    return () => { live = false; };
+  }, [apiBase, patientId]);
+
+  // Optimistic, because a form that lags feels broken — but the server's answer
+  // is what is kept, and a failure puts the old value back.
+  async function save(key, value) {
+    const before = state.stated[key];
+    setState(s => ({ ...s, stated: { ...s.stated, [key]: value } }));
+    setSaving(key);
+    try {
+      const res = await fetch(`${apiBase}/v2/patients/${patientId}/home`, {
+        method: "PUT",
+        headers: authHeaders(),
+        // ONE key. The store changes only what it is given, so a single answer
+        // cannot blank the other sixteen.
+        body: JSON.stringify({ stated: { [key]: value } }),
+      });
+      const j = await res.json();
+      if (!res.ok || !j.success) throw new Error(j.error || `HTTP ${res.status}`);
+      setState(s => ({ ...s, stated: j.data.stated || s.stated, error: null }));
+      setDraft(d => { const n = { ...d }; delete n[key]; return n; });
+    } catch (e) {
+      setState(s => {
+        const stated = { ...s.stated };
+        if (before === undefined) delete stated[key]; else stated[key] = before;
+        return { ...s, stated, error: e.message };
+      });
+    } finally {
+      setSaving(null);
+    }
+  }
+
+  if (!patientId) {
+    return <div style={{ fontSize:12, color:C.muted, padding:14 }}>
+      Select a patient to record their home environment.
+    </div>;
+  }
+  if (state.loading) return <div style={{ fontSize:12, color:C.muted, padding:14 }}>Loading the home record…</div>;
+
+  const byKey = Object.fromEntries(state.fields.map(f => [f.key, f]));
+  const stored = state.stated.exercise_location || "";
+  // Match the stored phrase to the served gate codes the same way the module
+  // does, rather than comparing prose to prose.
+  const locationCode = /both/i.test(stored) ? "BOTH"
+    : /indoor/i.test(stored) ? "INDOOR"
+    : /outdoor/i.test(stored) ? "OUTDOOR" : null;
+
+  const answered = Object.keys(state.stated).length;
+
+  const renderField = (key) => {
+    const f = byKey[key];
+    if (!f) return null;
+    const busy = saving === key;
+    const value = draft[key] !== undefined ? draft[key] : (state.stated[key] ?? "");
+    return (
+      <div key={key} style={{ flex:"1 1 220px", minWidth:200, opacity: busy ? 0.6 : 1 }}>
+        <Lbl>{f.label}</Lbl>
+        {f.freeText ? (
+          <textarea
+            rows={2} value={value} disabled={busy}
+            onChange={e => setDraft(d => ({ ...d, [key]: e.target.value }))}
+            onBlur={e => { if (e.target.value !== (state.stated[key] ?? "")) save(key, e.target.value); }}
+            style={{ width:"100%", padding:"8px 10px", border:`1px solid ${C.border}`, borderRadius:5, fontSize:12, fontFamily:"inherit" }}
+          />
+        ) : (
+          <select
+            value={value} disabled={busy}
+            onChange={e => save(key, e.target.value)}
+            style={{ width:"100%", padding:"8px 10px", border:`1px solid ${C.border}`, borderRadius:5, fontSize:12, background:C.white }}
+          >
+            <option value="">—</option>
+            {(f.options || []).map(o => <option key={o} value={o}>{o}</option>)}
+          </select>
+        )}
+      </div>
+    );
+  };
+
   return <>
-    <Sec title="Exercise Location" color={C.blue} colorLt={C.blueLt} noTop>
-      <div style={{ fontSize:11, color:C.muted, marginBottom:12 }}>
-        Where will the home exercises be performed? This determines what equipment and surfaces B.E.A.U. can include in the program.
-      </div>
-      <div style={{ display:"flex", gap:10, marginBottom:16 }}>
-        {["Indoor Only","Outdoor Only","Both Indoor & Outdoor"].map(l=>(
-          <button key={l} onClick={()=>setLocation(l)} style={{ flex:1, padding:"11px 8px", background: location===l ? C.blue : C.white, border:`1.5px solid ${location===l ? C.blue : C.border}`, color: location===l ? C.white : C.muted, borderRadius:6, cursor:"pointer", fontSize:11, fontWeight:700, transition:"all .15s" }}>{l}</button>
-        ))}
-      </div>
+    <div style={{ fontSize:11, color:C.muted, marginBottom:16, padding:"10px 14px", background:C.blueLt, borderRadius:6, border:`1px solid ${C.blue}33` }}>
+      This is <strong>this patient&rsquo;s home</strong>, saved as you answer. It is what B.E.A.U. at Home
+      adapts the programme to — B.E.A.U. may substitute household equipment, and this is the only
+      place it learns what the household has.
+      <span style={{ marginLeft:6 }}>{answered} of {state.fields.length} answered.</span>
+    </div>
 
-      {(location==="Indoor Only"||location==="Both Indoor & Outdoor") && (
-        <Sec title="Indoor Environment" color={C.blue} colorLt={C.blueLt}>
-          <Row>
-            <F label="Primary Flooring — Indoor" options={["Non-slip carpet — all areas","Hardwood / Tile (slippery)","Mixed — mostly carpet","Mixed — mostly hard floors","Rubber / Non-slip mats installed","Laminate"]}/>
-            <F label="Available Space Indoors" options={["Open floor — large room","Hallway only","Limited — small apartment","Multiple rooms available","Dedicated exercise space"]}/>
-          </Row>
-          <Row>
-            <F label="Indoor Stairs" options={["No stairs","1–3 steps to exit","Full staircase — must use","Full staircase — avoidable","Has ramp available"]}/>
-            <F label="Stair Frequency" options={["N/A","Multiple times daily","Once daily","Only when necessary","Can be fully avoided"]}/>
-          </Row>
+    {state.error && (
+      <div style={{ fontSize:11, color:C.red, marginBottom:12, padding:"8px 12px", background:C.redLt, borderRadius:5 }}>
+        {state.error}
+      </div>
+    )}
+
+    {state.sections.map(sec => {
+      if (sec.gatedBy && !sec.gatedBy.includes(locationCode)) return null;
+      return (
+        <Sec key={sec.id} title={sec.title} color={C.blue} colorLt={C.blueLt} noTop={sec.id === "location"}>
+          <div style={{ display:"flex", flexWrap:"wrap", gap:12 }}>
+            {sec.fields.map(renderField)}
+          </div>
         </Sec>
-      )}
+      );
+    })}
 
-      {(location==="Outdoor Only"||location==="Both Indoor & Outdoor") && (
-        <Sec title="Outdoor Environment" color={C.teal} colorLt={C.tealLt}>
-          <Row>
-            <F label="Outdoor Surface Type" options={["Flat grass — ideal","Uneven grass / terrain","Concrete / Pavement","Gravel / loose surface","Sand / beach","Mixed outdoor surfaces","Slope / incline available","Pool / water access"]}/>
-            <F label="Outdoor Space Size" options={["Small yard — patio","Medium yard — fenced","Large yard — open","Beach / park access","Open field"]}/>
-          </Row>
-          <Row>
-            <F label="Outdoor Steps / Ramps" options={["Flat — no steps","1–2 steps from door","Steps with railing","Ramp installed","Long driveway incline"]}/>
-            <F label="Outdoor Safety" options={["Fully fenced — secure","Partially fenced","Leash required at all times","Open property"]}/>
-          </Row>
-        </Sec>
-      )}
-    </Sec>
-
-    <Sec title="Available Home Equipment" color={C.blue} colorLt={C.blueLt}>
-      <div style={{ fontSize:11, color:C.muted, marginBottom:12 }}>
-        Tell B.E.A.U. everything available at home — inside AND outside. B.E.A.U. maps each item to evidence-based exercises appropriate for the patient's phase and location.
+    {!locationCode && (
+      <div style={{ fontSize:11, color:C.muted, padding:"10px 14px", background:C.amberLt, border:`1px solid ${C.amber}44`, borderRadius:5 }}>
+        Choose an exercise location above to record the indoor and outdoor environment.
       </div>
-      <F label="Indoor Items Available" placeholder="e.g. yoga mat, couch cushions, step stool, towels, rolled blankets, hula hoop, foam roller…" rows={2}/>
-      {(location==="Outdoor Only"||location==="Both Indoor & Outdoor") && (
-        <F label="Outdoor Items Available" placeholder="e.g. pool noodles, garden hose / sprinkler, outdoor steps, picnic table, slope / hill, swimming pool, garden chair…" rows={2}/>
-      )}
-      <F label="Lure / Reward Items" placeholder="e.g. high-value treats, peanut butter, lick mat, favorite toy…"/>
-      <div style={{ padding:"10px 14px", background:C.greenLt, border:`1px solid ${C.green}44`, borderRadius:5, fontSize:11, color:C.muted, marginTop:10 }}>
-        B.E.A.U. will generate exercises using ONLY the items listed — no equipment will be prescribed that the owner does not have. Indoor and outdoor exercises will be separated and labeled accordingly.
-      </div>
-    </Sec>
-
-    <Sec title="Owner Profile" color={C.blue} colorLt={C.blueLt}>
-      <Row>
-        <F label="Owner Confidence with Exercises" options={["High — experienced, done rehab before","Moderate — willing to learn","Low — needs very simple program","Requires caregiver / second person"]}/>
-        <F label="Expected Compliance" options={["High — very motivated","Moderate","Low — lifestyle limitations","Variable — work schedule"]}/>
-      </Row>
-      <Row>
-        <F label="Time Available Per Session (min)" options={["10–15 minutes","15–20 minutes","20–30 minutes","30+ minutes","Variable"]}/>
-        <F label="Session Frequency (per day)" options={["Once daily (SID)","Twice daily (BID)","Three times daily (TID)","Every other day","As tolerated"]}/>
-      </Row>
-      <F label="Owner Notes / Concerns" placeholder="Any concerns about ability to perform exercises, physical limitations, household members who will help…" rows={2}/>
-    </Sec>
+    )}
     <ClinicalNotes/>
   </>;
 }
@@ -4032,8 +4126,12 @@ export default function DashboardView({ setView, currentUser, onLogout, patient,
   const uiLang = i18nInst.language || "en";
   const ctxValue = React.useMemo(() => ({
     data: dashData, update: updateField, blockId: openBlock,
+    // V3: panels that read and write their own table need to know WHICH
+    // patient. HomePanel is the first; the blob-backed panels do not, because
+    // the blob is loaded for the selected patient before they render.
+    patientId: patient?.id || null,
     beauVoice, uiLang, handleSave, updateToast, setUpdateToast,
-  }), [dashData, updateField, openBlock, beauVoice, uiLang, handleSave, updateToast]);
+  }), [dashData, updateField, openBlock, patient?.id, beauVoice, uiLang, handleSave, updateToast]);
 
   // No patient gate — dashboard always shows the 11-block grid.
   // If no patient is selected, header shows a prompt to select one.

@@ -37,7 +37,6 @@ const crypto = require('crypto');
 const authority = require('./authority');
 const hepSelection = require('./hep-selection');
 const intakeProposal = require('./intake-proposal');
-const homeEnvironment = require('./home-environment');
 
 // ---------------------------------------------------------------------------
 // States and roles

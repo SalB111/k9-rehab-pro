@@ -25,14 +25,18 @@ function test(name, fn) {
 const UI_PATH = path.join(__dirname, '..', '..', 'k9-rehab-frontend', 'src', 'pages', 'DashboardView.jsx');
 const DB_PATH = path.join(__dirname, '..', 'k9rehab.db');
 
-/** label -> options, parsed from the real JSX. */
+/**
+ * label -> options, from the MODULE.
+ *
+ * Before V3 these were parsed out of DashboardView.jsx, because that was where
+ * the lists lived and the risk was the module falling behind the screen. Now
+ * the module owns them and the API serves them to the screen, so the screen has
+ * no list to fall behind — and parsing the JSX would find nothing at all.
+ */
 function optionsFromUI() {
-  const src = fs.readFileSync(UI_PATH, 'utf8');
   const out = {};
-  const re = /<F\s+label="([^"]+)"\s+options=\{\[([^\]]*)\]\}/g;
-  let m;
-  while ((m = re.exec(src))) {
-    out[m[1]] = m[2].split(',').map((s) => s.trim().replace(/^"|"$/g, '')).filter(Boolean);
+  for (const f of home.FIELDS) {
+    if (f.options) out[f.keys[0].slice(6)] = f.options;
   }
   return out;
 }
@@ -82,14 +86,15 @@ test('every option the UI offers, and every value stored, is read or knowingly u
     }
   }
 
-  assert.ok(swept >= 40, `expected to sweep the whole vocabulary, swept only ${swept}`);
+  assert.ok(swept >= 55, `expected to sweep the whole vocabulary, swept only ${swept}`);
   assert.deepStrictEqual(unread, [], `unreadable values:\n      ${unread.join('\n      ')}`);
 });
 
-test('the UI options are actually found (the parser has not silently matched nothing)', () => {
+test('the option lists are actually populated (not silently empty)', () => {
   const ui = optionsFromUI();
-  assert.ok(ui['Indoor Stairs'], 'Indoor Stairs options not parsed out of the JSX');
+  assert.ok(ui['Indoor Stairs'], 'Indoor Stairs has no option list');
   assert.ok(ui['Indoor Stairs'].includes('Has ramp available'));
+  assert.ok(Object.keys(ui).length >= 12, `only ${Object.keys(ui).length} fields carry options`);
 });
 
 // ------------------------------------------------------------- the substring
@@ -209,7 +214,11 @@ test('owner confidence travels as prose and is never reduced to an enum', () => 
 
 // --------------------------------------------------------------- real record
 
-test('all five real patients read with no unreadable value', () => {
+test('the migration reader still reads all five blobs with no unreadable value', () => {
+  // V3: the blob is NO LONGER the source for this block — patient_home_environment
+  // is, and patient-home-store.test.js covers it. This test keeps the MIGRATION
+  // path honest, because the blob is still what a pre-V3 record has to be
+  // recovered from if one ever needs checking by hand.
   const db = new DatabaseSync(DB_PATH, { readOnly: true });
   const rows = db.prepare('SELECT name, dashboard_data FROM patients ORDER BY id').all();
   assert.ok(rows.length >= 5, `expected the real patient set, got ${rows.length}`);

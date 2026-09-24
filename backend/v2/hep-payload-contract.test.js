@@ -23,7 +23,7 @@ const assert = require('assert');
 const path = require('path');
 const { DatabaseSync } = require('node:sqlite');
 const protocolStore = require('./protocol-store');
-const homeEnvironment = require('./home-environment');
+const patientHomeStore = require('./patient-home-store');
 const goalsModule = require('./goals');
 const schema = require('./contracts/approved-hep.schema.json');
 
@@ -94,7 +94,10 @@ async function buildRealPayload() {
     ? await db.get(`SELECT dashboard_data FROM patients WHERE id = ?`, [protocol.patient_id])
     : null;
   const blob = patient && patient.dashboard_data;
-  const home = homeEnvironment.toPayload(homeEnvironment.readFromDashboard(blob));
+  // V3: the home comes from patient_home_environment, not the blob.
+  const home = protocol.patient_id
+    ? await patientHomeStore.toHepPayload(db, protocol.patient_id)
+    : null;
   const goals = goalsModule.toPayload(goalsModule.readFromDashboard(blob));
 
   return protocolStore.buildHepPayload(protocol, { ...full, approval }, { home, goals });
@@ -121,22 +124,25 @@ async function buildRealPayload() {
       + `(columns: ${columns.join(', ')})`);
   });
 
-  await test('home_environment reaches the payload for a patient whose home is recorded', async () => {
+  await test('home_environment reaches the payload FROM THE TABLE', async () => {
+    // V3. Reading this from the blob would pass even with an empty table,
+    // which is exactly what the migration had to prove.
     const patient = raw.prepare(
-      `SELECT id, name, dashboard_data FROM patients
-        WHERE dashboard_data LIKE '%home::%' ORDER BY id LIMIT 1`
+      `SELECT p.id, p.name FROM patients p
+         JOIN patient_home_environment h ON h.patient_id = p.id
+        ORDER BY p.id LIMIT 1`
     ).get();
-    assert.ok(patient, 'no patient with a recorded home to test against');
+    assert.ok(patient, 'no rows in patient_home_environment — has the migration run?');
 
-    const home = homeEnvironment.toPayload(homeEnvironment.readFromDashboard(patient.dashboard_data));
-    assert.ok(home, `${patient.name}: home recorded in V1 but toPayload returned null`);
+    const home = await patientHomeStore.toHepPayload(db, patient.id);
+    assert.ok(home, `${patient.name}: a home row exists but toHepPayload returned null`);
     assert.ok(Object.keys(home.stated).length >= 7, `${patient.name}: only ${Object.keys(home.stated).length} fields reached the payload`);
     assert.ok(home.normalized.session_minutes > 0, 'session capacity did not reach the payload');
   });
 
   await test('a patient with no home recorded yields null, not an empty shell', async () => {
-    const home = homeEnvironment.toPayload(homeEnvironment.readFromDashboard('{}'));
-    assert.strictEqual(home, null);
+    // A patient id with no row at all.
+    assert.strictEqual(await patientHomeStore.toHepPayload(db, 999999), null);
   });
 
   await test('goals reach the payload for a patient whose goals are recorded', async () => {
