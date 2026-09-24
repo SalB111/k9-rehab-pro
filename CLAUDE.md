@@ -105,18 +105,104 @@ conversation gets summarised. That is why this is written here.
 | **home** | **MERGED (V3)** — `patient_home_environment`; blob no longer read |
 | **goals** | **MERGED (V3)** — `patient_goals` + `patient_goal_items`; reviewable, blob no longer read |
 | **diagnostics** | **MERGED (V3)** — `patient_diagnostic_studies`; a study is a row with a date |
-| assessment, conditioning, global, treatment | untouched |
+| assessment, treatment, conditioning, global | untouched |
 
-`dashboard_data` still holds the keys for the blocks not yet migrated, and
-`dashboard-bridge` still reads it for the ASSESSMENT engine inputs — that is
-the block left to do. Home, goals, diagnostics and client each have their own
-table now, and their blob copies are inert.
+### Where a blob value still reaches the engine
+
+**Corrected 2026-09-24.** An earlier version of this section said assessment was
+the block left to do and the only place a blob value still reaches the engine.
+That was **wrong**. Treatment feeds the engine too, and two of the three
+blob-only safety gates are treatment fields.
+
+Three engine inputs have **no column anywhere**, so `dashboard_data` is their
+only source:
+
+| engine input | blob key | block |
+|---|---|---|
+| `weightBearingStatus` (gate) | `treatment::Weight Bearing Status` | treatment |
+| `incisionStatus` (gate) | `treatment::Incision Status` | treatment |
+| `neuroDeepPain` (gate) | `assessment::Deep Pain Perception` | assessment |
+
+Everything else the bridge maps is **column-first**: `intake-proposal`'s `FILL`
+list (intake-proposal.js:269) reads the column, and the blob answers only where
+the column is empty. Across the five current patients no such column is empty,
+so today nothing else is blob-sourced. **That is a fact about the DATA, not
+about the code** — a new patient with an empty column is blob-sourced
+immediately.
+
+### The two screens disagree about which record wins
+
+This is the mechanism by which the two records drift apart, and it is worth
+knowing before touching either:
+
+- the **engine** reads column-first, blob fills gaps (intake-proposal.js:269)
+- the **dashboard** reads blob-first, columns fill gaps
+  (DashboardView.jsx:4166, `...savedDash` spread first)
+
+and the dashboard's column fallback covers `client::` keys **only**. No
+`treatment::` key is ever seeded from its column. So a clinician edits the blob
+value on screen while the engine reads the column, and neither screen shows the
+other's value.
+
+Live example, Charlie: `affected_region` = `Bilateral Hip (R>L)` (what the
+engine reads) and `treatment::Affected Limb(s)` = `Both hindlimbs` (what the
+screen shows). Same for `special_instructions` vs `treatment::Activity
+Restrictions` — for Charlie and Luna each holds orders the other is missing.
+
+### `Affected Limb(s)` and `affected_region` are not the same fact
+
+The bridge aliases them onto one engine input, `affectedRegion`
+(dashboard-bridge.js:204). They are different vocabularies:
+
+- the `affected_region` COLUMN holds a **lesion site** — `Thoracolumbar`,
+  `Bilateral Hip (R>L)`, `Left Stifle`
+- `treatment::Affected Limb(s)` holds **limbs** — `Both hindlimbs`,
+  `Left hindlimb (LH)`
+
+The engine's own vocabulary is the anatomical one, and `getProtocolType`
+(protocol-generator.js:435) string-matches it. Demonstrated 2026-09-24:
+
+    "Osteoarthritis" + "Left Stifle"         ->  tplo protocol
+    "Osteoarthritis" + "Left hindlimb (LH)"  ->  oa protocol
+
+Same patient, same limb, different protocol, decided by which field answered.
+It does **not** fire for the five current patients — their diagnoses route on
+their own — and it fires the moment `affected_region` is empty and the blob
+fills it.
+
+### Treatment answers the engine never sees
+
+`treatment::E-Collar Required` and `treatment::Strict Crate Rest` are collected
+by the dashboard and stored. The engine has `eCollarRequired` and
+`crateRestRequired` gates. **The bridge maps neither**, so both gates always
+fall to their cautious default and the clinician's answer is discarded.
+
+Not a safety hole — every gate carries `mustConfirm: true` and is confirmed by
+a person before use — but it is a collected answer that goes nowhere.
+
+`treatment::Approach` is discarded the same way: `intake-proposal` always
+DERIVES `treatmentApproach` from the surgery date and the presentation
+(intake-proposal.js:318). Checked against all five patients on 2026-09-24 — the
+derivation agrees with the recorded answer in every case, so nothing is wrong
+today.
+
+### Re-derive this section rather than trusting it
+
+From the repo root. If any of these disagree with the text above, the text is
+stale and the commands are right:
+
+    # every engine input the bridge can supply from the blob
+    node -e "console.log(require('./backend/v2/dashboard-bridge').MAP.map(m=>m.to).sort().join(' '))"
+
+    # which safety gates the bridge can source at all
+    node -e "const b=require('./backend/v2/dashboard-bridge'),i=require('./backend/v2/intake-proposal');       const s=new Set(b.MAP.map(m=>m.to));       i.SAFETY_GATES.forEach(g=>console.log(s.has(g.field)?'from record':'NO SOURCE ',g.field))"
 
 ### Scope note
 
-`DashboardView.jsx` is 4,247 lines but has **one** `updateField` definition —
-all 51 field writes funnel through it — and **two** calls that PUT the blob.
-Changing where that data lands does not require rewriting the form.
+`DashboardView.jsx` is 4,536 lines but has **one** `updateField` definition —
+all field writes funnel through it — and **two** calls that PUT the blob
+(DashboardView.jsx:3123 and :4252). Changing where that data lands does not
+require rewriting the form.
 
 ### Related
 
