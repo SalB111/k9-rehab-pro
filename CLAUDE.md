@@ -101,15 +101,16 @@ conversation gets summarised. That is why this is written here.
 |---|---|
 | equipment | **MERGED** — `clinic_capabilities.equipment_json`, both screens read it |
 | metrics | **MERGED** — 40 rows migrated into `visit_measurements` |
-| client | **MIXED** — real columns, reconciled by `record-sync`; blob still holds the same facts |
+| **client** | **MERGED (V3)** — `patients` owns the clinical identity, `patient_client_details` owns the address, contacts, cover and PII; blob no longer read |
 | **home** | **MERGED (V3)** — `patient_home_environment`; blob no longer read |
 | **goals** | **MERGED (V3)** — `patient_goals` + `patient_goal_items`; reviewable, blob no longer read |
 | **diagnostics** | **MERGED (V3)** — `patient_diagnostic_studies`; a study is a row with a date |
 | assessment, conditioning, global, treatment | untouched |
 
-`dashboard_data` still holds the keys for the blocks not yet migrated. The home
-block's 43 values now live in `patient_home_environment` and the blob copies are
-inert. **goals and diagnostics are still blob-sourced.**
+`dashboard_data` still holds the keys for the blocks not yet migrated, and
+`dashboard-bridge` still reads it for the ASSESSMENT engine inputs — that is
+the block left to do. Home, goals, diagnostics and client each have their own
+table now, and their blob copies are inert.
 
 ### Scope note
 
