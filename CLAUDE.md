@@ -102,13 +102,14 @@ conversation gets summarised. That is why this is written here.
 | equipment | **MERGED** — `clinic_capabilities.equipment_json`, both screens read it |
 | metrics | **MERGED** — 40 rows migrated into `visit_measurements` |
 | client | **MIXED** — real columns, reconciled by `record-sync`; blob still holds the same facts |
-| home | **BRIDGED, NOT MERGED** — no table; blob is the only source |
+| **home** | **MERGED (V3)** — `patient_home_environment`; blob no longer read |
 | goals | **BRIDGED, NOT MERGED** — no table; blob is the only source |
 | diagnostics | **BRIDGED, NOT MERGED** — no table; blob is the only source |
 | assessment, conditioning, global, treatment | untouched |
 
-`dashboard_data` holds 447 filled keys / 13,359 characters across 5 patients.
-All V2 tables together hold 141 rows. **The blob is still the record.**
+`dashboard_data` still holds the keys for the blocks not yet migrated. The home
+block's 43 values now live in `patient_home_environment` and the blob copies are
+inert. **goals and diagnostics are still blob-sourced.**
 
 ### Scope note
 
