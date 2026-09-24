@@ -103,7 +103,7 @@ conversation gets summarised. That is why this is written here.
 | metrics | **MERGED** — 40 rows migrated into `visit_measurements` |
 | client | **MIXED** — real columns, reconciled by `record-sync`; blob still holds the same facts |
 | **home** | **MERGED (V3)** — `patient_home_environment`; blob no longer read |
-| goals | **BRIDGED, NOT MERGED** — no table; blob is the only source |
+| **goals** | **MERGED (V3)** — `patient_goals` + `patient_goal_items`; reviewable, blob no longer read |
 | diagnostics | **BRIDGED, NOT MERGED** — no table; blob is the only source |
 | assessment, conditioning, global, treatment | untouched |
 
