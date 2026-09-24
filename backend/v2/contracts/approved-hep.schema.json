@@ -315,6 +315,60 @@
         "recorded_by": { "type": ["string", "number", "null"] }
       }
     },
+    "goals": {
+      "type": ["object", "null"],
+      "description": "What success looks like for this patient, split by who each goal was written for — not withheld from either. Null means no goals recorded, which is NOT a record with empty fields. Context, not constraint: the engine has no patient-goal input and nothing here gates exercise selection. Practice admin, such as the client's communication preference, is deliberately excluded.",
+      "additionalProperties": false,
+      "required": ["primary_goals", "owner_facing", "clinical", "uninterpreted"],
+      "properties": {
+        "primary_goals": {
+          "type": "array",
+          "description": "The selected rehabilitation goals, in the order the clinician chose them. Each carries the stated label and its code, so nothing downstream matches on the prose.",
+          "items": {
+            "type": "object",
+            "required": ["stated", "code"],
+            "additionalProperties": false,
+            "properties": {
+              "stated": { "type": "string" },
+              "code": {
+                "type": ["string", "null"],
+                "description": "Null where the label is not in the vocabulary — expected, since 'Other' invites free text. The goal still travels.",
+                "enum": [
+                  "HOUSEHOLD_FUNCTION", "PAIN_MANAGEMENT", "POST_SURGICAL",
+                  "NEURO_AMBULATION", "WEIGHT_MANAGEMENT", "RANGE_OF_MOTION",
+                  "STRENGTH", "SPORT_RETURN", "SENIOR_WELLNESS", "PALLIATIVE",
+                  "OTHER", null
+                ]
+              }
+            }
+          }
+        },
+        "owner_facing": {
+          "type": "object",
+          "description": "Goals written in what the dog will be able to do, plus the owner's own words and priorities. Addressed to the owner."
+        },
+        "clinical": {
+          "type": "object",
+          "description": "Goals written in clinician measures — ROM in degrees, HCPI thresholds, thigh girth, drawer. Carried so the record is whole, but not addressed to the owner as instructions."
+        },
+        "uninterpreted": {
+          "type": "array",
+          "description": "Primary goals whose label is not in the vocabulary. Reported so a consumer does not mistake a free-text goal for one that failed to match a code.",
+          "items": {
+            "type": "object",
+            "required": ["field", "label", "stated"],
+            "additionalProperties": false,
+            "properties": {
+              "field": { "type": "string" },
+              "label": { "type": "string" },
+              "stated": { "type": "string" }
+            }
+          }
+        },
+        "recorded_at": { "type": ["string", "null"] },
+        "recorded_by": { "type": ["string", "number", "null"] }
+      }
+    },
     "beau_permissions": {
       "type": "object",
       "description": "The explicit authority boundary, transmitted with every handoff so it is never assumed. B.E.A.U. adapts EXECUTION; it never generates or alters a PRESCRIPTION.",

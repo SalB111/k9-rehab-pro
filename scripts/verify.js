@@ -79,7 +79,12 @@ const CHECKS = [
   // so a phrase the UI offers can never go uninterpreted unnoticed.
   { name: 'K9 · home environment',     cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/home-environment.test.js'],
     ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
-  // The handoff contract, which nothing enforced until now.
+  // What success looks like, split by who each goal was written for. The
+  // vocabulary is read out of the real dashboard JSX, so a goal the UI offers
+  // can never reach B.E.A.U. uncoded.
+  { name: 'K9 · goals',                cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/goals.test.js'],
+    ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
+  // The handoff contract.
   { name: 'K9 · HEP payload contract', cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/hep-payload-contract.test.js'],
     ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
   { name: 'K9 · frontend build',       cwd: path.join(K9, 'k9-rehab-frontend'), cmd: 'npx', args: ['--no-install', 'vite', 'build'],

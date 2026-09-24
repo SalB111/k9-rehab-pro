@@ -24,6 +24,7 @@ const path = require('path');
 const { DatabaseSync } = require('node:sqlite');
 const protocolStore = require('./protocol-store');
 const homeEnvironment = require('./home-environment');
+const goalsModule = require('./goals');
 const schema = require('./contracts/approved-hep.schema.json');
 
 let passed = 0;
@@ -92,11 +93,11 @@ async function buildRealPayload() {
   const patient = protocol.patient_id
     ? await db.get(`SELECT dashboard_data FROM patients WHERE id = ?`, [protocol.patient_id])
     : null;
-  const home = homeEnvironment.toPayload(
-    homeEnvironment.readFromDashboard(patient && patient.dashboard_data)
-  );
+  const blob = patient && patient.dashboard_data;
+  const home = homeEnvironment.toPayload(homeEnvironment.readFromDashboard(blob));
+  const goals = goalsModule.toPayload(goalsModule.readFromDashboard(blob));
 
-  return protocolStore.buildHepPayload(protocol, { ...full, approval }, home);
+  return protocolStore.buildHepPayload(protocol, { ...full, approval }, { home, goals });
 }
 
 (async () => {
@@ -136,6 +137,33 @@ async function buildRealPayload() {
   await test('a patient with no home recorded yields null, not an empty shell', async () => {
     const home = homeEnvironment.toPayload(homeEnvironment.readFromDashboard('{}'));
     assert.strictEqual(home, null);
+  });
+
+  await test('goals reach the payload for a patient whose goals are recorded', async () => {
+    const patient = raw.prepare(
+      `SELECT id, name, dashboard_data FROM patients
+        WHERE dashboard_data LIKE '%goals::Primary Rehabilitation Goals%' ORDER BY id LIMIT 1`
+    ).get();
+    assert.ok(patient, 'no patient with recorded goals to test against');
+
+    const payload = goalsModule.toPayload(goalsModule.readFromDashboard(patient.dashboard_data));
+    assert.ok(payload, `${patient.name}: goals recorded in V1 but toPayload returned null`);
+    assert.ok(payload.primary_goals.length > 0, `${patient.name}: no primary goal reached the payload`);
+    assert.ok(payload.primary_goals.every((g) => g.code),
+      `${patient.name}: a real goal reached the payload without a code`);
+  });
+
+  await test('a context block omitted by the caller is null, never undefined', async () => {
+    // An omitted block must still appear as an explicit null. `undefined`
+    // disappears through JSON.stringify, so the key would vanish from the
+    // stored payload and a consumer could not tell it from a contract change.
+    const version = await db.get(`SELECT id FROM protocol_versions ORDER BY id DESC LIMIT 1`);
+    const full = await protocolStore.getVersion(db, version.id);
+    const { row: approval } = approvalFromSchema();
+    const payload = protocolStore.buildHepPayload({ id: full.protocol_id }, { ...full, approval });
+    assert.strictEqual(payload.home_environment, null);
+    assert.strictEqual(payload.goals, null);
+    assert.ok('goals' in JSON.parse(JSON.stringify(payload)), 'goals vanished through serialization');
   });
 
   await test('the contract still forbids undeclared fields (the check has teeth)', () => {

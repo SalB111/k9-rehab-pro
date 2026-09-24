@@ -29,23 +29,25 @@ const authority = require('../authority');
 const intakeProposal = require('../intake-proposal');
 const patientGaps = require('../patient-gaps');
 const homeEnvironment = require('../home-environment');
+const goalsModule = require('../goals');
 const ownerAuth = require('../owner-auth');
 const { requireRole, requireApprovalAuthority } = require('../middleware/require-role');
 const { route } = require('../http-errors');
 
 /**
- * The patient's home, for the handoff payload.
+ * The V1-sourced context for a handoff: the patient's home, and their goals.
  *
- * Reads V1's `patients.dashboard_data` and interprets it once, here, so the
- * clinical vocabulary is never string-matched again further downstream.
+ * Both live in the same `patients.dashboard_data` blob, so they are read in
+ * one query and interpreted once, here — the clinical vocabularies are never
+ * string-matched again further downstream.
  *
- * A failure to read the home NEVER blocks a handoff. Home data is context for
- * B.E.A.U., not a gate on the prescription, and refusing to release an
- * approved protocol because a home field could not be read would withhold
- * treatment over a missing convenience. The failure is logged loudly instead
- * of swallowed, because an unreadable record still needs someone to see it.
+ * A failure to read this NEVER blocks a handoff. Both are context for
+ * B.E.A.U., not gates on the prescription, and refusing to release an approved
+ * protocol because a home field could not be parsed would withhold treatment
+ * over a missing convenience. The failure is logged loudly rather than
+ * swallowed, because an unreadable record still needs someone to see it.
  */
-async function readHomeEnvironment(db, versionId) {
+async function readHandoffContext(db, versionId) {
   try {
     const row = await db.get(
       `SELECT p.dashboard_data AS blob
@@ -55,13 +57,18 @@ async function readHomeEnvironment(db, versionId) {
         WHERE v.id = ?`,
       [versionId]
     );
-    return homeEnvironment.toPayload(homeEnvironment.readFromDashboard(row && row.blob));
+    const blob = row && row.blob;
+    return {
+      home: homeEnvironment.toPayload(homeEnvironment.readFromDashboard(blob)),
+      goals: goalsModule.toPayload(goalsModule.readFromDashboard(blob)),
+    };
   } catch (err) {
     console.error(
-      `[v2-router] could not read the home environment for version ${versionId}: ${err.message}. ` +
-      `Handing off WITHOUT it — B.E.A.U. will adapt execution with no knowledge of the home.`
+      `[v2-router] could not read the V1 record for version ${versionId}: ${err.message}. ` +
+      `Handing off WITHOUT the home environment or the goals — B.E.A.U. will adapt ` +
+      `execution knowing neither the home nor what the owner is working toward.`
     );
-    return null;
+    return { home: null, goals: null };
   }
 }
 
@@ -528,12 +535,13 @@ function createV2Router(deps) {
   router.post('/versions/:id/handoff', approvalAuthority, route(async (req, res) => {
     const handoff = await store.handoffToBeau(db, {
       versionId: Number(req.params.id), actor: req.user,
-      // The home B.E.A.U. is permitted to adapt to, read here rather than in
-      // the store: it lives in V1's `patients.dashboard_data`, and this router
-      // is the V1-aware layer. Read straight through, never copied into a V2
-      // table — the dashboard form is still where a clinician types it, and a
-      // second copy would drift the moment one side was edited alone.
-      home: await readHomeEnvironment(db, Number(req.params.id)),
+      // The home B.E.A.U. is permitted to adapt to, and the goals it is
+      // working toward. Read here rather than in the store: both live in V1's
+      // `patients.dashboard_data`, and this router is the V1-aware layer. Read
+      // straight through, never copied into a V2 table — the dashboard form is
+      // still where a clinician types them, and a second copy would drift the
+      // moment one side was edited alone.
+      ...(await readHandoffContext(db, Number(req.params.id))),
     });
     res.status(201).json({ success: true, data: handoff });
   }));

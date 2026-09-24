@@ -869,7 +869,15 @@ async function verifyApprovalIntegrity(db, versionId) {
  * Contains the prescription and its safety envelope, and nothing that would let
  * B.E.A.U. reconstruct or alter clinical reasoning.
  */
-function buildHepPayload(protocol, version, home = null) {
+/**
+ * `context` is the V1-sourced record that surrounds the prescription — the
+ * home, the goals, and whatever later blocks add. An options object rather
+ * than positional arguments, because each block migrated out of V1 adds one
+ * and a fourth positional argument is how a caller silently passes the goals
+ * in the home slot.
+ */
+function buildHepPayload(protocol, version, context = {}) {
+  const { home = null, goals = null } = context;
   return {
     contract_version: '1.0',
     patient_id: protocol.patient_id,
@@ -965,6 +973,20 @@ function buildHepPayload(protocol, version, home = null) {
     // selection, and whether it should is a clinical decision not yet made.
     home_environment: home,
 
+    // What success looks like, and in whose words.
+    //
+    // Split by audience rather than withheld: `owner_facing` is written in
+    // what the dog will be able to DO, `clinical` in degrees of ROM and HCPI
+    // thresholds. Both travel, the same way `clinic_protocol` travels beside
+    // `exercises` — the owner is shown the whole picture without clinician
+    // shorthand being addressed to them as instructions.
+    //
+    // Context, not constraint. The engine has no patient-goal input, nothing
+    // here gates exercise selection, and no conflict between goals is
+    // detected — whether two goals contradict each other is a clinical
+    // judgement this codebase does not make.
+    goals,
+
     beau_permissions: {
       may_adapt_execution_to_home_environment: true,
       may_substitute_household_equipment: true,
@@ -988,11 +1010,13 @@ function buildHepPayload(protocol, version, home = null) {
  * nothing in V2 is supposed to need more. So the V1-aware route reads it and
  * passes it in; see `readHomeEnvironment` in mount-v2.
  *
- * Omitted means no home on record, which is exactly true for any caller that
- * has none. It withholds nothing: home data is context for B.E.A.U., never a
+ * `goals` arrives the same way and for the same reason.
+ *
+ * Omitted means none on record, which is exactly true for any caller that has
+ * none. It withholds nothing: both are context for B.E.A.U., never a
  * constraint on what was prescribed.
  */
-async function handoffToBeau(db, { versionId, actor, home = null }) {
+async function handoffToBeau(db, { versionId, actor, home = null, goals = null }) {
   requireActor(actor);
   const version = await getVersion(db, versionId);
 
@@ -1020,7 +1044,7 @@ async function handoffToBeau(db, { versionId, actor, home = null }) {
   }
 
   const protocol = await getProtocol(db, version.protocol_id);
-  const payload = buildHepPayload(protocol, version, home);
+  const payload = buildHepPayload(protocol, version, { home, goals });
   const payloadHash = hashContent(payload);
 
   const result = await db.run(
