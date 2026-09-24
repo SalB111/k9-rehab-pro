@@ -59,7 +59,17 @@ export default function LoginView({ onLogin, onRegister }) {
           <p className="text-[#7AAACF] text-base leading-relaxed max-w-md text-center mx-auto">
             {tr("Clinical decision-support for veterinary rehabilitation professionals.")}
             {" "}
-            {tr("Canine & feline protocols powered by")} B.E.A.U.
+            {/* "Canine & feline protocols" until 23 Sep 2026. The protocol
+                engine has no feline path — zero species references, and it can
+                select none of the fifteen FELINE_* exercises — so generation
+                refuses for a cat and registration offers canine only.
+                Promising feline protocols on the sign-in page was a claim the
+                product could not meet.
+
+                The 3D anatomy viewer's "species-aware canine & feline models"
+                claim is accurate and stays: it genuinely ships both models.
+                This line is about protocols. */}
+            {tr("Canine rehabilitation protocols powered by")} B.E.A.U.
           </p>
         </div>
 
