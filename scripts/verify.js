@@ -79,6 +79,10 @@ const CHECKS = [
   // so a phrase the UI offers can never go uninterpreted unnoticed.
   { name: 'K9 · home environment',     cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/home-environment.test.js'],
     ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
+  // Imaging and labs, in both the shape the dashboard writes today and the
+  // legacy one every seeded record is in. Nothing read either before.
+  { name: 'K9 · diagnostics',          cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/diagnostics.test.js'],
+    ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
   // Age is the one field on a patient record that goes wrong on its own. A
   // date of birth does not, so age is derived from it rather than typed.
   { name: 'K9 · patient age',          cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/patient-age.test.js'],
