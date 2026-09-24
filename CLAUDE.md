@@ -54,7 +54,7 @@ This platform is a **Clinical Decision-Support System (CDSS)** for **post-diagno
 
 These rules are **non-negotiable** and apply to all code generation, B.E.A.U. output, and protocol logic:
 
-1. **Exercise Library Lock**: Every exercise referenced in protocol output or B.E.A.U. responses MUST match an exercise code in the 223-exercise library. Any unmatched exercise name = blocked output + clinician alert. No exceptions.
+1. **Exercise Library Lock**: Every exercise referenced in protocol output or B.E.A.U. responses MUST match an exercise code in the 260-exercise library (`backend/all-exercises.js`, which prints its own count on load). Any unmatched exercise name = blocked output + clinician alert. No exceptions.
 2. **Dosing from Source Only**: Sets, reps, duration, frequency, and intensity parameters MUST be extracted from the source-of-truth document. B.E.A.U. must NOT generate novel dosing. If the source doc doesn't specify dosing for an exercise, output "Dosing: Per clinician assessment" — never fabricate numbers.
 3. **No Invented Clinical Data**: Exercise descriptions, contraindications, indications, evidence grades, and phase assignments must trace to source documents. If a value cannot be sourced, it must be flagged as `[UNVERIFIED]` and excluded from clinical output.
 4. **B.E.A.U. Post-Generation Verification**: Every B.E.A.U. response that references exercises must be cross-checked against the exercise database before delivery to the clinician. Novel exercise names trigger a block.
@@ -330,7 +330,7 @@ Features and safety measures are prioritized into implementation tiers:
 ### TIER 1 — Required before clinical use
 - [ ] Credential verification at registration (DVM/CCRP/CCRT/student attestation)
 - [ ] Scope-of-practice enforcement in B.E.A.U. (block out-of-scope queries)
-- [ ] B.E.A.U. exercise name cross-check against 223-exercise library
+- [ ] B.E.A.U. exercise name cross-check against 260-exercise library
 - [ ] Terms of Service sign-off on first login
 - [ ] Evidence grade display on every exercise in protocol output
 - [ ] Red-flag audit logging per patient per protocol

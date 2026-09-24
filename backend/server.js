@@ -454,10 +454,36 @@ app.get("/api/v2/exercises", (req, res) => {
   }
 });
 
-app.get("/api/exercises/:id", requireAuth, async (req, res) => {
+// One exercise, from the SAME library the list endpoint serves.
+//
+// This read `SELECT * FROM exercises_v2 WHERE id = ?` until 2026-09-24, which
+// is a different library from the one directly above it:
+//
+//   /api/exercises      ALL_EXERCISES   260 entries, identified by `code`
+//                                       ("PROM_STIFLE"). No `id` field exists
+//                                       on these objects at all.
+//   exercises_v2 table   48 rows, identified by `id` ("MOB-P1-01")
+//
+// The overlap between those two identifier sets is ZERO, measured. So every
+// lookup of an exercise the list endpoint had just returned was a guaranteed
+// 404, and every lookup that succeeded returned a row from a library the
+// engine does not use and B.E.A.U. does not validate against.
+//
+// Nothing called it, which is why it was never noticed. It is fixed rather
+// than deleted because the list endpoint hands out codes and a client that
+// follows one should get the same exercise the protocol engine would.
+app.get("/api/exercises/:id", requireAuth, (req, res) => {
   try {
-    const exercise = await get("SELECT * FROM exercises_v2 WHERE id = ?", [req.params.id]);
-    if (!exercise) return res.status(404).json({ success: false, error: "Exercise not found" });
+    // Codes are upper-case by convention; accept any casing rather than 404 on
+    // a link somebody lower-cased.
+    const wanted = String(req.params.id || "").trim().toUpperCase();
+    const exercise = TAGGED_EXERCISES.find(ex => ex.code.toUpperCase() === wanted);
+    if (!exercise) {
+      return res.status(404).json({
+        success: false,
+        error: `No exercise with code "${req.params.id}" in the ${TAGGED_EXERCISES.length}-exercise library`,
+      });
+    }
     res.json({ success: true, data: exercise });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -858,7 +884,26 @@ app.get("/api/storyboards/:code", requireAuth, (req, res) => {
     if (!storyboard) {
       return res.status(404).json({ success: false, error: "Storyboard not available for this exercise" });
     }
-    res.json({ success: true, data: storyboard });
+    // Stamp each frame with its artwork version so the client can cache-bust.
+    // Without this, a browser that cached a wrong image under the immutable
+    // frame URL would keep showing it no matter what the server regenerates.
+    let versions = {};
+    try {
+      const { storyboardVersions } = require("./storyboard-image-gen");
+      versions = storyboardVersions({
+        code,
+        sb: storyboard,
+        category: exercise?.category,
+        species: exercise?.clinical_classification?.species,
+      });
+    } catch (e) {
+      console.warn("Storyboard version stamping failed:", e.message);
+    }
+    const stamped = {
+      ...storyboard,
+      frames: (storyboard.frames || []).map(f => ({ ...f, image_version: versions[f.frame_number] || null })),
+    };
+    res.json({ success: true, data: stamped });
   } catch (err) {
     console.error("Storyboard lookup failed:", err);
     res.status(500).json({ success: false, error: "Failed to load storyboard" });
@@ -889,14 +934,25 @@ app.get("/api/storyboards/:code/frame/:n.png", async (req, res) => {
     const key = `${code}:${frameNumber}`;
     let task = _sbImageInFlight.get(key);
     if (!task) {
-      task = getFrameImage({ code, sb, frame, category: exercise?.category })
+      task = getFrameImage({
+        code,
+        sb,
+        frame,
+        category: exercise?.category,
+        species: exercise?.clinical_classification?.species,
+      })
         .finally(() => _sbImageInFlight.delete(key));
       _sbImageInFlight.set(key, task);
     }
     const { buffer, cached } = await task;
 
     res.set("Content-Type", "image/png");
-    res.set("Cache-Control", "public, max-age=31536000, immutable");
+    // Only a versioned URL may be cached forever. An unversioned request must
+    // revalidate, or a corrected image can never reach a browser that already
+    // cached the wrong one under the same URL.
+    res.set("Cache-Control", req.query.v
+      ? "public, max-age=31536000, immutable"
+      : "public, max-age=60, must-revalidate");
     res.set("X-Sketch-Cache", cached ? "hit" : "miss");
     return res.send(buffer);
   } catch (err) {

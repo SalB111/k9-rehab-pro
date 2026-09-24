@@ -109,7 +109,8 @@ CREATE TABLE progress_assessments (
 ### Core Protocol Generation (Original)
 - `POST /api/generate-protocol` - Generate protocol (now saves to DB automatically)
 - `POST /api/safety-screening` - Evaluate patient safety
-- `GET /api/exercises` - Get exercise library (50 exercises)
+- `GET /api/exercises` - Get exercise library (260 exercises, from all-exercises.js)
+- `GET /api/exercises/:code` - One exercise, by its library code (e.g. PROM_STIFLE)
 - `GET /api/conditions` - Get supported conditions (8 total)
 - `GET /api/health` - Server health check
 

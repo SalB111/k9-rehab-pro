@@ -115,6 +115,13 @@ const CHECKS = [
   // can never reach B.E.A.U. uncoded.
   { name: 'K9 · goals',                cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/goals.test.js'],
     ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
+  // One library, one identifier, one stated size. `all-exercises.js` is THE
+  // library; the `exercises_v2` table is a different one with a disjoint id
+  // scheme, and an endpoint keyed one by the other 404'd on every code the
+  // list endpoint handed out. Also asserts CLAUDE.md's anti-hallucination rule
+  // cites the size the library actually has — it said 223 against 260.
+  { name: 'K9 · exercise library',     cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/exercise-library.test.js'],
+    ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
   // The handoff contract.
   { name: 'K9 · HEP payload contract', cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/hep-payload-contract.test.js'],
     ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
