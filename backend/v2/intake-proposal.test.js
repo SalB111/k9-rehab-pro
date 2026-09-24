@@ -491,6 +491,82 @@ t('a disagreement between the two records is reported, not resolved', () => {
   assert.equal(age.v1Record, '10');
 });
 
+
+// ── Treatment approach: stated beats inferred ──────────────────────────────
+//
+// The Treatment panel offers SURGICAL, CONSERVATIVE and PALLIATIVE, and
+// getProtocolType routes 'palliative' to the comfort-care protocol AHEAD of
+// diagnosis. The derivation can only ever produce the first two, so while it
+// ran unconditionally a patient placed on comfort care was handed a
+// rehabilitation protocol. That is what these protect.
+
+const withBlob = (blob, over = {}) => patient({ dashboard_data: JSON.stringify(blob), ...over });
+
+t('a stated PALLIATIVE approach survives to the engine', () => {
+  const { proposed } = proposeEngineInputs({
+    patient: withBlob({ 'treatment::Approach': 'Palliative' }, { surgery_date: daysAgo(10) }),
+  });
+  assert.equal(proposed.treatmentApproach, 'Palliative',
+    'comfort care was overwritten by the surgery-date derivation, which is how '
+    + 'a palliative patient gets a rehabilitation protocol');
+});
+
+t('and it actually routes the comfort-care protocol', () => {
+  const { getProtocolType } = require('../protocol-generator');
+  assert.equal(getProtocolType('TPLO Post-Op', 'Left Stifle', 'Palliative'), 'geriatric',
+    'if this stops being true the reason for preferring the stated approach is gone');
+});
+
+t('a stated approach beats a contradicting surgery date', () => {
+  const { proposed, summary } = proposeEngineInputs({
+    patient: withBlob({ 'treatment::Approach': 'Conservative' }, { surgery_date: daysAgo(10) }),
+  });
+  assert.equal(proposed.treatmentApproach, 'Conservative');
+  assert.equal(summary.treatmentApproachSource, 'RECORD');
+});
+
+t('with nothing stated, the derivation still runs', () => {
+  const { proposed, summary } = proposeEngineInputs({
+    patient: patient({ condition: 'TPLO Post-Op', surgery_date: null }),
+  });
+  assert.equal(proposed.treatmentApproach, 'Surgical',
+    'the derivation was written for exactly this record and must not be lost');
+  assert.equal(summary.treatmentApproachSource, 'DERIVED');
+});
+
+// ── The summary counts are COUNTED, not constants ──────────────────────────
+
+t('summary.derived reflects what this run derived', () => {
+  // The proof that these are computed: the same patient, differing only in
+  // whether the approach is stated, must report different counts. Both were
+  // hardcoded literals until 2026-09-24, and the header said different numbers
+  // again.
+  const stated = proposeEngineInputs({
+    patient: withBlob({ 'treatment::Approach': 'Conservative' }),
+  }).summary;
+  const inferred = proposeEngineInputs({ patient: patient() }).summary;
+
+  assert.equal(inferred.derived, stated.derived + 1,
+    'deriving one more field did not change the count, so it is not a count');
+  assert.equal(stated.treatmentApproachSource, 'RECORD');
+  assert.equal(inferred.treatmentApproachSource, 'DERIVED');
+});
+
+t('summary.fromRecord matches the record block it describes', () => {
+  // `proposed` holds four kinds of field: the record block, the clinic's
+  // capabilities, the derived three, and every safety gate (null when the gate
+  // does not apply). Strip the last three and what remains is what
+  // summary.fromRecord claims to count.
+  const { proposed, summary } = proposeEngineInputs({ patient: patient() });
+  const notFromRecord = new Set([
+    ...SAFETY_GATES.map((g) => g.field),
+    'treatmentApproach', 'protocolLength', 'frequency',
+  ]);
+  const fromRecord = Object.keys(proposed).filter((k) => !notFromRecord.has(k));
+  assert.equal(summary.fromRecord, fromRecord.length,
+    'the reported count and the fields it counts have drifted apart');
+});
+
 // ── Report ─────────────────────────────────────────────────────────────────
 for (const { name, err } of failures) {
   console.error(`\n  FAIL  ${name}`);

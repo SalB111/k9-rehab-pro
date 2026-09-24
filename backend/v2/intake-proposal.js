@@ -6,17 +6,40 @@
  *
  * WHAT THIS REPLACES
  * A seven-step wizard asking 186 fields before a protocol appeared. Roughly
- * 150 of those the engine never read. Of the 40 it does read, 14 already sit
+ * 150 of those the engine never read. Of the 40 it does read, 15 already sit
  * on the patient record, 10 are properties of the clinic rather than the
- * animal, and 4 follow from a stated rule. That leaves 12 — the safety gates —
+ * animal, and 3 follow from a stated rule. That leaves 12 — the safety gates —
  * and a clinician only ever sees the ones relevant to the case in front of
  * them.
  *
+ * Those counts read 14 and 4 until 2026-09-24 while the code built 15 and 3.
+ * They are no longer written down here as constants: `summary` COUNTS what a
+ * given run actually did, and `summary.fromRecord`, `.fromClinic`, `.derived`,
+ * `.gatesApplicable` and `.gatesSkipped` are the checkable version of the
+ * sentence above.
+ *
+ * The SPLIT moves between runs and that is not a defect. Treatment approach is
+ * derived only when the record does not state it, so for a patient who states
+ * it the field leaves `derived` and is reported in `fromClinicalRecord`
+ * instead. All five current patients state it, so `derived` reads 2, not 3.
+ * What is stable is the 40 inputs the engine reads; how they were answered is
+ * exactly what `summary` exists to report.
+ *
  * WHY THIS IS RULES AND NOT A LANGUAGE MODEL
  * ------------------------------------------
- * "AI does the work" here means the protocol engine — 260 exercises, 33 safety
- * gates, evidence-graded selection. That is the intelligence, and it already
- * exists. This module's job is only to assemble its inputs.
+ * "AI does the work" here means the protocol engine — 260 exercises and an
+ * exclusion table a clinician can read line by line. That is the intelligence,
+ * and it already exists. This module's job is only to assemble its inputs.
+ *
+ * An earlier version of this line said "33 safety gates". Nothing in the
+ * engine produces that number and it is not derivable from the source, so it
+ * is gone rather than carried. What IS there, counted 2026-09-24:
+ * `CONTRAINDICATION_MAP` (18 keywords), `WEIGHT_BEARING_EXCLUSIONS` (3),
+ * `INCISION_EXCLUSIONS` (4), `ACTIVITY_RESTRICTION_EXCLUSIONS` (2), and three
+ * further rules in `getExcludedCodes` with no table of their own — lameness
+ * grade 5, severe OA, severe weakness. The exercise count is real:
+ *
+ *   node -e "require('./all-exercises')"   # prints the library summary
  *
  * A language model must not propose a value for a safety gate. Asked whether a
  * dog has deep pain sensation, a model will produce a confident, plausible,
@@ -52,6 +75,22 @@ const SOURCE = {
   DERIVED: 'DERIVED', // followed from a stated rule
   GATE: 'GATE',       // a safety gate — proposed cautiously, must be confirmed
 };
+
+/**
+ * How long a post-operative restriction is plausibly still in force.
+ *
+ * Crate rest and an e-collar are ordinary for the fortnight after surgery and
+ * implausible months later. Proposing them regardless of time was not merely
+ * over-cautious, it was degenerate: measured on 22 Sep 2026, a TPLO patient
+ * 26 weeks post-op received the same five passive exercises every week for
+ * eight weeks, and another protocol's final week contained a single modality.
+ * Answering both gates "no" turned those into 27 distinct exercises with real
+ * progression.
+ *
+ * A default that is obviously wrong every time is a default people learn to
+ * accept without reading, which costs more than it protects.
+ */
+const ACUTE_POST_OP_DAYS = 14;
 
 /**
  * The gates that fail UNSAFE. A clinician confirms each one that applies
@@ -90,22 +129,6 @@ const SOURCE = {
  *      looks answered. "true" sitting in a complications box is not caution;
  *      it is a field nobody will look at twice.
  */
-/**
- * How long a post-operative restriction is plausibly still in force.
- *
- * Crate rest and an e-collar are ordinary for the fortnight after surgery and
- * implausible months later. Proposing them regardless of time was not merely
- * over-cautious, it was degenerate: measured on 22 Sep 2026, a TPLO patient
- * 26 weeks post-op received the same five passive exercises every week for
- * eight weeks, and another protocol's final week contained a single modality.
- * Answering both gates "no" turned those into 27 distinct exercises with real
- * progression.
- *
- * A default that is obviously wrong every time is a default people learn to
- * accept without reading, which costs more than it protects.
- */
-const ACUTE_POST_OP_DAYS = 14;
-
 const SAFETY_GATES = [
   { field: 'weightBearingStatus', label: 'Weight-bearing status',   cautious: 'NWB' },
   { field: 'incisionStatus',      label: 'Incision status',          cautious: null },
@@ -309,6 +332,16 @@ function proposeEngineInputs({ patient, clinicInputs = {}, priorInputs = null } 
     breed: effective.breed || '',
   };
 
+  // COUNTED, not stated. `summary.fromRecord` was the literal 15 while the
+  // header said 14; a hardcoded count and the object above it drift apart the
+  // first time somebody adds a field to one of them.
+  const fromRecordCount = Object.keys(proposed).length;
+
+  // Each field this run DERIVES from a rule, as it derives it. Treatment
+  // approach is only derived when the record does not state it, so this is a
+  // property of the run and not a constant.
+  const derivedFields = new Set();
+
   // ── From the clinic. A property of the practice, not the animal. ─────────
   // Tri-state is preserved: null means "unstated", which the engine treats
   // differently from "unavailable". Never coerce it here.
@@ -346,18 +379,22 @@ function proposeEngineInputs({ patient, clinicInputs = {}, priorInputs = null } 
   // empty surgery date was being called Conservative.
   const recordedApproach = v1.values.treatmentApproach;
   if (recordedApproach) {
+    // Not added to derivedFields: this one was READ, not inferred.
     const prov = v1.provenance.treatmentApproach;
     proposed.treatmentApproach = recordedApproach;
     why.treatmentApproach = `Recorded in this practice's clinical record as `
       + `"${prov ? prov.raw : recordedApproach}". A stated approach is used as `
       + `stated rather than inferred from the surgery date.`;
   } else if (effective.surgery_date) {
+    derivedFields.add('treatmentApproach');
     proposed.treatmentApproach = 'Surgical';
     why.treatmentApproach = `A surgery date of ${effective.surgery_date} is on the record.`;
   } else if (surgicalPresentation) {
+    derivedFields.add('treatmentApproach');
     proposed.treatmentApproach = 'Surgical';
     why.treatmentApproach = 'The presentation names a surgical procedure, though no date is recorded.';
   } else {
+    derivedFields.add('treatmentApproach');
     proposed.treatmentApproach = 'Conservative';
     why.treatmentApproach = 'No surgery date, and the presentation names no procedure.';
   }
@@ -365,6 +402,8 @@ function proposeEngineInputs({ patient, clinicInputs = {}, priorInputs = null } 
   // Protocol shape follows how far into recovery the animal is. These are
   // starting points the clinician adjusts, not restrictions, so a wrong guess
   // is visible and harmless.
+  derivedFields.add('protocolLength');
+  derivedFields.add('frequency');
   if (postOpDays !== null && postOpDays >= 0 && postOpDays <= 14) {
     proposed.protocolLength = 4;  proposed.frequency = 'Every other day';
     why.protocolLength = `${postOpDays} days post-operative — acute phase.`;
@@ -470,9 +509,12 @@ function proposeEngineInputs({ patient, clinicInputs = {}, priorInputs = null } 
 
   const summary = {
     undatedSurgery,
-    fromRecord: 15,
+    fromRecord: fromRecordCount,
     fromClinic: Object.keys(clinicInputs).length,
-    derived: 3,
+    derived: derivedFields.size,
+    // Which way the approach was settled. It routes the engine down a
+    // different protocol path, so "who decided this" is worth surfacing.
+    treatmentApproachSource: derivedFields.has('treatmentApproach') ? 'DERIVED' : 'RECORD',
     gatesApplicable: gates.length,
     gatesSkipped: SAFETY_GATES.length - gates.length,
     // What the patient columns did not hold and the V1 clinical record did.
