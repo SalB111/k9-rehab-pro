@@ -544,8 +544,37 @@ function validateIntake(formData) {
   if (!formData.patientName)        errors.push('Patient name is required');
   if (!formData.clientLastName && !formData.clientFirstName) errors.push('Client name is required');
 
-  // Default optional fields if not provided
-  if (!formData.diagnosis)          { formData.diagnosis = 'Conditioning'; warnings.push('No diagnosis selected — defaulting to General Conditioning'); }
+  // A MISSING DIAGNOSIS IS AN ERROR, NOT A DEFAULT.
+  //
+  // This defaulted to 'Conditioning' until 2026-09-24. Measured on that date, a
+  // patient with no diagnosis, no affected region and no treatment approach
+  // produced: ZERO errors, a fabricated identity of Conditioning / Generalized
+  // / Conservative, routing to the OA protocol, and ZERO exclusions applied.
+  // A completely undescribed animal received a full rehabilitation protocol
+  // with no restriction of any kind, and the only signal was a warning.
+  //
+  // That is the fails-unsafe direction, and it contradicted this system's own
+  // stated doctrine in two other files:
+  //
+  //   intake-proposal.js  "A blank a clinician must fill is safer than a
+  //                        fabricated value that looks answered."
+  //   dashboard-bridge.js "UNRECOGNISED IS REPORTED, NEVER GUESSED."
+  //
+  // `diagnosis` is also what getProtocolType routes on, so a fabricated one
+  // does not merely fill a field — it chooses the protocol. There is no honest
+  // cautious value available here, so none is invented.
+  if (!formData.diagnosis) {
+    errors.push(
+      'Diagnosis is required. Without one the engine cannot choose a protocol, '
+      + 'and defaulting it silently produced an unrestricted conditioning '
+      + 'programme for a patient nobody had described.'
+    );
+  }
+
+  // These two still default, which is defensible only because a diagnosis is
+  // now required: diagnosis is the primary routing signal, these refine it.
+  // They remain fabrications presented as answers, so each one warns every
+  // time rather than filling in quietly.
   if (!formData.affectedRegion)     { formData.affectedRegion = 'Generalized'; warnings.push('No affected region selected — defaulting to Generalized'); }
   if (!formData.treatmentApproach)  { formData.treatmentApproach = 'Conservative'; warnings.push('No treatment approach selected — defaulting to Conservative'); }
 

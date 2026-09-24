@@ -266,6 +266,59 @@ test('a gate proposing nothing is still a gate', () => {
 });
 
 // ---------------------------------------------------------------------------
+// AN UNDESCRIBED PATIENT MUST NOT GENERATE
+//
+// The same defect this file exists for, one level up. Until 2026-09-24
+// validateIntake DEFAULTED a missing diagnosis to 'Conditioning' and a missing
+// region to 'Generalized'. Measured that day, a patient with no diagnosis, no
+// region and no approach produced zero errors, routed to the OA protocol, and
+// had ZERO exclusions applied. Every individual gate in this file was working;
+// the patient simply had no findings for any of them to act on.
+//
+// A gate that restricts nothing because the value is inert is what the tests
+// above catch. A whole protocol that restricts nothing because nobody said
+// what was wrong with the animal is this one.
+// ---------------------------------------------------------------------------
+
+test('a patient with no diagnosis does not generate at all', () => {
+  const fd = { patientName: 'Test', clientLastName: 'Owner' };
+  const { valid, errors } = validateIntake(fd);
+  assert.strictEqual(valid, false,
+    'an undescribed patient validated. It used to receive a full OA protocol '
+    + 'with no exclusions, and the only signal was a warning');
+  assert.ok(errors.some((e) => /diagnosis/i.test(e)),
+    'it must say which field is missing, not just refuse');
+});
+
+test('and the diagnosis is not fabricated on the way out', () => {
+  const fd = { patientName: 'Test', clientLastName: 'Owner' };
+  validateIntake(fd);
+  assert.ok(!fd.diagnosis,
+    'validateIntake mutates formData by design, but inventing a DIAGNOSIS is '
+    + 'not a derived severity flag - it chooses the protocol');
+});
+
+test('a described patient is unaffected', () => {
+  // The change must block the undescribed case and nothing else. Every
+  // patient in the live database carries a condition.
+  const { valid } = validateIntake(intake());
+  assert.strictEqual(valid, true, 'an ordinary intake stopped validating');
+});
+
+test('region and approach still default, and still say so', () => {
+  // These two remain fabrications presented as answers. That is tolerable only
+  // because diagnosis - the field that routes - is now required. If they ever
+  // stop warning, they become silent.
+  const fd = intake({ affectedRegion: '', treatmentApproach: '' });
+  const { valid, warnings } = validateIntake(fd);
+  assert.strictEqual(valid, true);
+  assert.strictEqual(fd.affectedRegion, 'Generalized');
+  assert.strictEqual(fd.treatmentApproach, 'Conservative');
+  assert.ok(warnings.some((w) => /affected region/i.test(w)), 'assumed a region silently');
+  assert.ok(warnings.some((w) => /treatment approach/i.test(w)), 'assumed an approach silently');
+});
+
+// ---------------------------------------------------------------------------
 
 if (failures.length) {
   console.error(`\nFAILED ${failures.length} of ${passed + failures.length}\n`);
