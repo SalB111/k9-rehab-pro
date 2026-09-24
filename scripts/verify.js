@@ -79,6 +79,10 @@ const CHECKS = [
   // so a phrase the UI offers can never go uninterpreted unnoticed.
   { name: 'K9 · home environment',     cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/home-environment.test.js'],
     ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
+  // Age is the one field on a patient record that goes wrong on its own. A
+  // date of birth does not, so age is derived from it rather than typed.
+  { name: 'K9 · patient age',          cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/patient-age.test.js'],
+    ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
   // What success looks like, split by who each goal was written for. The
   // vocabulary is read out of the real dashboard JSX, so a goal the UI offers
   // can never reach B.E.A.U. uncoded.

@@ -342,14 +342,17 @@ function readDashboard(patient) {
  * clinician looking at both, not for a precedence rule buried in a mapper.
  *
  * @param {Object} patient   the row, columns and dashboard_data
- * @param {Array} fields     [{ column, label, dashboardKey }]
+ * @param {Array} fields     [{ column, label, dashboardKey | v1, same? }]
  */
 function disagreements(patient, fields) {
   const blob = parse(patient);
   const out = [];
   for (const f of fields) {
     const stored = patient ? patient[f.column] : undefined;
-    const v1 = blob[f.dashboardKey];
+    // `v1` for a column the V1 record splits across several keys — the owner's
+    // name is one column here and a first and last name there. Without it the
+    // comparison would have to pick one half and would miss a changed surname.
+    const v1 = f.v1 ? f.v1(blob) : blob[f.dashboardKey];
     if (stored === undefined || stored === null || String(stored).trim() === '') continue;
     if (v1 === undefined || v1 === null || String(v1).trim() === '') continue;
     // Compare what the two values MEAN, not how they are spelled. Without
@@ -357,7 +360,12 @@ function disagreements(patient, fields) {
     // report that is mostly punctuation is a report nobody reads.
     const same = f.same || ((a, b) => String(a).trim().toLowerCase() === String(b).trim().toLowerCase());
     if (same(stored, v1)) continue;
-    out.push({ field: f.label, column: String(stored), v1Record: String(v1), key: f.dashboardKey });
+    out.push({
+      field: f.label,
+      column: String(stored),
+      v1Record: String(v1),
+      key: f.dashboardKey || (f.keys && f.keys.join(' + ')) || null,
+    });
   }
   return out;
 }
@@ -381,6 +389,53 @@ const sameSex = (a, b) => {
 };
 
 /**
+ * The same number, however it is punctuated.
+ *
+ * "(954) 555-0142" and "954-555-0142" are one phone number, and a report that
+ * flags the brackets is a report nobody reads. Only the digits are compared.
+ *
+ * A country code is NOT stripped: "+1 954 555 0142" against "954 555 0142" is
+ * left as a difference, because guessing that a leading 1 is a country code
+ * and not an area code is how a comparison quietly stops catching real
+ * mismatches.
+ */
+const samePhone = (a, b) => {
+  const digits = (v) => String(v).replace(/\D/g, '');
+  const x = digits(a), y = digits(b);
+  return x !== '' && x === y;
+};
+
+/** Case and surrounding space never make two addresses different. */
+const sameEmail = (a, b) => String(a).trim().toLowerCase() === String(b).trim().toLowerCase();
+
+/**
+ * The same person, ignoring spacing and case.
+ *
+ * Titles are NOT stripped, and this is a conservative choice rather than a
+ * safety property. The defect that prompted this comparison — a client column
+ * holding "Dr. Sarah Martinez" against a V1 record naming the owner "Sarah
+ * Thompson" — is caught on the surname whether or not the title is removed.
+ * What stripping would change is the everyday case where the owner IS a
+ * doctor: "Dr. Sarah Thompson" against "Sarah Thompson" is then reported.
+ *
+ * That is accepted noise. A name is how a person is identified on a medical
+ * record, the whole set here is five patients, and a difference that turns out
+ * to be a title costs one glance. If this ever reports more titles than real
+ * mismatches, strip them — the trade is legible and the tests pin it.
+ */
+const sameName = (a, b) => {
+  const norm = (v) => String(v).trim().toLowerCase().replace(/\s+/g, ' ');
+  return norm(a) === norm(b);
+};
+
+/** The owner's name, which V1 splits into two fields and the column does not. */
+const clientNameFromV1 = (blob) =>
+  [blob['client::Client First Name'], blob['client::Client Last Name']]
+    .map((s) => (s == null ? '' : String(s).trim()))
+    .filter(Boolean)
+    .join(' ');
+
+/**
  * The column/V1 pairs worth comparing.
  *
  * DELIBERATELY NOT COMPARED, having run this over all 18 production records:
@@ -397,6 +452,18 @@ const sameSex = (a, b) => {
  * What is left is the set where a difference means one of the two records is
  * WRONG about the animal: six age disagreements, four of them a stored 0
  * against a V1 record of 10 to 14 years, and one weight.
+ *
+ * THE CONTACT FIELDS were added later, and are about the OWNER rather than the
+ * animal — but a practice that rings the wrong number after a post-operative
+ * complication reaches nobody, so a difference there is still one record being
+ * wrong. Adding them surfaced three defects on a single patient whose columns
+ * had never been corrected from seed data: an email of sarah@example.com, a
+ * phone of (555) 123-4567, and a client_name holding a VETERINARIAN's name
+ * while the V1 record named the actual owner. None of it was visible before,
+ * because none of these columns was compared.
+ *
+ * `species` is deliberately not compared: the column is NOT NULL DEFAULT
+ * 'canine' and differs from the V1 record only in capitalisation.
  */
 const COMPARABLE = [
   { column: 'age', label: 'Age', dashboardKey: 'client::Age (years)', same: sameNumber },
@@ -405,6 +472,15 @@ const COMPARABLE = [
     dashboardKey: 'metrics::BCS (1–9)', same: sameNumber },
   { column: 'sex', label: 'Sex', dashboardKey: 'client::Sex', same: sameSex },
   { column: 'surgery_date', label: 'Surgery date', dashboardKey: 'treatment::Surgery Date' },
+  { column: 'client_email', label: 'Client email', dashboardKey: 'client::Email', same: sameEmail },
+  { column: 'client_phone', label: 'Client phone', dashboardKey: 'client::Phone', same: samePhone },
+  {
+    column: 'client_name',
+    label: 'Client name',
+    keys: ['client::Client First Name', 'client::Client Last Name'],
+    v1: clientNameFromV1,
+    same: sameName,
+  },
 ];
 
 module.exports = {

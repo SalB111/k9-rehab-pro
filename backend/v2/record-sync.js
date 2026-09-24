@@ -63,6 +63,22 @@ const TWO_WAY = [
   { column: 'breed', key: 'client::Breed', out: (v) => String(v) },
   { column: 'name', key: 'client::Patient Name', out: (v) => String(v) },
   { column: 'surgery_date', key: 'treatment::Surgery Date', out: (v) => String(v) },
+  // Contact details. Plain facts by the same test as the rest: one spelling,
+  // one meaning, and a column that is simply empty on a patient whose V1
+  // record has the answer. One patient's referring surgeon was recorded in V1
+  // and nowhere else, so nothing downstream could reach the person who
+  // operated on the dog.
+  //
+  // This only ever FILLS AN EMPTY COLUMN — it does not correct a column that
+  // already holds something, including a placeholder. A column holding
+  // sarah@example.com against a V1 record holding a real address is a
+  // disagreement, and disagreements are reported by dashboard-bridge for a
+  // person to resolve, never overwritten here.
+  { column: 'client_email', key: 'client::Email', out: (v) => String(v) },
+  { column: 'client_phone', key: 'client::Phone', out: (v) => String(v) },
+  { column: 'referring_vet', key: 'client::Referred By', out: (v) => String(v) },
+  // The date of birth, which unlike the age it implies does not go stale.
+  { column: 'date_of_birth', key: 'client::Date of Birth', out: (v) => String(v) },
 ];
 
 /**

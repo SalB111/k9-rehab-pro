@@ -166,6 +166,43 @@ async function buildRealPayload() {
     assert.ok('goals' in JSON.parse(JSON.stringify(payload)), 'goals vanished through serialization');
   });
 
+  await test('no client PII reaches B.E.A.U.', async () => {
+    // The payload gains a context block with every V1 dataset migrated, and
+    // the client block is the one that must NOT travel: an address, a phone
+    // number, a microchip and an emergency contact have no bearing on how an
+    // owner performs an exercise at home.
+    //
+    // Checked by searching the SERIALIZED payload for the patient's actual
+    // recorded values rather than for field names, because the risk is a value
+    // riding along inside prose — a clinical note that happens to quote a
+    // phone number — not a tidily named field somebody would notice.
+    const patient = raw.prepare(
+      `SELECT id, name, dashboard_data FROM patients
+        WHERE dashboard_data LIKE '%client::Phone%' ORDER BY id LIMIT 1`
+    ).get();
+    assert.ok(patient, 'no patient with client contact details to test against');
+
+    let blob = {};
+    try { blob = JSON.parse(patient.dashboard_data || '{}'); } catch { /* asserted below */ }
+
+    const PRIVATE = [
+      'client::Phone', 'client::Email', 'client::Street Address', 'client::Address',
+      'client::Zip / Postal Code', 'client::Microchip #', 'client::Emergency Contact',
+      'client::Apt / Suite / Unit', 'client::Pet Insurance Provider',
+    ];
+    const secrets = PRIVATE
+      .map((k) => blob[k])
+      .filter((v) => v != null && String(v).trim().length >= 5)
+      .map(String);
+    assert.ok(secrets.length >= 3,
+      `expected several private values on ${patient.name} to test against, found ${secrets.length}`);
+
+    const serialized = JSON.stringify(await buildRealPayload());
+    const leaked = secrets.filter((v) => serialized.includes(v));
+    assert.deepStrictEqual(leaked, [],
+      `the handoff payload carries private client data: ${leaked.join(', ')}`);
+  });
+
   await test('the contract still forbids undeclared fields (the check has teeth)', () => {
     assert.strictEqual(schema.additionalProperties, false,
       'the top-level contract stopped forbidding extra fields, so drift would go unnoticed');

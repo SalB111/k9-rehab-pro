@@ -357,6 +357,15 @@ async function createTables() {
     console.log("📦 Migration: added last_visit_date column to patients");
   } catch { /* column already exists */ }
 
+  // Migration: date of birth. `age` is the one field on a patient record that
+  // becomes wrong on its own — nobody revisits a record to increment it — and
+  // a birth date does not. Stored as ISO text, which is what the dashboard's
+  // date input already produces. See v2/patient-age.js.
+  try {
+    await run("ALTER TABLE patients ADD COLUMN date_of_birth TEXT");
+    console.log("📦 Migration: added date_of_birth column to patients");
+  } catch { /* column already exists */ }
+
   console.log("📦 All tables created (V2 only)");
 }
 

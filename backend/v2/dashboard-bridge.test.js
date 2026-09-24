@@ -539,6 +539,115 @@ test('nothing is reported when either side is empty', () => {
 
 // ---------------------------------------------------------------------------
 
+// ── contact fields ───────────────────────────────────────────────────────────
+// Added with the client block. These are about the OWNER rather than the
+// animal, but a practice that rings the wrong number after a post-operative
+// complication reaches nobody.
+
+test('a placeholder left in a column is reported against the real V1 value', () => {
+  const d = bridge.disagreements({
+    client_email: 'sarah@example.com',
+    client_phone: '(555) 123-4567',
+    dashboard_data: JSON.stringify({
+      'client::Email': 'sarah.thompson@gmail.com',
+      'client::Phone': '(954) 555-0142',
+    }),
+  }, bridge.COMPARABLE);
+  assert.ok(d.find((x) => x.field === 'Client email'), 'a seed email must be reported');
+  assert.ok(d.find((x) => x.field === 'Client phone'), 'a seed phone must be reported');
+});
+
+test('a phone number is compared on its digits, not its punctuation', () => {
+  const d = bridge.disagreements({
+    client_phone: '(954) 555-0142',
+    dashboard_data: JSON.stringify({ 'client::Phone': '954-555-0142' }),
+  }, bridge.COMPARABLE);
+  assert.deepStrictEqual(d, [], 'brackets and dashes are not a disagreement');
+});
+
+test('a country code is left as a difference rather than guessed away', () => {
+  // Stripping a leading 1 would also strip an area code on a ten-digit number,
+  // which is how a comparison quietly stops catching real mismatches.
+  const d = bridge.disagreements({
+    client_phone: '+1 954 555 0142',
+    dashboard_data: JSON.stringify({ 'client::Phone': '954 555 0142' }),
+  }, bridge.COMPARABLE);
+  assert.strictEqual(d.length, 1, 'an unexplained extra digit is worth a human look');
+});
+
+test('an email differs only by case is not a disagreement', () => {
+  const d = bridge.disagreements({
+    client_email: 'Sarah.Thompson@Gmail.com',
+    dashboard_data: JSON.stringify({ 'client::Email': 'sarah.thompson@gmail.com' }),
+  }, bridge.COMPARABLE);
+  assert.deepStrictEqual(d, []);
+});
+
+test("the owner's name is compared across both V1 fields, not one of them", () => {
+  // The column holds one name; the V1 record holds a first and a last. Reading
+  // only the first would miss a changed surname entirely.
+  const d = bridge.disagreements({
+    client_name: 'Sarah Thompson',
+    dashboard_data: JSON.stringify({
+      'client::Client First Name': 'Sarah',
+      'client::Client Last Name': 'Thompson',
+    }),
+  }, bridge.COMPARABLE);
+  assert.deepStrictEqual(d, [], 'the joined name matches');
+
+  const changed = bridge.disagreements({
+    client_name: 'Sarah Martinez',
+    dashboard_data: JSON.stringify({
+      'client::Client First Name': 'Sarah',
+      'client::Client Last Name': 'Thompson',
+    }),
+  }, bridge.COMPARABLE);
+  assert.strictEqual(changed.length, 1, 'a different surname must be caught');
+});
+
+test("a veterinarian's name sitting in the client column is reported", () => {
+  // The defect this comparison was added for. A title is NOT stripped: a rule
+  // that removed "Dr." would equate a vet with a client of the same name.
+  const d = bridge.disagreements({
+    client_name: 'Dr. Sarah Martinez',
+    dashboard_data: JSON.stringify({
+      'client::Client First Name': 'Sarah',
+      'client::Client Last Name': 'Thompson',
+    }),
+  }, bridge.COMPARABLE);
+  const hit = d.find((x) => x.field === 'Client name');
+  assert.ok(hit, 'the client column holding a vet name must be reported');
+  assert.strictEqual(hit.column, 'Dr. Sarah Martinez');
+  assert.strictEqual(hit.v1Record, 'Sarah Thompson');
+});
+
+test('a title alone IS reported — accepted noise, pinned so the trade is visible', () => {
+  // Not a safety property. The vet-in-the-client-column defect is caught on
+  // the surname either way; what this pins is the everyday case where the
+  // owner is themselves a doctor. If titles ever outnumber real mismatches,
+  // strip them in sameName and change this test deliberately.
+  const d = bridge.disagreements({
+    client_name: 'Dr. Sarah Thompson',
+    dashboard_data: JSON.stringify({
+      'client::Client First Name': 'Sarah',
+      'client::Client Last Name': 'Thompson',
+    }),
+  }, bridge.COMPARABLE);
+  assert.strictEqual(d.length, 1, 'a title difference is currently reported');
+});
+
+test('a composite field still reports which V1 keys it read', () => {
+  const [hit] = bridge.disagreements({
+    client_name: 'Someone Else',
+    dashboard_data: JSON.stringify({
+      'client::Client First Name': 'Sarah',
+      'client::Client Last Name': 'Thompson',
+    }),
+  }, bridge.COMPARABLE);
+  assert.ok(hit.key && hit.key.includes('Client First Name'),
+    'a report with no key tells nobody where to go and fix it');
+});
+
 if (failures.length) {
   console.error(`\nFAILED ${failures.length} of ${passed + failures.length}\n`);
   for (const f of failures) console.error(`  ✗ ${f.name}\n    ${f.message}\n`);
