@@ -56,14 +56,62 @@ test('the coverage guard actually fails when a gate loses its item', () => {
   assert.throws(() => eq.assertCoversEngineGates(fake), /modalityUnicorn/);
 });
 
-test('each capability is enabled by exactly one item', () => {
-  // A capability fed by two items needs a rule for when they disagree, and the
-  // honest rule is the 1:1 map itself.
-  const counts = {};
-  for (const cap of Object.values(eq.TO_CAPABILITY)) counts[cap] = (counts[cap] || 0) + 1;
-  for (const [cap, n] of Object.entries(counts)) {
-    assert.strictEqual(n, 1, `${cap} is enabled by ${n} items`);
+test('every capability has at least one item that enables it', () => {
+  // More than one is allowed and means OR — two machines can deliver heat.
+  // None is the failure: a capability with no enabler can never be turned on,
+  // so the therapy is withheld from every practice forever.
+  for (const cap of Object.values(eq.TO_CAPABILITY)) {
+    assert.ok(
+      Array.isArray(eq.FROM_CAPABILITY[cap]) && eq.FROM_CAPABILITY[cap].length > 0,
+      `${cap} has no item that enables it`
+    );
   }
+});
+
+test('a capability with two enablers is satisfied by either', () => {
+  // Heat therapy: a hydrocollator OR a handheld infrared unit. Requiring one
+  // specifically withholds a therapy the practice can plainly give.
+  const heat = eq.FROM_CAPABILITY.modality_heat_therapy;
+  assert.ok(heat.length >= 2, 'heat therapy should have more than one enabler');
+  for (const item of heat) {
+    const d = eq.deriveCapabilities({ [item]: true });
+    assert.strictEqual(d.modality_heat_therapy, true, `"${item}" alone should enable heat`);
+  }
+});
+
+test('a capability is only unavailable when EVERY way of delivering it is denied', () => {
+  const heat = eq.FROM_CAPABILITY.modality_heat_therapy;
+  // One denied, the other unanswered: not a "no". Somebody may still own it.
+  const partial = eq.deriveCapabilities({ [heat[0]]: false });
+  assert.strictEqual(partial.modality_heat_therapy, null,
+    'one machine answered "no" does not mean the therapy is unavailable');
+  // All denied: genuinely unavailable.
+  const all = eq.deriveCapabilities(Object.fromEntries(heat.map((i) => [i, false])));
+  assert.strictEqual(all.modality_heat_therapy, false);
+});
+
+test('turning a capability on does not overwrite which machine the practice owns', () => {
+  // A toggle that says "we can do heat" cannot say which device does it. If the
+  // record already names one, the toggle must leave it alone.
+  const current = { 'Infrared Therapy': true };
+  const out = eq.capabilitiesToChecklist({ modality_heat_therapy: true }, current);
+  assert.strictEqual(out['Moist Heat / Hydrocollator'], undefined,
+    'it should not invent a hydrocollator the practice never claimed');
+});
+
+test('turning a capability on with nothing recorded ticks the canonical item', () => {
+  const out = eq.capabilitiesToChecklist({ modality_heat_therapy: true }, {});
+  assert.strictEqual(out[eq.PRIMARY_ITEM.modality_heat_therapy], true);
+});
+
+test('turning a capability off denies every way of delivering it', () => {
+  // Otherwise deriving straight afterwards ORs one of them back to true and the
+  // toggle silently does nothing.
+  const out = eq.capabilitiesToChecklist({ modality_heat_therapy: false }, { 'Infrared Therapy': true });
+  for (const item of eq.FROM_CAPABILITY.modality_heat_therapy) {
+    assert.strictEqual(out[item], false, `"${item}" should be denied too`);
+  }
+  assert.strictEqual(eq.deriveCapabilities(out).modality_heat_therapy, false);
 });
 
 test('every gating item is a real item on the checklist', () => {
@@ -72,15 +120,17 @@ test('every gating item is a real item on the checklist', () => {
   }
 });
 
-test('the three deliberate non-mappings stay unmapped', () => {
-  // Each is a clinical judgement recorded in the module, not an oversight:
-  //   Class IIIb Laser  — the engine's exercise is LASER_IV, a Class IV
-  //     protocol a IIIb device cannot deliver.
-  //   Infrared Therapy  — heating, but not the moist-heat thermotherapy the
-  //     engine's HEAT_THERAPY describes.
-  //   Cold Water Spa    — aquatic, but not a pool a dog is walked in, and not
+test('the two deliberate non-mappings stay unmapped', () => {
+  // Both are clinical judgements recorded in the module, not oversights:
+  //   Class IIIb Laser — the engine's exercise is LASER_IV, a Class IV
+  //     protocol a IIIb device cannot deliver. The practice's own unit is a
+  //     Class IV, which is the item that answers for it.
+  //   Cold Water Spa   — aquatic, but not a pool a dog is walked in, and not
   //     a cryotherapy unit.
-  for (const item of ['Class IIIb Laser', 'Infrared Therapy', 'Cold Water Spa / Whirlpool']) {
+  //
+  // Infrared Therapy was on this list and should not have been; it is a
+  // handheld heat-penetrating unit and it now enables heat therapy.
+  for (const item of ['Class IIIb Laser', 'Cold Water Spa / Whirlpool']) {
     assert.ok(eq.ALL_ITEMS.includes(item), `"${item}" is no longer on the checklist`);
     assert.strictEqual(
       eq.TO_CAPABILITY[item], undefined,
@@ -119,8 +169,10 @@ test('deriving returns every capability, always', () => {
   // A missing key is a dropped enablement gate, which withholds therapy with
   // no error anywhere.
   const d = eq.deriveCapabilities({ 'TENS Unit': true });
+  // The UNIQUE set of capabilities — TO_CAPABILITY is keyed by item, and two
+  // items now name the same capability, so its values carry a duplicate.
   assert.deepStrictEqual(
-    Object.keys(d).sort(), Object.values(eq.TO_CAPABILITY).sort()
+    Object.keys(d).sort(), [...new Set(Object.values(eq.TO_CAPABILITY))].sort()
   );
 });
 
@@ -128,10 +180,14 @@ test('checklist and capabilities round-trip without losing a state', () => {
   for (const value of [true, false, null]) {
     const checklist = Object.fromEntries(Object.keys(eq.TO_CAPABILITY).map((i) => [i, value]));
     const caps = eq.deriveCapabilities(checklist);
-    const back = eq.capabilitiesToChecklist(caps);
-    for (const item of Object.keys(eq.TO_CAPABILITY)) {
-      assert.strictEqual(back[item], value, `${item} lost ${JSON.stringify(value)} on the round trip`);
-    }
+    const back = eq.capabilitiesToChecklist(caps, checklist);
+    // Deriving the round-tripped checklist must give the same capabilities.
+    // Item-by-item equality is too strong now that a capability can have two
+    // enablers: turning heat on with infrared already ticked correctly leaves
+    // the hydrocollator alone rather than asserting one the practice never
+    // claimed. What has to survive is the CAPABILITY, not which box holds it.
+    const again = eq.deriveCapabilities({ ...checklist, ...back });
+    assert.deepStrictEqual(again, caps, `capabilities changed round-tripping ${JSON.stringify(value)}`);
   }
 });
 
@@ -195,7 +251,7 @@ test('every item belongs to exactly one category', () => {
 });
 
 test('gating and inventory together account for the whole checklist', () => {
-  const gating = Object.keys(eq.TO_CAPABILITY).length;
+  const gating = Object.keys(eq.TO_CAPABILITY).length;  // items, not capabilities
   assert.strictEqual(
     gating + eq.INVENTORY_ONLY.length, eq.ALL_ITEMS.length,
     'an item is either a gate or inventory; it cannot be neither or both'

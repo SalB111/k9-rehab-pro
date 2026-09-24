@@ -87,31 +87,33 @@ const CHECKLIST = [
 ];
 
 /**
- * The ten items that enable a therapy, and the capability each enables.
+ * The items that enable a therapy, and the capability each enables.
  *
- * One item per capability, on purpose. A capability fed by two items would need
- * a rule for which wins when they disagree, and the honest rule — "the one that
- * can actually deliver the therapy" — is exactly what a 1:1 map states already.
+ * A capability may have MORE THAN ONE enabler, and it means OR: a practice that
+ * owns any machine capable of delivering the therapy can deliver it. Heat is
+ * the case — a hydrocollator and a handheld infrared unit are different
+ * machines that both produce therapeutic heat, and requiring the hydrocollator
+ * specifically would withhold heat from a practice that can plainly give it.
  *
- * THREE ITEMS ARE DELIBERATELY NOT MAPPED, and each is a clinical judgement
- * rather than an oversight:
+ * TWO ITEMS ARE DELIBERATELY NOT MAPPED, and both are clinical judgements:
  *
  *   Class IIIb Laser — the engine's laser exercise is LASER_IV, a Class IV
  *     protocol. A IIIb device is lower power and does not deliver it. Mapping
  *     IIIb to `modality_laser` would prescribe a Class IV protocol on a machine
- *     that cannot perform it.
- *
- *   Infrared Therapy — a superficial heating modality, but the engine's
- *     HEAT_THERAPY is thermotherapy by moist heat. They are not the same
- *     delivery, and the cost of being wrong here is prescribing a modality the
- *     practice cannot give.
+ *     that cannot perform it. (Confirmed 24 Sep 2026: the practice's unit is a
+ *     Class IV, so the Class IV item is the one that answers for it.)
  *
  *   Cold Water Spa / Whirlpool — aquatic, but not a pool a dog is walked in,
  *     and not a cryotherapy unit. It enables neither gate.
  *
- * All three are still RECORDED. They are inventory, not capability, and a
- * clinician who disagrees can say so — that is a better outcome than a map
- * that quietly decided for them.
+ * Both are still RECORDED. They are inventory, not capability.
+ *
+ * A THIRD WAS UNMAPPED AND SHOULD NOT HAVE BEEN. I left Infrared Therapy out on
+ * the reasoning that the engine's HEAT_THERAPY is moist heat and infrared is a
+ * different delivery. That was my judgement and it was wrong: the unit is a
+ * handheld heat-penetrating device and it delivers the therapy. A clinician
+ * corrected it, which is the point of writing the reasoning down rather than
+ * only the decision.
  */
 const TO_CAPABILITY = {
   'Underwater Treadmill (UWTM)': 'modality_uwtm',
@@ -124,11 +126,40 @@ const TO_CAPABILITY = {
   'PEMF (Pulsed Electromagnetic Field)': 'modality_pulsed_emf',
   'Cryotherapy Unit': 'modality_cryotherapy',
   'Moist Heat / Hydrocollator': 'modality_heat_therapy',
+  // A SECOND WAY TO DELIVER HEAT.
+  //
+  // Unmapped until 24 Sep 2026, on the reasoning that the engine's
+  // HEAT_THERAPY is moist-heat thermotherapy and infrared is a different
+  // delivery. Sal corrected that: the unit in question is a handheld
+  // heat-penetrating device, and a practice that owns one can give heat
+  // therapy whether or not it also owns a hydrocollator.
+  //
+  // I had the clinical judgement wrong, and it is the reason a capability may
+  // now have more than one enabler.
+  'Infrared Therapy': 'modality_heat_therapy',
 };
 
-/** Capability -> the one item that enables it. The inverse, built once. */
-const FROM_CAPABILITY = Object.fromEntries(
-  Object.entries(TO_CAPABILITY).map(([item, cap]) => [cap, item])
+/**
+ * Capability -> every item that enables it.
+ *
+ * More than one is allowed, and it means OR: a practice that owns any device
+ * capable of delivering the therapy can deliver it. Heat is the case that
+ * forced this — a hydrocollator and a handheld infrared unit are different
+ * machines that both produce therapeutic heat.
+ *
+ * Insertion order matters. The FIRST item listed is the canonical one, used
+ * when the V2 screen toggles a capability directly and something has to be
+ * ticked: with two ways to deliver heat and no other information, the answer
+ * has to be the ordinary one rather than a guess between them.
+ */
+const FROM_CAPABILITY = {};
+for (const [item, cap] of Object.entries(TO_CAPABILITY)) {
+  (FROM_CAPABILITY[cap] = FROM_CAPABILITY[cap] || []).push(item);
+}
+
+/** The canonical item for a capability — the one a direct toggle ticks. */
+const PRIMARY_ITEM = Object.fromEntries(
+  Object.entries(FROM_CAPABILITY).map(([cap, items]) => [cap, items[0]])
 );
 
 /** Every item, flat, in checklist order. */
@@ -159,9 +190,15 @@ function categoryOf(item) {
  */
 function deriveCapabilities(checked = {}) {
   const out = {};
-  for (const [cap, item] of Object.entries(FROM_CAPABILITY)) {
-    const v = checked[item];
-    out[cap] = v === true ? true : v === false ? false : null;
+  for (const [cap, items] of Object.entries(FROM_CAPABILITY)) {
+    const values = items.map((i) => checked[i]);
+    // OR across the enablers, tri-state. One machine that can deliver the
+    // therapy is enough; only when EVERY way of delivering it has been
+    // answered "no" is the therapy genuinely unavailable; and if nobody has
+    // answered any of them it stays unstated rather than becoming a "no".
+    if (values.some((v) => v === true)) out[cap] = true;
+    else if (values.length && values.every((v) => v === false)) out[cap] = false;
+    else out[cap] = null;
   }
   return out;
 }
@@ -172,12 +209,25 @@ function deriveCapabilities(checked = {}) {
  * Used when the V2 admin screen toggles a capability directly — the checklist
  * is the record both screens read, so a toggle has to land in it.
  */
-function capabilitiesToChecklist(capabilities = {}) {
+function capabilitiesToChecklist(capabilities = {}, currentChecklist = {}) {
   const out = {};
-  for (const [cap, item] of Object.entries(FROM_CAPABILITY)) {
+  for (const [cap, items] of Object.entries(FROM_CAPABILITY)) {
     if (!(cap in capabilities)) continue;
     const v = capabilities[cap];
-    out[item] = v === true ? true : v === false ? false : null;
+
+    if (v === false || v === null) {
+      // "We cannot deliver this" has to mean every way of delivering it, or a
+      // derive straight afterwards would OR one of them back to true.
+      for (const item of items) out[item] = v === false ? false : null;
+      continue;
+    }
+
+    // Turning a capability ON: if the practice already says it owns one of the
+    // machines, leave the record alone — it is more specific than the toggle.
+    // Only when none is ticked does the canonical item get it, because a
+    // switch that says "we can do heat" cannot say which device does it.
+    if (items.some((i) => currentChecklist[i] === true)) continue;
+    out[PRIMARY_ITEM[cap]] = true;
   }
   return out;
 }
@@ -248,6 +298,7 @@ function assertCoversEngineGates(contract) {
 
 module.exports = {
   CHECKLIST,
+  PRIMARY_ITEM,
   ALL_ITEMS,
   INVENTORY_ONLY,
   TO_CAPABILITY,

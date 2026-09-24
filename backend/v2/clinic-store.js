@@ -154,7 +154,10 @@ async function setCapabilities(db, { clinicId, capabilities, equipment: checklis
   if (Object.keys(input).length) {
     Object.assign(merged, equipment.capabilitiesToChecklist(
       Object.fromEntries(Object.entries(input).map(([k, v]) => [k, toTriState(v) === 1 ? true
-        : toTriState(v) === 0 ? false : null]))
+        : toTriState(v) === 0 ? false : null])),
+      // The checklist as it stands, so turning a capability on does not
+      // overwrite a practice that has already said WHICH machine it owns.
+      merged
     ));
   }
 
