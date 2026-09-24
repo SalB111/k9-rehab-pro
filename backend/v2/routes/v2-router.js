@@ -30,6 +30,7 @@ const intakeProposal = require('../intake-proposal');
 const patientGaps = require('../patient-gaps');
 const patientHomeStore = require('../patient-home-store');
 const patientGoalsStore = require('../patient-goals-store');
+const patientDiagnosticsStore = require('../patient-diagnostics-store');
 const ownerAuth = require('../owner-auth');
 const { requireRole, requireApprovalAuthority } = require('../middleware/require-role');
 const { route } = require('../http-errors');
@@ -236,6 +237,54 @@ function createV2Router(deps) {
       status: req.body.status === undefined ? null : req.body.status,
       note: req.body.note,
       visitId: req.body.visit_id,
+      actor: req.user,
+    });
+    res.json({ success: true, data: row });
+  }));
+
+
+  // -------------------------------------------------------------------------
+  // Diagnostics — V3: `patient_diagnostic_studies` is the source of truth
+  //
+  // A study is a ROW WITH A DATE. A repeat MRI is a second study, not a
+  // sentence appended to the first one's findings — which is the state four
+  // records in this database were already in.
+  //
+  // `performed_on` is set here by a clinician and is never inferred from the
+  // findings text: "at 8w" is a point in a recovery, not a date.
+  // -------------------------------------------------------------------------
+
+  router.get('/patients/:id/diagnostics', route(async (req, res) => {
+    res.json({
+      success: true,
+      data: await patientDiagnosticsStore.getStudies(db, Number(req.params.id)),
+    });
+  }));
+
+  router.post('/patients/:id/diagnostics', route(async (req, res) => {
+    const id = await patientDiagnosticsStore.addStudy(db, {
+      patientId: Number(req.params.id),
+      category: req.body.category,
+      modality: req.body.modality,
+      panels: req.body.panels,
+      performedOn: req.body.performed_on,
+      findings: req.body.findings,
+      actor: req.user,
+    });
+    res.status(201).json({
+      success: true,
+      data: await patientDiagnosticsStore.getStudies(db, Number(req.params.id)),
+      id,
+    });
+  }));
+
+  router.put('/diagnostics/:studyId', route(async (req, res) => {
+    const row = await patientDiagnosticsStore.updateStudy(db, {
+      studyId: Number(req.params.studyId),
+      performedOn: req.body.performed_on,
+      findings: req.body.findings,
+      panels: req.body.panels,
+      modality: req.body.modality,
       actor: req.user,
     });
     res.json({ success: true, data: row });

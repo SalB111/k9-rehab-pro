@@ -26,6 +26,7 @@ const SQLITE_SCHEMAS = [
   // lived only in `patients.dashboard_data`, keyed by UI label.
   'patient-home.sqlite.sql',
   'patient-goals.sqlite.sql',
+  'patient-diagnostics.sqlite.sql',
 ];
 
 /** Postgres/Supabase equivalents, same order. Kept in parity by tests/schema-parity.test.js. */
@@ -38,6 +39,7 @@ const POSTGRES_SCHEMAS = [
   'home-execution.postgres.sql',
   'patient-home.postgres.sql',
   'patient-goals.postgres.sql',
+  'patient-diagnostics.postgres.sql',
 ];
 
 /**

@@ -97,6 +97,10 @@ const CHECKS = [
   // legacy one every seeded record is in. Nothing read either before.
   { name: 'K9 · diagnostics',          cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/diagnostics.test.js'],
     ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
+  // V3: a diagnostic study is a row with a date, so a repeat MRI is a second
+  // study. Guards that a findings text is never split and a date never inferred.
+  { name: 'K9 · diagnostics store (V3)', cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/patient-diagnostics-store.test.js'],
+    ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
   // Age is the one field on a patient record that goes wrong on its own. A
   // date of birth does not, so age is derived from it rather than typed.
   { name: 'K9 · patient age',          cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/patient-age.test.js'],

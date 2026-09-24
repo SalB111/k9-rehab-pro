@@ -50,6 +50,53 @@ const LAB_PANELS = ['CBC', 'Chemistry Panel', 'Urinalysis', 'Thyroid Panel', 'Ur
 const MULTI_DELIMITER = '||';
 const PREFIX = 'diagnostics::';
 
+// ---------------------------------------------------------------------------
+// V3 — diagnostics are a TIMELINE, not a set of checkboxes
+//
+// Both V1 shapes record whether a modality was ever performed and give it one
+// findings box. A rehabilitation patient is imaged more than once: before
+// surgery, after it, and at recheck, and the whole point of the second study
+// is comparing it with the first.
+//
+// That is not hypothetical here. Four fields in this database already describe
+// more than one study each, crammed into a single text:
+//
+//   Bella   radiograph findings   "at 4w", "post-op", "recheck"
+//   Bella   lab results           "pre-op", "post-op", "day 7"
+//   Winston MRI findings          "post-op MRI at 8w"
+//   Winston lab results           "pre-op", "post-op", "day 5"
+//
+// So a study becomes a ROW with a DATE, and a repeat study is another row.
+// ---------------------------------------------------------------------------
+
+const CATEGORY = { IMAGING: 'IMAGING', LAB: 'LAB' };
+const CATEGORIES = Object.keys(CATEGORY);
+
+/**
+ * Does this text appear to describe more than one study?
+ *
+ * REPORTS ONLY. It never splits the text: "T13-L1 right-sided Hansen Type I
+ * disc extrusion with 60% spinal cord compression. No myelomalacia. Post-op
+ * MRI at 8w showed appropriate decompression" is plainly two studies to a
+ * clinician, and cutting it in two would be this codebase inventing a clinical
+ * record — including inventing which finding belongs to which study.
+ *
+ * A clinician splits them. This only makes the fact visible so somebody can.
+ */
+function describesMultipleStudies(text) {
+  if (!text) return false;
+  const t = String(text);
+  const markers = [
+    /\bpre-?op\b/i,
+    /\bpost-?op\b/i,
+    /\brecheck\b/i,
+    /\bfollow-?up\b/i,
+    /\bat \d+\s*(w|wk|wks|week|weeks|d|day|days|m|month|months)\b/i,
+    /\bday \d+\b/i,
+  ];
+  return markers.filter((m) => m.test(t)).length >= 2;
+}
+
 function blank(value) {
   return value === undefined || value === null || String(value).trim() === '';
 }
@@ -189,6 +236,9 @@ function read(dashboardData) {
 
 module.exports = {
   IMAGING_MODALITIES,
+  CATEGORY,
+  CATEGORIES,
+  describesMultipleStudies,
   LAB_PANELS,
   MULTI_DELIMITER,
   read,

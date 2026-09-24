@@ -1004,186 +1004,185 @@ function ClientPanel() {
 }
 
 // ── DIAGNOSTICS ───────────────────────────────────────────────────────────────
+/**
+ * DIAGNOSTICS — imaging and laboratory work as a TIMELINE
+ *
+ * V3. Reads and writes \`patient_diagnostic_studies\` through the V2 API. That
+ * table is the source of truth; \`patients.dashboard_data\` is no longer read
+ * for this block.
+ *
+ * WHY THIS IS A LIST OF STUDIES AND NOT A SET OF CHECKBOXES
+ *
+ * The old panel recorded whether a modality had EVER been performed and gave it
+ * one findings box. A rehabilitation patient is imaged before surgery, after it
+ * and at recheck, and the clinical value of the second study is the comparison
+ * with the first — which one box cannot hold, so the second gets appended to
+ * the first and they stop being separable. Four records in this database are
+ * already in that state, and they are flagged here so a clinician can split
+ * them. Splitting them automatically would mean deciding which finding belongs
+ * to which study, and that is a clinical reading, not a parse.
+ *
+ * A study's DATE is entered here. It is never inferred from the findings text:
+ * "at 8w" is a point in a recovery, not a date.
+ */
 function DiagnosticsPanel() {
-  const imaging = ["Radiograph (X-Ray)","CT Scan","MRI","Ultrasound","Myelogram","Nuclear Scintigraphy","Fluoroscopy","Echocardiogram"];
-  const labTypes = ["CBC","Chemistry Panel","Urinalysis","Thyroid Panel","Urinary Culture"];
-  const { data, update } = useContext(DashFormContext);
+  const { patientId } = useContext(DashFormContext);
+  const apiBase = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+  const [state, setState] = useState({ loading: true, error: null, data: null });
+  const [busy, setBusy] = useState(null);
+  const [draft, setDraft] = useState({ category: "IMAGING", modality: "", panels: [], performed_on: "", findings: "" });
 
-  const isImgSelected = (im) => !!data[`diagnostics::Imaging ${im}`];
-  const toggleImg = (im) => update(`diagnostics::Imaging ${im}`, isImgSelected(im) ? "" : "performed");
-  const imgStatus = (im) => data[`diagnostics::Imaging ${im}`] || "";
-  const setImgStatus = (im, status) => update(`diagnostics::Imaging ${im}`, status);
-
-  const isLabChecked = (k) => !!data[`diagnostics::Lab ${k}`];
-  const toggleLab = (k) => update(`diagnostics::Lab ${k}`, isLabChecked(k) ? "" : "true");
-
-  const reportName = data["diagnostics::Lab Report Filename"] || "";
-  const onFilePick = (e) => {
-    const f = e.target.files?.[0];
-    if (f) {
-      const sizeKb = Math.round(f.size / 1024);
-      update("diagnostics::Lab Report Filename", `${f.name} (${sizeKb} KB)`);
-    }
+  const authHeaders = () => {
+    const token = localStorage.getItem("token");
+    return { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) };
   };
-  const clearFile = () => update("diagnostics::Lab Report Filename", "");
 
-  return <>
-    <Sec title="Diagnostic Imaging" color={C.purple} colorLt={C.purpleLt} noTop>
-      <div style={{ fontSize:11, color:C.muted, marginBottom:14, lineHeight:1.6 }}>
-        Select imaging studies performed or recommended. Multiple selections allowed. Use the toggle per item to mark recommended studies not yet performed.
-      </div>
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(2, 1fr)", gap:8 }}>
-        {imaging.map(im => {
-          const selected = isImgSelected(im);
-          const status = imgStatus(im);
-          return (
-            <div key={im} style={{
-              border: `1.5px solid ${selected ? C.purple : C.border}`,
-              background: selected ? C.purpleLt : C.white,
-              borderRadius: 6, padding: "10px 12px", cursor: "pointer",
-              transition: "all .12s",
-            }}>
-              <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => toggleImg(im))(e); } }} onClick={() => toggleImg(im)} style={{ display:"flex", alignItems:"center", gap:8 }}>
-                <div style={{
-                  width: 16, height: 16, borderRadius: 3,
-                  border: `1.5px solid ${selected ? C.purple : C.border}`,
-                  background: selected ? C.purple : C.white,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  color: C.white, fontSize: 11, fontWeight: 900,
-                }}>{selected ? "✓" : ""}</div>
-                <span style={{ fontSize: 12, fontWeight: 600, color: selected ? C.purple : C.text }}>{im}</span>
-              </div>
-              {selected && (
-                <div style={{ display:"flex", gap:6, marginTop:8, paddingLeft: 24 }}>
-                  {["performed","recommended"].map(s => (
-                    <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); ((e) => { e.stopPropagation(); setImgStatus(im, s); })(e); } }} key={s}
-                      onClick={(e) => { e.stopPropagation(); setImgStatus(im, s); }}
-                      style={{
-                        padding: "3px 10px", fontSize: 10, fontWeight: 700,
-                        borderRadius: 12, border: `1px solid ${status === s ? C.purple : C.border}`,
-                        background: status === s ? C.purple : C.white,
-                        color: status === s ? C.white : C.muted,
-                        textTransform: "uppercase", letterSpacing: ".06em",
-                      }}>
-                      {s}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-      <div style={{ marginTop: 14 }}>
-        <F label="Other Imaging / Notes" placeholder="Additional imaging studies or notes (e.g. breed-specific views, comparison films)…" rows={2}/>
-      </div>
-    </Sec>
+  const load = React.useCallback(() => {
+    if (!patientId) { setState(s => ({ ...s, loading: false })); return; }
+    fetch(`${apiBase}/v2/patients/${patientId}/diagnostics`, { headers: authHeaders() })
+      .then(r => r.json())
+      .then(j => setState({ loading: false, error: null, data: j.data || null }))
+      .catch(e => setState(s => ({ ...s, loading: false, error: e.message })));
+  }, [apiBase, patientId]);
 
-    <Sec title="Laboratory Work" color={C.purple} colorLt={C.purpleLt}>
-      <div style={{ fontSize:11, color:C.muted, marginBottom:14, lineHeight:1.6, padding:"10px 14px", background:C.purpleLt, border:`1px solid ${C.purple}33`, borderRadius:6 }}>
-        <strong style={{ color: C.purple }}>Rehab intake scope:</strong> Record which labs were performed — not individual values. Abnormal results route to the appropriate department. Attach the full lab report PDF/image for reference.
-      </div>
+  useEffect(load, [load]);
 
-      {/* Master "Labwork performed" checkbox */}
-      <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => toggleLab("Performed"))(e); } }} onClick={() => toggleLab("Performed")}
-        style={{
-          display: "flex", alignItems: "center", gap: 10, padding: "10px 14px",
-          border: `1.5px solid ${isLabChecked("Performed") ? C.purple : C.border}`,
-          background: isLabChecked("Performed") ? C.purpleLt : C.white,
-          borderRadius: 6, cursor: "pointer", marginBottom: 12,
-        }}>
-        <div style={{
-          width: 18, height: 18, borderRadius: 4,
-          border: `1.5px solid ${isLabChecked("Performed") ? C.purple : C.border}`,
-          background: isLabChecked("Performed") ? C.purple : C.white,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          color: C.white, fontSize: 12, fontWeight: 900,
-        }}>{isLabChecked("Performed") ? "✓" : ""}</div>
-        <span style={{ fontSize: 13, fontWeight: 700, color: isLabChecked("Performed") ? C.purple : C.text }}>
-          Labwork performed
+  async function call(url, method, body, key) {
+    setBusy(key);
+    try {
+      const res = await fetch(`${apiBase}${url}`, {
+        method, headers: authHeaders(), body: body ? JSON.stringify(body) : undefined,
+      });
+      const j = await res.json();
+      if (!res.ok || !j.success) throw new Error(j.error || `HTTP ${res.status}`);
+      setState(s => ({ ...s, error: null }));
+      load();
+    } catch (e) {
+      setState(s => ({ ...s, error: e.message }));
+    } finally { setBusy(null); }
+  }
+
+  if (!patientId) return <div style={{ fontSize:12, color:C.muted, padding:14 }}>Select a patient to record diagnostics.</div>;
+  if (state.loading) return <div style={{ fontSize:12, color:C.muted, padding:14 }}>Loading diagnostics…</div>;
+  const d = state.data;
+  if (!d) return <div style={{ fontSize:12, color:C.red, padding:14 }}>{state.error || "No diagnostics."}</div>;
+
+  const { summary, vocabulary } = d;
+  const chip = (label, n, colour) => (
+    <span style={{ padding:"3px 9px", borderRadius:11, background:colour + "1a", color:colour,
+      border:`1px solid ${colour}44`, fontSize:10, fontWeight:700, marginRight:6 }}>{n} {label}</span>
+  );
+
+  const studyRow = (s) => (
+    <div key={s.id} style={{ padding:"10px 12px", border:`1px solid ${C.border}`, borderRadius:6,
+      marginBottom:8, background:C.white,
+      borderLeft: `3px solid ${s.describes_multiple_studies ? C.amber : s.performed_on ? C.blue : C.border}` }}>
+      <div style={{ display:"flex", flexWrap:"wrap", gap:8, alignItems:"center", marginBottom:6 }}>
+        <span style={{ fontSize:11, fontWeight:700, color:C.text }}>
+          {s.category === "LAB" ? (s.panels.join(", ") || "Laboratory work") : s.modality}
         </span>
+        <span style={{ fontSize:10, color:C.muted, fontWeight:700 }}>{s.category}</span>
+        <label style={{ fontSize:10, color:C.muted }}>
+          performed{" "}
+          <input type="date" value={s.performed_on || ""} disabled={busy === s.id}
+            onChange={e => call(`/v2/diagnostics/${s.id}`, "PUT", { performed_on: e.target.value }, s.id)}
+            style={{ padding:"3px 5px", border:`1px solid ${C.border}`, borderRadius:4, fontSize:10 }}/>
+        </label>
+        {s.needs_a_date && <span style={{ fontSize:10, color:C.muted, fontStyle:"italic" }}>no date recorded</span>}
       </div>
-
-      {/* Individual lab type checkboxes */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8, marginBottom: 12 }}>
-        {labTypes.map(lab => {
-          const checked = isLabChecked(lab);
-          return (
-            <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => toggleLab(lab))(e); } }} key={lab} onClick={() => toggleLab(lab)}
-              style={{
-                display: "flex", alignItems: "center", gap: 9, padding: "9px 12px",
-                border: `1.5px solid ${checked ? C.purple : C.border}`,
-                background: checked ? C.purpleLt : C.white,
-                borderRadius: 6, cursor: "pointer",
-              }}>
-              <div style={{
-                width: 16, height: 16, borderRadius: 3,
-                border: `1.5px solid ${checked ? C.purple : C.border}`,
-                background: checked ? C.purple : C.white,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                color: C.white, fontSize: 11, fontWeight: 900,
-              }}>{checked ? "✓" : ""}</div>
-              <span style={{ fontSize: 12, fontWeight: 600, color: checked ? C.purple : C.text }}>{lab}</span>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Other lab — checkbox + free text */}
-      <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => toggleLab("Other"))(e); } }} onClick={() => toggleLab("Other")}
-        style={{
-          display: "flex", alignItems: "center", gap: 9, padding: "9px 12px",
-          border: `1.5px solid ${isLabChecked("Other") ? C.purple : C.border}`,
-          background: isLabChecked("Other") ? C.purpleLt : C.white,
-          borderRadius: 6, cursor: "pointer", marginBottom: 8,
-        }}>
-        <div style={{
-          width: 16, height: 16, borderRadius: 3,
-          border: `1.5px solid ${isLabChecked("Other") ? C.purple : C.border}`,
-          background: isLabChecked("Other") ? C.purple : C.white,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          color: C.white, fontSize: 11, fontWeight: 900,
-        }}>{isLabChecked("Other") ? "✓" : ""}</div>
-        <span style={{ fontSize: 12, fontWeight: 600, color: isLabChecked("Other") ? C.purple : C.text }}>Other</span>
-      </div>
-      {isLabChecked("Other") && (
-        <div style={{ marginBottom: 12 }}>
-          <F label="Other Tests — Specify" placeholder="List any additional diagnostic tests performed…" rows={2}/>
+      {s.findings && <div style={{ fontSize:11, color:C.text, lineHeight:1.5 }}>{s.findings}</div>}
+      {s.describes_multiple_studies && (
+        <div style={{ marginTop:7, fontSize:10, color:C.amber, fontWeight:700 }}>
+          This text describes MORE THAN ONE study — record the repeat as its own study below,
+          and trim this one to the first.
         </div>
       )}
+    </div>
+  );
 
-      <Divider/>
+  return <>
+    <div style={{ marginBottom:16, padding:"10px 14px", background:C.blueLt, borderRadius:6,
+      border:`1px solid ${C.blue}33` }}>
+      <div style={{ fontSize:11, color:C.muted, marginBottom:8 }}>
+        Each study is recorded on its own, with the date it was performed. A repeat MRI is a
+        <strong> second study</strong>, not a sentence added to the first one&rsquo;s findings.
+      </div>
+      <div>
+        {chip("studies", summary.total, C.blue)}
+        {summary.undated > 0 && chip("with no date", summary.undated, C.muted)}
+        {summary.describing_multiple_studies > 0
+          && chip("need splitting", summary.describing_multiple_studies, C.amber)}
+      </div>
+    </div>
 
-      {/* Single Lab Date + Reference Laboratory */}
-      <Row>
-        <F label="Lab Date" type="date"/>
-        <F label="Reference Laboratory" placeholder="e.g. IDEXX, Antech, In-house"/>
-      </Row>
+    {state.error && (
+      <div style={{ fontSize:11, color:C.red, marginBottom:12, padding:"8px 12px", background:C.redLt, borderRadius:5 }}>
+        {state.error}
+      </div>
+    )}
 
-      {/* Attach Lab Report */}
-      <div style={{ marginTop: 14 }}>
-        <Lbl>Attach Lab Report</Lbl>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <label style={{
-            display: "inline-flex", alignItems: "center", gap: 8, padding: "9px 16px",
-            background: C.purpleLt, border: `1.5px solid ${C.purple}`, borderRadius: 6,
-            color: C.purple, fontSize: 12, fontWeight: 700, cursor: "pointer",
-            letterSpacing: ".04em",
-          }}>
-            📎 Choose File (PDF or Image)
-            <input type="file" accept=".pdf,image/*" onChange={onFilePick} style={{ display: "none" }}/>
-          </label>
-          {reportName && (
-            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 12px", background: C.greenLt, border: `1px solid ${C.green}55`, borderRadius: 6, fontSize: 11, color: C.green, fontWeight: 600 }}>
-              ✓ {reportName}
-              <span role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (clearFile)(e); } }} onClick={clearFile} style={{ cursor: "pointer", color: C.red, fontSize: 13, marginLeft: 4 }}>✕</span>
-            </div>
-          )}
+    {d.imaging.length > 0 && (
+      <Sec title="Imaging" color={C.blue} colorLt={C.blueLt} noTop>{d.imaging.map(studyRow)}</Sec>
+    )}
+    {d.labs.length > 0 && (
+      <Sec title="Laboratory Work" color={C.purple} colorLt={C.purpleLt}>{d.labs.map(studyRow)}</Sec>
+    )}
+
+    <Sec title="Record a Study" color={C.teal} colorLt={C.tealLt}>
+      <div style={{ display:"flex", flexWrap:"wrap", gap:8, alignItems:"flex-end", marginBottom:10 }}>
+        <div style={{ flex:"1 1 130px" }}>
+          <Lbl>Type</Lbl>
+          <select value={draft.category} onChange={e => setDraft(x => ({ ...x, category: e.target.value, modality: "", panels: [] }))}
+            style={{ width:"100%", padding:"8px 10px", border:`1px solid ${C.border}`, borderRadius:5, fontSize:12 }}>
+            {vocabulary.categories.map(o => <option key={o} value={o}>{o}</option>)}
+          </select>
         </div>
-        <div style={{ fontSize: 10, color: C.muted, marginTop: 6, fontStyle: "italic" }}>
-          File is captured for reference. Full lab report upload to patient record — coming in next version.
+        {draft.category === "IMAGING" ? (
+          <div style={{ flex:"2 1 200px" }}>
+            <Lbl>Modality</Lbl>
+            <select value={draft.modality} onChange={e => setDraft(x => ({ ...x, modality: e.target.value }))}
+              style={{ width:"100%", padding:"8px 10px", border:`1px solid ${C.border}`, borderRadius:5, fontSize:12 }}>
+              <option value="">—</option>
+              {vocabulary.modalities.map(o => <option key={o} value={o}>{o}</option>)}
+            </select>
+          </div>
+        ) : (
+          <div style={{ flex:"2 1 240px" }}>
+            <Lbl>Panels</Lbl>
+            <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+              {vocabulary.panels.map(p => (
+                <label key={p} style={{ fontSize:10, color:C.muted, display:"flex", alignItems:"center", gap:3 }}>
+                  <input type="checkbox" checked={draft.panels.includes(p)}
+                    onChange={e => setDraft(x => ({ ...x,
+                      panels: e.target.checked ? [...x.panels, p] : x.panels.filter(q => q !== p) }))}/>
+                  {p}
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
+        <div style={{ flex:"1 1 130px" }}>
+          <Lbl>Performed on</Lbl>
+          <input type="date" value={draft.performed_on}
+            onChange={e => setDraft(x => ({ ...x, performed_on: e.target.value }))}
+            style={{ width:"100%", padding:"7px 10px", border:`1px solid ${C.border}`, borderRadius:5, fontSize:12 }}/>
         </div>
       </div>
+      <Lbl>Findings</Lbl>
+      <textarea rows={2} value={draft.findings}
+        onChange={e => setDraft(x => ({ ...x, findings: e.target.value }))}
+        placeholder="What this study showed"
+        style={{ width:"100%", padding:"8px 10px", border:`1px solid ${C.border}`, borderRadius:5, fontSize:12, fontFamily:"inherit", marginBottom:10 }}/>
+      <button
+        disabled={busy === "add" || (draft.category === "IMAGING" ? !draft.modality : !draft.panels.length)}
+        onClick={() => call(`/v2/patients/${patientId}/diagnostics`, "POST", {
+          category: draft.category, modality: draft.modality || null, panels: draft.panels,
+          performed_on: draft.performed_on || null, findings: draft.findings || null,
+        }, "add").then(() => setDraft({ category: draft.category, modality: "", panels: [], performed_on: "", findings: "" }))}
+        style={{ padding:"9px 16px", background:C.blue, color:C.white, border:"none",
+          borderRadius:5, fontSize:11, fontWeight:700, cursor:"pointer" }}>
+        Record study
+      </button>
     </Sec>
     <ClinicalNotes/>
   </>;

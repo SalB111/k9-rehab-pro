@@ -28,7 +28,7 @@
 'use strict';
 
 const { ProtocolStoreError, ERR } = require('./protocol-store');
-const diagnosticsRecord = require('./diagnostics');
+const patientDiagnosticsStore = require('./patient-diagnostics-store');
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -472,18 +472,17 @@ async function buildClinicalSnapshot(db, { patientId, patient }) {
     changes_since_previous_visit: assessmentChanges,
     measurement_trends: trends,
 
-    // Imaging and laboratory work, read from the V1 record.
+    // Imaging and laboratory work — V3, from patient_diagnostic_studies.
     //
-    // Read off the patient OBJECT, never with a query naming
-    // `dashboard_data` — the V2 test harness builds a two-column patients
-    // table, and V2 core has no business knowing V1's schema. An absent
-    // property simply yields null, which is true for a caller that has none.
+    // Each study is a ROW WITH A DATE, so a repeat MRI is a second study
+    // rather than a sentence appended to the first one's findings. The blob
+    // is no longer read for this block.
     //
     // Surfaced here rather than in the B.E.A.U. handoff on purpose. A pelvic
     // fracture on a radiograph explains why the programme is what it is, and
     // the person who needs it is the clinician opening the patient. The
     // engine takes no diagnostic input and nothing here gates selection.
-    diagnostics: diagnosticsRecord.read(patient && patient.dashboard_data),
+    diagnostics: await patientDiagnosticsStore.toSnapshot(db, patientId),
     active_protocol: activeProtocol,
     // Explicit rather than implied: a patient with no prior visit has no
     // baseline, and the clinician should see that stated.

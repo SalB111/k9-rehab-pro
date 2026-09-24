@@ -39,25 +39,44 @@ console.log('\ndiagnostics\n');
 
 // ------------------------------------------------------------- the two lists
 
-test('every imaging modality the dashboard offers is read', () => {
-  const ui = listFromUI('imaging');
-  assert.ok(ui.length >= 6, `expected the modality list, parsed ${ui.length}`);
-  const missing = ui.filter((m) => !diagnostics.IMAGING_MODALITIES.includes(m));
-  assert.deepStrictEqual(missing, [],
-    `the dashboard offers modalities this module never reads:\n      ${missing.join('\n      ')}`);
+test('the modality list is populated and has no duplicates', () => {
+  // Before V3 this compared the module against the lists in DashboardView.jsx,
+  // because that was where they lived and the risk was the module falling
+  // behind the screen. In V3 the module OWNS them and the API serves them to
+  // the screen, so the screen has no list to fall behind — and parsing the JSX
+  // would now find nothing.
+  //
+  // What still matters: a duplicate would make two studies indistinguishable,
+  // and an empty list would silently offer nothing.
+  const m = diagnostics.IMAGING_MODALITIES;
+  assert.ok(m.length >= 6, `only ${m.length} modalities`);
+  assert.strictEqual(new Set(m).size, m.length, 'a duplicated modality');
+  assert.ok(m.includes('Radiograph (X-Ray)') && m.includes('MRI'));
 });
 
-test('no modality is read that the dashboard no longer offers', () => {
-  const ui = new Set(listFromUI('imaging'));
-  const orphans = diagnostics.IMAGING_MODALITIES.filter((m) => !ui.has(m));
-  assert.deepStrictEqual(orphans, [], `renamed in the dashboard? ${orphans.join(', ')}`);
+test('the lab panel list is populated and has no duplicates', () => {
+  const p = diagnostics.LAB_PANELS;
+  assert.ok(p.length >= 4, `only ${p.length} panels`);
+  assert.strictEqual(new Set(p).size, p.length, 'a duplicated panel');
+  assert.ok(p.includes('CBC'));
 });
 
-test('every lab panel the dashboard offers is read', () => {
-  const ui = listFromUI('labTypes');
-  assert.ok(ui.length >= 4, `expected the panel list, parsed ${ui.length}`);
-  assert.deepStrictEqual(ui.filter((p) => !diagnostics.LAB_PANELS.includes(p)), []);
-  assert.deepStrictEqual(diagnostics.LAB_PANELS.filter((p) => !ui.includes(p)), []);
+test('the dashboard panel no longer declares its own diagnostics fields', () => {
+  // The remaining risk after V3 is the opposite of the old one: somebody
+  // adding a field straight into the panel again, which would save nowhere.
+  const src = fs.readFileSync(UI_PATH, 'utf8');
+  const lines = src.split(/\r?\n/);
+  const start = lines.findIndex((l) => /^function DiagnosticsPanel/.test(l));
+  assert.ok(start > 0, 'DiagnosticsPanel not found in the dashboard source');
+  let end = start + 1;
+  while (end < lines.length && !/^function /.test(lines[end])) end++;
+  const body = lines.slice(start, end).join('\n');
+
+  const hardcoded = [...body.matchAll(/<F\s+label="([^"]+)"/g)].map((m) => m[1]);
+  assert.deepStrictEqual(hardcoded, [],
+    `the panel declares its own fields again — they would save nowhere:\n      ${hardcoded.join('\n      ')}`);
+  assert.ok(/patients\/\$\{patientId\}\/diagnostics/.test(body),
+    'the panel no longer calls the diagnostics endpoint');
 });
 
 // ------------------------------------------------------------ current format
