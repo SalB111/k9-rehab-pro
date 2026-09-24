@@ -432,6 +432,42 @@ function proposeEngineInputs({ patient, clinicInputs = {}, priorInputs = null } 
   const applicable = new Set([
     ...applicableGates(patient),
     ...applicableGates(effective),
+    // THIRD READING: the clinical record's OWN WORDS, even where a column
+    // already answered.
+    //
+    // `effective` only takes the record's diagnosis when the column is EMPTY,
+    // and a column is usually a short label while the record is a full
+    // statement. Charlie, 2026-09-24:
+    //
+    //   condition column  "Bilateral Hip Osteoarthritis (moderate-severe)"
+    //   clinical record   "Bilateral coxofemoral osteoarthritis (R>L),
+    //                      spondylosis L7-S1"
+    //
+    // The column is not wrong, it is shorter — and the word it drops is the
+    // one `applicableGates` looks for. Lumbosacral spondylosis is in the neuro
+    // list deliberately, because it compresses the cauda equina. Reading only
+    // the column, Charlie was asked 2 gates. Reading the record too, he is
+    // asked 7, the extra five being muscle strength and all four neurological
+    // findings.
+    //
+    // This is safe for the same reason the union above is: applicability may
+    // only ADD questions. A gate shown unnecessarily costs a clinician two
+    // seconds; a gate hidden wrongly costs them the restriction. Post-op
+    // timing is deliberately NOT re-read here — `surgery_date` is carried from
+    // `effective` so this adds a text dimension and changes no date logic.
+    ...applicableGates({
+      id: patient.id,
+      condition: [
+        v1.values.diagnosis,
+        v1.context['assessment::Comorbidities / Secondary Diagnoses'],
+        v1.context['assessment::Chief Complaint'],
+      ].filter(Boolean).join(' '),
+      affected_region: v1.values.affectedRegion || '',
+      medical_history: v1.values.medicalHistory || '',
+      surgery_date: effective.surgery_date || null,
+      mobility_level: v1.values.mobilityLevel || '',
+      lameness_grade: v1.values.lamenessGrade ?? null,
+    }),
   ]);
   const gates = [];
 

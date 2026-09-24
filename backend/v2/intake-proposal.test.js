@@ -567,6 +567,62 @@ t('summary.fromRecord matches the record block it describes', () => {
     'the reported count and the fields it counts have drifted apart');
 });
 
+// ── A short column does not hide what the record says ───────────────────────
+//
+// Charlie, 2026-09-24:
+//   condition column  "Bilateral Hip Osteoarthritis (moderate-severe)"
+//   clinical record   "Bilateral coxofemoral osteoarthritis (R>L),
+//                      spondylosis L7-S1"
+//
+// The column is not wrong, it is SHORTER, and the word it drops is the one the
+// gate rules look for. `effective` takes the record's diagnosis only when the
+// column is empty, so the spondylosis never reached applicableGates and four
+// neurological gates were never asked on a patient with L7-S1 disease.
+
+t('a diagnosis the column omits still raises its gates', () => {
+  const columnOnly = patient({
+    condition: 'Bilateral Hip Osteoarthritis (moderate-severe)',
+    lameness_grade: 2,
+  });
+  const withRecord = patient({
+    condition: 'Bilateral Hip Osteoarthritis (moderate-severe)',
+    lameness_grade: 2,
+    dashboard_data: JSON.stringify({
+      'assessment::Primary Diagnosis':
+        'Bilateral coxofemoral osteoarthritis (R>L), spondylosis L7-S1',
+    }),
+  });
+
+  const before = proposeEngineInputs({ patient: columnOnly }).gates.map((g) => g.field);
+  const after = proposeEngineInputs({ patient: withRecord }).gates.map((g) => g.field);
+
+  assert.ok(!before.includes('neuroDeepPain'),
+    'the fixture is wrong: the column alone already raises the neuro gates, '
+    + 'so this test would pass without reading the record at all');
+
+  for (const gate of ['neuroProprioception', 'neuroWithdrawal', 'neuroDeepPain',
+                      'neuroMotorGrade', 'mmtGrade']) {
+    assert.ok(after.includes(gate),
+      `${gate} was not asked. Lumbosacral spondylosis compresses the cauda `
+      + 'equina, and the record says it is there');
+  }
+});
+
+t('reading the record can only ADD gates, never remove them', () => {
+  // The safety rule the union exists for. A record that reclassifies a patient
+  // must not drop a question the raw row would have asked.
+  const raw = patient({ condition: 'TPLO Post-Op', surgery_date: daysAgo(5) });
+  const withRecord = patient({
+    condition: 'TPLO Post-Op', surgery_date: daysAgo(5),
+    dashboard_data: JSON.stringify({ 'assessment::Primary Diagnosis': 'Conditioning' }),
+  });
+  const before = proposeEngineInputs({ patient: raw }).gates.map((g) => g.field);
+  const after = proposeEngineInputs({ patient: withRecord }).gates.map((g) => g.field);
+  for (const g of before) {
+    assert.ok(after.includes(g), `${g} disappeared once the record was read`);
+  }
+});
+
 // ── Report ─────────────────────────────────────────────────────────────────
 for (const { name, err } of failures) {
   console.error(`\n  FAIL  ${name}`);
