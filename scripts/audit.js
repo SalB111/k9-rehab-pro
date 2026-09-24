@@ -27,6 +27,7 @@ const DB_PATH = process.env.K9_DB || path.join(BACKEND, 'k9rehab.db');
 const V2 = path.join(BACKEND, 'v2');
 
 const bridge = require(path.join(V2, 'dashboard-bridge'));
+const { diagnosisRecognised } = require(path.join(BACKEND, 'protocol-generator'));
 const homeStore = require(path.join(V2, 'patient-home-store'));
 const goalsStore = require(path.join(V2, 'patient-goals-store'));
 const diagStore = require(path.join(V2, 'patient-diagnostics-store'));
@@ -182,6 +183,78 @@ const line = (k, v) => console.log(`   ${String(k).padEnd(34)}${v}`);
   line('database backups', backups.length);
   if (backups.length) line('most recent', backups.sort().slice(-1)[0]);
   if (!backups.length) problems.push('no database backups on disk');
+
+  // ── 8. clinical contradictions ───────────────────────────────────────────
+  //
+  // Added 2026-09-24. Until then this audit printed "Nothing needs a person"
+  // while nine of these sat in the data. Each one needs a clinical decision,
+  // so each is a problem and not a note.
+  h('8. CLINICAL CONTRADICTIONS');
+
+  // Full rows: the list above carries only id and name.
+  const full = await db.all('SELECT * FROM patients ORDER BY id');
+
+  // The limb vocabulary, read from the real control rather than copied here.
+  const dashSrc = fs.readFileSync(
+    path.join(ROOT, 'k9-rehab-frontend', 'src', 'pages', 'DashboardView.jsx'), 'utf8');
+  const limbM = /<F\s[^>]*?label="Affected Limb\(s\)"[^>]*?options=\{\[([\s\S]*?)\]\}/.exec(dashSrc);
+  const LIMBS = limbM ? (limbM[1].match(/"([^"]*)"/g) || []).map((s) => s.slice(1, -1)) : [];
+  if (!LIMBS.length) problems.push('could not read the Affected Limb(s) options out of DashboardView.jsx');
+
+  // A diagnosis that matched no routing rule is routed by fallthrough.
+  let fellThrough = 0;
+  for (const p of full) {
+    if (!p.condition) { problems.push(`${p.name}: no diagnosis recorded — cannot generate a protocol`); continue; }
+    if (!diagnosisRecognised(p.condition, p.affected_region, '')) {
+      fellThrough += 1;
+      line(p.name, `"${String(p.condition).slice(0, 34)}" matches no routing rule`);
+      problems.push(
+        `${p.name}: diagnosis "${p.condition}" matches no routing rule, so the `
+        + 'engine falls through to the OA protocol. Record the condition being treated.'
+      );
+    }
+  }
+  if (!fellThrough) line('diagnoses that route', 'all recognised');
+
+  // A limb sitting in the column the engine matches anatomically.
+  let wrongVocab = 0;
+  for (const p of full) {
+    if (p.affected_region && LIMBS.includes(p.affected_region)) {
+      wrongVocab += 1;
+      line(p.name, `affected_region holds a LIMB: "${p.affected_region}"`);
+      problems.push(
+        `${p.name}: affected_region is "${p.affected_region}", which is a value from `
+        + 'Affected Limb(s), not from Affected Area. getProtocolType matches this '
+        + 'column against an anatomical vocabulary.'
+      );
+    }
+  }
+  if (!wrongVocab) line('affected_region vocabulary', 'no limbs in the region column');
+
+  // One fact recorded in two places, saying two things.
+  const DRIFT = [
+    ['condition', 'assessment::Primary Diagnosis'],
+    ['special_instructions', 'treatment::Activity Restrictions'],
+    ['current_medications', 'treatment::Current Medications'],
+    ['mobility_level', 'assessment::Current Mobility Level'],
+  ];
+  const norm = (s) => String(s).trim().toLowerCase().replace(/\s+/g, ' ');
+  let drifted = 0;
+  for (const p of full) {
+    let blob = {};
+    try { blob = p.dashboard_data ? JSON.parse(p.dashboard_data) : {}; } catch { blob = {}; }
+    for (const [col, key] of DRIFT) {
+      if (!p[col] || !blob[key]) continue;
+      if (norm(p[col]) === norm(blob[key])) continue;
+      drifted += 1;
+      line(p.name, `${col} and the record disagree`);
+      problems.push(
+        `${p.name}: ${col} and ${key} hold different text. The engine reads the `
+        + 'column, the dashboard shows the record, and neither screen shows the other.'
+      );
+    }
+  }
+  if (!drifted) line('column vs record text', 'no drift');
 
   // ── verdict ──────────────────────────────────────────────────────────────
   h('VERDICT');
