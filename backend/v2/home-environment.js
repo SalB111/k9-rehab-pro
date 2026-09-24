@@ -213,6 +213,14 @@ const FIELDS = [
     normalize: null,
   },
   {
+    key: 'expected_compliance',
+    label: 'Expected compliance',
+    keys: ['home::Expected Compliance'],
+    // Prose, for the same reason as owner confidence: "High — very motivated"
+    // reduced to HIGH keeps the grade and discards the observation.
+    normalize: null,
+  },
+  {
     key: 'owner_notes',
     label: 'Owner notes / concerns',
     keys: ['home::Owner Notes / Concerns'],
