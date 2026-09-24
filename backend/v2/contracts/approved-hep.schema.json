@@ -283,6 +283,38 @@
         }
       }
     },
+    "home_environment": {
+      "type": ["object", "null"],
+      "description": "The home the adaptation permissions are about, read from the clinician's record. Null means nothing has been recorded — which is NOT a record with empty fields, and does not narrow what B.E.A.U. may do. This is context, not a constraint: nothing here gates exercise selection.",
+      "additionalProperties": false,
+      "required": ["stated", "normalized", "uninterpreted"],
+      "properties": {
+        "stated": {
+          "type": "object",
+          "description": "Verbatim, as the clinician recorded it. The record itself."
+        },
+        "normalized": {
+          "type": "object",
+          "description": "This codebase's single reading of the stated values, so B.E.A.U. never string-matches a clinical vocabulary itself. A sub-reading is null where the phrase was not understood."
+        },
+        "uninterpreted": {
+          "type": "array",
+          "description": "Fields that were stated but could not be read. Reported rather than dropped, because an unreadable home fact is a gap in the record and must look like one.",
+          "items": {
+            "type": "object",
+            "required": ["field", "label", "stated"],
+            "additionalProperties": false,
+            "properties": {
+              "field": { "type": "string" },
+              "label": { "type": "string" },
+              "stated": { "type": "string" }
+            }
+          }
+        },
+        "recorded_at": { "type": ["string", "null"] },
+        "recorded_by": { "type": ["string", "number", "null"] }
+      }
+    },
     "beau_permissions": {
       "type": "object",
       "description": "The explicit authority boundary, transmitted with every handoff so it is never assumed. B.E.A.U. adapts EXECUTION; it never generates or alters a PRESCRIPTION.",

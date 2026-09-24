@@ -37,6 +37,7 @@ const crypto = require('crypto');
 const authority = require('./authority');
 const hepSelection = require('./hep-selection');
 const intakeProposal = require('./intake-proposal');
+const homeEnvironment = require('./home-environment');
 
 // ---------------------------------------------------------------------------
 // States and roles
@@ -868,7 +869,7 @@ async function verifyApprovalIntegrity(db, versionId) {
  * Contains the prescription and its safety envelope, and nothing that would let
  * B.E.A.U. reconstruct or alter clinical reasoning.
  */
-function buildHepPayload(protocol, version) {
+function buildHepPayload(protocol, version, home = null) {
   return {
     contract_version: '1.0',
     patient_id: protocol.patient_id,
@@ -950,6 +951,20 @@ function buildHepPayload(protocol, version) {
       approved_at: version.approval.approved_at,
       content_hash: version.approval.content_hash,
     },
+    // The home the two permissions below are about.
+    //
+    // B.E.A.U. has always been allowed to adapt execution to the home and to
+    // substitute household equipment, and was never told what the home was —
+    // so every adaptation it made was made blind. The `stated` values are the
+    // clinician's own words; `normalized` is this codebase's single reading of
+    // them, so B.E.A.U. never string-matches a clinical vocabulary itself.
+    //
+    // `null` means nothing has been recorded, which is NOT the same as a
+    // record with empty fields, and neither one narrows what B.E.A.U. may do:
+    // this is context, not a constraint. Nothing here gates exercise
+    // selection, and whether it should is a clinical decision not yet made.
+    home_environment: home,
+
     beau_permissions: {
       may_adapt_execution_to_home_environment: true,
       may_substitute_household_equipment: true,
@@ -964,7 +979,20 @@ function buildHepPayload(protocol, version) {
 }
 
 /** Hand an APPROVED version to B.E.A.U. (I3). */
-async function handoffToBeau(db, { versionId, actor }) {
+/**
+ * `home` is supplied by the caller rather than read here.
+ *
+ * It lives in V1's `patients.dashboard_data`, and reaching into that column
+ * from V2 core would couple the engine's storage to the legacy form's schema —
+ * the V2 test harness creates a two-column `patients` table precisely because
+ * nothing in V2 is supposed to need more. So the V1-aware route reads it and
+ * passes it in; see `readHomeEnvironment` in mount-v2.
+ *
+ * Omitted means no home on record, which is exactly true for any caller that
+ * has none. It withholds nothing: home data is context for B.E.A.U., never a
+ * constraint on what was prescribed.
+ */
+async function handoffToBeau(db, { versionId, actor, home = null }) {
   requireActor(actor);
   const version = await getVersion(db, versionId);
 
@@ -992,7 +1020,7 @@ async function handoffToBeau(db, { versionId, actor }) {
   }
 
   const protocol = await getProtocol(db, version.protocol_id);
-  const payload = buildHepPayload(protocol, version);
+  const payload = buildHepPayload(protocol, version, home);
   const payloadHash = hashContent(payload);
 
   const result = await db.run(

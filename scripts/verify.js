@@ -74,6 +74,14 @@ const CHECKS = [
   // booleans are derived from the checklist so they cannot drift apart again.
   { name: 'K9 · clinic equipment',     cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/clinic-equipment.test.js'],
     ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
+  // The home B.E.A.U. was already permitted to adapt to, and was never told
+  // about. Reads the whole V1 option vocabulary out of the real dashboard JSX,
+  // so a phrase the UI offers can never go uninterpreted unnoticed.
+  { name: 'K9 · home environment',     cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/home-environment.test.js'],
+    ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
+  // The handoff contract, which nothing enforced until now.
+  { name: 'K9 · HEP payload contract', cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/hep-payload-contract.test.js'],
+    ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
   { name: 'K9 · frontend build',       cwd: path.join(K9, 'k9-rehab-frontend'), cmd: 'npx', args: ['--no-install', 'vite', 'build'],
     ok: (out) => /built in/.test(out) && !/error/i.test(out) },
   { name: 'B.E.A.U. · tests',          cwd: BEAU, cmd: 'npm', args: ['test'],
