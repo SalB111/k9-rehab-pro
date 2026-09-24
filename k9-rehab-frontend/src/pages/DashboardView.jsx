@@ -798,7 +798,93 @@ const PATTERN_OPTIONS = [
 
 // ── CLIENT & PATIENT ──────────────────────────────────────────────────────────
 function ClientPanel() {
-  const { data, update } = useContext(DashFormContext);
+  const { data, update, patientId } = useContext(DashFormContext);
+
+  // ── V3: client details live in `patient_client_details`, not the blob ──
+  //
+  // The address, emergency contact, insurer, other vet, microchip and markings.
+  // Demographics are NOT here: they have columns already, are validated on
+  // PUT /api/patients/:id and reconciled by record-sync, and a second write
+  // path with its own validation is how two records start disagreeing.
+  const apiBase = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+  const [cd, setCd] = useState({ loading: true, details: {}, unstructured: false, error: null });
+  const [cdSaving, setCdSaving] = useState(null);
+  const [cdDraft, setCdDraft] = useState({});
+
+  const cdHeaders = () => {
+    const token = localStorage.getItem("token");
+    return { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) };
+  };
+
+  useEffect(() => {
+    if (!patientId) { setCd(s => ({ ...s, loading: false })); return; }
+    let live = true;
+    fetch(`${apiBase}/v2/patients/${patientId}/client`, { headers: cdHeaders() })
+      .then(r => r.json())
+      .then(j => {
+        if (!live) return;
+        const d = j.data || {};
+        setCd({ loading: false, details: d.details || {}, unstructured: !!d.address_is_unstructured, error: null });
+        setCdDraft({});
+      })
+      .catch(e => live && setCd(s => ({ ...s, loading: false, error: e.message })));
+    return () => { live = false; };
+  }, [apiBase, patientId]);
+
+  // One field at a time. The store changes only what it is given, so a single
+  // answer cannot blank the other thirteen.
+  const saveDetail = async (col, value, extra) => {
+    if (!patientId) return;
+    const before = cd.details[col];
+    setCd(s => ({ ...s, details: { ...s.details, [col]: value } }));
+    setCdSaving(col);
+    try {
+      const res = await fetch(`${apiBase}/v2/patients/${patientId}/client`, {
+        method: "PUT", headers: cdHeaders(),
+        body: JSON.stringify({ details: { [col]: value }, ...(extra || {}) }),
+      });
+      const j = await res.json();
+      if (!res.ok || !j.success) throw new Error(j.error || `HTTP ${res.status}`);
+      setCd(s => ({ ...s, details: j.data.details || s.details,
+        unstructured: !!j.data.address_is_unstructured, error: null }));
+      setCdDraft(d => { const n = { ...d }; delete n[col]; return n; });
+    } catch (e) {
+      setCd(s => {
+        const details = { ...s.details };
+        if (before === undefined) delete details[col]; else details[col] = before;
+        return { ...s, details, error: e.message };
+      });
+    } finally { setCdSaving(null); }
+  };
+
+  const cdValue = (col) => (cdDraft[col] !== undefined ? cdDraft[col] : (cd.details[col] ?? ""));
+
+  /**
+   * A client-detail field. Saves on blur, to the table.
+   *
+   * A plain function, CALLED — not a <CD/> component. A component defined
+   * inside a render is a new type on every render, so React unmounts and
+   * remounts the input on each keystroke: focus is lost and the typed value
+   * never reaches blur. That is not theoretical; it was caught in the browser
+   * writing a null microchip.
+   */
+  const CD = ({ col, label, placeholder, rows }) => (
+    <div style={{ flex: 1, minWidth: 160, opacity: cdSaving === col ? 0.6 : 1 }}>
+      <Lbl>{label}</Lbl>
+      {rows ? (
+        <textarea rows={rows} value={cdValue(col)} placeholder={placeholder} disabled={cdSaving === col}
+          onChange={e => setCdDraft(d => ({ ...d, [col]: e.target.value }))}
+          onBlur={e => { if (e.target.value !== (cd.details[col] ?? "")) saveDetail(col, e.target.value); }}
+          style={{ width:"100%", padding:"8px 10px", border:`1px solid ${C.border}`, borderRadius:5, fontSize:12, fontFamily:"inherit" }}/>
+      ) : (
+        <input value={cdValue(col)} placeholder={placeholder} disabled={cdSaving === col}
+          onChange={e => setCdDraft(d => ({ ...d, [col]: e.target.value }))}
+          onBlur={e => { if (e.target.value !== (cd.details[col] ?? "")) saveDetail(col, e.target.value); }}
+          style={{ width:"100%", padding:"8px 10px", border:`1px solid ${C.border}`, borderRadius:5, fontSize:12 }}/>
+      )}
+    </div>
+  );
+
   const species = data["client::Species"] || "Canine";
   const setSpecies = (v) => update("client::Species", v);
   const breeds = species === "Feline" ? FELINE_BREEDS : CANINE_BREEDS;
@@ -808,35 +894,35 @@ function ClientPanel() {
   }, [species]);
 
   // ── Zip code auto-lookup ──
+  // V3: writes the table, not the blob. The lookup still fills city and state,
+  // but each is saved as its own field so a failed lookup cannot half-write an
+  // address.
   const onZipChange = async (val) => {
-    update("client::Zip / Postal Code", val);
-    if (val.length === 5 && /^\d{5}$/.test(val)) {
-      try {
-        const res = await fetch(`https://api.zippopotam.us/us/${val}`);
-        if (res.ok) {
-          const json = await res.json();
-          const place = json.places?.[0];
-          if (place) {
-            update("client::City", place["place name"] || "");
-            update("client::State / Province", place["state abbreviation"] || "");
-          }
-        }
-      } catch { /* silent — manual entry fallback */ }
-    }
+    setCdDraft(d => ({ ...d, postal_code: val }));
+    if (!/^\d{5}$/.test(val)) return;
+    await saveDetail("postal_code", val);
+    try {
+      const res = await fetch(`https://api.zippopotam.us/us/${val}`);
+      if (!res.ok) return;
+      const place = (await res.json()).places?.[0];
+      if (!place) return;
+      if (place["place name"]) await saveDetail("city", place["place name"]);
+      if (place["state abbreviation"]) await saveDetail("state_province", place["state abbreviation"]);
+    } catch { /* silent — manual entry fallback */ }
   };
 
   // ── Insurance ──
-  const insuranceVal = data["client::Pet Insurance Provider"] || "";
+  const insuranceVal = cdValue("insurance_provider");
   const isOtherInsurance = insuranceVal === "Other — specify below";
 
   // ── Color/Markings multi-select ──
-  const colorRaw = data["client::Color / Markings"] || "";
+  const colorRaw = cdValue("colour_markings");
   const selectedColors = colorRaw ? colorRaw.split("||").filter(Boolean) : [];
   const toggleColor = (opt) => {
     const next = selectedColors.includes(opt)
       ? selectedColors.filter(x => x !== opt)
       : [...selectedColors, opt];
-    update("client::Color / Markings", next.join("||"));
+    saveDetail("colour_markings", next.join("||"));
   };
 
   // ── Clinician/Staff roster from Settings ──
@@ -858,41 +944,41 @@ function ClientPanel() {
 
       {/* ── Structured Address Fields ── */}
       <Sec title="Address" color={C.blue} colorLt={C.blueLt} collapsible defaultOpen={true}>
-        <F label="Street Address" placeholder="123 Main Street"/>
+        {CD({ col: "street_address", label: "Street Address", placeholder: "123 Main Street" })}
         <Row>
-          <F label="Apt / Suite / Unit" placeholder="Apt 4B"/>
+          {CD({ col: "apt_suite_unit", label: "Apt / Suite / Unit", placeholder: "Apt 4B" })}
           <div>
             <Lbl>Zip / Postal Code</Lbl>
             <input type="text" placeholder="e.g. 33301"
-              value={data["client::Zip / Postal Code"] || ""}
+              value={cdValue("postal_code")}
               onChange={e => onZipChange(e.target.value)}/>
             <div style={{ fontSize:10, color:C.muted, marginTop:4, fontStyle:"italic" }}>Auto-fills city & state from zip</div>
           </div>
         </Row>
         <Row>
-          <F label="City" placeholder="Fort Lauderdale"/>
-          <F label="State / Province" placeholder="FL"/>
+          {CD({ col: "city", label: "City", placeholder: "Fort Lauderdale" })}
+          {CD({ col: "state_province", label: "State / Province", placeholder: "FL" })}
         </Row>
-        <F label="Country" placeholder="United States"/>
+        {CD({ col: "country", label: "Country", placeholder: "United States" })}
       </Sec>
 
-      <Row><F label="Emergency Contact" placeholder="Name & phone"/><F label="Referred By" placeholder="Referring veterinarian & clinic"/></Row>
+      <Row>{CD({ col: "emergency_contact", label: "Emergency Contact", placeholder: "Name & phone" })}<F label="Referred By" placeholder="Referring veterinarian & clinic"/></Row>
 
       {/* ── Pet Insurance Provider dropdown ── */}
       <Row>
         <div>
           <Lbl>Pet Insurance Provider</Lbl>
-          <select value={insuranceVal} onChange={e => update("client::Pet Insurance Provider", e.target.value)}>
+          <select value={insuranceVal} onChange={e => saveDetail("insurance_provider", e.target.value)}>
             <option value="">Select provider…</option>
             {PET_INSURANCE_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
           </select>
           {isOtherInsurance && (
             <div style={{ marginTop:6 }}>
-              <F label="Other Insurance Provider" placeholder="Provider name & policy number"/>
+              {CD({ col: "insurance_other", label: "Other Insurance Provider", placeholder: "Provider name & policy number" })}
             </div>
           )}
         </div>
-        <F label="Primary Veterinarian" placeholder="Name & clinic"/>
+        {CD({ col: "primary_veterinarian", label: "Primary Veterinarian", placeholder: "Name & clinic" })}
       </Row>
     </Sec>
 
@@ -943,13 +1029,13 @@ function ClientPanel() {
             })}
           </div>
           <div style={{ marginTop:6 }}>
-            <F label="Additional Markings" placeholder="e.g. white chest patch, ticking on legs"/>
+            {CD({ col: "markings_additional", label: "Additional Markings", placeholder: "e.g. white chest patch, ticking on legs" })}
           </div>
         </div>
       </Row>
       <Row cols={2}>
         <WeightPair label="Weight" fieldBase="client::Weight"/>
-        <F label="Microchip #" placeholder="15-digit number"/>
+        {CD({ col: "microchip", label: "Microchip #", placeholder: "15-digit number" })}
       </Row>
     </Sec>
 

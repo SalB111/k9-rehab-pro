@@ -27,6 +27,7 @@ const SQLITE_SCHEMAS = [
   'patient-home.sqlite.sql',
   'patient-goals.sqlite.sql',
   'patient-diagnostics.sqlite.sql',
+  'patient-client-details.sqlite.sql',
 ];
 
 /** Postgres/Supabase equivalents, same order. Kept in parity by tests/schema-parity.test.js. */
@@ -40,6 +41,7 @@ const POSTGRES_SCHEMAS = [
   'patient-home.postgres.sql',
   'patient-goals.postgres.sql',
   'patient-diagnostics.postgres.sql',
+  'patient-client-details.postgres.sql',
 ];
 
 /**

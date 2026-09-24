@@ -88,6 +88,11 @@ const CHECKS = [
   // that every question the dashboard panel offers has somewhere to be stored.
   { name: 'K9 · home store (V3)',      cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/patient-home-store.test.js'],
     ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
+  // V3: the client block splits — `patients` owns the clinical identity,
+  // `patient_client_details` owns the address, contacts, cover and PII. Guards
+  // that a demographic field is REFUSED here and that no PII sits on `patients`.
+  { name: 'K9 · client store (V3)',    cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/patient-client-store.test.js'],
+    ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
   // V3: goals are a rehabilitation workflow, not four boxes of text. Guards
   // that unreviewed is never "in progress", that a target date is never
   // inferred from the goal wording, and that overdue is computed not stored.

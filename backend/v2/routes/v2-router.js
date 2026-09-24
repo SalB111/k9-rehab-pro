@@ -31,6 +31,7 @@ const patientGaps = require('../patient-gaps');
 const patientHomeStore = require('../patient-home-store');
 const patientGoalsStore = require('../patient-goals-store');
 const patientDiagnosticsStore = require('../patient-diagnostics-store');
+const patientClientStore = require('../patient-client-store');
 const ownerAuth = require('../owner-auth');
 const { requireRole, requireApprovalAuthority } = require('../middleware/require-role');
 const { route } = require('../http-errors');
@@ -288,6 +289,34 @@ function createV2Router(deps) {
       actor: req.user,
     });
     res.json({ success: true, data: row });
+  }));
+
+
+  // -------------------------------------------------------------------------
+  // Client details — V3: `patient_client_details` is the source of truth
+  //
+  // The address, emergency contact, insurer, other veterinarians, microchip and
+  // markings. Client PII with no clinical consumer and no engine use, kept OFF
+  // the patient row on purpose so a payload built from that row cannot leak it.
+  //
+  // The demographics — name, breed, age, weight, sex, DOB, client contact —
+  // are NOT writable here. They have columns already, are validated on
+  // PUT /api/patients/:id, and are reconciled by record-sync. A second write
+  // path with its own validation is how two records start disagreeing.
+  // -------------------------------------------------------------------------
+
+  router.get('/patients/:id/client', route(async (req, res) => {
+    res.json({ success: true, data: await patientClientStore.getClient(db, Number(req.params.id)) });
+  }));
+
+  router.put('/patients/:id/client', route(async (req, res) => {
+    const data = await patientClientStore.setClient(db, {
+      patientId: Number(req.params.id),
+      details: req.body.details || req.body,
+      addressIsUnstructured: req.body.address_is_unstructured,
+      actor: req.user,
+    });
+    res.json({ success: true, data });
   }));
 
   // -------------------------------------------------------------------------
