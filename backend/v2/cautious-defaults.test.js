@@ -31,7 +31,7 @@
 'use strict';
 
 const assert = require('assert');
-const { validateIntake, getExcludedCodes } = require('../protocol-generator');
+const { validateIntake, getExcludedCodes, diagnosisRecognised } = require('../protocol-generator');
 const { SAFETY_GATES } = require('./intake-proposal');
 
 let passed = 0;
@@ -316,6 +316,46 @@ test('region and approach still default, and still say so', () => {
   assert.strictEqual(fd.treatmentApproach, 'Conservative');
   assert.ok(warnings.some((w) => /affected region/i.test(w)), 'assumed a region silently');
   assert.ok(warnings.some((w) => /treatment approach/i.test(w)), 'assumed an approach silently');
+});
+
+// ---------------------------------------------------------------------------
+// "WE CHOSE THIS" vs "NOTHING MATCHED"
+//
+// getProtocolType returns 'oa' both for a genuine OA-class condition and for
+// text it does not understand at all. The catch-all is deliberate; being
+// unable to tell the two apart was not.
+// ---------------------------------------------------------------------------
+
+test('an unrecognised diagnosis is reported, not silently routed', () => {
+  const fd = intake({ diagnosis: 'Rehabilitation' });
+  const { valid, warnings } = validateIntake(fd);
+  assert.strictEqual(valid, true,
+    'the OA catch-all is deliberate - this must warn, not block');
+  assert.ok(warnings.some((w) => /matches no routing rule/i.test(w)),
+    'a live patient was routed to the osteoarthritis protocol by fallthrough '
+    + 'with nothing said about it');
+});
+
+test('a real OA-class diagnosis does NOT warn', () => {
+  // The warning is worthless if it fires on the conditions the catch-all was
+  // written for.
+  for (const dx of ['Bilateral Hip Osteoarthritis', 'Elbow Dysplasia',
+                    'Pelvic Fracture', 'Iliopsoas Strain', 'Obesity']) {
+    const { warnings } = validateIntake(intake({ diagnosis: dx }));
+    assert.ok(!warnings.some((w) => /matches no routing rule/i.test(w)),
+      `"${dx}" is exactly what the OA protocol is for, and it was flagged`);
+  }
+});
+
+test('a diagnosis that routes elsewhere is recognised by definition', () => {
+  for (const dx of ['TPLO Post-Op', 'IVDD Hansen Type I', 'Degenerative Myelopathy']) {
+    assert.ok(diagnosisRecognised(dx, '', ''), `${dx} reported as unrecognised`);
+  }
+});
+
+test('gibberish is not recognised', () => {
+  assert.strictEqual(diagnosisRecognised('zzz nonsense', '', ''), false,
+    'if this passes, the recogniser recognises everything and reports nothing');
 });
 
 // ---------------------------------------------------------------------------

@@ -509,6 +509,57 @@ function getProtocolType(diagnosis, affectedRegion, treatmentApproach) {
 
 
 // ============================================================================
+// DID THE DIAGNOSIS MATCH ANYTHING, OR DID IT FALL THROUGH?
+// ============================================================================
+//
+// getProtocolType ends with "OA / EVERYTHING ELSE" and returns 'oa'. That
+// catch-all is deliberate and clinically reasoned — hip and elbow dysplasia,
+// obesity, soft tissue injury, fractures and polytrauma genuinely do belong on
+// the multimodal orthopaedic protocol.
+//
+// But it catches two different things and treats them the same:
+//
+//   "Bilateral Hip Osteoarthritis"  -> oa, because it IS an OA-class condition
+//   "Rehabilitation"                -> oa, because nothing matched
+//   "zzz nonsense"                  -> oa, because nothing matched
+//
+// The second kind is not a routing decision, it is the absence of one. Found
+// on a live patient on 2026-09-24: a post-FHO, post-fracture-repair dog whose
+// `condition` column read "Rehabilitation" was being routed to the
+// osteoarthritis protocol by fallthrough, while the actual diagnosis sat in
+// the clinical record where the engine never looked.
+//
+// This does NOT change routing. The catch-all stays, because narrowing it
+// would withhold a reasonable protocol from real conditions. It only lets
+// validateIntake say out loud that nothing matched, so a clinician sees the
+// difference between "we chose this" and "we had nothing to choose from".
+//
+// The keyword list below is the class the comment in getProtocolType already
+// names. Adding to it widens what counts as recognised, which is a clinical
+// judgement and belongs to a clinician, not to whoever is next in this file.
+const OA_CLASS_KEYWORDS = [
+  'oa', 'osteoarth', 'arthr', 'djd', 'degenerative joint',
+  'dysplasia', 'obesity', 'weight management',
+  'soft tissue', 'fracture', 'polytrauma', 'trauma',
+  'strain', 'sprain', 'tendon', 'ligament', 'luxation', 'contracture',
+  'hip', 'elbow', 'shoulder', 'carpus', 'carpal', 'tarsus', 'tarsal',
+];
+
+/**
+ * Did this diagnosis match a routing rule, or did it fall through to 'oa'?
+ *
+ * Additive on purpose: it does not touch getProtocolType, it asks it. Anything
+ * that routes somewhere other than 'oa' matched by definition; an 'oa' result
+ * matched only if the text names an OA-class condition.
+ */
+function diagnosisRecognised(diagnosis, affectedRegion, treatmentApproach) {
+  if (getProtocolType(diagnosis, affectedRegion, treatmentApproach) !== 'oa') return true;
+  const d = `${diagnosis || ''} ${affectedRegion || ''}`.toLowerCase();
+  return OA_CLASS_KEYWORDS.some((k) => d.includes(k));
+}
+
+
+// ============================================================================
 // PHASE DETERMINATION
 // Maps week number to the correct phase based on protocol-specific timelines
 // ============================================================================
@@ -568,6 +619,20 @@ function validateIntake(formData) {
       'Diagnosis is required. Without one the engine cannot choose a protocol, '
       + 'and defaulting it silently produced an unrestricted conditioning '
       + 'programme for a patient nobody had described.'
+    );
+  }
+
+  // A diagnosis that matches NO routing rule is not an error — the OA
+  // catch-all is a deliberate clinical decision — but it must not be silent.
+  // Without this, "Rehabilitation" and "zzz nonsense" produce an osteoarthritis
+  // protocol that looks exactly like a chosen one.
+  if (formData.diagnosis
+      && !diagnosisRecognised(formData.diagnosis, formData.affectedRegion, formData.treatmentApproach)) {
+    warnings.push(
+      `Diagnosis "${formData.diagnosis}" matches no routing rule. The engine is `
+      + `falling through to the general orthopaedic (OA) protocol because nothing `
+      + `else matched, not because this was recognised as an OA-class condition. `
+      + `Check the diagnosis names the condition being treated.`
     );
   }
 
@@ -1152,6 +1217,8 @@ module.exports = {
   getProtocolType,
   getPhaseForWeek,
   validateIntake,
+  diagnosisRecognised,
+  OA_CLASS_KEYWORDS,
   getExcludedCodes,
   PROTOCOL_DEFINITIONS,
   EVIDENCE_MAP,
