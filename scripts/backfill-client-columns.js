@@ -9,11 +9,24 @@
  *
  * WHAT IT WILL NOT DO
  *
- * It only ever fills a column that is EMPTY. It never overwrites a column that
- * already holds something, including a placeholder: a column reading
- * sarah@example.com against a V1 record holding a real address is a
- * DISAGREEMENT, and disagreements are for a person to resolve, not for a
- * script to pick a winner. Run `report-disagreements` to see those.
+ * It never resolves a DISAGREEMENT. A column reading sarah@example.com against
+ * a V1 record holding a real address is two records contradicting each other,
+ * and that is for a person to settle, not for a script to pick a winner.
+ *
+ * WHAT COUNTS AS EMPTY — read this before running it
+ *
+ * "Empty" is record-sync's `real()` test, and for a NUMERIC column that
+ * includes ZERO. So a `lameness_grade` of 0 is treated as unset and will be
+ * filled from the V1 record.
+ *
+ * That is right here only because the column DEFAULT is also 0: a stored 0 is
+ * indistinguishable from a grade nobody assessed, so there is no 0 to protect.
+ * It is not right in principle — on a 0-5 lameness scale, 0 means sound, and
+ * on a pain scale 0 means no pain. Both are findings. If those columns ever
+ * become nullable, so that an unassessed grade is NULL and an assessed 0 is 0,
+ * this rule must stop treating 0 as absent.
+ *
+ * Non-numeric columns are only filled when genuinely blank.
  *
  * DRY RUN BY DEFAULT. Pass --apply to write.
  *

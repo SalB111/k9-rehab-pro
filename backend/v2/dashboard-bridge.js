@@ -409,22 +409,30 @@ const samePhone = (a, b) => {
 const sameEmail = (a, b) => String(a).trim().toLowerCase() === String(b).trim().toLowerCase();
 
 /**
- * The same person, ignoring spacing and case.
+ * The same person, ignoring spacing, case and a leading title.
  *
- * Titles are NOT stripped, and this is a conservative choice rather than a
- * safety property. The defect that prompted this comparison — a client column
- * holding "Dr. Sarah Martinez" against a V1 record naming the owner "Sarah
- * Thompson" — is caught on the surname whether or not the title is removed.
- * What stripping would change is the everyday case where the owner IS a
- * doctor: "Dr. Sarah Thompson" against "Sarah Thompson" is then reported.
+ * A TITLE CARRIES NO SIGNAL about whether this column is wrong. An owner may
+ * perfectly well be a doctor — a physician, a veterinarian in another
+ * department, a rehabilitation clinician — and "Dr." in front of a client's
+ * name is an ordinary thing to record, not evidence that a practitioner's name
+ * has been filed in the client field.
  *
- * That is accepted noise. A name is how a person is identified on a medical
- * record, the whole set here is five patients, and a difference that turns out
- * to be a title costs one glance. If this ever reports more titles than real
- * mismatches, strip them — the trade is legible and the tests pin it.
+ * It is stripped because the difference is STRUCTURAL rather than occasional:
+ * the V1 record stores a first name and a last name and has nowhere to put a
+ * title, so an owner with one produces a mismatch on every single comparison,
+ * forever. That is a false positive by construction.
+ *
+ * Nothing real is lost. The disagreement this comparison was added for — a
+ * column reading "Dr. Sarah Martinez" against a V1 record naming the owner
+ * "Sarah Thompson" — is a different SURNAME, and is caught either way.
+ *
+ * Only leading titles. A trailing credential ("Sarah Martinez, DVM") is left
+ * alone: no record here has one, and inventing a rule for a case nobody has
+ * written is how a comparison acquires behaviour nobody can justify.
  */
+const LEADING_TITLE = /^(dr|doctor|prof|professor)\.?\s+/;
 const sameName = (a, b) => {
-  const norm = (v) => String(v).trim().toLowerCase().replace(/\s+/g, ' ');
+  const norm = (v) => String(v).trim().toLowerCase().replace(/\s+/g, ' ').replace(LEADING_TITLE, '');
   return norm(a) === norm(b);
 };
 

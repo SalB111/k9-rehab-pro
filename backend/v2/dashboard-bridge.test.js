@@ -605,9 +605,9 @@ test("the owner's name is compared across both V1 fields, not one of them", () =
   assert.strictEqual(changed.length, 1, 'a different surname must be caught');
 });
 
-test("a veterinarian's name sitting in the client column is reported", () => {
-  // The defect this comparison was added for. A title is NOT stripped: a rule
-  // that removed "Dr." would equate a vet with a client of the same name.
+test('a client name with a different surname is reported, title or no title', () => {
+  // The disagreement this comparison was added for. The title is irrelevant to
+  // it — an owner may well be a doctor — and the catch is the SURNAME.
   const d = bridge.disagreements({
     client_name: 'Dr. Sarah Martinez',
     dashboard_data: JSON.stringify({
@@ -621,19 +621,44 @@ test("a veterinarian's name sitting in the client column is reported", () => {
   assert.strictEqual(hit.v1Record, 'Sarah Thompson');
 });
 
-test('a title alone IS reported — accepted noise, pinned so the trade is visible', () => {
-  // Not a safety property. The vet-in-the-client-column defect is caught on
-  // the surname either way; what this pins is the everyday case where the
-  // owner is themselves a doctor. If titles ever outnumber real mismatches,
-  // strip them in sameName and change this test deliberately.
+test('a title alone is NOT a disagreement', () => {
+  // An owner may be a doctor, and the V1 record has nowhere to put a title —
+  // first name and last name only. So a titled owner would mismatch on every
+  // comparison forever: a false positive by construction, not occasional noise.
+  for (const titled of ['Dr. Sarah Thompson', 'Dr Sarah Thompson', 'Doctor Sarah Thompson']) {
+    const d = bridge.disagreements({
+      client_name: titled,
+      dashboard_data: JSON.stringify({
+        'client::Client First Name': 'Sarah',
+        'client::Client Last Name': 'Thompson',
+      }),
+    }, bridge.COMPARABLE);
+    assert.deepStrictEqual(d, [], `${titled} is the same person as Sarah Thompson`);
+  }
+});
+
+test('stripping the title does not hide a real mismatch', () => {
   const d = bridge.disagreements({
-    client_name: 'Dr. Sarah Thompson',
+    client_name: 'Dr. Sarah Martinez',
     dashboard_data: JSON.stringify({
       'client::Client First Name': 'Sarah',
       'client::Client Last Name': 'Thompson',
     }),
   }, bridge.COMPARABLE);
-  assert.strictEqual(d.length, 1, 'a title difference is currently reported');
+  assert.strictEqual(d.length, 1, 'a different surname survives title stripping');
+});
+
+test('a trailing credential is left alone rather than guessed at', () => {
+  // No record here has one. A rule invented for a case nobody has written is
+  // behaviour nobody can justify — if these appear, decide it then.
+  const d = bridge.disagreements({
+    client_name: 'Sarah Thompson, DVM',
+    dashboard_data: JSON.stringify({
+      'client::Client First Name': 'Sarah',
+      'client::Client Last Name': 'Thompson',
+    }),
+  }, bridge.COMPARABLE);
+  assert.strictEqual(d.length, 1, 'currently reported; not silently normalised away');
 });
 
 test('a composite field still reports which V1 keys it read', () => {
