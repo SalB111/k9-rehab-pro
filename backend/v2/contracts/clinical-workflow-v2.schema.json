@@ -1,0 +1,105 @@
+﻿{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "K9 Clinical Workflow V2 Contract",
+  "type": "object",
+  "required": ["patient", "today", "workflow"],
+  "properties": {
+    "patient": {
+      "type": "object",
+      "required": ["id", "name"],
+      "properties": {
+        "id": { "type": ["string", "number"] },
+        "name": { "type": "string", "minLength": 1 },
+        "species": { "type": "string" },
+        "breed": { "type": ["string", "null"] },
+        "age": { "type": ["number", "null"] },
+        "weight": { "type": ["number", "null"] },
+        "sex": { "type": ["string", "null"] },
+        "condition": { "type": ["string", "null"] },
+        "affected_region": { "type": ["string", "null"] },
+        "surgery_date": { "type": ["string", "null"] },
+        "mobility_level": { "type": ["string", "null"] },
+        "current_medications": { "type": ["string", "null"] },
+        "medical_history": { "type": ["string", "null"] },
+        "special_instructions": { "type": ["string", "null"] },
+        "client_name": { "type": ["string", "null"] },
+        "client_email": { "type": ["string", "null"] },
+        "client_phone": { "type": ["string", "null"] },
+        "referring_vet": { "type": ["string", "null"] }
+      }
+    },
+
+    "today": {
+      "type": "object",
+      "properties": {
+        "pain_level": { "type": ["number", "null"], "minimum": 0, "maximum": 10 },
+        "lameness_grade": { "type": ["number", "null"], "minimum": 0, "maximum": 5 },
+        "weight_bearing": { "type": ["string", "null"] },
+        "mobility_level": { "type": ["string", "null"] },
+        "rom_joint": { "type": ["string", "null"] },
+        "rom_flexion": { "type": ["number", "null"] },
+        "rom_extension": { "type": ["number", "null"] },
+        "rom_flexion_contralateral": { "type": ["number", "null"] },
+        "rom_extension_contralateral": { "type": ["number", "null"] },
+        "hcpi_score": { "type": ["number", "null"] },
+        "cbpi_pss": { "type": ["number", "null"] },
+        "cbpi_pis": { "type": ["number", "null"] },
+        "load_score": { "type": ["number", "null"] },
+        "clinical_observation": { "type": ["string", "null"] },
+        "change_since_previous_visit": { "type": ["string", "null"] }
+      }
+    },
+
+    "workflow": {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "ASSESSMENT",
+            "GENERATING",
+            "REVIEW",
+            "APPROVED",
+            "HANDED_OFF"
+          ]
+        },
+        "protocol_id": { "type": ["string", "number", "null"] },
+        "protocol_version": { "type": ["integer", "null"], "minimum": 1 },
+        "approved_by": { "type": ["string", "null"] },
+        "approved_at": { "type": ["string", "null"] }
+      }
+    },
+
+    "recommendation": {
+      "type": ["object", "null"],
+      "properties": {
+        "protocol_type": { "type": ["string", "null"] },
+        "phase": { "type": ["object", "null"] },
+        "exercises": { "type": "array" },
+        "frequency": { "type": ["string", "null"] },
+        "duration_weeks": { "type": ["integer", "null"] },
+        "warnings": { "type": "array" },
+        "contraindications": { "type": "array" },
+        "rationale": { "type": "array" }
+      }
+    },
+
+    "approved_hep": {
+      "type": ["object", "null"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["DRAFT", "APPROVED", "SUPERSEDED"]
+        },
+        "exercises": { "type": "array" },
+        "frequency": { "type": ["string", "null"] },
+        "duration_weeks": { "type": ["integer", "null"] },
+        "progression": { "type": "array" },
+        "restrictions": { "type": "array" },
+        "contraindications": { "type": "array" },
+        "safety_instructions": { "type": "array" }
+      }
+    }
+  }
+}

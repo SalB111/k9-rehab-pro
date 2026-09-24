@@ -1,0 +1,48 @@
+{
+  "patient_record": {
+    "id": "patient.id",
+    "name": "patient.name",
+    "species": "patient.species",
+    "breed": "patient.breed",
+    "age": "patient.age",
+    "weight": "patient.weight",
+    "sex": "patient.sex",
+    "condition": "patient.condition",
+    "affected_region": "patient.affected_region",
+    "surgery_date": "patient.surgery_date",
+    "mobility_level": "patient.mobility_level",
+    "current_medications": "patient.current_medications",
+    "medical_history": "patient.medical_history",
+    "special_instructions": "patient.special_instructions",
+    "client_name": "patient.client_name",
+    "client_email": "patient.client_email",
+    "client_phone": "patient.client_phone",
+    "referring_vet": "patient.referring_vet",
+    "pain_level": "today.pain_level",
+    "lameness_grade": "today.lameness_grade"
+  },
+  "clinical_measures": {
+    "rom_joint": "today.rom_joint",
+    "rom_flexion": "today.rom_flexion",
+    "rom_extension": "today.rom_extension",
+    "rom_flexion_contralateral": "today.rom_flexion_contralateral",
+    "rom_extension_contralateral": "today.rom_extension_contralateral",
+    "hcpi_score": "today.hcpi_score",
+    "cbpi_pss": "today.cbpi_pss",
+    "cbpi_pis": "today.cbpi_pis",
+    "load_score": "today.load_score"
+  },
+  "requires_source_verification": {
+    "weight_bearing": "today.weight_bearing",
+    "mobility_level": "today.mobility_level",
+    "clinical_observation": "today.clinical_observation",
+    "change_since_previous_visit": "today.change_since_previous_visit"
+  },
+  "workflow_owned_by_v2": {
+    "status": "workflow.status",
+    "protocol_id": "workflow.protocol_id",
+    "protocol_version": "workflow.protocol_version",
+    "approved_by": "workflow.approved_by",
+    "approved_at": "workflow.approved_at"
+  }
+}

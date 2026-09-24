@@ -25,12 +25,16 @@ const path = require('path');
 
 const K9 = path.resolve(__dirname, '..');
 const BEAU = 'C:/Users/User/beauaihome';
-// The V2 clinical suite lives outside both repositories. That is exactly how
-// it went unnoticed, so it is named explicitly here.
-const V2_TESTS = 'D:/BEAU-K9-INTEGRATION/10-BUILD/K9-CLINICAL-WORKFLOW-V2';
+// The V2 clinical suite used to live at
+// D:/BEAU-K9-INTEGRATION/10-BUILD/K9-CLINICAL-WORKFLOW-V2 — outside both
+// repositories, with no version control and no backup. That is exactly how it
+// went unnoticed when an API rename broke it. It was brought into this repo on
+// 2026-09-24 and its paths made relative, so it is now versioned, pushed, and
+// runs wherever the repo is checked out.
+const V2_TESTS = path.join(K9, 'backend', 'v2', 'tests');
 
 const CHECKS = [
-  { name: 'K9 · V2 clinical suite',    cwd: V2_TESTS, cmd: 'node', args: ['tests/run-all.js'],
+  { name: 'K9 · V2 clinical suite',    cwd: V2_TESTS, cmd: 'node', args: ['run-all.js'],
     ok: (out) => /All suites passed/.test(out) && !/suite\(s\) FAILED/.test(out) },
   { name: 'K9 · intake proposal',      cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/intake-proposal.test.js'],
     ok: (out) => /^ok\s/m.test(out) && !/FAILED/.test(out) },

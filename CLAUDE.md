@@ -61,6 +61,67 @@ These rules are **non-negotiable** and apply to all code generation, B.E.A.U. ou
 5. **Confidence Transparency**: When B.E.A.U. synthesizes recommendations (vs. quoting source material directly), the output must indicate this distinction. Never present AI synthesis as sourced fact.
 6. **No Speculative Prognosis**: B.E.A.U. must never predict outcomes, timelines to recovery, or success rates unless directly quoting published literature with citation.
 
+## V3 — The V1/V2 Merge (standing constraint)
+
+**Instruction from Sal, 2026-09-24:** *"can we merge v1 and v2 so they dont
+conflict? ... take all best of v1 and all the best of v2 and merge them"* /
+*"before we deploy i thought we are merging v1 and v2 we can call it v3"*
+
+### Definition of done
+
+**For any clinical fact, exactly ONE store is the source of truth.**
+
+`patients.dashboard_data` is **NOT** a source of truth in V3. At most it is a
+view served at the API boundary for backward compatibility with the existing
+dashboard form.
+
+### The template — commit `9e8f407`
+
+Give the block **one real home**, point **both screens** at it, **fold the old
+copies in**. That commit did it for clinic equipment. It works. Follow it.
+
+### THE RULE
+
+> A change that leaves `dashboard_data` as the source of truth for a block is
+> **NOT progress toward V3**, whatever else it achieves.
+>
+> If you are about to do that, say so in the **FIRST LINE** of your response,
+> name it as a departure from this section, and say why — before anything else.
+
+A "bridge", a "reader", and "reading through" are the same thing: **not a
+merge.** On 2026-09-24 commit `9e8f407` declared the template above and the
+next three blocks (home, goals, diagnostics) silently did not follow it, while
+still being called "the next block". Every individual statement made was true;
+the work still drifted, because the goal lived only in conversation and
+conversation gets summarised. That is why this is written here.
+
+### Verified state, 2026-09-24
+
+| block | state |
+|---|---|
+| equipment | **MERGED** — `clinic_capabilities.equipment_json`, both screens read it |
+| metrics | **MERGED** — 40 rows migrated into `visit_measurements` |
+| client | **MIXED** — real columns, reconciled by `record-sync`; blob still holds the same facts |
+| home | **BRIDGED, NOT MERGED** — no table; blob is the only source |
+| goals | **BRIDGED, NOT MERGED** — no table; blob is the only source |
+| diagnostics | **BRIDGED, NOT MERGED** — no table; blob is the only source |
+| assessment, conditioning, global, treatment | untouched |
+
+`dashboard_data` holds 447 filled keys / 13,359 characters across 5 patients.
+All V2 tables together hold 141 rows. **The blob is still the record.**
+
+### Scope note
+
+`DashboardView.jsx` is 4,247 lines but has **one** `updateField` definition —
+all 51 field writes funnel through it — and **two** calls that PUT the blob.
+Changing where that data lands does not require rewriting the form.
+
+### Related
+
+The integration workspace map, and which copies are stale, is in
+`D:\BEAU-K9-INTEGRATION\CLAUDE.md`. Note that `01-SOURCE\K9-REHAB-PRO` there
+is a frozen archive months out of date — **this repo is the live code.**
+
 ## Evidence Gating Policy
 
 - Protocols default to **Grade A (strong RCT)** and **Grade B (moderate evidence)** exercises
