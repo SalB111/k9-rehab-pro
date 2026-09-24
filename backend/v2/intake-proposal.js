@@ -324,7 +324,34 @@ function proposeEngineInputs({ patient, clinicInputs = {}, priorInputs = null } 
     'post-op', 'postop', 'post op', 'tplo', 'tta', 'repair', 'osteotomy',
     'ectomy', 'otomy', 'arthrodesis', 'amputation', 'stabilisation', 'stabilization'
   );
-  if (effective.surgery_date) {
+  // AN EXPLICIT ANSWER BEATS AN INFERENCE.
+  //
+  // Until 2026-09-24 the derivation below ran unconditionally, so the
+  // clinician's own selection in the Treatment panel was read by
+  // dashboard-bridge and then immediately overwritten. Two consequences:
+  //
+  //   * The panel offers SURGICAL, CONSERVATIVE and PALLIATIVE. The derivation
+  //     can only ever produce the first two. `getProtocolType` routes
+  //     'palliative' to the comfort-care protocol AHEAD of diagnosis, so a
+  //     patient placed on comfort care was silently given a rehabilitation
+  //     protocol instead. That is the reason this changed.
+  //
+  //   * Checked against all five current patients on 2026-09-24, the
+  //     derivation agreed with the recorded answer every time. So this changes
+  //     no present case; it changes the case where they disagree, and there
+  //     the clinician wins.
+  //
+  // The derivation is NOT deleted. It still runs whenever nothing is recorded,
+  // which is what it was written for: a record reading "TPLO Post-Op" with an
+  // empty surgery date was being called Conservative.
+  const recordedApproach = v1.values.treatmentApproach;
+  if (recordedApproach) {
+    const prov = v1.provenance.treatmentApproach;
+    proposed.treatmentApproach = recordedApproach;
+    why.treatmentApproach = `Recorded in this practice's clinical record as `
+      + `"${prov ? prov.raw : recordedApproach}". A stated approach is used as `
+      + `stated rather than inferred from the surgery date.`;
+  } else if (effective.surgery_date) {
     proposed.treatmentApproach = 'Surgical';
     why.treatmentApproach = `A surgery date of ${effective.surgery_date} is on the record.`;
   } else if (surgicalPresentation) {

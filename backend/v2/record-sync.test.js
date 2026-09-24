@@ -169,11 +169,37 @@ test('no clinical-vocabulary key is ever in the two-way set', () => {
 
 test('the clinical vocabulary still reaches the columns', () => {
   const r = sync.reconcile({
-    existing: { id: 1, affected_region: null, medical_history: null, dashboard_data: BLOB() },
+    existing: {
+      id: 1, affected_region: null, medical_history: null,
+      dashboard_data: BLOB({ 'treatment::Affected Area': 'Stifle - right' }),
+    },
     updates: {},
   });
-  assert.strictEqual(r.columns.affected_region, 'Right hindlimb (RH)');
+  assert.strictEqual(r.columns.affected_region, 'Stifle - right');
   assert.match(r.columns.medical_history, /TPLO, uneventful/);
+});
+
+test('a LIMB never gets written into the affected_region column', () => {
+  // This direction matters more than the read does. The bridge offering a
+  // wrong-vocabulary value to a proposal is something a clinician confirms;
+  // record-sync WRITES it into the column, where it becomes the stored answer
+  // and every later read takes it as fact. `getProtocolType` string-matches
+  // that column against an anatomical vocabulary, so a limb sitting in it
+  // routes a different protocol - silently, and permanently.
+  //
+  // The fixture has a limb and no Affected Area, which is the ordinary case.
+  // The column must stay EMPTY: an unanswered region is a gap the record-gap
+  // check reports, and a wrong region is not.
+  const r = sync.reconcile({
+    existing: { id: 1, affected_region: null, dashboard_data: BLOB() },
+    updates: {},
+  });
+  assert.strictEqual(r.columns.affected_region, undefined,
+    'a limb was written into the region column - see rule 3 in dashboard-bridge.js');
+  assert.ok(
+    !r.notes.some((n) => /affected_region/.test(n)),
+    'it must not report having filled a column it did not fill'
+  );
 });
 
 // ---------------------------------------------------------------------------

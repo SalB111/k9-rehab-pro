@@ -345,7 +345,14 @@ test('a real V1 record produces the engine inputs it should', () => {
   assert.strictEqual(r.values.painScore, 3);
   assert.strictEqual(r.values.lamenessGrade, 2);
   assert.strictEqual(r.values.surgeryDate, '2026-03-21');
-  assert.strictEqual(r.values.affectedRegion, 'Right hindlimb (RH)');
+  // Bella's record fills 'Affected Limb(s)' and NOT 'Affected Area', which is
+  // the ordinary case. Until 2026-09-24 the limb answered affectedRegion, and
+  // the engine string-matches that input against an anatomical vocabulary. It
+  // is now carried as context instead: the fact is kept, the mis-routing is not.
+  assert.strictEqual(r.values.affectedRegion, undefined,
+    'the limb is answering the region input again - see rule 3');
+  assert.strictEqual(r.context['treatment::Affected Limb(s)'], 'Right hindlimb (RH)',
+    'and it must still be visible to a clinician rather than dropped');
   assert.strictEqual(r.values.treatmentApproach, 'Surgical');
   assert.ok(/CCL rupture diagnosed/.test(r.values.medicalHistory));
 });
@@ -441,16 +448,23 @@ test('fields recorded under more than one key keep every one of them', () => {
       'assessment::Weight Bearing Status',
       'assessment::Current Mobility Level',
     ],
-    affectedRegion: ['treatment::Affected Limb(s)', 'treatment::Affected Area'],
+    // NOT 'treatment::Affected Limb(s)'. This list is for one fact stored
+    // under several LABELS. The limb is a different fact in a different
+    // vocabulary and routes a different protocol — see rule 3 in
+    // dashboard-bridge.js and the alias-vocabulary test below.
+    affectedRegion: ['treatment::Affected Area'],
     currentMedications: ['assessment::Current Pain Medications', 'treatment::Current Medications'],
     surgeryDate: ['treatment::Surgery Date', 'assessment::Date of Diagnosis / Surgery'],
   };
   for (const [field, keys] of Object.entries(REQUIRED)) {
-    const entry = bridge.MAP.find((e) => e.to === field);
-    assert.ok(entry, `${field} is no longer mapped at all`);
+    // An input may be served by more than one entry when the second is
+    // conditional (surgeryDate is), so gather the keys across all of them.
+    const entries = bridge.MAP.filter((e) => e.to === field);
+    assert.ok(entries.length, `${field} is no longer mapped at all`);
+    const readable = entries.flatMap((e) => e.keys);
     for (const k of keys) {
       assert.ok(
-        entry.keys.includes(k),
+        readable.includes(k),
         `${field} no longer reads "${k}". Keys are LABELS — renaming a field in ` +
         `DashboardView orphans everything stored under the old name, and a ` +
         `dropped alias reads as an empty field rather than an error`
@@ -671,6 +685,274 @@ test('a composite field still reports which V1 keys it read', () => {
   }, bridge.COMPARABLE);
   assert.ok(hit.key && hit.key.includes('Client First Name'),
     'a report with no key tells nobody where to go and fix it');
+});
+
+// ---------------------------------------------------------------------------
+// RULE 3 - an alias list is for a RENAME, never for two live fields
+//
+// These exist because the rule was broken and it changed which protocol ran.
+// 'treatment::Affected Limb(s)' and 'treatment::Affected Area' were listed as
+// one field. Both are live controls in TreatmentPanel, and they hold different
+// facts in different vocabularies.
+//
+// The first test is the general guard. It reads the REAL JSX, so it fails for
+// ANY entry that aliases two controlled vocabularies, not just the pair we
+// already know about. A fixture could not do this.
+// ---------------------------------------------------------------------------
+
+/**
+ * Every <F/> control in the dashboard: blockId::label -> its option list.
+ *
+ * Panels are located by their 'function XxxPanel()' declaration and the block
+ * id comes from the panel name, which is how DashFormContext keys the fields.
+ * A control belongs to the panel whose body contains it. The value is the
+ * array of option strings, or null for a free-text control.
+ */
+function liveControls() {
+  const src = fs.readFileSync(DASHBOARD, 'utf8');
+  const panels = [];
+  const panelRe = /^function ([A-Za-z]+)Panel\(\)/gm;
+  let m;
+  while ((m = panelRe.exec(src)) !== null) {
+    panels.push({ block: m[1].toLowerCase(), start: m.index });
+  }
+  assert.ok(panels.length > 5, 'no panels found in DashboardView.jsx - has it moved?');
+  for (let i = 0; i < panels.length; i++) {
+    panels[i].end = i + 1 < panels.length ? panels[i + 1].start : src.length;
+  }
+
+  const out = new Map();
+  const fRe = /<F\s([^>]*?)\/?>/g;
+  while ((m = fRe.exec(src)) !== null) {
+    const attrs = m[1];
+    const lab = /label="([^"]+)"/.exec(attrs);
+    if (!lab) continue;
+    const panel = panels.find((q) => m.index >= q.start && m.index < q.end);
+    if (!panel) continue;
+    const optm = /options=\{\[([\s\S]*?)\]\}/.exec(attrs);
+    const opts = optm ? (optm[1].match(/"([^"]*)"/g) || []).map((s) => s.slice(1, -1)) : null;
+    out.set(panel.block + '::' + lab[1], opts);
+  }
+  assert.ok(out.size > 40, `only ${out.size} controls found - the reader is broken, not the map`);
+  return out;
+}
+
+test('alias lists never mix two DIFFERENT controlled vocabularies', () => {
+  const controls = liveControls();
+  const problems = [];
+
+  for (const entry of bridge.MAP) {
+    // Only controls that still exist can still be written to.
+    const live = entry.keys.filter((k) => controls.has(k));
+    if (live.length < 2) continue;
+
+    // Free-text controls impose no vocabulary, so they cannot conflict.
+    const listed = live.filter((k) => Array.isArray(controls.get(k)) && controls.get(k).length);
+    if (listed.length < 2) continue;
+
+    const signature = (k) => controls.get(k).slice().sort().join('|');
+    const distinct = new Set(listed.map(signature));
+    if (distinct.size < 2) continue;
+
+    // Two different option lists on one engine input is only safe when a
+    // normaliser reconciles them. 'text' is not a normaliser - it hands the
+    // raw value to an engine that string-matches it.
+    const viaName = entry.via && entry.via.name ? entry.via.name : '(anonymous)';
+    if (viaName === 'text') {
+      problems.push(
+        `${entry.to}: ${listed.join('  +  ')}\n      `
+        + `via=text, so the raw value reaches the engine. These controls offer `
+        + `different option lists, so which one answered decides what the engine sees.`
+      );
+      continue;
+    }
+
+    // There IS a normaliser. Then every option of every one of these controls
+    // must survive it - an option that normalises to null is a value a
+    // clinician can choose that the engine will never act on.
+    for (const key of listed) {
+      for (const option of controls.get(key)) {
+        const mapped = entry.via(option);
+        if (mapped === null || mapped === undefined) {
+          problems.push(
+            `${entry.to}: "${option}" from ${key} normalises to null - `
+            + `a clinician can select it and the engine never sees it`
+          );
+        }
+      }
+    }
+  }
+
+  assert.strictEqual(problems.length, 0,
+    'Alias lists are for ONE fact stored under several labels. These mix '
+    + 'vocabularies:\n  ' + problems.join('\n  '));
+});
+
+test('the limb vocabulary never reaches affectedRegion', () => {
+  const r = bridge.readDashboard({
+    dashboard_data: JSON.stringify({ 'treatment::Affected Limb(s)': 'Left hindlimb (LH)' }),
+  });
+  assert.strictEqual(r.values.affectedRegion, undefined,
+    'a limb answered the region input again - see rule 3');
+});
+
+test('the anatomical field still reaches affectedRegion', () => {
+  const r = bridge.readDashboard({
+    dashboard_data: JSON.stringify({ 'treatment::Affected Area': 'Thoracolumbar spine' }),
+  });
+  assert.strictEqual(r.values.affectedRegion, 'Thoracolumbar spine',
+    'splitting the alias must not leave the region input with no source at all');
+});
+
+test('the limb is kept as context, not discarded', () => {
+  const r = bridge.readDashboard({
+    dashboard_data: JSON.stringify({ 'treatment::Affected Limb(s)': 'Both hindlimbs' }),
+  });
+  assert.strictEqual(r.context['treatment::Affected Limb(s)'], 'Both hindlimbs',
+    'a real clinical fact was dropped instead of moved out of the engine path');
+});
+
+test('the two vocabularies really do route differently - the reason for rule 3', () => {
+  const { getProtocolType } = require('../protocol-generator');
+  assert.notStrictEqual(
+    getProtocolType('Osteoarthritis', 'Left Stifle', 'Conservative'),
+    getProtocolType('Osteoarthritis', 'Left hindlimb (LH)', 'Conservative'),
+    'if these ever agree, the engine stopped string-matching the region; '
+    + 'rewrite rule 3 rather than keep a test that proves nothing');
+});
+
+// ---------------------------------------------------------------------------
+// One control, two clinical questions
+// ---------------------------------------------------------------------------
+
+test('a diagnosis date does not become a surgery date', () => {
+  const r = bridge.readDashboard({
+    dashboard_data: JSON.stringify({
+      'treatment::Approach': 'Conservative',
+      'assessment::Date of Diagnosis / Surgery': '2026-05-01',
+    }),
+  });
+  assert.strictEqual(r.values.surgeryDate, undefined,
+    'a conservatively managed patient was given a surgery date, which opens a '
+    + 'post-operative window and raises the acute gates on a dog never operated on');
+});
+
+test('but a surgical patient still gets one from the same field', () => {
+  const r = bridge.readDashboard({
+    dashboard_data: JSON.stringify({
+      'treatment::Approach': 'Surgical',
+      'assessment::Date of Diagnosis / Surgery': '2026-05-01',
+    }),
+  });
+  assert.strictEqual(r.values.surgeryDate, '2026-05-01',
+    'the guard threw away a real surgery date - it must only decline where '
+    + 'the record says there was no operation');
+});
+
+test('a named procedure counts as evidence of surgery when no approach is set', () => {
+  const r = bridge.readDashboard({
+    dashboard_data: JSON.stringify({
+      'treatment::Surgeon Name': 'Dr Bibevski',
+      'assessment::Date of Diagnosis / Surgery': '2026-05-01',
+    }),
+  });
+  assert.strictEqual(r.values.surgeryDate, '2026-05-01');
+});
+
+test('a declined value is REPORTED, never silently dropped', () => {
+  const r = bridge.readDashboard({
+    dashboard_data: JSON.stringify({
+      'treatment::Approach': 'Conservative',
+      'assessment::Date of Diagnosis / Surgery': '2026-05-01',
+    }),
+  });
+  const hit = r.unmapped.find((u) => u.to === 'surgeryDate');
+  assert.ok(hit, 'the date vanished - "why did the engine not see this" has no answer');
+  assert.ok(hit.reason && hit.reason.length > 20, 'reported without a reason is barely reported');
+});
+
+test('the dedicated surgery date still beats the shared one', () => {
+  const r = bridge.readDashboard({
+    dashboard_data: JSON.stringify({
+      'treatment::Approach': 'Surgical',
+      'treatment::Surgery Date': '2026-03-21',
+      'assessment::Date of Diagnosis / Surgery': '2026-04-09',
+    }),
+  });
+  assert.strictEqual(r.values.surgeryDate, '2026-03-21',
+    'Louie has both, and the treatment field is the one that means surgery');
+});
+
+// ---------------------------------------------------------------------------
+// Checkboxes are TRI-STATE
+// ---------------------------------------------------------------------------
+
+test('a ticked e-collar box reaches the gate', () => {
+  const r = bridge.readDashboard({
+    dashboard_data: JSON.stringify({ 'treatment::E-Collar Required': 'true' }),
+  });
+  assert.strictEqual(r.values.eCollarRequired, true, 'the tick was collected and discarded again');
+  assert.strictEqual(r.provenance.eCollarRequired.gate, true, 'this is a gate and must say so');
+});
+
+// The tri-state holds in TWO places and these test them separately, because a
+// test driving "" through readDashboard passes no matter what `ticked` does -
+// firstFilled discards "" before the normaliser is reached. The first version
+// of this test did exactly that and survived the normaliser being changed to
+// return false. Mutation testing found it; the split is the fix.
+
+test('an EMPTY box never reaches the map at all (firstFilled)', () => {
+  const r = bridge.readDashboard({
+    dashboard_data: JSON.stringify({
+      'treatment::E-Collar Required': '',
+      'treatment::Strict Crate Rest': '',
+    }),
+  });
+  assert.strictEqual(r.values.eCollarRequired, undefined,
+    'an untouched checkbox became a clinical answer');
+  assert.strictEqual(r.values.crateRestRequired, undefined, 'same for crate rest');
+  assert.strictEqual(r.unmapped.filter((u) => u.to === 'eCollarRequired').length, 0,
+    'an empty box is not an unreadable value, it is an unanswered question');
+});
+
+test('an UNTICKED spelling says nothing - it does not say "no"', () => {
+  for (const spelling of ['false', 'no', '0', 'unchecked', 'not required']) {
+    assert.strictEqual(bridge.ticked(spelling), null,
+      `"${spelling}" became a clinical "no". The e-collar and crate-rest gates `
+      + 'default to REQUIRED inside the acute window, so this relaxes them');
+  }
+});
+
+test('a ticked spelling is read as a tick', () => {
+  for (const spelling of ['true', 'TRUE', ' yes ', '1', 'required', true]) {
+    assert.strictEqual(bridge.ticked(spelling), true, `${spelling} did not read as ticked`);
+  }
+});
+
+test('an unticked spelling that DOES reach the map is still not a "no"', () => {
+  const r = bridge.readDashboard({
+    dashboard_data: JSON.stringify({ 'treatment::E-Collar Required': 'false' }),
+  });
+  assert.strictEqual(r.values.eCollarRequired, undefined,
+    'this is the path firstFilled does not cover, and it is the one that matters');
+  assert.ok(r.unmapped.some((u) => u.to === 'eCollarRequired'),
+    'a value the map declined must be reported, not dropped');
+});
+
+test('silence is not an answer either', () => {
+  const r = bridge.readDashboard({ dashboard_data: JSON.stringify({}) });
+  assert.strictEqual(r.values.crateRestRequired, undefined);
+  assert.strictEqual(r.values.eCollarRequired, undefined);
+});
+
+test('every gate the map claims to supply is a gate the engine actually has', () => {
+  const { SAFETY_GATES } = require('./intake-proposal');
+  const engineGates = new Set(SAFETY_GATES.map((g) => g.field));
+  for (const entry of bridge.MAP.filter((e) => e.gate === true)) {
+    assert.ok(engineGates.has(entry.to),
+      `the map marks ${entry.to} as a safety gate but intake-proposal has no `
+      + 'such gate - one of the two was renamed and the other was not');
+  }
 });
 
 if (failures.length) {

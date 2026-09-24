@@ -3,25 +3,39 @@
 /**
  * THE V1 -> V2 BRIDGE
  *
- * K9 Rehab Pro keeps two records of the same patient and the engine reads the
- * emptier one.
+ * K9 Rehab Pro grew two records of the same patient.
  *
- *   V1 `DashboardView.jsx` writes a complete clinical record into
- *   `patients.dashboard_data` — a JSON blob keyed by BLOCK::LABEL. All 18
- *   patients in production carry one; 187 distinct fields are filled across
- *   the set. Diagnosis, weight-bearing status, incision status, deep pain
- *   perception, goniometry, thigh circumference, surgical history, surgeon,
- *   surgery date.
+ *   V1 `DashboardView.jsx` writes a clinical record into
+ *   `patients.dashboard_data` — a JSON blob keyed by BLOCK::LABEL.
  *
- *   The V2 clinical workflow and the protocol engine read flat columns on
- *   `patients` plus `visit_assessments`. Nothing anywhere reads
- *   `dashboard_data` — I grepped `backend/v2/` and the V1 prompt builders:
- *   `data["home::` and `data["equipment::` appear ZERO times, and the backend
- *   has no reference to the column at all.
+ *   The V2 workflow and the protocol engine read flat columns on `patients`
+ *   plus `visit_assessments`.
  *
- * So a clinician fills in a sourced, checked clinical record, and the protocol
- * is generated from whatever happens to be in the columns — which for the only
- * real post-operative patient meant a null surgery date and a null history.
+ * For a while nothing read the blob at all, so a clinician filled in a checked
+ * clinical record and the protocol was generated from whatever happened to be
+ * in the columns. This module was written to close that gap.
+ *
+ * WHERE THIS MODULE STANDS IN V3 — read this before extending it
+ *
+ * V3 moves each block to its own table (see CLAUDE.md). Six blocks are done:
+ * equipment, metrics, client, home, goals, diagnostics. For those, this module
+ * is DEAD WEIGHT by design — their keys are still in the blob but nothing here
+ * should be the source for them.
+ *
+ * What still genuinely depends on this module is narrow and worth stating
+ * exactly, because it is the list of things V3 has left to do:
+ *
+ *   THREE engine inputs have no column anywhere, so the blob is their only
+ *   source, and all three are safety gates:
+ *
+ *     weightBearingStatus  <- treatment::Weight Bearing Status
+ *     incisionStatus       <- treatment::Incision Status
+ *     neuroDeepPain        <- assessment::Deep Pain Perception
+ *
+ *   Everything else mapped below is COLUMN-FIRST: intake-proposal's `FILL`
+ *   list reads the column and only consults this module where the column is
+ *   empty. That is a fact about today's DATA, not about this code — a patient
+ *   with an empty column is blob-sourced the moment they exist.
  *
  * WHAT THIS MODULE DOES
  * Reads that blob and maps it onto engine inputs. It is a READER: it never
@@ -29,7 +43,7 @@
  * produces arrives at the intake proposal as a PROPOSAL carrying its
  * provenance, and every safety gate still has to be confirmed by a person.
  *
- * THREE RULES, each learned from this data rather than assumed:
+ * FOUR RULES, each learned from this data rather than assumed:
  *
  *   1. MAP FROM THE OPTION LIST, NOT FROM THE STORED VALUES.
  *      No patient currently has "Absent — bilateral" deep pain. The V1 control
@@ -39,13 +53,49 @@
  *   2. KEYS ARE LABELS, SO KEYS ROT.
  *      `key = blockId::label`. Renaming a field in the dashboard orphans every
  *      value stored under the old name — visible right now as
- *      "Neurological Grade (Frankel Modified)" (10 patients) and
- *      "Neurological Grade (Frankel / ASIA Modified)" (2). Every field below
+ *      "Neurological Grade (Frankel Modified)" and
+ *      "Neurological Grade (Frankel / ASIA Modified)". Every field below
  *      therefore lists every key it has ever been stored under.
  *
- *   3. UNRECOGNISED IS REPORTED, NEVER GUESSED.
+ *   3. AN ALIAS LIST IS FOR A RENAME, NEVER FOR TWO LIVE FIELDS.
+ *      This is rule 2's failure mode and it caused a real defect. Until
+ *      2026-09-24 this file listed
+ *
+ *          keys: ['treatment::Affected Limb(s)', 'treatment::Affected Area']
+ *
+ *      as one field. They are not one field. Both controls are live in
+ *      TreatmentPanel today, they hold DIFFERENT clinical facts, and they use
+ *      different vocabularies:
+ *
+ *          Affected Limb(s) -> "Both hindlimbs", "Left hindlimb (LH)"
+ *          Affected Area    -> "Thoracolumbar spine", "Stifle — right"
+ *
+ *      `getProtocolType` (protocol-generator.js) string-matches this input, so
+ *      feeding it the limb vocabulary changes which protocol runs:
+ *
+ *          "Osteoarthritis" + "Left Stifle"         ->  tplo protocol
+ *          "Osteoarthritis" + "Left hindlimb (LH)"  ->  oa protocol
+ *
+ *      Same patient, same limb, different protocol, decided by which of the
+ *      two fields happened to answer first. Only the anatomical field maps to
+ *      `affectedRegion` now. The limb is clinical fact worth keeping and is
+ *      carried as CONTEXT, where nothing string-matches it.
+ *
+ *      Before adding a key to an alias list, check it is not a live control:
+ *      `grep 'label="<name>"' k9-rehab-frontend/src/pages/DashboardView.jsx`.
+ *      alias-lists-are-renames in dashboard-bridge.test.js enforces this
+ *      against the real JSX.
+ *
+ *   4. UNRECOGNISED IS REPORTED, NEVER GUESSED.
  *      A value the map does not know comes back in `unmapped` with its key and
  *      value. It does not become a default, and it does not disappear.
+ *
+ * NUMBERS ARE NOT WRITTEN HERE ON PURPOSE. An earlier version of this header
+ * stated a patient count, a field count and two key counts. Every one of them
+ * was wrong within weeks, while reading as though it had been checked. To see
+ * the current shape of the blob, run it:
+ *
+ *   node -e "const {DatabaseSync}=require('node:sqlite');  *     const db=new DatabaseSync('backend/k9rehab.db');  *     const m={}; for(const r of db.prepare('SELECT dashboard_data FROM patients').all()){  *       if(!r.dashboard_data) continue; const d=JSON.parse(r.dashboard_data);  *       for(const k of Object.keys(d)){const b=k.split('::')[0];(m[b]=m[b]||new Set()).add(k);} }  *     for(const b of Object.keys(m).sort()) console.log(b, m[b].size)"
  */
 
 /**
@@ -163,10 +213,75 @@ function painScore(value) {
   return n >= 0 && n <= 10 ? n : null;
 }
 
+/**
+ * A checkbox, read as a TRI-STATE.
+ *
+ * The V1 form serialises a checkbox as "true" when ticked and "" when not, and
+ * a checkbox nobody has touched is simply absent from the blob. So "" cannot
+ * tell "the clinician says no" apart from "the form rendered and nobody
+ * answered", and those are different clinical statements.
+ *
+ * Only a TICK is read. Anything else returns null, the gate stays unproposed
+ * and falls to its own cautious default, exactly as it did before these fields
+ * were mapped at all. That makes the mapping a strict improvement: a ticked box
+ * now reaches the engine, and an unticked one loses no caution.
+ *
+ * WHERE THE "" CASE IS ACTUALLY HANDLED — this caught a test out, so it is
+ * written down. An empty string never reaches this function: `firstFilled`
+ * treats "" as unfilled and the map entry is skipped before `via` is called.
+ * So the tri-state holds in two places, and only one of them is here:
+ *
+ *   ""                  -> stopped by firstFilled, entry never fires
+ *   "false" "no" "0"    -> stopped HERE, returns null
+ *   "true" "yes" "1"    -> returns true
+ *
+ * A test that asserts the "" case through `readDashboard` passes whatever this
+ * function does, and proves nothing about it. Test the two paths separately.
+ *
+ * Do NOT "improve" this by returning false for the unticked spellings. The
+ * e-collar and crate-rest gates default to REQUIRED inside the acute
+ * post-operative window, and reading an unticked box as a clinical "no" would
+ * quietly relax both.
+ */
+function ticked(value) {
+  if (value === true) return true;
+  const t = String(value === null || value === undefined ? '' : value).trim().toLowerCase();
+  if (t === 'true' || t === 'yes' || t === '1' || t === 'required') return true;
+  return null;
+}
+
 /** A trimmed non-empty string, or null. */
 function text(value) {
   const t = String(value === null || value === undefined ? '' : value).trim();
   return t ? t : null;
+}
+
+/**
+ * Does this record describe a patient who had an OPERATION?
+ *
+ * Needed because `assessment::Date of Diagnosis / Surgery` is one control
+ * answering two different questions. For a surgical patient it is the surgery
+ * date. For a conservatively managed patient it is the date the diagnosis was
+ * made, and those are not the same fact.
+ *
+ * Reading a diagnosis date as a surgery date is not cosmetic. `surgery_date`
+ * drives the post-operative window, which raises the acute gates (incision,
+ * e-collar, crate rest), and it used to force treatmentApproach to Surgical —
+ * so a dog on conservative management for a partial cruciate tear would have
+ * been proposed a post-operative protocol.
+ *
+ * Deliberately NOT inferred from the diagnosis text. "TPLO Post-Op" in the
+ * condition field already routes through `surgicalPresentation` in
+ * intake-proposal, and adding a second text heuristic here would mean two
+ * places guessing at the same thing from the same words.
+ */
+function hasSurgery(blob) {
+  const stated = String(blob['treatment::Approach'] || '').trim().toLowerCase();
+  if (stated === 'surgical') return true;
+  if (stated === 'conservative' || stated === 'palliative') return false;
+  // No approach recorded: accept the date only if the record names an actual
+  // procedure. A surgeon or a procedure type is a statement that one happened.
+  return Boolean(text(blob['treatment::Surgery Type']) || text(blob['treatment::Surgeon Name']));
 }
 
 /** A finite positive number, or null. */
@@ -184,6 +299,15 @@ function number(value) {
  * `gate: true` marks a field that fails UNSAFE if omitted. It changes nothing
  * about how the value is read; it is here so a reader can see at a glance that
  * proposing this field never excuses confirming it.
+ *
+ * `when(blob)` makes an entry CONDITIONAL — it answers only for a record the
+ * predicate accepts. Used where one control answers two different clinical
+ * questions depending on the case. `whyNot` is the sentence reported in
+ * `unmapped` when it declines, because a value that stops reaching the engine
+ * without explanation is the thing this module exists to stop.
+ *
+ * Two entries may share a `to`. The FIRST filled one wins, so an
+ * unconditional entry is written above the conditional one.
  */
 const MAP = [
   // ── Identity ──────────────────────────────────────────────────────────────
@@ -201,11 +325,21 @@ const MAP = [
   // ── Longitudinal record ───────────────────────────────────────────────────
   { keys: ['assessment::Primary Diagnosis', 'treatment::Primary Diagnosis'],
     to: 'diagnosis', via: text },
-  { keys: ['treatment::Affected Limb(s)', 'treatment::Affected Area'],
-    to: 'affectedRegion', via: text },
+  // ANATOMICAL ONLY — see rule 3 in the header. `treatment::Affected Limb(s)`
+  // is a different live field with a different vocabulary and is carried as
+  // context, not mapped here. Adding it back changes which protocol runs.
+  { keys: ['treatment::Affected Area'], to: 'affectedRegion', via: text },
   { keys: ['treatment::Approach'], to: 'treatmentApproach', via: text },
-  { keys: ['treatment::Surgery Date', 'assessment::Date of Diagnosis / Surgery'],
-    to: 'surgeryDate', via: text },
+  // Two entries, one input. The first is unconditional and wins whenever it is
+  // filled; the second only answers for a patient who actually had surgery.
+  // See `hasSurgery`. Order here is precedence — see readDashboard.
+  { keys: ['treatment::Surgery Date'], to: 'surgeryDate', via: text },
+  { keys: ['assessment::Date of Diagnosis / Surgery'], to: 'surgeryDate', via: text,
+    when: hasSurgery,
+    whyNot: 'This record does not describe an operation, so a "Date of Diagnosis '
+      + '/ Surgery" is a DIAGNOSIS date. Reading it as a surgery date would open '
+      + 'a post-operative window and raise the acute gates on a patient who was '
+      + 'never operated on.' },
   { keys: ['assessment::Relevant Medical & Surgical History'],
     to: 'medicalHistory', via: text },
   { keys: ['assessment::Current Pain Medications', 'treatment::Current Medications'],
@@ -222,6 +356,11 @@ const MAP = [
            'assessment::Current Mobility Level'],
     to: 'weightBearingStatus', via: weightBearing, gate: true },
   { keys: ['treatment::Incision Status'], to: 'incisionStatus', via: incisionStatus, gate: true },
+  // Collected by the dashboard since the form existed, mapped to nothing until
+  // 2026-09-24 — the engine has both gates and this module supplied neither,
+  // so a clinician's tick was stored and discarded. Tri-state: see `ticked`.
+  { keys: ['treatment::E-Collar Required'], to: 'eCollarRequired', via: ticked, gate: true },
+  { keys: ['treatment::Strict Crate Rest'], to: 'crateRestRequired', via: ticked, gate: true },
   { keys: ['assessment::Deep Pain Perception'], to: 'neuroDeepPain', via: deepPain, gate: true },
 ];
 
@@ -239,6 +378,14 @@ const MAP = [
  *     to it directly; mapping both would mean deciding which wins.
  *   treatment::Sling Assist Required
  *     The engine records it and excludes nothing on it, by design.
+ *   treatment::Affected Limb(s) / assessment::Affected Limb(s)
+ *     A different fact from Affected Area, in a different vocabulary. Mapping
+ *     it to `affectedRegion` changed which protocol ran; see rule 3.
+ *   treatment::Approach
+ *     Mapped to `treatmentApproach` below, but intake-proposal derives that
+ *     field from the surgery date and presentation. The mapping is the
+ *     FALLBACK, and the derivation runs when nothing is recorded — see
+ *     intake-proposal.js.
  *   metrics::*  (goniometry, thigh circumference)
  *     Real measurements with no engine input to reach. They belong in
  *     visit_measurements, which is a migration, not a read.
@@ -252,6 +399,14 @@ const CONTEXT_KEYS = [
   'assessment::Comorbidities / Secondary Diagnoses',
   'treatment::Surgery Type',
   'treatment::Sling Assist Required',
+  // The limb, kept OUT of `affectedRegion` by rule 3. It is real clinical
+  // fact and a clinician should see it; it simply must not reach an input that
+  // string-matches an anatomical vocabulary.
+  'treatment::Affected Limb(s)',
+  'assessment::Affected Limb(s)',
+  // Recorded by the form and read by nothing before 2026-09-24.
+  'treatment::Surgeon Name',
+  'treatment::Clinical Notes',
 ];
 
 /** Parse the blob off a patient row. Never throws; a bad blob reads as empty. */
@@ -299,8 +454,25 @@ function readDashboard(patient) {
   const usedKeys = new Set();
 
   for (const entry of MAP) {
+    // FIRST ENTRY WINS for a given engine input. Two entries may target one
+    // input when the second is conditional, so position in MAP is precedence
+    // and the unconditional entry is written first.
+    if (Object.prototype.hasOwnProperty.call(values, entry.to)) continue;
+
     const hit = firstFilled(blob, entry.keys);
     if (!hit) continue;
+
+    // A conditional entry whose condition does not hold. Rule 4 still applies:
+    // the value is REPORTED as unused, with the reason, rather than vanishing.
+    // "Why did the engine not see this date" has to have an answer.
+    if (entry.when && !entry.when(blob)) {
+      unmapped.push({
+        key: hit.key, value: String(hit.value), to: entry.to,
+        reason: entry.whyNot || 'a condition on this mapping was not met',
+      });
+      continue;
+    }
+
     usedKeys.add(hit.key);
     const mapped = entry.via(hit.value);
     if (mapped === null || mapped === undefined) {
@@ -499,6 +671,7 @@ module.exports = {
   CONTEXT_KEYS,
   // exported for tests — each is a documented clinical mapping in its own right
   weightBearing,
+  ticked,
   incisionStatus,
   deepPain,
   painScore,
