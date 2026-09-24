@@ -175,7 +175,9 @@ if (routeChanges.length && !ALLOW_ROUTE_CHANGE) {
   process.exit(1);
 }
 
-const stamp = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 15);
+// 14 chars, not 15: the 15th is the '.' before the milliseconds, which lands
+// in the middle of the filename as "...155827.-pre-drift-reconcile".
+const stamp = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 14);
 const backup = `${DB_PATH}.backup-${stamp}-pre-drift-reconcile`;
 fs.copyFileSync(DB_PATH, backup);
 console.log(`\n  backup: ${path.basename(backup)}`);
