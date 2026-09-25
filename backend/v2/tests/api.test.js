@@ -67,7 +67,11 @@ async function boot({ seedCapabilities = true, seedClinic = true } = {}) {
     id INTEGER PRIMARY KEY, name TEXT, client_first_name TEXT, client_last_name TEXT,
     species TEXT, breed TEXT, age REAL, weight REAL, condition TEXT,
     affected_region TEXT, treatment_approach TEXT, surgery_date TEXT,
-    medical_history TEXT, current_medications TEXT, special_instructions TEXT
+    medical_history TEXT, current_medications TEXT, special_instructions TEXT,
+    -- V3 treatment: the case-level facts. affected_limbs is the LIMB and is
+    -- deliberately never fed to the protocol router; affected_region above is
+    -- the lesion site, which is.
+    affected_limbs TEXT
   )`);
   if (seedClinic) {
     await db.run(`INSERT INTO clinics (id, clinic_name) VALUES (1, 'Founding Clinic')`);
@@ -141,6 +145,213 @@ async function runWorkflow(api, { assessment = { pain_score: 3, lameness_grade: 
     { note: 'ok', gate_confirmations });
   return { visit: visit.body.data, version: rec.body.data, approved };
 }
+
+// ===========================================================================
+section('Treatment block (V3) over HTTP');
+// ===========================================================================
+//
+// The layer between the panel and the store, which nothing covered. The store
+// suite proves the rules; this proves the WIRING — that the routes hand the
+// store what the panel sends, and that what the store holds reaches the engine.
+
+test('a patient with no procedures or status reads as empty, not as broken', async () => {
+  const api = await boot();
+  const r = await api.call('GET', '/patients/100/treatment');
+  assert.equal(r.status, 200);
+  assert.deepEqual(r.body.data.procedures, []);
+  assert.equal(r.body.data.status, null);
+  assert.deepEqual(r.body.data.statusHistory, []);
+  // `configured` is TRUE here and that is correct: the fixture seeds
+  // treatment_approach = 'Surgical', which is part of this block. It means
+  // "something in the treatment record has been answered", not "a status has
+  // been recorded" — the first version of this test conflated the two.
+  assert.equal(r.body.data.configured, true);
+  assert.equal(r.body.data.approach, 'Surgical');
+  await api.close();
+});
+
+test('the case round-trips: approach and affected limb', async () => {
+  const api = await boot();
+  const r = await api.call('PUT', '/patients/100/treatment/case', {
+    approach: 'Conservative', affected_limbs: 'Both hindlimbs',
+  });
+  assert.equal(r.status, 200);
+  assert.equal(r.body.data.approach, 'Conservative');
+  assert.equal(r.body.data.affected_limbs, 'Both hindlimbs');
+  await api.close();
+});
+
+test('a limb never overwrites the lesion site', async () => {
+  // Different clinical facts in different vocabularies. getProtocolType
+  // string-matches the region, so writing a limb into it changes which
+  // protocol runs.
+  const api = await boot();
+  const r = await api.call('PUT', '/patients/100/treatment/case', {
+    affected_limbs: 'Both hindlimbs',
+  });
+  assert.equal(r.body.data.affected_region, 'Stifle', 'the seeded lesion site was overwritten');
+  await api.close();
+});
+
+test('PALLIATIVE is refused over HTTP, with a message naming what to use', async () => {
+  const api = await boot();
+  const r = await api.call('PUT', '/patients/100/treatment/case', { approach: 'Palliative' });
+  assert.equal(r.status, 400, 'the retired pathway got back in through the API');
+  assert.match(r.body.error, /retired/i);
+  assert.match(r.body.error, /Surgical/, 'a refusal that does not say what to do instead is a dead end');
+  await api.close();
+});
+
+test('a second procedure is a second row', async () => {
+  const api = await boot();
+  await api.call('POST', '/patients/100/treatment/procedures', {
+    procedure: { procedure_type: 'TPLO right stifle', procedure_date: '2026-03-21' },
+  });
+  const r = await api.call('POST', '/patients/100/treatment/procedures', {
+    procedure: { procedure_type: 'TPLO left stifle', procedure_date: '2026-08-14' },
+  });
+  assert.equal(r.status, 201);
+  assert.equal(r.body.data.procedures.length, 2, 'the contralateral procedure overwrote the first');
+  await api.close();
+});
+
+test('an unparseable procedure date is refused, not stored', async () => {
+  const api = await boot();
+  const r = await api.call('POST', '/patients/100/treatment/procedures', {
+    procedure: { procedure_type: 'TPLO', procedure_date: '21/03/2026' },
+  });
+  assert.equal(r.status, 400);
+  assert.match(r.body.error, /ISO date/);
+  await api.close();
+});
+
+test('a procedure can be removed', async () => {
+  const api = await boot();
+  const add = await api.call('POST', '/patients/100/treatment/procedures', {
+    procedure: { procedure_type: 'TPLO', procedure_date: '2026-03-21' },
+  });
+  const id = add.body.data.procedures[0].id;
+  const r = await api.call('DELETE', `/treatment/procedures/${id}`);
+  assert.equal(r.status, 200);
+  assert.equal(r.body.data.procedures.length, 0);
+  await api.close();
+});
+
+test('recording a status keeps the previous one', async () => {
+  const api = await boot();
+  await api.call('POST', '/patients/100/treatment/status', {
+    effective_date: '2026-03-25',
+    status: { weight_bearing_status: 'Non-weight bearing (NWB)' },
+  });
+  const r = await api.call('POST', '/patients/100/treatment/status', {
+    effective_date: '2026-04-15',
+    status: { weight_bearing_status: 'Partial weight bearing (PWB)' },
+  });
+  assert.equal(r.status, 201);
+  assert.equal(r.body.data.statusHistory.length, 2, 'the progression was overwritten');
+  assert.equal(r.body.data.status.weight_bearing_status, 'Partial weight bearing (PWB)');
+  await api.close();
+});
+
+test('the tri-state survives the round trip', async () => {
+  // The one that matters. "" from an unticked box is UNANSWERED, and the
+  // e-collar and crate-rest gates default to REQUIRED in the acute window, so
+  // reading silence as "no" relaxes both.
+  const api = await boot();
+  const r = await api.call('POST', '/patients/100/treatment/status', {
+    status: { e_collar_required: false, strict_crate_rest: null, sling_assist_required: '' },
+  });
+  assert.equal(r.body.data.status.e_collar_required, 0, 'a clinician said no and it was lost');
+  assert.equal(r.body.data.status.strict_crate_rest, null, 'silence became an answer');
+  assert.equal(r.body.data.status.sling_assist_required, null, 'an empty string became an answer');
+  await api.close();
+});
+
+test('an unknown status field is refused rather than dropped', async () => {
+  const api = await boot();
+  const r = await api.call('POST', '/patients/100/treatment/status', {
+    status: { pain_level: 5 },
+  });
+  assert.equal(r.status, 400);
+  assert.match(r.body.error, /Unknown status fields: pain_level/);
+  await api.close();
+});
+
+// ---------------------------------------------------------------------------
+// THE WHOLE POINT: what the panel records reaches the engine
+// ---------------------------------------------------------------------------
+
+test('a recorded weight-bearing status reaches the intake proposal', async () => {
+  // panel -> route -> store -> intake-proposal -> the gate a clinician
+  // confirms. Every hop real. Until 2026-09-25 this failed in the middle:
+  // the panel wrote the blob and the proposal read the tables.
+  const api = await boot();
+
+  const before = await api.call('GET', '/patients/100/intake-proposal');
+  const wbBefore = before.body.data.gates.find((g) => g.field === 'weightBearingStatus');
+  assert.ok(wbBefore, 'weight bearing must be asked for a post-operative patient');
+  assert.equal(wbBefore.proposed, 'NWB',
+    'with nothing recorded the gate must sit at its most cautious value');
+  assert.equal(wbBefore.fromTreatmentRecord, false);
+
+  await api.call('POST', '/patients/100/treatment/status', {
+    status: { weight_bearing_status: 'Partial weight bearing (PWB)' },
+  });
+
+  const after = await api.call('GET', '/patients/100/intake-proposal');
+  const wbAfter = after.body.data.gates.find((g) => g.field === 'weightBearingStatus');
+  assert.equal(wbAfter.proposed, 'PWB',
+    'what the panel recorded did not reach the engine — this is the exact '
+    + 'failure that existed while the panel wrote the blob and the proposal '
+    + 'read the tables');
+  assert.equal(wbAfter.fromTreatmentRecord, true, 'and it must say where it came from');
+  assert.equal(wbAfter.mustConfirm, true, 'and still be confirmed by a person');
+  await api.close();
+});
+
+test('a recorded procedure date reaches the post-operative gates', async () => {
+  const api = await boot();
+  // Clear the seeded column date so the procedure is the only source.
+  await api.db.run('UPDATE patients SET surgery_date = NULL WHERE id = 100');
+
+  const before = await api.call('GET', '/patients/100/intake-proposal');
+  const hadIncision = before.body.data.gates.some((g) => g.field === 'incisionStatus');
+
+  await api.call('POST', '/patients/100/treatment/procedures', {
+    procedure: { procedure_type: 'TPLO', procedure_date: new Date(Date.now() - 4 * 86400000).toISOString().slice(0, 10) },
+  });
+
+  const after = await api.call('GET', '/patients/100/intake-proposal');
+  assert.equal(after.body.data.proposed.surgeryDate !== null, true,
+    'the recorded procedure did not become the surgery date');
+  assert.ok(after.body.data.gates.some((g) => g.field === 'incisionStatus'),
+    'a patient four days post-operative must be asked about the incision; '
+    + `before the procedure was recorded that gate was ${hadIncision ? 'present' : 'absent'}`);
+  await api.close();
+});
+
+test('an e-collar tick reaches its gate, and silence does not', async () => {
+  const api = await boot();
+  await api.db.run('UPDATE patients SET surgery_date = ? WHERE id = 100',
+    [new Date(Date.now() - 3 * 86400000).toISOString().slice(0, 10)]);
+
+  const silent = await api.call('GET', '/patients/100/intake-proposal');
+  const eSilent = silent.body.data.gates.find((g) => g.field === 'eCollarRequired');
+  assert.ok(eSilent, 'an e-collar must be asked three days post-operatively');
+  assert.equal(eSilent.proposed, true, 'unanswered must keep the cautious default, which is REQUIRED');
+  assert.equal(eSilent.fromTreatmentRecord, false);
+
+  await api.call('POST', '/patients/100/treatment/status', {
+    status: { e_collar_required: false },
+  });
+
+  const answered = await api.call('GET', '/patients/100/intake-proposal');
+  const eAnswered = answered.body.data.gates.find((g) => g.field === 'eCollarRequired');
+  assert.equal(eAnswered.proposed, false,
+    'a clinician saying an e-collar is NOT required did not reach the engine');
+  assert.equal(eAnswered.fromTreatmentRecord, true);
+  await api.close();
+});
 
 // ===========================================================================
 section('Workflow over HTTP');
