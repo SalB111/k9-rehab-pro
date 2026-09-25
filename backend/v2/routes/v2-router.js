@@ -32,6 +32,7 @@ const patientHomeStore = require('../patient-home-store');
 const patientGoalsStore = require('../patient-goals-store');
 const patientDiagnosticsStore = require('../patient-diagnostics-store');
 const patientClientStore = require('../patient-client-store');
+const patientTreatmentStore = require('../patient-treatment-store');
 const ownerAuth = require('../owner-auth');
 const { requireRole, requireApprovalAuthority } = require('../middleware/require-role');
 const { route } = require('../http-errors');
@@ -317,6 +318,86 @@ function createV2Router(deps) {
       actor: req.user,
     });
     res.json({ success: true, data });
+  }));
+
+  // -------------------------------------------------------------------------
+  // Treatment — V3: `patient_procedures`, `patient_treatment_status` and two
+  // columns on `patients` are the source of truth
+  //
+  // The block is three different SHAPES and the routes follow them rather than
+  // presenting one flat object:
+  //
+  //   the CASE       approach and affected limb; they do not change over time
+  //   a PROCEDURE    an event with a date; a second operation is a second row
+  //   the STATUS     a time series; recording one INSERTS, never updates
+  //
+  // This is the first V3 block that feeds the protocol ENGINE — weight-bearing
+  // status and incision status are safety gates with no column anywhere else —
+  // so the store validates rather than the route, and every refusal it makes
+  // travels back with its reason instead of being coerced into a 500.
+  // -------------------------------------------------------------------------
+
+  router.get('/patients/:id/treatment', route(async (req, res) => {
+    res.json({
+      success: true,
+      data: await patientTreatmentStore.getTreatment(db, Number(req.params.id)),
+    });
+  }));
+
+  /** Approach and affected limb. Only what is named changes. */
+  router.put('/patients/:id/treatment/case', route(async (req, res) => {
+    const data = await patientTreatmentStore.setCase(db, {
+      patientId: Number(req.params.id),
+      approach: req.body.approach,
+      affectedLimbs: req.body.affected_limbs,
+      actor: req.user,
+    });
+    res.json({ success: true, data });
+  }));
+
+  /** A new operation. NOT an edit of the last one — that is PUT below. */
+  router.post('/patients/:id/treatment/procedures', route(async (req, res) => {
+    const data = await patientTreatmentStore.addProcedure(db, {
+      patientId: Number(req.params.id),
+      procedure: req.body.procedure || req.body,
+      actor: req.user,
+    });
+    res.status(201).json({ success: true, data });
+  }));
+
+  router.put('/treatment/procedures/:procedureId', route(async (req, res) => {
+    const data = await patientTreatmentStore.updateProcedure(db, {
+      procedureId: Number(req.params.procedureId),
+      patch: req.body.procedure || req.body,
+      actor: req.user,
+    });
+    res.json({ success: true, data });
+  }));
+
+  router.delete('/treatment/procedures/:procedureId', route(async (req, res) => {
+    const data = await patientTreatmentStore.deleteProcedure(db, {
+      procedureId: Number(req.params.procedureId),
+      actor: req.user,
+    });
+    res.json({ success: true, data });
+  }));
+
+  /**
+   * Record the treatment status as at a date.
+   *
+   * POST, not PUT, and that is the contract rather than a preference: this
+   * ALWAYS inserts. The previous row stays as the progression, because a chart
+   * that can say where a patient is but never where they were is the thing
+   * this block was built to fix.
+   */
+  router.post('/patients/:id/treatment/status', route(async (req, res) => {
+    const data = await patientTreatmentStore.recordStatus(db, {
+      patientId: Number(req.params.id),
+      status: req.body.status || {},
+      effectiveDate: req.body.effective_date,
+      actor: req.user,
+    });
+    res.status(201).json({ success: true, data });
   }));
 
   // -------------------------------------------------------------------------
