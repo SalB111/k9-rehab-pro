@@ -172,9 +172,21 @@ test('an empty string is not a goal', () => {
 // -------------------------------------------------------------- real records
 
 test('all five real patients read with every primary goal coded', () => {
+  // SCOPED TO THE MIGRATED RECORDS, not to every row in the table.
+  //
+  // This asserts the MIGRATION was complete. A patient registered after it —
+  // through the V3 screens, which do not write the blob — has no `goals::`
+  // keys and never did. Asserting over every patient meant the suite went red
+  // the moment Sal registered a new one mid-intake on 2026-09-25, reporting a
+  // defect that did not exist and hiding any that did.
+  //
+  // The floor of five keeps it honest: if the migrated records ever stop
+  // carrying this block, that is a real regression and this still catches it.
   const db = new DatabaseSync(DB_PATH, { readOnly: true });
-  const rows = db.prepare('SELECT name, dashboard_data FROM patients ORDER BY id').all();
-  assert.ok(rows.length >= 5, `expected the real patient set, got ${rows.length}`);
+  const rows = db.prepare('SELECT name, dashboard_data FROM patients ORDER BY id').all()
+    .filter((r) => String(r.dashboard_data || '').includes('"goals::'));
+  assert.ok(rows.length >= 5,
+    `expected at least the five migrated records, got ${rows.length}`);
 
   let totalGoals = 0;
   for (const row of rows) {

@@ -219,9 +219,21 @@ test('the migration reader still reads all five blobs with no unreadable value',
   // is, and patient-home-store.test.js covers it. This test keeps the MIGRATION
   // path honest, because the blob is still what a pre-V3 record has to be
   // recovered from if one ever needs checking by hand.
+  // SCOPED TO THE MIGRATED RECORDS, not to every row in the table.
+  //
+  // This asserts the MIGRATION was complete. A patient registered after it —
+  // through the V3 screens, which do not write the blob — has no `home::`
+  // keys and never did. Asserting over every patient meant the suite went red
+  // the moment Sal registered a new one mid-intake on 2026-09-25, reporting a
+  // defect that did not exist and hiding any that did.
+  //
+  // The floor of five keeps it honest: if the migrated records ever stop
+  // carrying this block, that is a real regression and this still catches it.
   const db = new DatabaseSync(DB_PATH, { readOnly: true });
-  const rows = db.prepare('SELECT name, dashboard_data FROM patients ORDER BY id').all();
-  assert.ok(rows.length >= 5, `expected the real patient set, got ${rows.length}`);
+  const rows = db.prepare('SELECT name, dashboard_data FROM patients ORDER BY id').all()
+    .filter((r) => String(r.dashboard_data || '').includes('"home::'));
+  assert.ok(rows.length >= 5,
+    `expected at least the five migrated records, got ${rows.length}`);
   for (const row of rows) {
     const stated = home.readFromDashboard(row.dashboard_data);
     assert.ok(Object.keys(stated).length >= 7,

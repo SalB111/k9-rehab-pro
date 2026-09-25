@@ -187,7 +187,13 @@ const IMG = (over = {}) => ({
   await test('all thirteen migrated studies read from the table', async () => {
     const raw = new DatabaseSync(REAL_DB, { readOnly: true });
     const db = wrap(raw);
-    const patients = raw.prepare('SELECT id, name FROM patients ORDER BY id').all();
+    // SCOPED TO THE MIGRATED RECORDS — see home-environment.test.js for the
+    // reasoning. A patient registered after the migration has no studies to
+    // have migrated, and asserting over every row turned this red when Sal
+    // registered one mid-intake on 2026-09-25.
+    const patients = raw.prepare(
+      "SELECT id, name FROM patients WHERE dashboard_data LIKE '%\"diagnostics::%' ORDER BY id"
+    ).all();
 
     let total = 0;
     let withStudies = 0;
@@ -209,7 +215,9 @@ const IMG = (over = {}) => ({
     const raw = new DatabaseSync(REAL_DB, { readOnly: true });
     const db = wrap(raw);
     let flagged = 0;
-    for (const p of raw.prepare('SELECT id FROM patients').all()) {
+    for (const p of raw.prepare(
+      "SELECT id FROM patients WHERE dashboard_data LIKE '%\"diagnostics::%'"
+    ).all()) {
       const r = await store.getStudies(db, p.id);
       flagged += r.summary.describing_multiple_studies;
     }
@@ -220,11 +228,19 @@ const IMG = (over = {}) => ({
   await test('the one stated lab date survived the migration', async () => {
     // V1 recorded exactly one real date. It was carried because it was STATED,
     // not read out of prose.
+    // SCOPED TO THE MIGRATED RECORDS. Counting every row in the table meant
+    // this asserted something about the whole database rather than about the
+    // migration, so the first study a clinician recorded through the V3 screen
+    // broke it — which happened while Sal was driving an intake on 2026-09-25.
     const raw = new DatabaseSync(REAL_DB, { readOnly: true });
     const dated = raw.prepare(
-      'SELECT performed_on FROM patient_diagnostic_studies WHERE performed_on IS NOT NULL'
+      "SELECT s.performed_on FROM patient_diagnostic_studies s"
+      + " JOIN patients p ON p.id = s.patient_id"
+      + " WHERE s.performed_on IS NOT NULL"
+      + " AND p.dashboard_data LIKE '%\"diagnostics::%'"
     ).all();
-    assert.strictEqual(dated.length, 1, 'exactly one study had a stated date');
+    assert.strictEqual(dated.length, 1,
+      `exactly one MIGRATED study had a stated date, found ${dated.length}`);
     assert.strictEqual(dated[0].performed_on, '2026-04-15');
   });
 
