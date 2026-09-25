@@ -111,7 +111,7 @@ the table below is the first version that checks them:
 | block | own table (rows) | engine reads blob | panel writes blob | verdict |
 |---|---|---|---|---|
 | **home** | `patient_home_environment` (5) | 0 | **0 controls** | **MERGED** |
-| **treatment** | `patient_procedures` (3) + `patient_treatment_status` (5) | 0 gates | **14 `<F>` + 4 `update()`** | **HALF** — engine done, panel not |
+| **treatment** | `patient_procedures` (3) + `patient_treatment_status` (5) | 0 gates | 5, none of them migrated fields | **MERGED** |
 | **diagnostics** | `patient_diagnostic_studies` (13) | 0 | 4, none of them migrated fields | MERGED |
 | **goals** | `patient_goals` (5) + `patient_goal_items` (16) | 0 | 15, none of them migrated fields | MERGED |
 | **metrics** | `visit_measurements` (40) | 1 (`bodyConditionScore`) | 8, none of them migrated fields | MERGED |
@@ -144,12 +144,14 @@ and referring vet into the blob, and four engine inputs (age, breed, sex,
 weight) are still read from `client::` keys. The design says demographics go
 through `PUT /api/patients/:id`; the panel does not do that.
 
-**treatment is HALF and saying so is the point of this table.** Since
+**treatment was HALF for one day and is now MERGED.** Since
 `3c8a22a` the engine reads `patient_treatment_status` and
-`patient_procedures` — all four safety gates are off the blob. The panel still
-writes the blob, so a clinician's edit does not reach the protocol. Those two
-must not sit apart for long: it is the one state where the screen and the
-engine disagree by construction.
+`patient_procedures` — all four safety gates are off the blob — and since
+`50d71f9` the panel writes them too. For the day between those two commits a
+clinician's edit did not reach the protocol, which is the one state where the
+screen and the engine disagree by construction. Two tests in
+`patient-treatment-store.test.js` now read the real JSX and fail if the panel
+goes back to the blob or stops reading the endpoint.
 
 ### Re-derive this table
 
