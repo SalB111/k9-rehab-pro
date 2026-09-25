@@ -149,13 +149,24 @@ test('deleting backwards through a formatted number works', () => {
   assert.strictEqual(v, '', 'the field could not be cleared by backspacing');
 });
 
-test('every tel field goes through the formatter', () => {
-  // The formatter is applied in F's onChange, keyed off type="tel". If a
-  // phone field is added with type="text" it silently opts out.
-  assert.match(src, /type === "tel" \? formatPhone\(val\) : val/,
-    'F no longer routes tel fields through formatPhone');
+test('every tel field goes through the formatter, ON BLUR', () => {
+  // Keyed off type="tel", so a phone field added as type="text" silently
+  // opts out.
+  assert.ok(/type !== "tel"\) return;[\s\S]{0,200}formatPhone\(val\)/.test(src),
+    'F no longer tidies tel fields through formatPhone');
+  assert.ok(/onBlur=\{e => onBlur\(e\.target\.value\)\}/.test(src),
+    'the input no longer calls onBlur, so the formatter never runs');
   const telFields = (src.match(/type="tel"/g) || []).length;
   assert.ok(telFields > 0, 'no type="tel" field found — has the phone field been renamed?');
+});
+
+test('the formatter is NOT wired into onChange', () => {
+  // This is the regression that cost a digit. Reformatting a controlled React
+  // input on every keystroke changes the value's length, React re-renders and
+  // moves the caret to the end, and a character typed before that render is
+  // lost. Typing 9545550142 produced "(954) 555-014" — silently one short.
+  assert.ok(!/update\(key, type === "tel" \? formatPhone/.test(src),
+    'formatting is back in onChange, where it fights the caret and drops digits');
 });
 
 if (failures.length) {

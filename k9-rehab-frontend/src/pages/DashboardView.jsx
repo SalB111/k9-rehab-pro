@@ -169,9 +169,22 @@ const F = ({ label, placeholder, type="text", options, rows, range, hint, disabl
   const tr = useTr();
   const key = blockId ? `${blockId}::${label}` : label;
   const value = data[key] ?? "";
-  const onChange = (val) => {
-    if (disabled) return;
-    update(key, type === "tel" ? formatPhone(val) : val);
+  const onChange = (val) => { if (!disabled) update(key, val); };
+
+  // FORMAT ON BLUR, NOT ON EVERY KEYSTROKE.
+  //
+  // The first version reformatted inside onChange. In a controlled React input
+  // that fights the caret: inserting "(" and ") " changes the value's length,
+  // React re-renders and puts the caret at the end, and a character typed
+  // before that render lands in the wrong place or is lost outright. Typing
+  // 9545550142 produced "(954) 555-014" — one digit short, silently.
+  //
+  // On blur there is no caret to fight. The clinician types digits, and the
+  // number is tidied when they leave the field.
+  const onBlur = (val) => {
+    if (disabled || type !== "tel") return;
+    const tidied = formatPhone(val);
+    if (tidied !== val) update(key, tidied);
   };
   const selectPlaceholder = t("common.select", { defaultValue: "Select…" });
   return (
@@ -181,7 +194,7 @@ const F = ({ label, placeholder, type="text", options, rows, range, hint, disabl
         ? <select value={value} disabled={disabled} onChange={e => onChange(e.target.value)}><option value="">{selectPlaceholder}</option>{options.map(o=><option key={o} value={o}>{tr(o)}</option>)}</select>
         : rows
           ? <textarea placeholder={tr(placeholder)} rows={rows} value={value} disabled={disabled} onChange={e => onChange(e.target.value)}/>
-          : <input type={type} placeholder={tr(placeholder)} value={value} disabled={disabled} onChange={e => onChange(e.target.value)}/>
+          : <input type={type} placeholder={tr(placeholder)} value={value} disabled={disabled} onChange={e => onChange(e.target.value)} onBlur={e => onBlur(e.target.value)}/>
       }
       {hint && <div style={{ fontSize:10, color:C.muted, marginTop:4, fontStyle:"italic" }}>{tr(hint)}</div>}
     </div>
