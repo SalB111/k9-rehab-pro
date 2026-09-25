@@ -1615,7 +1615,10 @@ function AssessmentPanel() {
 }
 
 // ── TREATMENT & SURGICAL STATUS ───────────────────────────────────────────────
-// Three mutually-exclusive approaches (Surgical / Conservative / Palliative).
+// Two mutually-exclusive approaches (Surgical / Conservative). Palliative was
+// retired 2026-09-25 — a palliative patient is not a rehabilitation candidate.
+// The ENGINE still handles the token, because the pain >= 8 override routes
+// through it to reach the comfort protocol.
 // Selection stored in `treatment::Approach` drives which field set is rendered.
 // All nested fields use standard F components so they auto-wire under
 // "treatment::*" keys in DashFormContext.
@@ -1666,13 +1669,31 @@ function TreatmentPanel() {
           <div style={{ fontSize:13, fontWeight:800, letterSpacing:".05em" }}>CONSERVATIVE</div>
           <div style={{ fontSize:10, marginTop:4, opacity:.85 }}>Non-surgical management</div>
         </div>
-        <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => update("treatment::Approach", "Palliative"))(e); } }} style={cardStyle(approach === "Palliative", "#BE185D")}
-             onClick={() => update("treatment::Approach", "Palliative")}>
-          <div style={{ fontSize:28, marginBottom:6 }}>💗</div>
-          <div style={{ fontSize:13, fontWeight:800, letterSpacing:".05em" }}>PALLIATIVE</div>
-          <div style={{ fontSize:10, marginTop:4, opacity:.85 }}>Comfort care / QoL</div>
-        </div>
       </div>
+      {/* PALLIATIVE was retired as a selectable approach on 2026-09-25 (Sal:
+          a palliative patient is not a rehabilitation candidate). No patient
+          record held it. If one ever does — a legacy record, an import, a
+          restored backup — the value is SHOWN rather than silently dropped,
+          because a panel that renders nothing for a value it still stores is
+          how a clinical fact disappears without anyone deciding to remove it.
+
+          The engine still understands 'palliative' and that is deliberate:
+          the pain >= 8 override in protocol-generator.js routes through it to
+          reach the comfort protocol. Removing the routing would disable that
+          restriction. */}
+      {approach === "Palliative" && (
+        <div style={{ marginTop:12, padding:"10px 12px", border:`1px solid ${C.border}`,
+                      borderLeft:"3px solid #BE185D", borderRadius:5, background:"#FDF2F8" }}>
+          <div style={{ fontSize:11, fontWeight:700, color:"#BE185D", marginBottom:4 }}>
+            This record has a retired treatment approach: PALLIATIVE
+          </div>
+          <div style={{ fontSize:11, color:C.muted, lineHeight:1.6 }}>
+            Palliative is no longer a rehabilitation pathway and cannot be selected.
+            The value is still stored on this patient. Choose Surgical or Conservative
+            to replace it, or leave it and refer for comfort care.
+          </div>
+        </div>
+      )}
     </Sec>
 
     {/* ── SURGICAL FIELDS ── */}
@@ -1824,34 +1845,14 @@ function TreatmentPanel() {
       </Sec>
     )}
 
-    {/* ── PALLIATIVE FIELDS ── */}
-    {approach === "Palliative" && (
-      <Sec title="Palliative / Comfort Care Details" color="#BE185D" colorLt="#FDF2F8">
-        <F label="Primary Condition" options={[
-          "End-stage osteoarthritis",
-          "Terminal cancer — mobility decline",
-          "Degenerative myelopathy — advanced",
-          "Severe congestive heart failure",
-          "Chronic kidney disease — end-stage",
-          "Advanced geriatric decline",
-          "Chronic refractory pain",
-          "Post-paralysis — DPP absent",
-          "Other — Specify in notes"
-        ]}/>
-        <F label="Quality of Life Goal" placeholder="e.g. Maintain comfortable mobility, preserve ability to rise unassisted, reduce pain at rest…" rows={2}/>
-        <F label="Pain Management Protocol" placeholder="e.g. Gabapentin 10mg/kg q8h, meloxicam 0.1mg/kg sid, laser therapy weekly…" rows={2}/>
-        <F label="Owner Goals & Expectations" placeholder="e.g. Maximize comfort, family time, avoid further surgery, hospice approach…" rows={3}/>
-        <div style={{ marginTop:8 }}>
-          <Lbl>DNR / Comfort Care Only</Lbl>
-          <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => update("treatment::DNR Comfort Care Only", data["treatment::DNR Comfort Care Only"]==="true" ? "" : "true"))(e); } }} className={`cb-row${data["treatment::DNR Comfort Care Only"]==="true"?" active":""}`}
-               onClick={() => update("treatment::DNR Comfort Care Only", data["treatment::DNR Comfort Care Only"]==="true" ? "" : "true")}>
-            <input type="checkbox" checked={data["treatment::DNR Comfort Care Only"]==="true"} readOnly
-                   style={{ width:15, height:15, accentColor:"#BE185D", flexShrink:0 }}/>
-            <span style={{ fontSize:11 }}>Yes — owner has elected Do Not Resuscitate / comfort care only</span>
-          </div>
-        </div>
-      </Sec>
-    )}
+    {/* The PALLIATIVE detail fields were removed on 2026-09-25 with the
+        approach that gated them. They were five: Primary Condition, Quality of
+        Life Goal, Pain Management Protocol, Owner Goals & Expectations, and a
+        DNR / Comfort Care Only flag. No patient record held any of them.
+
+        Deleted rather than left behind a condition that can no longer be true:
+        a section nothing can reach is a form somebody will one day wire back up
+        without knowing why it was dark. */}
     <ClinicalNotes/>
   </>;
 }
@@ -3999,7 +4000,7 @@ const BEAU_BLOCK_CONTEXTS = {
   client:       "You are helping with patient intake — demographics, breed-specific considerations, owner communication. Reference breed predispositions and signalment relevance.",
   diagnostics:  "You are helping interpret diagnostic results — radiographs, bloodwork, MRI findings. Identify rehabilitation-relevant findings and how they affect protocol selection.",
   assessment:   "You are helping with clinical assessment — pain scoring (CSU scale, BPI), functional grading, lameness assessment, neurological evaluation. Focus on objective measurement.",
-  treatment:    "You are helping with treatment and surgical status planning — post-op recovery phase guidance, conservative management protocols, or palliative comfort care. Tailor advice to the selected approach (Surgical / Conservative / Palliative) and current restrictions.",
+  treatment:    "You are helping with treatment and surgical status planning — post-op recovery phase guidance or conservative management protocols. Tailor advice to the selected approach (Surgical / Conservative) and current restrictions. Palliative is not a rehabilitation pathway in this product; if a case is genuinely for comfort care, say so rather than proposing a rehabilitation programme.",
   metrics:      "You are helping with B.E.A.U. metrics — girth measurements, goniometry/ROM interpretation, body condition scoring, HCPI scoring, LOAD scoring. Explain clinical significance and normal ranges.",
   equipment:    "You are helping with equipment selection — underwater treadmill settings, TENS/NMES parameters, laser therapy protocols (Class IV), therapeutic ultrasound, shockwave therapy indications.",
   home:         "You are helping design home exercise programs — client education, exercise selection appropriate for home, frequency/duration recommendations, safety guidelines, environment assessment.",

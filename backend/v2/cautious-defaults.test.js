@@ -31,7 +31,11 @@
 'use strict';
 
 const assert = require('assert');
-const { validateIntake, getExcludedCodes, diagnosisRecognised } = require('../protocol-generator');
+const {
+  validateIntake, getExcludedCodes, diagnosisRecognised,
+  getProtocolType, selectExercisesForWeek, PROTOCOL_DEFINITIONS,
+} = require('../protocol-generator');
+const { ALL_EXERCISES } = require('../all-exercises');
 const { SAFETY_GATES } = require('./intake-proposal');
 
 let passed = 0;
@@ -356,6 +360,79 @@ test('a diagnosis that routes elsewhere is recognised by definition', () => {
 test('gibberish is not recognised', () => {
   assert.strictEqual(diagnosisRecognised('zzz nonsense', '', ''), false,
     'if this passes, the recogniser recognises everything and reports nothing');
+});
+
+// ---------------------------------------------------------------------------
+// THE PAIN >= 8 LOCK RIDES ON THE PALLIATIVE TOKEN
+//
+// PALLIATIVE was retired as a selectable approach on 2026-09-25 — a palliative
+// patient is not a rehabilitation candidate, and the card is gone from the
+// Treatment panel.
+//
+// The ENGINE still understands the token, and that is not leftover code:
+//
+//   selectExercisesForWeek:
+//     const effectiveApproach =
+//       formData._highPainOverride ? 'palliative' : formData.treatmentApproach;
+//
+// A patient at pain >= 8/10 is force-routed THROUGH 'palliative' into the
+// comfort protocol and locked to Phase 1. Deleting the palliative branch in
+// getProtocolType as "dead code now that the option is gone" would silently
+// disable the severe-pain restriction, and the protocol would still generate
+// and still look normal.
+//
+// These tests exist so that deletion fails loudly instead.
+// ---------------------------------------------------------------------------
+
+test('the token the high-pain override uses still routes to comfort care', () => {
+  assert.strictEqual(getProtocolType('TPLO Post-Op', 'Left Stifle', 'palliative'), 'geriatric',
+    "selectExercisesForWeek routes severe pain through the literal string "
+    + "'palliative'. If this branch is gone, a dog at 9/10 gets the TPLO "
+    + 'protocol instead of comfort care.');
+});
+
+test('pain >= 8 sets the override flag', () => {
+  const fd = intake({ painScore: 9 });
+  validateIntake(fd);
+  assert.strictEqual(fd._highPainOverride, true,
+    'the flag selectExercisesForWeek reads is not being set');
+});
+
+test('severe pain changes what a patient is actually prescribed', () => {
+  // End to end, through the real selector. The two runs differ only in pain.
+  const severe = intake({ painScore: 9, diagnosis: 'TPLO Post-Op', affectedRegion: 'Left Stifle' });
+  const ordinary = intake({ painScore: 3, diagnosis: 'TPLO Post-Op', affectedRegion: 'Left Stifle' });
+  validateIntake(severe);
+  validateIntake(ordinary);
+
+  const a = selectExercisesForWeek(1, 8, ALL_EXERCISES, severe).map((e) => e.code).sort();
+  const b = selectExercisesForWeek(1, 8, ALL_EXERCISES, ordinary).map((e) => e.code).sort();
+
+  assert.ok(a.length, 'the severe-pain patient received no exercises at all');
+  assert.notDeepStrictEqual(a, b,
+    'a dog at 9/10 was prescribed exactly what a dog at 3/10 was prescribed. '
+    + 'The high-pain override is not reaching the selector.');
+
+  // "Different" is not enough, and the first draft of this test stopped there.
+  // With the palliative branch deleted the sets STILL differ, because the
+  // Phase 1 lock fires on _highPainOverride independently of routing — so the
+  // test passed while a severe-pain dog was being given the TPLO protocol's
+  // first phase instead of the comfort protocol's. Assert WHICH protocol.
+  const comfort = new Set(
+    PROTOCOL_DEFINITIONS.geriatric.phases[0].exercises.map((e) => e.code)
+  );
+  const strays = a.filter((code) => !comfort.has(code));
+  assert.deepStrictEqual(strays, [],
+    'a dog at 9/10 was prescribed exercises that are not in the comfort '
+    + `protocol's first phase: ${strays.join(', ')}. Severe pain must route `
+    + 'through the palliative token into `geriatric`, not merely lock the phase.');
+});
+
+test('a palliative value arriving from anywhere is still honoured', () => {
+  // The panel can no longer produce it, but the override does, and a legacy
+  // or imported record may hold it. It must not be quietly reinterpreted.
+  assert.strictEqual(getProtocolType('Bilateral Hip Osteoarthritis', 'Bilateral Hip', 'Palliative'),
+    'geriatric', 'capitalised Palliative from a stored record stopped routing');
 });
 
 // ---------------------------------------------------------------------------
