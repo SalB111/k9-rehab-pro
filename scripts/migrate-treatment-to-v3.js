@@ -114,10 +114,48 @@ const rule = (c = '-') => console.log('  ' + c.repeat(74));
   console.log('  ' + DB_PATH);
   rule('=');
 
+  // ── back up BEFORE the first write ──────────────────────────────────────
+  //
+  // The first version of this script took its backup after the ALTER TABLEs
+  // and before the inserts, so the "pre-migration" copy already carried the
+  // schema change. A backup taken after the first write is not a backup, and
+  // the only reason it cost nothing that time is that the run failed two
+  // statements later.
+  let backup = null;
+  if (APPLY) {
+    const stamp = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 14);
+    backup = `${DB_PATH}.backup-${stamp}-pre-v3-treatment`;
+    fs.copyFileSync(DB_PATH, backup);
+    console.log('\n  backup: ' + path.basename(backup) + '   (taken before any write)');
+  }
+
+  // ── the tables ──────────────────────────────────────────────────────────
+  //
+  // schema.js applies these on server boot, so a migration run against a
+  // database the server has never started on finds them missing — which is
+  // exactly what happened on the first attempt here. Applying the real schema
+  // file makes the script self-sufficient. Every statement in it is
+  // CREATE ... IF NOT EXISTS, so this is safe to repeat.
+  const schemaSql = fs.readFileSync(
+    path.join(BACKEND, 'v2', 'schema', 'patient-treatment.sqlite.sql'), 'utf8'
+  );
+  const existing = await db.all(
+    "SELECT name FROM sqlite_master WHERE type='table' AND name IN (?, ?)",
+    [store.PROCEDURES, store.STATUS]
+  );
+  console.log('\n  tables present: ' + (existing.length ? existing.map((r) => r.name).join(', ') : 'none'));
+  if (APPLY && existing.length < 2) {
+    const stripped = schemaSql.split('\n').filter((l) => !l.trim().startsWith('--')).join('\n');
+    for (const stmt of stripped.split(';')) {
+      if (stmt.trim()) await db.run(stmt);
+    }
+    console.log('    applied patient-treatment.sqlite.sql');
+  }
+
   // ── the two case columns ────────────────────────────────────────────────
   const cols = new Set((await db.all('PRAGMA table_info(patients)')).map((r) => r.name));
   const needed = store.CASE_COLUMNS.filter((c) => !cols.has(c));
-  console.log('\n  patients columns to add: ' + (needed.length ? needed.join(', ') : 'none'));
+  console.log('  patients columns to add: ' + (needed.length ? needed.join(', ') : 'none'));
 
   if (needed.length && APPLY) {
     for (const c of needed) {
@@ -205,11 +243,6 @@ const rule = (c = '-') => console.log('  ' + c.repeat(74));
   }
 
   // ── apply ───────────────────────────────────────────────────────────────
-  const stamp = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 14);
-  const backup = `${DB_PATH}.backup-${stamp}-pre-v3-treatment`;
-  fs.copyFileSync(DB_PATH, backup);
-  console.log(`\n  backup: ${path.basename(backup)}`);
-
   const actor = { id: 1 };
   const today = new Date().toISOString().slice(0, 10);
 
@@ -221,7 +254,23 @@ const rule = (c = '-') => console.log('  ' + c.repeat(74));
     if (x.limbs) {
       await store.setCase(db, { patientId: id, affectedLimbs: x.limbs, actor });
     }
-    if (x.hasProcedure) {
+    // RE-RUNNABLE. `setCase` is naturally idempotent; these two are not, and
+    // the first attempt at this migration died part-way through, so a second
+    // run is the normal case rather than the exotic one. Without these guards
+    // it would give every surgical patient a duplicate procedure.
+    const already = await store.getTreatment(db, id);
+    const dupProc = x.hasProcedure && already.procedures.some(
+      (r) => r.procedure_type === (x.procType || 'Procedure (type not recorded)')
+        && (r.procedure_date || null) === (x.procDate || null)
+    );
+    const dupStatus = x.hasStatus && already.statusHistory.some(
+      (r) => r[store.DATE_UNKNOWN] === 1
+    );
+
+    if (x.hasProcedure && dupProc) console.log(`    ${x.p.name}: procedure already migrated, skipped`);
+    if (x.hasStatus && dupStatus) console.log(`    ${x.p.name}: status already migrated, skipped`);
+
+    if (x.hasProcedure && !dupProc) {
       await store.addProcedure(db, {
         patientId: id,
         procedure: {
@@ -232,7 +281,7 @@ const rule = (c = '-') => console.log('  ' + c.repeat(74));
         actor,
       });
     }
-    if (x.hasStatus) {
+    if (x.hasStatus && !dupStatus) {
       await store.recordStatus(db, {
         patientId: id,
         effectiveDate: today,
