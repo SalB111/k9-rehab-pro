@@ -22,7 +22,8 @@ const DashFormContext = createContext({ data: {}, update: () => {}, blockId: nul
  * nothing anywhere declared or imported it, so every one of them threw
  * "callBeau is not defined" the moment it ran:
  *
- *   the Assessment panel's synthesis        (runBeauSynthesis)
+ *   the Assessment panel's synthesis        (runBeauSynthesis — since removed
+ *                                            from that panel, 2026-09-25)
  *   the Goals panel's B.E.A.U. help
  *   the Protocol panel's B.E.A.U. help
  *   the Nutrition panel's B.E.A.U. help
@@ -1519,26 +1520,6 @@ function AssessmentPanel() {
   const hrRange = isFeline ? { min: 140, max: 220 } : { min: 60, max: 140 };
   const rrRange = isFeline ? { min: 20, max: 40 } : { min: 10, max: 30 };
 
-  // ── BEAU Assessment Synthesis ──
-  const [beauSynthesis, setBeauSynthesis] = useState("");
-  const [synthesizing, setSynthesizing] = useState(false);
-
-  const runBeauSynthesis = async () => {
-    setSynthesizing(true); setBeauSynthesis("");
-    try {
-      // Collect all assessment data
-      const assessKeys = Object.keys(data).filter(k => k.startsWith("assessment::"));
-      const assessData = assessKeys.map(k => `${k.replace("assessment::","")}: ${data[k]}`).join("\n");
-      const text = await callBeau(
-        `You are B.E.A.U. — clinical AI of K9 Rehab Pro™. Analyze the following assessment data and generate: 1) Clinical summary of findings, 2) Key rehabilitation implications, 3) Contraindications identified, 4) Recommended protocol adjustments, 5) Evidence references (Millis & Levine chapters). No markdown. Plain clinical text.`,
-        `Species: ${species}\n\nAssessment Data:\n${assessData}\n\nProvide comprehensive clinical analysis.`,
-        uiLang
-      );
-      setBeauSynthesis(text);
-    } catch (err) { setBeauSynthesis(`Error: ${err.message}`); }
-    setSynthesizing(false);
-  };
-
   // ── Vital flags panel ──
   const vitalFlags = [];
   const tempCheck = checkVital("Temperature (°F)", tempRange.min, tempRange.max);
@@ -1763,28 +1744,15 @@ function AssessmentPanel() {
       </Row>
     </Sec>
 
-    {/* ── BEAU ASSESSMENT SYNTHESIS ── */}
-    <Sec title="B.E.A.U. Assessment Synthesis" color={C.green} colorLt={C.greenLt}>
-      <div style={{ fontSize:11, color:C.muted, marginBottom:12, lineHeight:1.65 }}>
-        B.E.A.U. will analyze all entered assessment data and generate a clinical summary, rehabilitation implications, contraindications, and evidence references.
-      </div>
-      <button onClick={runBeauSynthesis} disabled={synthesizing}
-        style={{
-          width:"100%", padding:"14px", background: synthesizing ? C.greenLt : C.green,
-          border:"none", color:C.white, borderRadius:6, cursor: synthesizing?"not-allowed":"pointer",
-          fontSize:13, fontWeight:700, letterSpacing:".08em", display:"flex", alignItems:"center", gap:10, justifyContent:"center",
-        }}>
-        {synthesizing
-          ? <><div style={{ width:16, height:16, border:"2px solid white", borderTopColor:"transparent", borderRadius:"50%", animation:"spinK9 .8s linear infinite" }}/> ANALYZING ASSESSMENT…</>
-          : "🧠 B.E.A.U. ANALYZE ASSESSMENT"}
-      </button>
-      {beauSynthesis && (
-        <div style={{ marginTop:14, padding:16, background:C.white, border:`1px solid ${C.green}44`, borderRadius:6 }}>
-          <div style={{ fontSize:9, fontWeight:700, color:C.green, letterSpacing:".15em", marginBottom:8 }}>B.E.A.U. CLINICAL SYNTHESIS</div>
-          <pre style={{ fontSize:12, color:C.text, whiteSpace:"pre-wrap", lineHeight:1.85, fontFamily:"Georgia, serif" }}>{beauSynthesis}</pre>
-        </div>
-      )}
-    </Sec>
+    {/* B.E.A.U. Assessment Synthesis was removed from this panel on
+        2026-09-25 on Sal's instruction: it does not belong on the assessment
+        page. It sent every assessment:: field to the model and asked for a
+        clinical summary, rehabilitation implications, contraindications and
+        evidence references.
+
+        "Ask B.E.A.U." remains available from the block header, where a
+        clinician asks a specific question rather than being handed a
+        synthesis of a form they are still filling in. */}
 
     <ClinicalNotes/>
   </>;
