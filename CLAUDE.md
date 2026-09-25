@@ -95,17 +95,76 @@ still being called "the next block". Every individual statement made was true;
 the work still drifted, because the goal lived only in conversation and
 conversation gets summarised. That is why this is written here.
 
-### Verified state, 2026-09-24
+### Verified state, 2026-09-25
 
-| block | state |
-|---|---|
-| equipment | **MERGED** — `clinic_capabilities.equipment_json`, both screens read it |
-| metrics | **MERGED** — 40 rows migrated into `visit_measurements` |
-| **client** | **MERGED (V3)** — `patients` owns the clinical identity, `patient_client_details` owns the address, contacts, cover and PII; blob no longer read |
-| **home** | **MERGED (V3)** — `patient_home_environment`; blob no longer read |
-| **goals** | **MERGED (V3)** — `patient_goals` + `patient_goal_items`; reviewable, blob no longer read |
-| **diagnostics** | **MERGED (V3)** — `patient_diagnostic_studies`; a study is a row with a date |
-| assessment, treatment, conditioning, global | untouched |
+**MERGED means three things, not one.** The template in commit `9e8f407` says:
+give the block one real home, point **both screens** at it, fold the old copies
+in. So a block is merged only when all three hold:
+
+1. it has its own table
+2. **nothing reads the blob** for its fields — the engine least of all
+3. **the panel writes the store**, not `dashboard_data`
+
+Measured 2026-09-25. Columns 2 and 3 are the ones that were being skipped, and
+the table below is the first version that checks them:
+
+| block | own table (rows) | engine reads blob | panel writes blob | verdict |
+|---|---|---|---|---|
+| **home** | `patient_home_environment` (5) | 0 | **0 controls** | **MERGED** |
+| **treatment** | `patient_procedures` (3) + `patient_treatment_status` (5) | 0 gates | **14 `<F>` + 4 `update()`** | **HALF** — engine done, panel not |
+| **diagnostics** | `patient_diagnostic_studies` (13) | 0 | 4, none of them migrated fields | MERGED |
+| **goals** | `patient_goals` (5) + `patient_goal_items` (16) | 0 | 15, none of them migrated fields | MERGED |
+| **metrics** | `visit_measurements` (40) | 1 (`bodyConditionScore`) | 8, none of them migrated fields | MERGED |
+| **equipment** | `clinic_capabilities` (2) | 0 | 1, not a migrated field | MERGED |
+| **client** | `patient_client_details` (5) | **4** — age, breed, sex, weight | 7 + 2, all DEMOGRAPHICS | **PARTIAL** |
+| assessment | — | **10**, incl. `neuroDeepPain` [GATE] | 68 + 1 | untouched |
+| conditioning / global / helsinki | — | 0 | no panel / 4 | untouched |
+
+**What "none of them migrated fields" means, because it is the load-bearing
+claim in four rows above.** Those panels still contain controls writing
+`block::Label` keys — but they are DIFFERENT FIELDS from the ones the store
+owns, not un-rewired copies of them:
+
+- diagnostics store owns imaging and labs; the 4 remaining controls are
+  Supplements, Last NSAID dose, Response to current medications, Medication
+  Notes — medication fields that happen to live in that panel
+- goals store owns rehabilitation goal items; the 15 are conditioning phase,
+  session duration, clinician sign-off and discharge summary
+- metrics store owns measurements; the 8 are goniometer type, position,
+  alignment and notes
+- equipment's 1 is a free-text "any additional equipment not listed above"
+
+They are not yet in V3 and they are not a regression. They are fields nobody
+has given a home.
+
+**client is PARTIAL and the table said MERGED until today.** The details —
+address, contacts, cover, PII — did move to `patient_client_details`. The
+DEMOGRAPHICS did not: the panel writes name, sex, species, breed, phone, email
+and referring vet into the blob, and four engine inputs (age, breed, sex,
+weight) are still read from `client::` keys. The design says demographics go
+through `PUT /api/patients/:id`; the panel does not do that.
+
+**treatment is HALF and saying so is the point of this table.** Since
+`3c8a22a` the engine reads `patient_treatment_status` and
+`patient_procedures` — all four safety gates are off the blob. The panel still
+writes the blob, so a clinician's edit does not reach the protocol. Those two
+must not sit apart for long: it is the one state where the screen and the
+engine disagree by construction.
+
+### Re-derive this table
+
+**Do not trust the four columns above.** One command prints all of them:
+
+    node scripts/block-state.js
+
+Read only. It reads the table row counts from the database, the engine sources
+from `dashboard-bridge.MAP`, and the panel writes out of the real
+`DashboardView.jsx`, and it ends with a list of every block that has a table
+but is not fully merged.
+
+It exists as a script rather than a one-liner here because the one-liner needed
+enough backslash escaping that the shell mangled it — and a document telling
+you to run a broken command is worse than a document saying nothing.
 
 ### Where a blob value still reaches the engine
 
