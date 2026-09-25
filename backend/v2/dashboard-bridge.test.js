@@ -339,12 +339,19 @@ const BELLA = {
 test('a real V1 record produces the engine inputs it should', () => {
   const r = bridge.readDashboard(BELLA);
   assert.strictEqual(r.present, true);
-  assert.strictEqual(r.values.weightBearingStatus, 'PWB');
-  assert.strictEqual(r.values.incisionStatus, 'Healing normally');
+  // Weight bearing, incision status, the surgery date and the approach were
+  // read from here until 2026-09-25 and now come from the treatment store.
+  // Asserting they are ABSENT is the point: if one comes back, the blob has
+  // become a second source for a field that already has one.
+  assert.strictEqual(r.values.weightBearingStatus, undefined,
+    'the blob answered a gate the treatment store owns');
+  assert.strictEqual(r.values.incisionStatus, undefined,
+    'the blob answered a gate the treatment store owns');
   assert.strictEqual(r.values.neuroDeepPain, 'Present');
   assert.strictEqual(r.values.painScore, 3);
   assert.strictEqual(r.values.lamenessGrade, 2);
-  assert.strictEqual(r.values.surgeryDate, '2026-03-21');
+  assert.strictEqual(r.values.surgeryDate, undefined,
+    'a surgery date is a PROCEDURE now — patient_procedures, not a blob key');
   // Bella's record fills 'Affected Limb(s)' and NOT 'Affected Area', which is
   // the ordinary case. Until 2026-09-24 the limb answered affectedRegion, and
   // the engine string-matches that input against an anatomical vocabulary. It
@@ -353,7 +360,8 @@ test('a real V1 record produces the engine inputs it should', () => {
     'the limb is answering the region input again - see rule 3');
   assert.strictEqual(r.context['treatment::Affected Limb(s)'], 'Right hindlimb (RH)',
     'and it must still be visible to a clinician rather than dropped');
-  assert.strictEqual(r.values.treatmentApproach, 'Surgical');
+  assert.strictEqual(r.values.treatmentApproach, undefined,
+    'the approach is a column on patients and a field on the treatment store');
   assert.ok(/CCL rupture diagnosed/.test(r.values.medicalHistory));
 });
 
@@ -372,7 +380,9 @@ test('every value read carries where it came from', () => {
 
 test('safety gates read from the V1 record are still marked as gates', () => {
   const r = bridge.readDashboard(BELLA);
-  for (const field of ['weightBearingStatus', 'incisionStatus', 'neuroDeepPain']) {
+  // Only deep pain is still sourced here. The other two moved to the
+  // treatment store, which marks them as gates itself.
+  for (const field of ['neuroDeepPain']) {
     assert.strictEqual(
       r.provenance[field].gate, true,
       `${field} must be marked a gate. Reading a value from the V1 record is ` +
@@ -396,12 +406,15 @@ test('a corrupt blob reads as absent rather than throwing', () => {
 });
 
 test('a value the map cannot interpret is reported, not dropped', () => {
+  // "Present — right only" means deep pain is ABSENT on the other side, which
+  // the single neuroDeepPain input cannot say either way. It comes back
+  // unmapped rather than being rounded to the better or worse answer.
   const r = bridge.readDashboard({
-    dashboard_data: JSON.stringify({ 'treatment::Incision Status': 'Mild erythema' }),
+    dashboard_data: JSON.stringify({ 'assessment::Deep Pain Perception': 'Present — right only' }),
   });
-  assert.strictEqual(r.values.incisionStatus, undefined, 'it must not be guessed at');
+  assert.strictEqual(r.values.neuroDeepPain, undefined, 'it must not be guessed at');
   assert.ok(
-    r.unmapped.some((u) => u.value === 'Mild erythema'),
+    r.unmapped.some((u) => u.value === 'Present — right only'),
     'an uninterpretable clinical finding must come back in `unmapped` so it can ' +
     'be seen and the map extended'
   );
@@ -443,8 +456,11 @@ test('fields recorded under more than one key keep every one of them', () => {
   // a renamed label, or a second control for the same fact in another block.
   const REQUIRED = {
     diagnosis: ['assessment::Primary Diagnosis', 'treatment::Primary Diagnosis'],
+    // 'treatment::Weight Bearing Status' is NOT here any more — it is read
+    // from patient_treatment_status. These two remain because the assessment
+    // block has not been migrated and they are the only source for a patient
+    // with no treatment record.
     weightBearingStatus: [
-      'treatment::Weight Bearing Status',
       'assessment::Weight Bearing Status',
       'assessment::Current Mobility Level',
     ],
@@ -454,7 +470,7 @@ test('fields recorded under more than one key keep every one of them', () => {
     // dashboard-bridge.js and the alias-vocabulary test below.
     affectedRegion: ['treatment::Affected Area'],
     currentMedications: ['assessment::Current Pain Medications', 'treatment::Current Medications'],
-    surgeryDate: ['treatment::Surgery Date', 'assessment::Date of Diagnosis / Surgery'],
+    surgeryDate: ['assessment::Date of Diagnosis / Surgery'],
   };
   for (const [field, keys] of Object.entries(REQUIRED)) {
     // An input may be served by more than one entry when the second is
@@ -871,28 +887,38 @@ test('a declined value is REPORTED, never silently dropped', () => {
   assert.ok(hit.reason && hit.reason.length > 20, 'reported without a reason is barely reported');
 });
 
-test('the dedicated surgery date still beats the shared one', () => {
+test('the blob no longer supplies a surgery date from the treatment block', () => {
+  // Louie had both keys. The treatment one is now a row in patient_procedures,
+  // which is the only shape that can hold a second operation.
   const r = bridge.readDashboard({
     dashboard_data: JSON.stringify({
       'treatment::Approach': 'Surgical',
       'treatment::Surgery Date': '2026-03-21',
-      'assessment::Date of Diagnosis / Surgery': '2026-04-09',
     }),
   });
-  assert.strictEqual(r.values.surgeryDate, '2026-03-21',
-    'Louie has both, and the treatment field is the one that means surgery');
+  assert.strictEqual(r.values.surgeryDate, undefined,
+    'a treatment-block key answered an input the treatment store owns');
 });
 
 // ---------------------------------------------------------------------------
 // Checkboxes are TRI-STATE
 // ---------------------------------------------------------------------------
 
-test('a ticked e-collar box reaches the gate', () => {
+test('the bridge does not answer the e-collar or crate-rest gates', () => {
+  // Both were mapped here for one day, 24 to 25 September 2026, between
+  // noticing the answers were being discarded and the block getting its own
+  // table. They belong to patient_treatment_status now, and the tri-state
+  // rule went with them — see `flag()` in patient-treatment-store.js.
   const r = bridge.readDashboard({
-    dashboard_data: JSON.stringify({ 'treatment::E-Collar Required': 'true' }),
+    dashboard_data: JSON.stringify({
+      'treatment::E-Collar Required': 'true',
+      'treatment::Strict Crate Rest': 'true',
+    }),
   });
-  assert.strictEqual(r.values.eCollarRequired, true, 'the tick was collected and discarded again');
-  assert.strictEqual(r.provenance.eCollarRequired.gate, true, 'this is a gate and must say so');
+  assert.strictEqual(r.values.eCollarRequired, undefined,
+    'a second source appeared behind the treatment store');
+  assert.strictEqual(r.values.crateRestRequired, undefined,
+    'a second source appeared behind the treatment store');
 });
 
 // The tri-state holds in TWO places and these test them separately, because a
@@ -901,49 +927,10 @@ test('a ticked e-collar box reaches the gate', () => {
 // of this test did exactly that and survived the normaliser being changed to
 // return false. Mutation testing found it; the split is the fix.
 
-test('an EMPTY box never reaches the map at all (firstFilled)', () => {
-  const r = bridge.readDashboard({
-    dashboard_data: JSON.stringify({
-      'treatment::E-Collar Required': '',
-      'treatment::Strict Crate Rest': '',
-    }),
-  });
-  assert.strictEqual(r.values.eCollarRequired, undefined,
-    'an untouched checkbox became a clinical answer');
-  assert.strictEqual(r.values.crateRestRequired, undefined, 'same for crate rest');
-  assert.strictEqual(r.unmapped.filter((u) => u.to === 'eCollarRequired').length, 0,
-    'an empty box is not an unreadable value, it is an unanswered question');
-});
 
-test('an UNTICKED spelling says nothing - it does not say "no"', () => {
-  for (const spelling of ['false', 'no', '0', 'unchecked', 'not required']) {
-    assert.strictEqual(bridge.ticked(spelling), null,
-      `"${spelling}" became a clinical "no". The e-collar and crate-rest gates `
-      + 'default to REQUIRED inside the acute window, so this relaxes them');
-  }
-});
 
-test('a ticked spelling is read as a tick', () => {
-  for (const spelling of ['true', 'TRUE', ' yes ', '1', 'required', true]) {
-    assert.strictEqual(bridge.ticked(spelling), true, `${spelling} did not read as ticked`);
-  }
-});
 
-test('an unticked spelling that DOES reach the map is still not a "no"', () => {
-  const r = bridge.readDashboard({
-    dashboard_data: JSON.stringify({ 'treatment::E-Collar Required': 'false' }),
-  });
-  assert.strictEqual(r.values.eCollarRequired, undefined,
-    'this is the path firstFilled does not cover, and it is the one that matters');
-  assert.ok(r.unmapped.some((u) => u.to === 'eCollarRequired'),
-    'a value the map declined must be reported, not dropped');
-});
 
-test('silence is not an answer either', () => {
-  const r = bridge.readDashboard({ dashboard_data: JSON.stringify({}) });
-  assert.strictEqual(r.values.crateRestRequired, undefined);
-  assert.strictEqual(r.values.eCollarRequired, undefined);
-});
 
 test('every gate the map claims to supply is a gate the engine actually has', () => {
   const { SAFETY_GATES } = require('./intake-proposal');

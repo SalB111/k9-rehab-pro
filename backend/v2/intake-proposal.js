@@ -157,6 +157,77 @@ const has = (text, ...words) => {
   return words.some((w) => t.includes(w));
 };
 
+/** A trimmed non-empty string, or null. */
+function text(v) {
+  const s = String(v === null || v === undefined ? '' : v).trim();
+  return s || null;
+}
+
+/**
+ * The treatment record as engine inputs.
+ *
+ * V3, 2026-09-25. Before this, weight-bearing status, incision status, the
+ * e-collar and crate-rest gates, the surgery date and the treatment approach
+ * all came out of `patients.dashboard_data` through dashboard-bridge. They now
+ * come from `patient_treatment_status`, `patient_procedures` and the two
+ * columns on `patients`, and the bridge no longer maps those keys at all.
+ *
+ * THE RANKING, AND WHY THE BLOB IS NOT IN IT
+ *
+ * A caller that does not pass `treatment` gets NOTHING from here, and the
+ * gates fall to their own cautious defaults. That is deliberate and it is the
+ * safe direction: the alternative is to quietly read the blob as a fallback,
+ * which leaves two sources for one fact and is exactly what V3 exists to end.
+ * A forgotten parameter now produces a visibly over-cautious proposal rather
+ * than a confident stale one.
+ *
+ * NORMALISERS ARE SHARED WITH THE BRIDGE ON PURPOSE. The store keeps the
+ * FORM's wording — "Non-weight bearing (NWB)" — because that is what the
+ * clinician chose and what the screen must show. The engine matches 'NWB'.
+ * Reusing `dashboardBridge.weightBearing` and `.incisionStatus` means there is
+ * one place that knows how the two vocabularies line up, rather than a second
+ * copy here that can drift from it silently.
+ */
+function readTreatment(treatment) {
+  const out = { values: {}, provenance: {} };
+  if (!treatment) return out;
+
+  const put = (field, value, from) => {
+    if (value === null || value === undefined) return;
+    out.values[field] = value;
+    out.provenance[field] = { key: from, raw: String(value) };
+  };
+
+  const s = treatment.status;
+  if (s) {
+    put('weightBearingStatus', dashboardBridge.weightBearing(s.weight_bearing_status),
+      'treatment status: weight bearing');
+    put('incisionStatus', dashboardBridge.incisionStatus(s.incision_status),
+      'treatment status: incision');
+    // Tri-state. NULL means nobody answered, and an unanswered gate must stay
+    // unproposed so it falls to its cautious default — which for both of these
+    // is REQUIRED inside the acute window.
+    if (s.e_collar_required !== null && s.e_collar_required !== undefined) {
+      put('eCollarRequired', Boolean(s.e_collar_required), 'treatment status: e-collar');
+    }
+    if (s.strict_crate_rest !== null && s.strict_crate_rest !== undefined) {
+      put('crateRestRequired', Boolean(s.strict_crate_rest), 'treatment status: crate rest');
+    }
+  }
+
+  // The most recent DATED procedure. An undated one cannot place a patient in
+  // a post-operative window, and guessing would close the acute gates.
+  const dated = (treatment.procedures || []).filter((p) => p.procedure_date);
+  if (dated.length) {
+    const latest = dated.reduce((a, b) => (a.procedure_date >= b.procedure_date ? a : b));
+    put('surgeryDate', latest.procedure_date, `procedure: ${latest.procedure_type}`);
+  }
+
+  if (treatment.approach) put('treatmentApproach', treatment.approach, 'treatment: approach');
+
+  return out;
+}
+
 /** Days since a date, or null if we cannot tell. */
 function daysSince(value) {
   if (!value) return null;
@@ -251,7 +322,9 @@ function splitClientName(full) {
  * @param {object} [priorInputs]  the previous protocol version's inputs, if any
  * @returns {{ proposed: object, gates: Array, summary: object }}
  */
-function proposeEngineInputs({ patient, clinicInputs = {}, priorInputs = null } = {}) {
+function proposeEngineInputs({
+  patient, clinicInputs = {}, priorInputs = null, treatment = null,
+} = {}) {
   if (!patient || !patient.id) {
     const err = new Error('A patient record is required to propose engine inputs');
     err.code = 'NO_PATIENT';
@@ -274,6 +347,9 @@ function proposeEngineInputs({ patient, clinicInputs = {}, priorInputs = null } 
   // ten-year-old dog while the chart said 10, and treating 0 as "filled in" is
   // how it stayed that way.
   const v1 = dashboardBridge.readDashboard(patient);
+  // V3: the treatment block's own store. Ranks ABOVE the V1 record for every
+  // field it answers, because it IS the record for those fields now.
+  const tx = readTreatment(treatment);
   const why = {};
 
   const filled = (columnValue, isNumeric) => {
@@ -308,6 +384,15 @@ function proposeEngineInputs({ patient, clinicInputs = {}, priorInputs = null } 
     const prov = v1.provenance[engineKey];
     why[engineKey] = `Not in the patient record. Read from this practice's clinical `
       + `record — ${prov ? prov.key : 'V1'}.`;
+  }
+
+  // A recorded PROCEDURE outranks the legacy `surgery_date` column: the
+  // column holds one date and a patient can have several operations, which is
+  // why patient_procedures exists. Verified against all five patients on
+  // 2026-09-25 — the two agree everywhere, so this changes no current case.
+  if (tx.values.surgeryDate) {
+    effective.surgery_date = tx.values.surgeryDate;
+    why.surgeryDate = `From the recorded ${tx.provenance.surgeryDate.key}.`;
   }
 
   const { first, last } = splitClientName(effective.client_name);
@@ -377,7 +462,12 @@ function proposeEngineInputs({ patient, clinicInputs = {}, priorInputs = null } 
   // The derivation is NOT deleted. It still runs whenever nothing is recorded,
   // which is what it was written for: a record reading "TPLO Post-Op" with an
   // empty surgery date was being called Conservative.
-  const recordedApproach = v1.values.treatmentApproach;
+  // V3 order: the treatment store, then the patient column, then the V1
+  // record, then the derivation. The first three are all somebody STATING the
+  // approach; only the last is an inference.
+  const recordedApproach = tx.values.treatmentApproach
+    || text(effective.treatment_approach)
+    || v1.values.treatmentApproach;
   if (recordedApproach) {
     // Not added to derivedFields: this one was READ, not inferred.
     const prov = v1.provenance.treatmentApproach;
@@ -497,7 +587,14 @@ function proposeEngineInputs({ patient, clinicInputs = {}, priorInputs = null } 
     // answers — was rejected because a gate that is obviously wrong every time
     // is a gate people learn to click through, and that costs more safety than
     // it buys.
-    const fromV1 = carried === undefined && v1.values[gate.field] !== undefined
+    // V3: the treatment store answers first among the record-derived sources.
+    // It is not "another record" — for these fields it is THE record, and the
+    // blob copies are inert.
+    const fromStore = carried === undefined && tx.values[gate.field] !== undefined
+      ? tx.values[gate.field] : undefined;
+
+    const fromV1 = carried === undefined && fromStore === undefined
+      && v1.values[gate.field] !== undefined
       ? v1.values[gate.field] : undefined;
 
     // A cautious value may depend on the case — crate rest is ordinary two days
@@ -507,26 +604,32 @@ function proposeEngineInputs({ patient, clinicInputs = {}, priorInputs = null } 
       : gate.cautious;
 
     const value = carried !== undefined ? carried
-      : fromV1 !== undefined ? fromV1
-        : cautious;
+      : fromStore !== undefined ? fromStore
+        : fromV1 !== undefined ? fromV1
+          : cautious;
     proposed[gate.field] = relevant ? value : null;
 
     if (relevant) {
-      const prov = fromV1 !== undefined ? v1.provenance[gate.field] : null;
+      const prov = fromStore !== undefined ? tx.provenance[gate.field]
+        : fromV1 !== undefined ? v1.provenance[gate.field] : null;
       gates.push({
         field: gate.field,
         label: gate.label,
         proposed: value,
         source: SOURCE.GATE,
         carriedForward: carried !== undefined,
+        fromTreatmentRecord: fromStore !== undefined,
         fromClinicalRecord: fromV1 !== undefined,
         mustConfirm: true,
         why: carried !== undefined
           ? 'Carried from the last approved protocol. Confirm it still holds.'
-          : fromV1 !== undefined
+          : fromStore !== undefined
+            ? `Recorded in the treatment record as "${prov ? prov.raw : value}". `
+              + 'That is a previous finding, not today\'s examination — confirm it still holds.'
+            : fromV1 !== undefined
             ? `Recorded in this practice's clinical record as "${prov ? prov.raw : value}". `
               + 'That is a previous finding, not today\'s examination — confirm it still holds.'
-            : 'Not derivable from the record — proposed at its most cautious value.',
+              : 'Not derivable from the record — proposed at its most cautious value.',
       });
     }
   }
@@ -611,4 +714,5 @@ module.exports = {
   unconfirmedGates,
   splitClientName,
   daysSince,
+  readTreatment,
 };

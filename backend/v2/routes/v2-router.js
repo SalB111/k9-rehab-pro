@@ -525,10 +525,24 @@ function createV2Router(deps) {
       if (prior && prior.j) priorInputs = JSON.parse(prior.j);
     } catch { priorInputs = null; }
 
+    // V3: the treatment block's own store answers the weight-bearing and
+    // incision gates, the e-collar and crate-rest flags, the surgery date and
+    // the treatment approach. dashboard-bridge no longer maps those keys, so
+    // a proposal built WITHOUT this reads none of them and every gate falls to
+    // its cautious default.
+    //
+    // That is the safe failure and it is deliberate — an over-cautious
+    // proposal is visible to the clinician confirming it, where a confident
+    // stale one is not. It is still a failure, so it is not swallowed: if the
+    // treatment record cannot be read, the request fails rather than quietly
+    // producing a proposal with no treatment findings in it.
+    const treatment = await patientTreatmentStore.getTreatment(db, patientId);
+
     const result = intakeProposal.proposeEngineInputs({
       patient,
       clinicInputs: clinicStore.toEngineInputs(capabilities),
       priorInputs,
+      treatment,
     });
 
     res.json({ success: true, data: result });

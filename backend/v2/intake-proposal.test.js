@@ -334,6 +334,19 @@ t('no proposal ever leaves an applicable restriction permissive', () => {
 // MORE complete and may make the gate list LONGER, and may never do either in
 // reverse.
 
+/**
+ * A treatment record shaped as `patient-treatment-store.getTreatment` returns
+ * one. Since 2026-09-25 this — not the blob — is where the weight-bearing and
+ * incision gates, the e-collar and crate-rest flags, the surgery date and the
+ * treatment approach come from.
+ */
+const TX = ({ status = null, procedures = [], approach = null } = {}) => ({
+  patient_id: 1, approach, approach_is_retired: false,
+  affected_limbs: null, affected_region: null,
+  procedures, status, statusHistory: status ? [status] : [],
+  configured: true,
+});
+
 const V1 = (extra = {}) => JSON.stringify({
   'treatment::Weight Bearing Status': 'Partial weight bearing (PWB)',
   'treatment::Incision Status': 'Fully healed / staples removed',
@@ -396,19 +409,34 @@ t('every value recovered from the clinical record says so', () => {
   }
 });
 
-t('a safety gate answered by the clinical record STILL requires confirmation', () => {
-  // The whole justification for using the chart value rather than the cautious
-  // default. If this ever stops being true, the bridge has to be unwired.
+t('a safety gate answered by the TREATMENT RECORD still requires confirmation', () => {
+  // The whole justification for using a recorded value rather than the
+  // cautious default. If this ever stops being true, the store has to be
+  // unwired from the proposal.
   const { gates } = proposeEngineInputs({
-    patient: patient({ condition: 'TPLO Post-Op', surgery_date: daysAgo(30), dashboard_data: V1() }),
+    patient: patient({ condition: 'TPLO Post-Op', surgery_date: daysAgo(30) }),
+    treatment: TX({ status: { weight_bearing_status: 'Partial weight bearing (PWB)' } }),
   });
   const wb = gates.find((g) => g.field === 'weightBearingStatus');
   assert.ok(wb, 'weight bearing must be asked for a post-operative patient');
-  assert.equal(wb.proposed, 'PWB', 'the chart value is proposed');
-  assert.equal(wb.fromClinicalRecord, true, 'and it is labelled as coming from the chart');
+  assert.equal(wb.proposed, 'PWB', 'the recorded value is proposed, normalised to the engine token');
+  assert.equal(wb.fromTreatmentRecord, true, 'and it is labelled as coming from the record');
   assert.equal(wb.mustConfirm, true, 'and it is still confirmed by a person');
   assert.match(wb.why, /not today's examination/i,
     'the wording must not let a previous finding read as an examination today');
+});
+
+t('a gate the store does NOT answer falls to its cautious default', () => {
+  // The safe failure. A caller that does not pass `treatment` — or a patient
+  // with no treatment record — must get the cautious value, never a stale one
+  // recovered from the blob, which no longer maps these keys at all.
+  const { gates } = proposeEngineInputs({
+    patient: patient({ condition: 'TPLO Post-Op', surgery_date: daysAgo(3), dashboard_data: V1() }),
+  });
+  const wb = gates.find((g) => g.field === 'weightBearingStatus');
+  assert.equal(wb.proposed, 'NWB', 'the blob answered a gate it is no longer the source for');
+  assert.equal(wb.fromTreatmentRecord, false);
+  assert.equal(wb.fromClinicalRecord, false);
 });
 
 t('the last approved protocol outranks the clinical record', () => {
@@ -437,14 +465,16 @@ t('filling a gap never removes a safety gate', () => {
     mobility_level: '', medical_history: null, lameness_grade: 0,
   });
   const before = proposeEngineInputs({ patient: raw });
+  // The surgery date now arrives as a recorded PROCEDURE rather than a blob
+  // key — same reclassification, same union rule, different source.
   const after = proposeEngineInputs({
     patient: {
       ...raw,
       dashboard_data: JSON.stringify({
-        'treatment::Surgery Date': daysAgo(30),
         'assessment::Relevant Medical & Surgical History': 'no previous injury',
       }),
     },
+    treatment: TX({ procedures: [{ procedure_type: 'TPLO', procedure_date: daysAgo(30) }] }),
   });
   assert.ok(
     before.gates.some((g) => g.field === 'mmtGrade'),
@@ -503,8 +533,10 @@ t('a disagreement between the two records is reported, not resolved', () => {
 const withBlob = (blob, over = {}) => patient({ dashboard_data: JSON.stringify(blob), ...over });
 
 t('a stated PALLIATIVE approach survives to the engine', () => {
+  // Retired from the panel on 2026-09-25 and still honoured wherever it is
+  // already stored — a legacy row, an import, the pain >= 8 override.
   const { proposed } = proposeEngineInputs({
-    patient: withBlob({ 'treatment::Approach': 'Palliative' }, { surgery_date: daysAgo(10) }),
+    patient: patient({ treatment_approach: 'Palliative', surgery_date: daysAgo(10) }),
   });
   assert.equal(proposed.treatmentApproach, 'Palliative',
     'comfort care was overwritten by the surgery-date derivation, which is how '
@@ -519,7 +551,8 @@ t('and it actually routes the comfort-care protocol', () => {
 
 t('a stated approach beats a contradicting surgery date', () => {
   const { proposed, summary } = proposeEngineInputs({
-    patient: withBlob({ 'treatment::Approach': 'Conservative' }, { surgery_date: daysAgo(10) }),
+    patient: patient({ surgery_date: daysAgo(10) }),
+    treatment: TX({ approach: 'Conservative' }),
   });
   assert.equal(proposed.treatmentApproach, 'Conservative');
   assert.equal(summary.treatmentApproachSource, 'RECORD');
@@ -542,7 +575,7 @@ t('summary.derived reflects what this run derived', () => {
   // hardcoded literals until 2026-09-24, and the header said different numbers
   // again.
   const stated = proposeEngineInputs({
-    patient: withBlob({ 'treatment::Approach': 'Conservative' }),
+    patient: patient(), treatment: TX({ approach: 'Conservative' }),
   }).summary;
   const inferred = proposeEngineInputs({ patient: patient() }).summary;
 

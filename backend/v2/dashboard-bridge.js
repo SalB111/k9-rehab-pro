@@ -214,43 +214,20 @@ function painScore(value) {
 }
 
 /**
- * A checkbox, read as a TRI-STATE.
+ * A checkbox read as a tri-state used to live here, feeding the e-collar and
+ * crate-rest gates from `treatment::E-Collar Required` and
+ * `treatment::Strict Crate Rest`.
  *
- * The V1 form serialises a checkbox as "true" when ticked and "" when not, and
- * a checkbox nobody has touched is simply absent from the blob. So "" cannot
- * tell "the clinician says no" apart from "the form rendered and nobody
- * answered", and those are different clinical statements.
+ * Both moved to `patient_treatment_status` on 2026-09-25 and the rule moved
+ * with them — see `flag()` in patient-treatment-store.js, which keeps the same
+ * distinction: only a TICK is read, "" and "false" are unanswered, and the
+ * gates keep their cautious defaults rather than being relaxed by silence.
  *
- * Only a TICK is read. Anything else returns null, the gate stays unproposed
- * and falls to its own cautious default, exactly as it did before these fields
- * were mapped at all. That makes the mapping a strict improvement: a ticked box
- * now reaches the engine, and an unticked one loses no caution.
- *
- * WHERE THE "" CASE IS ACTUALLY HANDLED — this caught a test out, so it is
- * written down. An empty string never reaches this function: `firstFilled`
- * treats "" as unfilled and the map entry is skipped before `via` is called.
- * So the tri-state holds in two places, and only one of them is here:
- *
- *   ""                  -> stopped by firstFilled, entry never fires
- *   "false" "no" "0"    -> stopped HERE, returns null
- *   "true" "yes" "1"    -> returns true
- *
- * A test that asserts the "" case through `readDashboard` passes whatever this
- * function does, and proves nothing about it. Test the two paths separately.
- *
- * Do NOT "improve" this by returning false for the unticked spellings. The
- * e-collar and crate-rest gates default to REQUIRED inside the acute
- * post-operative window, and reading an unticked box as a clinical "no" would
- * quietly relax both.
+ * Deleted rather than left behind, because a normaliser nothing calls is one
+ * somebody wires back up beside the store and gets a second source from.
  */
-function ticked(value) {
-  if (value === true) return true;
-  const t = String(value === null || value === undefined ? '' : value).trim().toLowerCase();
-  if (t === 'true' || t === 'yes' || t === '1' || t === 'required') return true;
-  return null;
-}
 
-/** A trimmed non-empty string, or null. */
+/** A trimmed non-empty string, or null. *//** A trimmed non-empty string, or null. */
 function text(value) {
   const t = String(value === null || value === undefined ? '' : value).trim();
   return t ? t : null;
@@ -329,11 +306,17 @@ const MAP = [
   // is a different live field with a different vocabulary and is carried as
   // context, not mapped here. Adding it back changes which protocol runs.
   { keys: ['treatment::Affected Area'], to: 'affectedRegion', via: text },
-  { keys: ['treatment::Approach'], to: 'treatmentApproach', via: text },
-  // Two entries, one input. The first is unconditional and wins whenever it is
-  // filled; the second only answers for a patient who actually had surgery.
-  // See `hasSurgery`. Order here is precedence — see readDashboard.
-  { keys: ['treatment::Surgery Date'], to: 'surgeryDate', via: text },
+  // treatmentApproach, incisionStatus, eCollarRequired and crateRestRequired
+  // were mapped here until 2026-09-25. They are now read from the treatment
+  // store by intake-proposal's `readTreatment`, and mapping them here as well
+  // would put a second source behind the first — which is the thing V3 exists
+  // to end. The blob keys remain in `dashboard_data`, inert.
+  // `treatment::Surgery Date` was the first entry here until 2026-09-25. A
+  // surgery date is now a PROCEDURE, and a patient can have several — which is
+  // why patient_procedures exists and why one date column could never hold it.
+  // What remains is the assessment field, which still answers for a patient
+  // with no procedure recorded, and only where the record describes an
+  // operation. See `hasSurgery`.
   { keys: ['assessment::Date of Diagnosis / Surgery'], to: 'surgeryDate', via: text,
     when: hasSurgery,
     whyNot: 'This record does not describe an operation, so a "Date of Diagnosis '
@@ -352,15 +335,12 @@ const MAP = [
   { keys: ['assessment::Current Mobility Level'], to: 'mobilityLevel', via: text },
 
   // ── Safety gates. Proposed only; always confirmed by a person. ────────────
-  { keys: ['treatment::Weight Bearing Status', 'assessment::Weight Bearing Status',
-           'assessment::Current Mobility Level'],
+  // `treatment::Weight Bearing Status` was the first key here. It is now read
+  // from `patient_treatment_status`. The two ASSESSMENT controls remain,
+  // because the assessment block has not been migrated and they are the only
+  // source for a patient with no treatment record.
+  { keys: ['assessment::Weight Bearing Status', 'assessment::Current Mobility Level'],
     to: 'weightBearingStatus', via: weightBearing, gate: true },
-  { keys: ['treatment::Incision Status'], to: 'incisionStatus', via: incisionStatus, gate: true },
-  // Collected by the dashboard since the form existed, mapped to nothing until
-  // 2026-09-24 — the engine has both gates and this module supplied neither,
-  // so a clinician's tick was stored and discarded. Tri-state: see `ticked`.
-  { keys: ['treatment::E-Collar Required'], to: 'eCollarRequired', via: ticked, gate: true },
-  { keys: ['treatment::Strict Crate Rest'], to: 'crateRestRequired', via: ticked, gate: true },
   { keys: ['assessment::Deep Pain Perception'], to: 'neuroDeepPain', via: deepPain, gate: true },
 ];
 
@@ -671,7 +651,6 @@ module.exports = {
   CONTEXT_KEYS,
   // exported for tests — each is a documented clinical mapping in its own right
   weightBearing,
-  ticked,
   incisionStatus,
   deepPain,
   painScore,
