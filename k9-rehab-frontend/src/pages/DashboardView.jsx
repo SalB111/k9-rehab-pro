@@ -14,6 +14,119 @@ void i18n;
 const DashFormContext = createContext({ data: {}, update: () => {}, blockId: null, beauVoice: null });
 
 // Auto-translation helpers (slugField, useTr) are imported from ../i18n/useTr
+
+/**
+ * Ask B.E.A.U. a question and return the whole answer.
+ *
+ * THIS DID NOT EXIST. Five call sites in this file awaited `callBeau` and
+ * nothing anywhere declared or imported it, so every one of them threw
+ * "callBeau is not defined" the moment it ran:
+ *
+ *   the Assessment panel's synthesis        (runBeauSynthesis)
+ *   the Goals panel's B.E.A.U. help
+ *   the Protocol panel's B.E.A.U. help
+ *   the Nutrition panel's B.E.A.U. help
+ *   "Ask B.E.A.U." in any block header      (askBeauInContext)
+ *
+ * Each one caught the error and put it in its own output box, so it read as
+ * a B.E.A.U. failure rather than a missing function. Reported by Sal on
+ * 2026-09-25: "BEAU analyze assessment not functioning".
+ *
+ * THE VALIDATION EVENTS ARE NOT OPTIONAL
+ *
+ * The server streams three kinds of event, and the third is a safety feature:
+ *
+ *   delta       a chunk of the answer
+ *   error       the request failed
+ *   validation  B.E.A.U. named an exercise code that is NOT in the library,
+ *               or one that exists but was not among those supplied for this
+ *               answer — recalled rather than retrieved
+ *
+ * beau-chat-handler.js says of those, verbatim: "It now reaches the client as
+ * well. The clinician is the person who can act on it, and they cannot act on
+ * what they are not told." A client that drops them would silently undo the
+ * anti-hallucination check that CLAUDE.md makes non-negotiable. They are
+ * appended to the returned text so they are impossible to miss.
+ *
+ * @param {string}   system    the system prompt for this panel
+ * @param {string}   userText  the question
+ * @param {string}   language  UI locale, passed through for the reply
+ * @param {Function} [onChunk] (chunk, accumulated) — for streaming panels
+ * @returns {Promise<string>}  the full answer, plus any validation notices
+ */
+async function callBeau(system, userText, language, onChunk) {
+  const apiBase = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+  const token = localStorage.getItem("token");
+
+  const res = await fetch(`${apiBase}/beau/chat`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify({
+      messages: [{ role: "user", content: userText }],
+      system,
+      language,
+    }),
+  });
+
+  // The endpoint answers a refusal as JSON, not as a stream — a missing API
+  // key is 503 with a sentence saying so, and that sentence is far more use
+  // to a clinician than "failed to fetch".
+  if (!res.ok) {
+    let detail = `HTTP ${res.status}`;
+    try { const j = await res.json(); if (j && j.error) detail = j.error; } catch { /* not JSON */ }
+    throw new Error(detail);
+  }
+  if (!res.body) throw new Error("B.E.A.U. returned no response body");
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let answer = "";
+  const notices = [];
+
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+
+    // SSE frames are separated by a blank line. Keep the trailing partial.
+    const frames = buffer.split("\n\n");
+    buffer = frames.pop() ?? "";
+
+    for (const frame of frames) {
+      for (const line of frame.split("\n")) {
+        if (!line.startsWith("data:")) continue;
+        let evt;
+        try { evt = JSON.parse(line.slice(5).trim()); } catch { continue; }
+
+        if (evt.type === "delta" && evt.text) {
+          answer += evt.text;
+          if (onChunk) onChunk(evt.text, answer);
+        } else if (evt.type === "validation") {
+          notices.push(evt);
+        } else if (evt.type === "error") {
+          throw new Error(evt.text || "B.E.A.U. reported an error");
+        }
+        // "done" needs no handling — the stream closing is the signal.
+      }
+    }
+  }
+
+  if (!notices.length) return answer;
+
+  const flagged = notices.map((n) => {
+    const head = n.severity === "error"
+      ? "NOT IN THE EXERCISE LIBRARY"
+      : "RECALLED, NOT SUPPLIED";
+    return `[${head}] ${n.text}`;
+  }).join("\n");
+
+  return `${answer}\n\n———\n${flagged}`;
+}
+
 // so other views across the platform can share the same mechanism.
 
 // ─── THEME — WHITE CLINICAL ───────────────────────────────────────────────────

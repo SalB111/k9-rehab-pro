@@ -158,6 +158,71 @@ test('every tel field goes through the formatter', () => {
   assert.ok(telFields > 0, 'no type="tel" field found — has the phone field been renamed?');
 });
 
+// ── 3. functions that are called but never defined ─────────────────────────
+//
+// `callBeau` was awaited at FIVE call sites in DashboardView.jsx and declared
+// nowhere — not defined, not imported. Every one threw "callBeau is not
+// defined" the moment it ran, and each call site caught the error and printed
+// it into its own output box, so it read as B.E.A.U. failing rather than as a
+// missing function. It reached Sal as "BEAU analyze assessment not
+// functioning" on 2026-09-25.
+//
+// There is no linter in this project (CLAUDE.md, Tech Stack: "No linter
+// configured"), so nothing else would have caught it. This is the cheap
+// version of the check that matters: anything AWAITED must exist.
+
+test('every awaited helper in DashboardView is actually defined', () => {
+  // Globals and browser APIs that are legitimately awaited without a local
+  // declaration. Anything else must be declared or imported in the file.
+  const AMBIENT = new Set([
+    'fetch', 'import', 'Promise', 'navigator', 'caches', 'queueMicrotask',
+    'structuredClone', 'requestAnimationFrame', 'setTimeout',
+  ]);
+
+  const called = new Set();
+  for (const m of src.matchAll(/await\s+([A-Za-z_$][\w$]*)\s*\(/g)) called.add(m[1]);
+
+  const declared = new Set();
+  for (const re of [
+    /\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=/g,
+    /\bfunction\s+([A-Za-z_$][\w$]*)\s*\(/g,
+    /\basync\s+function\s+([A-Za-z_$][\w$]*)\s*\(/g,
+    /\bimport\s+([A-Za-z_$][\w$]*)\s*(?:,|from)/g,
+    /\bimport\s*\{([^}]*)\}/g,
+  ]) {
+    for (const m of src.matchAll(re)) {
+      for (const name of m[1].split(',')) {
+        const clean = name.trim().split(/\s+as\s+/).pop().trim();
+        if (clean) declared.add(clean);
+      }
+    }
+  }
+
+  const missing = [...called].filter((n) => !declared.has(n) && !AMBIENT.has(n));
+  assert.deepStrictEqual(missing, [],
+    'These are awaited in DashboardView.jsx and defined nowhere, so every call '
+    + 'site throws "X is not defined" at runtime:\n    ' + missing.join('\n    ')
+    + '\n  There is no linter in this project — this test is the check.');
+});
+
+test('callBeau exists and surfaces the exercise-validation warnings', () => {
+  // The server streams a "validation" event when B.E.A.U. names an exercise
+  // code that is not in the library, or one that was not supplied for that
+  // answer. beau-chat-handler.js sends it to the CLIENT deliberately: "the
+  // clinician is the person who can act on it, and they cannot act on what
+  // they are not told." A client that drops it silently undoes the
+  // anti-hallucination check CLAUDE.md calls non-negotiable.
+  assert.ok(/async function callBeau\(/.test(src), 'callBeau is not defined');
+  assert.ok(/evt\.type === "validation"/.test(src),
+    'callBeau ignores the validation event, so a fabricated exercise code '
+    + 'would reach the clinician unflagged');
+  assert.ok(/NOT IN THE EXERCISE LIBRARY/.test(src),
+    'the validation notice is collected but never shown to anyone');
+  assert.ok(/evt\.type === "error"/.test(src),
+    'callBeau ignores the error event, so a failed request would look like an '
+    + 'empty answer rather than a failure');
+});
+
 if (failures.length) {
   console.error(`\nFAILED ${failures.length} of ${passed + failures.length}\n`);
   for (const f of failures) console.error(`  ✗ ${f.name}\n    ${f.message}\n`);
