@@ -129,13 +129,50 @@ const Lbl = ({ children, range }) => {
   );
 };
 
+/**
+ * A North American phone number, formatted as it is typed.
+ *
+ * Applied to every `type="tel"` field, so the clinic phone, the referring
+ * clinic and the owner's number all read the same way in the record instead of
+ * depending on who typed which punctuation.
+ *
+ * DELIBERATELY CONSERVATIVE. It formats only what it is sure about: ten digits
+ * or fewer, with no other characters in the box. Anything else is left exactly
+ * as the clinician typed it —
+ *
+ *   +44 20 7946 0958        an international number
+ *   (954) 555-0142 x231     an extension
+ *   555-0142 (mobile)       a note beside the number
+ *
+ * A formatter that "corrects" those is worse than none: it would silently
+ * mangle a number somebody needs to ring. An 11-digit string starting with 1
+ * is treated as a US number with its country code and keeps the leading 1.
+ */
+function formatPhone(input) {
+  const raw = String(input ?? "");
+  if (/[^0-9()\-.\s]/.test(raw)) return raw;        // letters, +, x — leave alone
+
+  const digits = raw.replace(/\D/g, "");
+  let lead = "";
+  let rest = digits;
+  if (digits.length === 11 && digits.startsWith("1")) { lead = "1 "; rest = digits.slice(1); }
+  if (rest.length > 10) return raw;                  // longer than a US number
+
+  if (rest.length <= 3) return lead + rest;
+  if (rest.length <= 6) return `${lead}(${rest.slice(0, 3)}) ${rest.slice(3)}`;
+  return `${lead}(${rest.slice(0, 3)}) ${rest.slice(3, 6)}-${rest.slice(6)}`;
+}
+
 const F = ({ label, placeholder, type="text", options, rows, range, hint, disabled }) => {
   const { data, update, blockId } = useContext(DashFormContext);
   const { t } = useTranslation();
   const tr = useTr();
   const key = blockId ? `${blockId}::${label}` : label;
   const value = data[key] ?? "";
-  const onChange = (val) => { if (!disabled) update(key, val); };
+  const onChange = (val) => {
+    if (disabled) return;
+    update(key, type === "tel" ? formatPhone(val) : val);
+  };
   const selectPlaceholder = t("common.select", { defaultValue: "Select…" });
   return (
     <div>
@@ -585,7 +622,26 @@ function Modal({ title, color, colorLt, icon, onClose, children, beauContext, be
     try { await handleSave?.(); } finally { setTimeout(() => setBlockSaving(false), 600); }
   };
   return (
-    <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (e=>{ if(e.target===e.currentTarget) onClose(); })(e); } }} style={{ position:"fixed", inset:0, zIndex:200, background:"rgba(26,39,68,.55)", display:"flex", alignItems:"center", justifyContent:"center", padding:48, animation:"fadeIn .18s ease" }}
+    // THE TARGET CHECK MUST COME FIRST.
+    //
+    // This div is the modal BACKDROP — position:fixed, inset:0 — and the whole
+    // dialog renders inside it, so every keystroke in every field bubbles up
+    // here. Until 2026-09-25 it called preventDefault() on Enter or Space
+    // BEFORE checking whether the key came from the backdrop itself, which
+    // meant NO TEXT FIELD IN ANY DASHBOARD BLOCK COULD ACCEPT A SPACE.
+    //
+    // Found by Sal typing an address. It was never about the address field:
+    // it was every field, in every block, behind every modal, and it looked
+    // like a stuck keyboard rather than a bug.
+    //
+    // A key pressed inside the dialog is not a click on the backdrop, so it
+    // returns before touching the event at all.
+    <div role="button" tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.target !== e.currentTarget) return;
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClose(); }
+      }}
+      style={{ position:"fixed", inset:0, zIndex:200, background:"rgba(26,39,68,.55)", display:"flex", alignItems:"center", justifyContent:"center", padding:48, animation:"fadeIn .18s ease" }}
       onClick={e=>{ if(e.target===e.currentTarget) onClose(); }}>
       <div style={{ background:C.white, borderRadius:10, width:"100%", height:"100%", maxWidth:1600, maxHeight:"none", display:"flex", flexDirection:"column", animation:"modalIn .2s ease", boxShadow:"0 24px 80px rgba(26,39,68,.25)", border:`1px solid ${C.border}` }}>
         {/* Header */}

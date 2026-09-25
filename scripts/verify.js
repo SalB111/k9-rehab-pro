@@ -123,6 +123,12 @@ const CHECKS = [
   // write does not blank what it never named.
   { name: 'K9 · treatment store (V3)', cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/patient-treatment-store.test.js'],
     ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
+  // What the clinician can TYPE, as opposed to what gets stored. Both defects
+  // this guards were found by Sal within minutes of driving a real intake and
+  // neither was visible to any existing test: a modal backdrop that swallowed
+  // every space in every field, and phone numbers stored however they arrived.
+  { name: 'K9 · dashboard form',      cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/dashboard-form.test.js'],
+    ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
   // One library, one identifier, one stated size. `all-exercises.js` is THE
   // library; the `exercises_v2` table is a different one with a disjoint id
   // scheme, and an endpoint keyed one by the other 404'd on every code the
