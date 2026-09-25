@@ -1623,11 +1623,169 @@ function AssessmentPanel() {
 // All nested fields use standard F components so they auto-wire under
 // "treatment::*" keys in DashFormContext.
 function TreatmentPanel() {
-  const { data, update } = useContext(DashFormContext);
-  const approach = data["treatment::Approach"] || "";
+  const { data, update, patientId } = useContext(DashFormContext);
 
-  // Days Post-Op auto-calc from Surgery Date
-  const surgeryDate = data["treatment::Surgery Date"] || "";
+  // ── V3: this block lives in its own tables, not in the blob ──────────────
+  //
+  //   the CASE       approach and affected limb  -> columns on `patients`
+  //   a PROCEDURE    an event with a date        -> patient_procedures
+  //   the STATUS     a time series               -> patient_treatment_status
+  //
+  // Recording a status INSERTS. The previous row stays as the progression,
+  // because weight bearing going NWB -> TTWB -> PWB -> FWB is the clinical
+  // record and a single overwritable field loses it.
+  //
+  // The engine reads these tables. Until 2026-09-25 this panel wrote the blob
+  // while the engine read the tables, which meant a clinician's edit did not
+  // reach the protocol.
+  const apiBase = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+  const [tx, setTx] = useState({ loading: true, data: null, error: null });
+  const [txBusy, setTxBusy] = useState(null);
+  const [txDraft, setTxDraft] = useState({});
+  const [procDraft, setProcDraft] = useState({ procedure_type: "", procedure_date: "", surgeon: "" });
+
+  const txHeaders = () => {
+    const token = localStorage.getItem("token");
+    return { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) };
+  };
+
+  const loadTx = React.useCallback(() => {
+    if (!patientId) { setTx({ loading: false, data: null, error: null }); return; }
+    fetch(`${apiBase}/v2/patients/${patientId}/treatment`, { headers: txHeaders() })
+      .then(r => r.json())
+      .then(j => setTx({ loading: false, data: j.data || null, error: j.success ? null : j.error }))
+      .catch(e => setTx({ loading: false, data: null, error: e.message }));
+  }, [apiBase, patientId]);
+
+  useEffect(() => { loadTx(); }, [loadTx]);
+
+  const txPost = async (path, body, method = "POST") => {
+    const res = await fetch(`${apiBase}/v2${path}`, {
+      method, headers: txHeaders(), body: JSON.stringify(body),
+    });
+    const j = await res.json();
+    // The store refuses rather than coerces — a retired approach, an
+    // unparseable date, "maybe" as a yes/no. Surface its sentence; it names
+    // what to do instead.
+    if (!res.ok || !j.success) throw new Error(j.error || `HTTP ${res.status}`);
+    setTx({ loading: false, data: j.data, error: null });
+    return j.data;
+  };
+
+  const saveCase = async (patch, busyKey) => {
+    if (!patientId) return;
+    setTxBusy(busyKey); setTx(s => ({ ...s, error: null }));
+    try { await txPost(`/patients/${patientId}/treatment/case`, patch, "PUT"); }
+    catch (e) { setTx(s => ({ ...s, error: e.message })); }
+    finally { setTxBusy(null); }
+  };
+
+  /** Record the status as at today. Fields not named are carried forward. */
+  const saveStatus = async (patch, busyKey) => {
+    if (!patientId) return;
+    setTxBusy(busyKey); setTx(s => ({ ...s, error: null }));
+    try {
+      await txPost(`/patients/${patientId}/treatment/status`, { status: patch });
+      setTxDraft(d => { const n = { ...d }; for (const k of Object.keys(patch)) delete n[k]; return n; });
+    } catch (e) { setTx(s => ({ ...s, error: e.message })); }
+    finally { setTxBusy(null); }
+  };
+
+  const status = (tx.data && tx.data.status) || {};
+  const sVal = (col) => (txDraft[col] !== undefined ? txDraft[col] : (status[col] ?? ""));
+
+  /** A status field. Saves on change (select) or blur (text). */
+  const TS = ({ col, label, options, placeholder, rows }) => {
+    const busy = txBusy === col;
+    const common = {
+      disabled: busy || !patientId,
+      style: { width: "100%", padding: "8px 10px", border: `1px solid ${C.border}`,
+               borderRadius: 5, fontSize: 12, opacity: busy ? 0.6 : 1 },
+    };
+    return (
+      <div style={{ flex: 1, minWidth: 160 }}>
+        <Lbl>{label}</Lbl>
+        {options ? (
+          <select value={sVal(col)} {...common}
+                  onChange={e => saveStatus({ [col]: e.target.value }, col)}>
+            <option value="">— Select —</option>
+            {options.map(o => <option key={o} value={o}>{o}</option>)}
+          </select>
+        ) : rows ? (
+          <textarea rows={rows} value={sVal(col)} placeholder={placeholder} {...common}
+                    onChange={e => setTxDraft(d => ({ ...d, [col]: e.target.value }))}
+                    onBlur={e => { if (e.target.value !== (status[col] ?? "")) saveStatus({ [col]: e.target.value }, col); }}/>
+        ) : (
+          <input value={sVal(col)} placeholder={placeholder} {...common}
+                 onChange={e => setTxDraft(d => ({ ...d, [col]: e.target.value }))}
+                 onBlur={e => { if (e.target.value !== (status[col] ?? "")) saveStatus({ [col]: e.target.value }, col); }}/>
+        )}
+      </div>
+    );
+  };
+
+  /**
+   * A TRI-STATE flag. Three buttons, not a checkbox, and that is the point.
+   *
+   * A checkbox has two states and this field has three. Unanswered is not
+   * "no": the e-collar and crate-rest gates DEFAULT TO REQUIRED inside the
+   * acute post-operative window, so a box nobody ticked must not read as a
+   * clinician saying it is not needed. The old control could not express the
+   * difference and stored "" for both.
+   */
+  const TFlag = ({ col, label, yes }) => {
+    const v = status[col];
+    const state = v === null || v === undefined ? null : (v ? 1 : 0);
+    const busy = txBusy === col;
+    const btn = (on, colour) => ({
+      flex: 1, padding: "7px 4px", fontSize: 11, cursor: busy ? "default" : "pointer",
+      border: `1px solid ${on ? colour : C.border}`, background: on ? colour : C.white,
+      color: on ? C.white : C.muted, borderRadius: 4, textAlign: "center",
+      opacity: busy ? 0.6 : 1, userSelect: "none",
+    });
+    const pick = (val) => { if (!busy) saveStatus({ [col]: val }, col); };
+    return (
+      <div style={{ flex: 1, minWidth: 150 }}>
+        <Lbl>{label}</Lbl>
+        <div style={{ display: "flex", gap: 4 }}>
+          <div role="button" tabIndex={0} style={btn(state === 1, "#F59E0B")}
+               onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(true); } }}
+               onClick={() => pick(true)}>{yes || "Yes"}</div>
+          <div role="button" tabIndex={0} style={btn(state === 0, "#64748B")}
+               onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(false); } }}
+               onClick={() => pick(false)}>No</div>
+          <div role="button" tabIndex={0} style={btn(state === null, "#CBD5E1")}
+               onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(null); } }}
+               onClick={() => pick(null)}>Not asked</div>
+        </div>
+      </div>
+    );
+  };
+
+  const addProcedure = async () => {
+    if (!patientId || !procDraft.procedure_type) return;
+    setTxBusy("procedure"); setTx(s => ({ ...s, error: null }));
+    try {
+      await txPost(`/patients/${patientId}/treatment/procedures`, { procedure: procDraft });
+      setProcDraft({ procedure_type: "", procedure_date: "", surgeon: "" });
+    } catch (e) { setTx(s => ({ ...s, error: e.message })); }
+    finally { setTxBusy(null); }
+  };
+
+  const removeProcedure = async (id) => {
+    setTxBusy("procedure"); setTx(s => ({ ...s, error: null }));
+    try { await txPost(`/treatment/procedures/${id}`, {}, "DELETE"); }
+    catch (e) { setTx(s => ({ ...s, error: e.message })); }
+    finally { setTxBusy(null); }
+  };
+
+  const approach = (tx.data && tx.data.approach) || "";
+
+  // Days Post-Op comes from the most recent DATED procedure now. An undated
+  // one cannot place a patient in a post-operative window, and the engine
+  // treats an undated surgical case as ACTIVE rather than guessing.
+  const procedures = (tx.data && tx.data.procedures) || [];
+  const surgeryDate = (procedures.find(p => p.procedure_date) || {}).procedure_date || "";
   const daysPostOp = (() => {
     if (!surgeryDate) return "";
     const d = new Date(surgeryDate);
@@ -1657,14 +1815,14 @@ function TreatmentPanel() {
         Select the primary treatment approach for this patient. Each approach reveals a tailored field set below.
       </div>
       <div style={{ display:"flex", gap:12 }}>
-        <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => update("treatment::Approach", "Surgical"))(e); } }} style={cardStyle(approach === "Surgical", "#F59E0B")}
-             onClick={() => update("treatment::Approach", "Surgical")}>
+        <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => saveCase({ approach: "Surgical" }, "approach"))(e); } }} style={cardStyle(approach === "Surgical", "#F59E0B")}
+             onClick={() => saveCase({ approach: "Surgical" }, "approach")}>
           <div style={{ fontSize:28, marginBottom:6 }}>🏥</div>
           <div style={{ fontSize:13, fontWeight:800, letterSpacing:".05em" }}>SURGICAL</div>
           <div style={{ fontSize:10, marginTop:4, opacity:.85 }}>Post-op recovery</div>
         </div>
-        <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => update("treatment::Approach", "Conservative"))(e); } }} style={cardStyle(approach === "Conservative", "#0EA5E9")}
-             onClick={() => update("treatment::Approach", "Conservative")}>
+        <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => saveCase({ approach: "Conservative" }, "approach"))(e); } }} style={cardStyle(approach === "Conservative", "#0EA5E9")}
+             onClick={() => saveCase({ approach: "Conservative" }, "approach")}>
           <div style={{ fontSize:28, marginBottom:6 }}>💊</div>
           <div style={{ fontSize:13, fontWeight:800, letterSpacing:".05em" }}>CONSERVATIVE</div>
           <div style={{ fontSize:10, marginTop:4, opacity:.85 }}>Non-surgical management</div>
@@ -1698,86 +1856,198 @@ function TreatmentPanel() {
 
     {/* ── SURGICAL FIELDS ── */}
     {approach === "Surgical" && (
-      <Sec title="Surgical Details" color="#F59E0B" colorLt="#FFFBEB">
-        <Row>
-          <F label="Surgery Type" options={[
-            "TPLO — Tibial Plateau Leveling Osteotomy",
-            "TTA — Tibial Tuberosity Advancement",
-            "FHO — Femoral Head Ostectomy",
-            "TPA — Total Hip Arthroplasty",
-            "Hip Replacement",
-            "Spinal Surgery — Hemilaminectomy",
-            "Spinal Surgery — Ventral Slot",
-            "Spinal Surgery — Dorsal Laminectomy",
-            "Soft Tissue Surgery",
-            "Fracture Repair — Internal Fixation",
-            "Fracture Repair — External Fixation",
-            "Amputation",
-            "Other — Specify in notes"
-          ]}/>
-          <F label="Surgeon Name" placeholder="e.g. Dr. Smith, DACVS"/>
-        </Row>
+      <Sec title="Procedures" color="#F59E0B" colorLt="#FFFBEB">
+        <div style={{ fontSize:11, color:C.muted, marginBottom:12, lineHeight:1.65 }}>
+          Each operation is its own record. A contralateral procedure or a revision
+          is a NEW entry, not an edit of the last one — a second operation is a
+          second event, and overwriting the first loses the history the protocol
+          phase is calculated from.
+        </div>
+
+        {procedures.length === 0 && (
+          <div style={{ fontSize:11, color:C.muted, fontStyle:"italic", marginBottom:12 }}>
+            No procedure recorded. A post-operative patient with no date is treated
+            as ACTIVE by the protocol engine — it cannot know an incision has
+            healed, so it asks.
+          </div>
+        )}
+
+        {procedures.map(p => (
+          <div key={p.id} style={{ display:"flex", alignItems:"center", gap:10, padding:"9px 11px",
+                                   border:`1px solid ${C.border}`, borderRadius:5, marginBottom:7 }}>
+            <div style={{ flex:1 }}>
+              <div style={{ fontSize:12, fontWeight:600 }}>{p.procedure_type}</div>
+              <div style={{ fontSize:10.5, color:C.muted, marginTop:2 }}>
+                {p.procedure_date || "date not recorded"}
+                {p.surgeon ? ` · ${p.surgeon}` : ""}
+              </div>
+            </div>
+            <div role="button" tabIndex={0} title="Remove this procedure"
+                 style={{ fontSize:11, color:C.red, cursor:"pointer", padding:"3px 7px" }}
+                 onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); removeProcedure(p.id); } }}
+                 onClick={() => removeProcedure(p.id)}>Remove</div>
+          </div>
+        ))}
+
+        <div style={{ marginTop:12, paddingTop:12, borderTop:`1px dashed ${C.border}` }}>
+          <Row>
+            <div style={{ flex:1, minWidth:160 }}>
+              <Lbl>Procedure</Lbl>
+              <select value={procDraft.procedure_type}
+                      onChange={e => setProcDraft(d => ({ ...d, procedure_type: e.target.value }))}
+                      style={{ width:"100%", padding:"8px 10px", border:`1px solid ${C.border}`, borderRadius:5, fontSize:12 }}>
+                <option value="">— Select —</option>
+                {["TPLO — Tibial Plateau Leveling Osteotomy",
+                  "TTA — Tibial Tuberosity Advancement",
+                  "FHO — Femoral Head Ostectomy",
+                  "TPA — Total Hip Arthroplasty",
+                  "Hip Replacement",
+                  "Spinal Surgery — Hemilaminectomy",
+                  "Spinal Surgery — Ventral Slot",
+                  "Spinal Surgery — Dorsal Laminectomy",
+                  "Soft Tissue Surgery",
+                  "Fracture Repair — Internal Fixation",
+                  "Fracture Repair — External Fixation",
+                  "Amputation",
+                  "Other — Specify in notes"].map(o => <option key={o} value={o}>{o}</option>)}
+              </select>
+            </div>
+            <div style={{ flex:1, minWidth:130 }}>
+              <Lbl>Date</Lbl>
+              <input type="date" value={procDraft.procedure_date}
+                     onChange={e => setProcDraft(d => ({ ...d, procedure_date: e.target.value }))}
+                     style={{ width:"100%", padding:"8px 10px", border:`1px solid ${C.border}`, borderRadius:5, fontSize:12 }}/>
+              <div style={{ fontSize:10, color:C.muted, marginTop:3, fontStyle:"italic" }}>
+                Leave blank if genuinely unknown
+              </div>
+            </div>
+            <div style={{ flex:1, minWidth:150 }}>
+              <Lbl>Surgeon</Lbl>
+              <input value={procDraft.surgeon} placeholder="e.g. Dr. Smith, DACVS"
+                     onChange={e => setProcDraft(d => ({ ...d, surgeon: e.target.value }))}
+                     style={{ width:"100%", padding:"8px 10px", border:`1px solid ${C.border}`, borderRadius:5, fontSize:12 }}/>
+            </div>
+          </Row>
+          <div role="button" tabIndex={0}
+               style={{ marginTop:9, padding:"8px 14px", display:"inline-block", fontSize:11.5,
+                        fontWeight:600, borderRadius:5, cursor: procDraft.procedure_type ? "pointer" : "default",
+                        background: procDraft.procedure_type ? "#F59E0B" : C.border,
+                        color: procDraft.procedure_type ? C.white : C.muted, userSelect:"none" }}
+               onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); addProcedure(); } }}
+               onClick={addProcedure}>+ Record procedure</div>
+        </div>
+
         <Row cols={3}>
-          <F label="Surgery Date" type="date"/>
           <div>
             <Lbl>Days Post-Op</Lbl>
-            <input type="text" value={daysPostOp} readOnly placeholder="Auto-calculated"
+            <input type="text" value={daysPostOp} readOnly placeholder="No dated procedure"
                    style={{ background:"#F9FAFB", color:C.muted, cursor:"default" }}/>
-            <div style={{ fontSize:10, color:C.muted, marginTop:4, fontStyle:"italic" }}>Auto-calculated from Surgery Date</div>
+            <div style={{ fontSize:10, color:C.muted, marginTop:4, fontStyle:"italic" }}>
+              From the most recent dated procedure
+            </div>
           </div>
-          <F label="Weight Bearing Status" options={[
+        </Row>
+      </Sec>
+    )}
+
+    {approach && (
+      <Sec title="Current Treatment Status" color="#F59E0B" colorLt="#FFFBEB">
+        <div style={{ fontSize:11, color:C.muted, marginBottom:12, lineHeight:1.65 }}>
+          Recording a status adds a new entry dated today. The previous one is kept —
+          weight bearing going NWB → TTWB → PWB → FWB is the progression, and it is
+          the thing that disappears if a single field is overwritten.
+        </div>
+
+        {tx.data && tx.data.status_date_is_unknown && (
+          <div style={{ padding:"9px 11px", marginBottom:12, borderRadius:5,
+                        border:`1px solid ${C.border}`, borderLeft:"3px solid #64748B", background:"#F8FAFC" }}>
+            <div style={{ fontSize:11, color:C.muted, lineHeight:1.6 }}>
+              This state was carried over from the old record, which stored no date
+              for it. The date shown is the migration date, not an examination.
+              Recording a status replaces it with a real one.
+            </div>
+          </div>
+        )}
+
+        <Row>
+          {TS({ col: "weight_bearing_status", label: "Weight Bearing Status", options: [
             "Non-weight bearing (NWB)",
             "Toe-touching (TTWB)",
             "Partial weight bearing (PWB)",
-            "Full weight bearing (FWB)"
-          ]}/>
+            "Full weight bearing (FWB)",
+            "Full weight bearing — no lameness",
+          ]})}
+          {TS({ col: "incision_status", label: "Incision Status", options: [
+            "Healing well — no concern",
+            "Mild erythema",
+            "Mild swelling",
+            "Serosanguinous discharge",
+            "Dehiscence — clinician review",
+            "Infection suspected — URGENT",
+            "Fully healed / staples removed",
+            "Not yet evaluated",
+          ]})}
         </Row>
-        <F label="Affected Limb(s)" options={[
-          "Right forelimb (RF)","Left forelimb (LF)",
-          "Right hindlimb (RH)","Left hindlimb (LH)",
-          "Both hindlimbs","Both forelimbs","All four limbs",
-          "Spinal / truncal","Other"
-        ]}/>
-        <F label="Activity Restrictions" placeholder="e.g. Strict crate rest 2 weeks, leash-only walks, no stairs…" rows={2}/>
+
         <Row cols={3}>
-          <div>
-            <Lbl>E-Collar Required</Lbl>
-            <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => update("treatment::E-Collar Required", data["treatment::E-Collar Required"]==="true" ? "" : "true"))(e); } }} className={`cb-row${data["treatment::E-Collar Required"]==="true"?" active":""}`}
-                 onClick={() => update("treatment::E-Collar Required", data["treatment::E-Collar Required"]==="true" ? "" : "true")}>
-              <input type="checkbox" checked={data["treatment::E-Collar Required"]==="true"} readOnly
-                     style={{ width:15, height:15, accentColor:"#F59E0B", flexShrink:0 }}/>
-              <span style={{ fontSize:11 }}>Yes — E-collar required</span>
-            </div>
-          </div>
-          <div>
-            <Lbl>Strict Crate Rest</Lbl>
-            <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => update("treatment::Strict Crate Rest", data["treatment::Strict Crate Rest"]==="true" ? "" : "true"))(e); } }} className={`cb-row${data["treatment::Strict Crate Rest"]==="true"?" active":""}`}
-                 onClick={() => update("treatment::Strict Crate Rest", data["treatment::Strict Crate Rest"]==="true" ? "" : "true")}>
-              <input type="checkbox" checked={data["treatment::Strict Crate Rest"]==="true"} readOnly
-                     style={{ width:15, height:15, accentColor:"#F59E0B", flexShrink:0 }}/>
-              <span style={{ fontSize:11 }}>Yes — strict crate rest</span>
-            </div>
-          </div>
-          <div>
-            <Lbl>Sling Assist Required</Lbl>
-            <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => update("treatment::Sling Assist Required", data["treatment::Sling Assist Required"]==="true" ? "" : "true"))(e); } }} className={`cb-row${data["treatment::Sling Assist Required"]==="true"?" active":""}`}
-                 onClick={() => update("treatment::Sling Assist Required", data["treatment::Sling Assist Required"]==="true" ? "" : "true")}>
-              <input type="checkbox" checked={data["treatment::Sling Assist Required"]==="true"} readOnly
-                     style={{ width:15, height:15, accentColor:"#F59E0B", flexShrink:0 }}/>
-              <span style={{ fontSize:11 }}>Yes — sling assist</span>
-            </div>
-          </div>
+          {TFlag({ col: "e_collar_required", label: "E-Collar Required" })}
+          {TFlag({ col: "strict_crate_rest", label: "Strict Crate Rest" })}
+          {TFlag({ col: "sling_assist_required", label: "Sling Assist Required" })}
         </Row>
-        <F label="Incision Status" options={[
-          "Healing well — no concern",
-          "Mild erythema",
-          "Mild swelling",
-          "Serosanguinous discharge",
-          "Dehiscence — clinician review",
-          "Infection suspected — URGENT",
-          "Fully healed / staples removed",
-          "Not yet evaluated"
-        ]}/>
+        <div style={{ fontSize:10, color:C.muted, marginTop:-4, marginBottom:10, fontStyle:"italic" }}>
+          "Not asked" is not "No". The engine assumes an e-collar and crate rest ARE
+          required in the two weeks after surgery unless a clinician says otherwise,
+          so leaving these unanswered keeps the cautious assumption rather than
+          removing it.
+        </div>
+
+        {TS({ col: "activity_restrictions", label: "Activity Restrictions",
+              placeholder: "e.g. Strict crate rest 2 weeks, leash-only walks, no stairs…", rows: 2 })}
+        {TS({ col: "clinical_notes", label: "Clinical Notes", rows: 2 })}
+
+        {tx.data && tx.data.statusHistory && tx.data.statusHistory.length > 1 && (
+          <details style={{ marginTop:12 }}>
+            <summary style={{ fontSize:11, color:C.muted, cursor:"pointer" }}>
+              Progression — {tx.data.statusHistory.length} recorded states
+            </summary>
+            <div style={{ marginTop:8 }}>
+              {tx.data.statusHistory.map(h => (
+                <div key={h.id} style={{ fontSize:11, padding:"6px 9px", borderLeft:`2px solid ${C.border}`, marginBottom:4 }}>
+                  <span style={{ color:C.muted }}>{h.effective_date}</span>
+                  {h.effective_date_is_unknown ? <span style={{ color:C.muted }}> (date not stated)</span> : null}
+                  {"  "}{h.weight_bearing_status || "—"}
+                  {h.incision_status ? ` · ${h.incision_status}` : ""}
+                </div>
+              ))}
+            </div>
+          </details>
+        )}
+      </Sec>
+    )}
+
+    {approach === "Surgical" && (
+      <Sec title="Affected Limb(s)" color="#F59E0B" colorLt="#FFFBEB">
+        <div style={{ fontSize:11, color:C.muted, marginBottom:10, lineHeight:1.65 }}>
+          The LIMB, which is a different fact from the affected area below. The
+          protocol engine routes on the anatomical area; the limb is recorded for
+          the chart and is deliberately never fed to it, because the two use
+          different vocabularies and feeding it the wrong one changes which
+          protocol runs.
+        </div>
+        <div style={{ maxWidth:340 }}>
+          <Lbl>Affected Limb(s)</Lbl>
+          <select value={(tx.data && tx.data.affected_limbs) || ""}
+                  disabled={txBusy === "limbs" || !patientId}
+                  onChange={e => saveCase({ affected_limbs: e.target.value }, "limbs")}
+                  style={{ width:"100%", padding:"8px 10px", border:`1px solid ${C.border}`,
+                           borderRadius:5, fontSize:12, opacity: txBusy === "limbs" ? 0.6 : 1 }}>
+            <option value="">— Select —</option>
+            {["Right forelimb (RF)","Left forelimb (LF)",
+              "Right hindlimb (RH)","Left hindlimb (LH)",
+              "Both hindlimbs","Both forelimbs","All four limbs",
+              "Spinal / truncal","Other"].map(o => <option key={o} value={o}>{o}</option>)}
+          </select>
+        </div>
       </Sec>
     )}
 
@@ -1824,15 +2094,14 @@ function TreatmentPanel() {
             "Tarsus — right","Tarsus — left",
             "Multiple joints","Generalized","Other"
           ]}/>
-          <F label="Weight Bearing Status" options={[
-            "Full weight bearing — no lameness",
-            "Full weight bearing — intermittent lameness",
-            "Partial weight bearing",
-            "Toe-touching (TTWB)",
-            "Non-weight bearing (NWB)"
-          ]}/>
+          {/* Weight Bearing Status was duplicated here. It is one stored
+              value — patient_treatment_status.weight_bearing_status — and it
+              is edited in "Current Treatment Status" above, which every
+              approach now shows. Two controls writing one fact is how a
+              screen starts disagreeing with itself. */}
         </Row>
-        <F label="Activity Restrictions" placeholder="e.g. Leash walks only, no running, no stairs, restricted play…" rows={2}/>
+        {/* Activity Restrictions was duplicated here for the same reason;
+            it is recorded in "Current Treatment Status" above. */}
         <F label="Current Medications" placeholder="NSAIDs, gabapentin, supplements — include dose and frequency" rows={2}/>
         <F label="Referral Source" options={[
           "Primary care veterinarian",

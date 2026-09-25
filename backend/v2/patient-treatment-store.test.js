@@ -439,6 +439,59 @@ const ACTOR = { id: 1 };
     assert.strictEqual(r.configured, false);
   });
 
+  // ── the PANEL and the store agree ───────────────────────────────────────
+  //
+  // The third column of the V3 table, enforced. A block is not merged while
+  // its panel still writes the blob, and on 2026-09-25 `client` had been
+  // marked MERGED for a day while its panel wrote every demographic into
+  // `dashboard_data`. Nothing caught it because nothing looked at the screen.
+  //
+  // This reads the REAL DashboardView.jsx and fails if the treatment panel
+  // writes a `treatment::` key for a field the store owns.
+
+  await test('the treatment panel writes NO field the store owns', async () => {
+    const jsxPath = path.join(__dirname, '..', '..', 'k9-rehab-frontend', 'src', 'pages', 'DashboardView.jsx');
+    const jsx = fs.readFileSync(jsxPath, 'utf8');
+
+    const start = jsx.indexOf('function TreatmentPanel()');
+    assert.ok(start > 0, 'TreatmentPanel not found — has it been renamed?');
+    const end = jsx.indexOf('\nfunction ', start + 10);
+    const panel = jsx.slice(start, end > 0 ? end : jsx.length);
+
+    // The labels the V1 form used for the fields this store now owns.
+    const OWNED = [
+      'Approach', 'Affected Limb(s)',
+      'Surgery Type', 'Surgery Date', 'Surgeon Name',
+      'Weight Bearing Status', 'Incision Status',
+      'E-Collar Required', 'Strict Crate Rest', 'Sling Assist Required',
+      'Activity Restrictions', 'Clinical Notes',
+    ];
+
+    const written = new Set([
+      ...[...panel.matchAll(/<F\s[^>]*?label="([^"]+)"/g)].map((m) => m[1]),
+      ...[...panel.matchAll(/update\("treatment::([^"]+)"/g)].map((m) => m[1]),
+    ]);
+
+    const leaks = OWNED.filter((f) => written.has(f));
+    assert.deepStrictEqual(leaks, [],
+      'The treatment panel still writes these to `dashboard_data`, and the '
+      + 'engine reads them from the store:\n    ' + leaks.join('\n    ')
+      + '\n  A clinician editing them would not change the protocol.');
+  });
+
+  await test('and it reads the treatment endpoint', async () => {
+    // The other half. A panel that writes the store but reads the blob shows
+    // a clinician stale values it is about to overwrite.
+    const jsxPath = path.join(__dirname, '..', '..', 'k9-rehab-frontend', 'src', 'pages', 'DashboardView.jsx');
+    const jsx = fs.readFileSync(jsxPath, 'utf8');
+    const start = jsx.indexOf('function TreatmentPanel()');
+    const end = jsx.indexOf('\nfunction ', start + 10);
+    const panel = jsx.slice(start, end > 0 ? end : jsx.length);
+    assert.ok(/\/treatment`/.test(panel),
+      'the panel never fetches /patients/:id/treatment, so it is writing a '
+      + 'store it cannot see');
+  });
+
   // ── the store and the schema agree ──────────────────────────────────────
   await test('every field the store writes exists in the schema file', async () => {
     const declared = new Set(

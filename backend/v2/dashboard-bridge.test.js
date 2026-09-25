@@ -50,16 +50,33 @@ function test(name, fn) {
 function optionsFor(label) {
   const src = fs.readFileSync(DASHBOARD, 'utf8');
   const found = [];
-  const block = new RegExp(
-    'label=\\{?"' + label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '"\\}?([\\s\\S]{0,1200}?)(?:\\/>|<\\/F>)',
-    'g'
-  );
-  let m;
-  while ((m = block.exec(src))) {
-    const opts = /options=\{\[([\s\S]*?)\]\}/.exec(m[1]);
-    if (!opts) continue;
-    for (const s of opts[1].match(/"(?:[^"\\]|\\.)*"/g) || []) {
-      found.push(JSON.parse(s));
+  const esc = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+  // TWO SHAPES, because the dashboard has two.
+  //
+  //   <F label="Incision Status" options={[ ... ]}/>
+  //   TS({ col: "…", label: "Incision Status", options: [ ... ] })
+  //
+  // The second appeared on 2026-09-25 when the treatment panel moved onto the
+  // V3 store and its controls became calls rather than elements. The extractor
+  // matched only the first, so three incision-status tests — including the one
+  // asserting that dehiscence and suspected infection HARD-BLOCK generation —
+  // started failing. That is the good outcome: the guard test below exists so
+  // a refactor cannot leave them quietly checking an empty list instead.
+  const blocks = [
+    new RegExp('label=\\{?"' + esc + '"\\}?([\\s\\S]{0,1200}?)(?:\\/>|<\\/F>)', 'g'),
+    new RegExp('label:\\s*"' + esc + '"([\\s\\S]{0,1200}?)\\}\\)', 'g'),
+  ];
+  const lists = [/options=\{\[([\s\S]*?)\]\}/, /options:\s*\[([\s\S]*?)\]/];
+
+  for (let i = 0; i < blocks.length; i++) {
+    let m;
+    while ((m = blocks[i].exec(src))) {
+      const opts = lists[i].exec(m[1]);
+      if (!opts) continue;
+      for (const s of opts[1].match(/"(?:[^"\\]|\\.)*"/g) || []) {
+        found.push(JSON.parse(s));
+      }
     }
   }
   return found;
