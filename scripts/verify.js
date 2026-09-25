@@ -115,6 +115,14 @@ const CHECKS = [
   // can never reach B.E.A.U. uncoded.
   { name: 'K9 · goals',                cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/goals.test.js'],
     ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
+  // V3: the treatment block, and the first V3 block that feeds the ENGINE —
+  // two of the three blob-only safety gates are treatment fields. Guards that
+  // a status row is INSERTED and never updated (the progression is the
+  // record), that the tri-state survives (NULL is "unanswered", 0 is "no", and
+  // the e-collar and crate-rest gates default to REQUIRED), and that a partial
+  // write does not blank what it never named.
+  { name: 'K9 · treatment store (V3)', cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/patient-treatment-store.test.js'],
+    ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
   // One library, one identifier, one stated size. `all-exercises.js` is THE
   // library; the `exercises_v2` table is a different one with a disjoint id
   // scheme, and an endpoint keyed one by the other 404'd on every code the
