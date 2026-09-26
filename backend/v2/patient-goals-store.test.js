@@ -307,17 +307,41 @@ const addGoal = (db, over = {}) => store.addGoalItem(db, {
       assert.strictEqual(r.review.unreviewed, r.items.length,
         `${p.name}: a goal is marked reviewed but nobody has reviewed one yet`);
     }
-    assert.strictEqual(withGoals, 5, `expected 5 migrated goal sets, found ${withGoals}`);
-    assert.strictEqual(items, 16, `expected 16 migrated goals, found ${items}`);
+    // FLOORS, NOT EXACT COUNTS — see patient-home-store.test.js. These broke
+    // when Sal recorded goals for a sixth patient. Each set is still checked
+    // in the loop above; what matters here is that the migrated ones survive.
+    assert.ok(
+      withGoals >= 5,
+      `expected at least the 5 migrated goal sets, found ${withGoals}`
+    );
+    assert.ok(
+      items >= 16,
+      `expected at least the 16 migrated goals, found ${items}`
+    );
   });
 
   await test('every migrated goal kept its horizon and kind', async () => {
     const raw = new DatabaseSync(REAL_DB, { readOnly: true });
     const rows = raw.prepare('SELECT horizon, kind, source_field FROM patient_goal_items').all();
+
+    // MIGRATED IS NOT THE SAME AS ALL. `source_field` records which blob key a
+    // goal was migrated OUT OF. A goal typed straight into the Goals block has
+    // no such key and correctly has none — requiring it on every row made the
+    // suite fail the first time a clinician added a goal by hand, which is the
+    // block working as designed.
+    //
+    // So: horizon and kind are checked on EVERY row, because they are the
+    // vocabulary and no row may be outside it. The provenance check is scoped
+    // to the migrated set, and asserted as a floor so the migration cannot be
+    // silently undone.
+    const migrated = rows.filter((r) => r.source_field);
+    assert.ok(
+      migrated.length >= 16,
+      `the 16 migrated goals must still carry their source_field, found ${migrated.length}`
+    );
     for (const r of rows) {
       assert.ok(['SHORT', 'LONG'].includes(r.horizon), `bad horizon ${r.horizon}`);
       assert.ok(['CLINICAL', 'FUNCTIONAL', 'OWNER'].includes(r.kind), `bad kind ${r.kind}`);
-      assert.ok(r.source_field, 'a migrated goal must say which field it came from');
     }
   });
 

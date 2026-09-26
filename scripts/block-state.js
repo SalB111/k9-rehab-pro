@@ -81,6 +81,37 @@ function panelWrites(block) {
   return { labels, updates: [...new Set(updates)], readsV3 };
 }
 
+/**
+ * THE FOURTH TEST, added 2026-09-26.
+ *
+ * MERGED was three tests — own table, engine off the blob, panel off the
+ * blob — and none asked whether some OTHER SCREEN still reads the block's
+ * blob keys. The Protocol Summary did, for goals and treatment, and both
+ * blocks passed all three tests while that page showed Haley nothing at all
+ * and showed Winston a weight-bearing status his own record had superseded
+ * eight hours earlier.
+ *
+ * A panel reading its OWN block's keys is the third test's business. This
+ * counts everybody else.
+ */
+function foreignReads(block) {
+  const re = new RegExp('"' + block + '::([^"]+)"', 'g');
+  const out = [];
+  for (const p of panels) {
+    if (p.block === block) continue;
+    const body = p.body.split('\n')
+      .filter((l) => { const t = l.trim(); return !t.startsWith('//') && !t.startsWith('*'); })
+      .join('\n');
+    for (const hit of body.matchAll(re)) {
+      // A WRITE belongs to the owning panel and is already counted by
+      // panelWrites. Only a READ by somebody else belongs here.
+      if (body.includes('update("' + block + '::' + hit[1] + '"')) continue;
+      out.push({ panel: p.block + 'Panel', key: block + '::' + hit[1] });
+    }
+  }
+  return out;
+}
+
 // ── engine inputs still sourced from each block's blob keys ───────────────
 const engineFrom = {};
 for (const e of bridge.MAP) {
@@ -93,7 +124,7 @@ for (const e of bridge.MAP) {
 console.log('');
 console.log('  V3 BLOCK STATE   (read only)');
 console.log('  ' + '='.repeat(86));
-console.log('  block          own table(s)                    engine   panel writes blob');
+console.log('  block          own table(s)                    engine   panel writes blob               other screens');
 console.log('  ' + '-'.repeat(86));
 
 const notMerged = [];
@@ -105,14 +136,18 @@ for (const block of Object.keys(TABLES)) {
   const w = panelWrites(block);
   const engine = engineFrom[block] ? engineFrom[block].size : 0;
   const writes = w ? (w.labels.length + w.updates.length) : 0;
+  const foreign = foreignReads(block);
 
   console.log('  ' + block.padEnd(15)
     + (rows.length ? rows.join(' ') : '—').padEnd(32)
     + String(engine).padEnd(9)
-    + (w ? `${w.labels.length} <F> + ${w.updates.length} update()${w.readsV3 ? '  (reads V3)' : ''}` : 'no panel'));
+    + (w ? `${w.labels.length} <F> + ${w.updates.length} update()${w.readsV3 ? ' (reads V3)' : ''}` : 'no panel').padEnd(32)
+    + (TABLES[block].length
+      ? (foreign.length ? String(foreign.length) + ' !' : '0')
+      : '—'));
 
-  if (TABLES[block].length && (engine > 0 || writes > 0)) {
-    notMerged.push({ block, engine, writes, w });
+  if (TABLES[block].length && (engine > 0 || writes > 0 || foreign.length > 0)) {
+    notMerged.push({ block, engine, writes, w, foreign });
   }
 }
 
@@ -135,6 +170,14 @@ if (notMerged.length) {
       for (const l of [...n.w.labels, ...n.w.updates]) console.log('          ' + l);
       console.log('      Some of these may be fields the store never claimed rather than');
       console.log('      un-rewired copies. Check each against the store\'s column list.');
+    }
+    if (n.foreign && n.foreign.length) {
+      console.log('      ' + n.foreign.length + ' blob key(s) read by ANOTHER screen:');
+      for (const f of n.foreign) console.log('          ' + f.panel + '  <-  ' + f.key);
+      console.log('      The store owns these. Whatever that screen shows is whatever was');
+      console.log('      left in the blob, which stops being true the moment anyone edits');
+      console.log('      the block. This is how the Protocol Summary came to show Winston a');
+      console.log('      weight-bearing status his own record had already superseded.');
     }
   }
 }

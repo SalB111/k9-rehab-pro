@@ -228,7 +228,19 @@ const ACTOR = { id: 1, username: 'sal', role: 'admin' };
       assert.deepStrictEqual(r.uninterpreted, [],
         `${p.name}: ${r.uninterpreted.map((u) => u.stated).join(', ')}`);
     }
-    assert.strictEqual(withHome, 5, `expected 5 migrated home records, found ${withHome}`);
+    // A FLOOR, NOT AN EXACT COUNT. This asserted exactly 5 and broke the day
+    // Sal recorded a home environment for a SIXTH patient through the UI —
+    // which is the feature working, not a regression. The invariant worth
+    // protecting is that the five migrated records still read from the table;
+    // every record is checked field-by-field in the loop above regardless of
+    // how it got there.
+    //
+    // Third time this pattern has bitten. A MIGRATION TEST MUST NOT ASSERT AN
+    // EXACT COUNT OF A LIVE TABLE — the table keeps being used.
+    assert.ok(
+      withHome >= 5,
+      `expected at least the 5 migrated home records, found ${withHome}`
+    );
   });
 
   await test('the Home panel renders what the API serves, and hardcodes no field', async () => {

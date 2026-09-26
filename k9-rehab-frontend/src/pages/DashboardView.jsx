@@ -3203,8 +3203,56 @@ REQUIREMENTS:
 // ── PROTOCOL SUMMARY (Block 10) ──────────────────────────────────────────────
 // 6-card summary grid showing live dashData, exercise library count bar,
 // compliance checkbox, and GENERATE EXERCISE PROTOCOL button.
+/**
+ * THE PROTOCOL SUMMARY READS THE STORES, NOT THE BLOB.
+ *
+ * Until 2026-09-26 this panel read 8 `dashboard_data` keys belonging to two
+ * blocks that had already been migrated to their own tables — 2 goals and 6
+ * treatment. The readers were never repointed, and nothing noticed because
+ * MERGED was defined as three tests (own table / engine off the blob / panel
+ * off the blob) and NONE of them asks whether some OTHER screen still reads it.
+ *
+ * What that cost, measured on the live database:
+ *
+ *   Haley    blank for all 8, while her record held FWB, her activity
+ *            restrictions, a goal item and her owner's priority
+ *   Winston  showed "Partial weight bearing (PWB)" while his record said
+ *            "Full weight bearing (FWB)" — the blob kept a value his store had
+ *            superseded eight hours earlier
+ *
+ * The second one is why this is not cosmetic. This is the page a clinician
+ * reads BEFORE SIGN-OFF, and it was presenting a stale weight-bearing status
+ * as current.
+ *
+ * NO BLOB FALLBACK. The stores cover every patient, so a fallback would gain
+ * nothing and would be exactly what kept showing Winston's stale value.
+ * Assessment, client, conditioning and protocol keys are still read from the
+ * blob below, deliberately — those blocks are untouched or PARTIAL, so the
+ * blob is still their correct source.
+ */
 function ProtocolPanel({ patientName, patientData }) {
-  const { data, update, beauVoice: bv, uiLang } = useContext(DashFormContext);
+  const { data, update, beauVoice: bv, uiLang, patientId } = useContext(DashFormContext);
+
+  // ── The two V3 stores this summary reports on ──
+  // Same load shape as GoalsPanel and TreatmentPanel, against the endpoints
+  // they already use: v2-router.js:195 and :340.
+  const [stores, setStores] = useState({ loading: true, goals: null, treatment: null });
+  const storeApiBase = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+  const storeHeaders = () => {
+    const token = localStorage.getItem("token");
+    return { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) };
+  };
+  const loadStores = React.useCallback(() => {
+    if (!patientId) { setStores({ loading: false, goals: null, treatment: null }); return; }
+    Promise.all([
+      fetch(`${storeApiBase}/v2/patients/${patientId}/goals`, { headers: storeHeaders() })
+        .then(r => r.json()).then(j => j.data || null).catch(() => null),
+      fetch(`${storeApiBase}/v2/patients/${patientId}/treatment`, { headers: storeHeaders() })
+        .then(r => r.json()).then(j => j.data || null).catch(() => null),
+    ]).then(([goals, treatment]) => setStores({ loading: false, goals, treatment }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storeApiBase, patientId]);
+  useEffect(loadStores, [loadStores]);
 
   // ── State ──
   const [generating, setGenerating] = useState(false);
@@ -3251,22 +3299,34 @@ function ProtocolPanel({ patientName, patientData }) {
   const liveLameness = data["assessment::Lameness Grade"] || "";
   const livePain = data["assessment::CSU Acute Pain Score (0–4)"] || "";
 
-  const liveApproach = data["treatment::Approach"] || "";
-  const liveSurgeryType = data["treatment::Surgery Type"] || "";
-  const liveSurgeryDate = data["treatment::Surgery Date"] || "";
-  const liveWBStatus = data["treatment::Weight Bearing Status"] || "";
+  // ── Treatment, from patient_procedures + patient_treatment_status ──
+  // `status` is the store's CURRENT row; it orders by effective_date DESC and
+  // hands back history[0]. Reading it is what fixes Winston.
+  const tx = stores.treatment;
+  const txStatus = (tx && tx.status) || null;
+  const txProcedure = (tx && tx.procedures && tx.procedures[0]) || null;
 
+  const liveApproach = (tx && tx.approach) || "";
+  const liveSurgeryType = (txProcedure && txProcedure.procedure_type) || "";
+  const liveSurgeryDate = (txProcedure && txProcedure.procedure_date) || "";
+  const liveWBStatus = (txStatus && txStatus.weight_bearing_status) || "";
+  const liveRegion = (tx && tx.affected_limbs) || "";
+
+  // Conditioning has no store yet, so the blob is still its correct source.
   const liveCondition = data["conditioning::Conditioning Phase"] || "";
-  const liveRegion = data["treatment::Affected Limb(s)"] || "";
 
-  const liveGoals = data["goals::Primary Rehabilitation Goals"] || "";
-  const liveGoalsList = liveGoals ? liveGoals.split("||").filter(Boolean) : [];
-  const liveShortTerm = data["goals::Short-Term Clinical Goals"] || "";
+  // ── Goals, from patient_goals + patient_goal_items ──
+  const gl = stores.goals;
+  const liveGoalsList = ((gl && gl.primary_goals) || [])
+    .map(g => g && g.stated).filter(Boolean);
+  const liveShortTerm = ((gl && gl.items) || [])
+    .filter(i => i && i.horizon === "SHORT" && i.kind === "CLINICAL")
+    .map(i => i.goal_text).filter(Boolean).join("; ");
 
   // Safety flags
   const painNRS = parseInt(data["assessment::Numeric Rating Scale (NRS 0–10)"], 10);
   const deepPain = data["assessment::Deep Pain Perception"] || "";
-  const incision = data["assessment::Incision Status"] || data["treatment::Incision Status"] || "";
+  const incision = data["assessment::Incision Status"] || (txStatus && txStatus.incision_status) || "";
   const flags = [];
   if (!isNaN(painNRS) && painNRS >= 8) flags.push({ label: "Pain ≥ 8/10 — BLOCKS protocol", color: C.red });
   if (deepPain.toLowerCase().includes("absent")) flags.push({ label: "Deep pain absent — BLOCKS protocol", color: C.red });
@@ -3275,10 +3335,14 @@ function ProtocolPanel({ patientName, patientData }) {
   if (liveLameness.includes("Grade 5")) flags.push({ label: "Grade 5 lameness — passive exercises only", color: C.amber });
   const hasBlockingFlag = flags.some(f => f.color === C.red);
 
-  // Required fields check for generate button
+  // Required fields check for generate button.
+  // `stores.loading` is checked because liveApproach comes from a fetch: an
+  // unloaded store is not an empty one, and reading it as empty would flash
+  // "missing required fields" over a complete record.
   const hasRequiredFields = !!(livePatientName && (liveDiagnosis || liveApproach));
 
-  const canGenerate = complianceChecked && hasRequiredFields && !hasBlockingFlag;
+  const canGenerate = complianceChecked && hasRequiredFields
+    && !hasBlockingFlag && !stores.loading;
 
   // ── Card style ──
   const cardStyle = (accent) => ({
@@ -3533,7 +3597,7 @@ EVIDENCE BASIS`;
           <div style={{ padding:"12px 16px", background:C.tealLt, border:`1px solid ${C.teal}44`, borderRadius:6, fontSize:11, color:C.teal, fontWeight:600, lineHeight:1.6 }}>
             <div style={{ fontSize:10, fontWeight:700, letterSpacing:".1em", marginBottom:6 }}>✓ VERIFICATION COMPLETE</div>
             <div>• Checked exercises against patient assessment data</div>
-            <div>• Weight bearing status: {data["assessment::Current Mobility Level"] || data["treatment::Weight Bearing Status"] || "Not specified"}</div>
+            <div>• Weight bearing status: {data["assessment::Current Mobility Level"] || liveWBStatus || "Not specified"}</div>
             <div>• Neurological grade: {data["assessment::Neurological Grade (Frankel Modified)"] || "Not assessed"}</div>
             <div>• Pain score: {data["assessment::Numeric Rating Scale (NRS 0–10)"] || "Not assessed"}</div>
             {hasBlockingFlag && (

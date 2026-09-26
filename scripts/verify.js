@@ -129,6 +129,14 @@ const CHECKS = [
   // every space in every field, and phone numbers stored however they arrived.
   { name: 'K9 · dashboard form',      cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/dashboard-form.test.js'],
     ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
+  // The SIGN-OFF page must show what the record holds. ProtocolPanel read 8
+  // dashboard_data keys belonging to two blocks that already owned tables, so
+  // Haley was blank and Winston showed a weight-bearing status his own record
+  // had superseded eight hours earlier. MERGED had three tests and none of
+  // them asked whether some OTHER screen still read the blob; the last check
+  // in this suite is that fourth test.
+  { name: 'K9 · protocol summary',   cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/protocol-summary.test.js'],
+    ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
   // One library, one identifier, one stated size. `all-exercises.js` is THE
   // library; the `exercises_v2` table is a different one with a disjoint id
   // scheme, and an endpoint keyed one by the other 404'd on every code the

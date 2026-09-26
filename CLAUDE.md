@@ -152,30 +152,63 @@ still being called "the next block". Every individual statement made was true;
 the work still drifted, because the goal lived only in conversation and
 conversation gets summarised. That is why this is written here.
 
-### Verified state, 2026-09-25
+### Verified state, 2026-09-26
 
-**MERGED means three things, not one.** The template in commit `9e8f407` says:
+**MERGED means FOUR things, not three.** The template in commit `9e8f407` says:
 give the block one real home, point **both screens** at it, fold the old copies
-in. So a block is merged only when all three hold:
+in. A block is merged only when all four hold:
 
 1. it has its own table
-2. **nothing reads the blob** for its fields — the engine least of all
+2. **the engine does not read the blob** for its fields
 3. **the panel writes the store**, not `dashboard_data`
+4. **no OTHER screen reads the blob** for its fields
 
-Measured 2026-09-25. Columns 2 and 3 are the ones that were being skipped, and
-the table below is the first version that checks them:
+**Test 4 was added 2026-09-26, and it was added because it was missing.** Sal,
+driving Haley's intake: *"the Goals are not being transferred to the protocol
+summary."* He was right, and it was wider than goals. `ProtocolPanel` read 8
+blob keys belonging to two blocks that already owned tables — 2 goals and 6
+treatment — and **goals and treatment passed all three of the old tests while
+being wrong on that page.** A panel reading its own block's keys is test 3's
+business; nothing asked about everyone else.
 
-| block | own table (rows) | engine reads blob | panel writes blob | verdict |
-|---|---|---|---|---|
-| **home** | `patient_home_environment` (5) | 0 | **0 controls** | **MERGED** |
-| **treatment** | `patient_procedures` (3) + `patient_treatment_status` (5) | 0 gates | 5, none of them migrated fields | **MERGED** |
-| **diagnostics** | `patient_diagnostic_studies` (13) | 0 | 4, none of them migrated fields | MERGED |
-| **goals** | `patient_goals` (5) + `patient_goal_items` (16) | 0 | 15, none of them migrated fields | MERGED |
-| **metrics** | `visit_measurements` (40) | 1 (`bodyConditionScore`) | 8, none of them migrated fields | MERGED |
-| **equipment** | `clinic_capabilities` (2) | 0 | 1, not a migrated field | MERGED |
-| **client** | `patient_client_details` (5) | **4** — age, breed, sex, weight | 7 + 2, all DEMOGRAPHICS | **PARTIAL** |
-| assessment | — | **10**, incl. `neuroDeepPain` [GATE] | 68 + 1 | untouched |
-| conditioning / global / helsinki | — | 0 | no panel / 4 | untouched |
+What it cost, measured on the live database:
+
+- **Haley** — blank for all 8, while her record held `Full weight bearing
+  (FWB)`, her activity restrictions, a goal item and her owner's priority.
+- **Winston** — the summary showed `Partial weight bearing (PWB)` while his
+  record said `Full weight bearing (FWB)`. His store had two rows for
+  2026-09-25, PWB at 04:30 then FWB at 12:56; the blob kept the 04:30 value.
+
+The second is why this is not cosmetic. **This is the page a clinician reads
+before sign-off, and it presented a superseded weight-bearing status as
+current.** A blank field gets noticed. A plausible stale one does not.
+
+Fixed in `ProtocolPanel` the same day: it now fetches
+`GET /v2/patients/:id/goals` and `GET /v2/patients/:id/treatment`, with **no
+blob fallback** — a fallback is precisely what would have kept showing
+Winston's stale value. Nine tests in `backend/v2/protocol-summary.test.js`
+read the real JSX and run the real stores against the real database.
+
+| block | own table (rows) | engine reads blob | panel writes blob | other screens read blob | verdict |
+|---|---|---|---|---|---|
+| **home** | `patient_home_environment` (6) | 0 | **0 controls** | 0 | **MERGED** |
+| **treatment** | `patient_procedures` (3) + `patient_treatment_status` (7) | 0 gates | 5, none of them migrated fields | **0** — was 6 | **MERGED** |
+| **diagnostics** | `patient_diagnostic_studies` (14) | 0 | 4, none of them migrated fields | 0 | MERGED |
+| **goals** | `patient_goals` (6) + `patient_goal_items` (17) | 0 | 15, none of them migrated fields | **0** — was 2 | MERGED |
+| **equipment** | `clinic_capabilities` (2) | 0 | 1, not a migrated field | 0 | MERGED |
+| **metrics** | `visit_measurements` (40) | 1 (`bodyConditionScore`) | 8, none of them migrated fields | **1** — nutrition panel reads `metrics::BCS (1–9)` | **PARTIAL** |
+| **client** | `patient_client_details` (6) | **4** — age, breed, sex, weight | 7 + 2, all DEMOGRAPHICS | **63**, all demographics | **PARTIAL** |
+| assessment | — | **10**, incl. `neuroDeepPain` [GATE] | 68 + 1 | n/a — no store to be wrong about | untouched |
+| conditioning / global / helsinki | — | 0 | no panel / 4 | n/a | untouched |
+
+**metrics moved MERGED → PARTIAL** on test 4. It is the one case the new column
+found that was not already known: `PetCareNutritionPanel` reads
+`metrics::BCS (1–9)` from the blob while `visit_measurements` owns the
+measurement. Small, and not yet fixed — recorded here rather than quietly
+carried.
+
+For blocks with no store of their own, test 4 does not apply: reading their
+blob keys from another screen is the design, not a defect.
 
 **What "none of them migrated fields" means, because it is the load-bearing
 claim in four rows above.** Those panels still contain controls writing
@@ -212,14 +245,19 @@ goes back to the blob or stops reading the endpoint.
 
 ### Re-derive this table
 
-**Do not trust the four columns above.** One command prints all of them:
+**Do not trust the measured columns above.** One command prints all four:
 
     node scripts/block-state.js
 
 Read only. It reads the table row counts from the database, the engine sources
-from `dashboard-bridge.MAP`, and the panel writes out of the real
-`DashboardView.jsx`, and it ends with a list of every block that has a table
-but is not fully merged.
+from `dashboard-bridge.MAP`, and BOTH the panel writes and the foreign reads
+out of the real `DashboardView.jsx`. It ends with a list of every block that
+has a table but is not fully merged, naming which screen reads which key.
+
+The fourth column exists because the table was wrong without it and nobody
+could tell. If you add a test to the definition above, add it here too — a
+document whose claims cannot be re-derived is the thing this whole file was
+written to prevent.
 
 It exists as a script rather than a one-liner here because the one-liner needed
 enough backslash escaping that the shell mangled it — and a document telling
