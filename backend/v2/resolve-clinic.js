@@ -54,4 +54,26 @@ async function requireClinicId(db, actor) {
   return id;
 }
 
-module.exports = { resolveClinicId, requireClinicId };
+/**
+ * The clinic a PATIENT belongs to.
+ *
+ * Added 2026-09-26 with clinic_id, and it is the rule that keeps the columns
+ * honest without threading a parameter through forty call sites: a patient
+ * belongs to a practice, and every record ABOUT that patient — visit,
+ * protocol, handoff, discharge — inherits the clinic at creation.
+ *
+ * Inheriting from a stored fact is not the same as resolving at read time.
+ * The old behaviour asked "which clinic is the current user in" every time a
+ * record was READ, so the answer could change under a record that had not.
+ * This asks once, when the record is made, and writes it down.
+ *
+ * Returns null when the patient has no clinic — which is an honest "not
+ * established" and must not be replaced by a guess.
+ */
+async function clinicOfPatient(db, patientId) {
+  if (!patientId) return null;
+  const row = await db.get('SELECT clinic_id FROM patients WHERE id = ?', [patientId]);
+  return row && row.clinic_id != null ? row.clinic_id : null;
+}
+
+module.exports = { resolveClinicId, requireClinicId, clinicOfPatient };

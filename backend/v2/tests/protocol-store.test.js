@@ -121,7 +121,10 @@ async function freshDb() {
   // owner-reported red flag reached production broken.
   await db.run(`PRAGMA foreign_keys = ON`);
   await db.run(`CREATE TABLE users (id INTEGER PRIMARY KEY, username TEXT, role TEXT)`);
-  await db.run(`CREATE TABLE patients (id INTEGER PRIMARY KEY, name TEXT)`);
+  await db.run(`CREATE TABLE patients (id INTEGER PRIMARY KEY, clinic_id INTEGER, name TEXT)`);
+  // visits, protocols and beau_handoffs carry a foreign key into `clinics`
+  // since 2026-09-26 — every clinical record names where it happened.
+  await db.run(`CREATE TABLE IF NOT EXISTS clinics (id INTEGER PRIMARY KEY, clinic_name TEXT)`);
   await db.run(`INSERT INTO patients (id, name) VALUES (100, 'Rex')`);
   for (const u of [CLINICIAN, TECHNICIAN, OWNER, ADMIN]) {
     await db.run(`INSERT INTO users (id, username, role) VALUES (?, ?, ?)`, [u.id, u.username, u.role]);

@@ -31,6 +31,10 @@ const SQLITE_SCHEMAS = [
   // V3: the treatment block. A procedure is a row with a date; treatment
   // status is a time series so NWB->PWB->FWB is a visible progression.
   'patient-treatment.sqlite.sql',
+  // V3: the end of an episode of care, and WHY it ended. Depends on both of
+  // the files above it: a discharge points at its visit and at the B.E.A.U.
+  // handoff, when there was one.
+  'patient-discharge.sqlite.sql',
 ];
 
 /** Postgres/Supabase equivalents, same order. Kept in parity by tests/schema-parity.test.js. */
@@ -46,6 +50,7 @@ const POSTGRES_SCHEMAS = [
   'patient-diagnostics.postgres.sql',
   'patient-client-details.postgres.sql',
   'patient-treatment.postgres.sql',
+  'patient-discharge.postgres.sql',
 ];
 
 /**

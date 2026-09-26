@@ -52,6 +52,19 @@ CREATE TABLE IF NOT EXISTS visits (
   clinician_username TEXT,
   clinician_role    TEXT,
   visit_notes       TEXT,
+  -- WHERE THIS HAPPENED. Sal, 2026-09-26: "WE SHOULD ALSO IDENTIFY WHICH
+  -- CLINIC WE ARE IN SO IF WE DRIFT WE DONT HAVE TO HUNT LOCATION".
+  --
+  -- No clinical record in this database named its clinic until today. Every
+  -- read resolved it as "the first clinic by id", which is fine with one
+  -- clinic and wrong the moment there are two: on 2026-09-26 that rule
+  -- reported on a clinic that did not exist while the real answers sat on
+  -- clinic 3. Written at creation, never re-derived at read time.
+  --
+  -- Nullable: rows created before 2026-09-26 are backfilled by
+  -- scripts/backfill-clinic-id.js, and NULL means "not yet established"
+  -- rather than a clinic anyone guessed.
+  clinic_id          INTEGER REFERENCES clinics(id),
   created_at        DATETIME DEFAULT CURRENT_TIMESTAMP,
   completed_at      DATETIME,
   FOREIGN KEY (patient_id) REFERENCES patients(id),

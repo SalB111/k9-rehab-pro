@@ -33,6 +33,9 @@ CREATE TABLE IF NOT EXISTS v2_protocols (
   current_version_id  BIGINT,
   status              TEXT NOT NULL DEFAULT 'DRAFT',
   created_by          BIGINT REFERENCES users(id),
+  -- See the SQLite mirror: written at creation, never re-derived at read
+  -- time. Nullable because pre-2026-09-26 rows are backfilled separately.
+  clinic_id          BIGINT,
   created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -157,6 +160,9 @@ CREATE TABLE IF NOT EXISTS v2_beau_handoffs (
   payload_hash         TEXT NOT NULL,
   status               TEXT NOT NULL DEFAULT 'ACTIVE',
   handed_off_by        BIGINT REFERENCES users(id),
+  -- See the SQLite mirror: written at creation, never re-derived at read
+  -- time. Nullable because pre-2026-09-26 rows are backfilled separately.
+  clinic_id          BIGINT,
   handed_off_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   superseded_at        TIMESTAMPTZ,
   revoked_at           TIMESTAMPTZ,

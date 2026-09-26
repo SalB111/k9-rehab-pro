@@ -65,6 +65,12 @@ async function boot({ seedCapabilities = true, seedClinic = true } = {}) {
   await db.run(`CREATE TABLE clinics (id INTEGER PRIMARY KEY, clinic_name TEXT)`);
   await db.run(`CREATE TABLE patients (
     id INTEGER PRIMARY KEY, name TEXT, client_first_name TEXT, client_last_name TEXT,
+    -- Which clinic this patient belongs to. Added 2026-09-26: visits,
+    -- protocols and handoffs INHERIT it at creation
+    -- (resolve-clinic.clinicOfPatient), so a fixture without it sends every
+    -- createVisit through a "no such column" that surfaces three layers
+    -- away as "Cannot read properties of undefined".
+    clinic_id INTEGER,
     species TEXT, breed TEXT, age REAL, weight REAL, condition TEXT,
     affected_region TEXT, treatment_approach TEXT, surgery_date TEXT,
     medical_history TEXT, current_medications TEXT, special_instructions TEXT,

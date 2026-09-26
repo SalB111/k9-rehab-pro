@@ -3082,6 +3082,370 @@ REQUIREMENTS:
 // ── PROTOCOL SUMMARY (Block 10) ──────────────────────────────────────────────
 // 6-card summary grid showing live dashData, exercise library count bar,
 // compliance checkbox, and GENERATE EXERCISE PROTOCOL button.
+// ── DISCHARGE ─────────────────────────────────────────────────────────────
+/**
+ * The end of an episode of care, and WHY it ended.
+ *
+ * WHAT WAS HERE BEFORE, 2026-09-26
+ *
+ *   await fetch(apiBase + "/patients/" + patientData.id, {
+ *     method: "PUT", body: JSON.stringify({ status: "discharged" }),
+ *   });
+ *   setDischarged(true);
+ *
+ * Three things wrong with four lines. PUT /api/patients/:id does not
+ * destructure `status`, so the field was dropped. `patients` has no `status`
+ * column, so there was nowhere to put it. And the response was never read, so
+ * the screen announced PATIENT DISCHARGED whatever happened. The claim
+ * survived until the next page load and nothing was recorded anywhere — no
+ * date, no clinician, no reason.
+ *
+ * WHY THE REASON IS THE POINT
+ *
+ * Sal, 2026-09-26: "in real life situation, a client may decide to stop after
+ * 1 session 3,3 or even 4 sessions, because may be financial constraints or
+ * has improved doing home exercises may be swants to continue with BEAU".
+ *
+ * Those are different clinical endings, and CLAUDE.md wants outcome data
+ * feeding efficacy tracking. "Improved and went home" counted alongside
+ * "could not afford it" does not lose detail — it makes the protocol look
+ * better or worse than it was.
+ *
+ * THE VOCABULARY IS NOT DEFINED HERE. It is fetched from
+ * GET /v2/discharge/reasons, which serves the store's own list, so this
+ * screen cannot offer an eleventh reason the record will refuse.
+ */
+function DischargeBlock({ patientId, patientName }) {
+  const apiBase = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+  const headers = () => {
+    const token = localStorage.getItem("token");
+    return { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) };
+  };
+
+  const [vocab, setVocab] = useState(null);
+  const [state, setState] = useState({ loading: true, discharged: false, discharge: null });
+  const [open,  setOpen]  = useState(false);
+  const [busy,  setBusy]  = useState(false);
+  const [error, setError] = useState(null);
+  const [reasonEdit, setReasonEdit] = useState("");
+  const [form, setForm] = useState({
+    outcome: "", reason: "", reasonStatus: "KNOWN", reasonNote: "",
+    weekReached: "", phaseReached: "",
+    clinicalOutcome: "NOT_ASSESSED", outcomeMeasuredBy: "",
+    dischargeSummary: "",
+  });
+
+  useEffect(() => {
+    fetch(`${apiBase}/v2/discharge/reasons`, { headers: headers() })
+      .then(r => r.json()).then(j => setVocab(j.data || null))
+      .catch(() => setVocab(null));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [apiBase]);
+
+  const load = React.useCallback(() => {
+    if (!patientId) { setState({ loading: false, discharged: false, discharge: null }); return; }
+    fetch(`${apiBase}/v2/patients/${patientId}/discharge`, { headers: headers() })
+      .then(r => r.json())
+      .then(j => setState({ loading: false, ...(j.data || { discharged: false, discharge: null }) }))
+      .catch(() => setState({ loading: false, discharged: false, discharge: null }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [apiBase, patientId]);
+  useEffect(load, [load]);
+
+  // Reasons for the chosen outcome only. A reason belongs to exactly one
+  // outcome, which is what keeps completions and discontinuations apart.
+  const reasons = (vocab && vocab.reasons ? vocab.reasons : []).filter(r => r.outcome === form.outcome);
+  const unknownPicked = form.reason === "NOT_YET_KNOWN";
+
+  const set = (k, v) => setForm(f => {
+    const next = { ...f, [k]: v };
+    // The fields that constrain each other, kept in step here so a clinician
+    // never meets the store's rejection for a combination the form allowed.
+    if (k === "outcome") { next.reason = ""; next.reasonStatus = "KNOWN"; }
+    if (k === "reason") {
+      next.reasonStatus = v === "NOT_YET_KNOWN"
+        ? (f.reasonStatus === "KNOWN" ? "PENDING_OWNER_CONTACT" : f.reasonStatus)
+        : "KNOWN";
+    }
+    if (k === "clinicalOutcome" && v === "NOT_ASSESSED") next.outcomeMeasuredBy = "";
+    return next;
+  });
+
+  const needsMeasure = form.clinicalOutcome !== "NOT_ASSESSED";
+  const ready = form.outcome && form.reason && (!needsMeasure || form.outcomeMeasuredBy.trim());
+
+  /**
+   * Record the discharge.
+   *
+   * THE RESPONSE IS CHECKED. The version this replaced set its success state
+   * unconditionally inside a try, so a 404, a 500 and a refusal all rendered
+   * as "Patient discharged successfully. Record updated."
+   */
+  const handleDischarge = async () => {
+    if (!patientId || !ready) return;
+    setBusy(true); setError(null);
+    try {
+      const res = await fetch(`${apiBase}/v2/patients/${patientId}/discharge`, {
+        method: "POST",
+        headers: headers(),
+        body: JSON.stringify({
+          outcome: form.outcome,
+          reason: form.reason,
+          reasonStatus: form.reasonStatus,
+          reasonNote: form.reasonNote || null,
+          weekReached: form.weekReached === "" ? null : Number(form.weekReached),
+          phaseReached: form.phaseReached || null,
+          clinicalOutcome: form.clinicalOutcome,
+          outcomeMeasuredBy: form.outcomeMeasuredBy || null,
+          dischargeSummary: form.dischargeSummary || null,
+        }),
+      });
+      const body = await res.json().catch(() => null);
+      if (!res.ok || !body || body.success === false) {
+        setError((body && body.error) || `The server refused the discharge (HTTP ${res.status}). Nothing was recorded.`);
+        return;
+      }
+      setOpen(false);
+      load();
+    } catch (e) {
+      setError(`Could not reach the server: ${e.message}. Nothing was recorded.`);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  /** The answer that arrives after the owner is called back. */
+  const saveReason = async () => {
+    if (!reasonEdit || !state.discharge) return;
+    setBusy(true); setError(null);
+    try {
+      const res = await fetch(`${apiBase}/v2/discharges/${state.discharge.id}/reason`, {
+        method: "POST", headers: headers(),
+        body: JSON.stringify({ reason: reasonEdit, reasonStatus: "KNOWN" }),
+      });
+      const body = await res.json().catch(() => null);
+      if (!res.ok || !body || body.success === false) {
+        setError((body && body.error) || `The server refused the update (HTTP ${res.status}).`);
+        return;
+      }
+      setReasonEdit(""); load();
+    } catch (e) {
+      setError(`Could not reach the server: ${e.message}.`);
+    } finally { setBusy(false); }
+  };
+
+  const labelFor = (code) => {
+    const hit = (vocab && vocab.reasons ? vocab.reasons : []).find(r => r.code === code);
+    return hit ? hit.label : code;
+  };
+
+  const box = { padding: "14px 16px", borderRadius: 6, fontSize: 12, lineHeight: 1.6 };
+  const lbl = { fontSize: 10, fontWeight: 700, letterSpacing: ".08em", color: C.muted, textTransform: "uppercase" };
+  const inp = { width: "100%", padding: "8px 10px", border: `1px solid ${C.border}`, borderRadius: 4, fontSize: 12, background: C.white, color: C.text };
+
+  if (state.loading) {
+    return <div style={{ ...box, background: C.blueLt, color: C.muted }}>Checking the record…</div>;
+  }
+
+  // ── already discharged: show what was recorded ───────────────────────────
+  if (state.discharged && state.discharge) {
+    const d = state.discharge;
+    const done = d.outcome === "COMPLETED";
+    const pending = d.reason_status !== "KNOWN";
+    return (
+      <div style={{ ...box, background: done ? C.greenLt : C.amberLt,
+                    border: `1px solid ${(done ? C.green : C.amber)}44` }}>
+        <div style={{ fontWeight: 700, color: done ? C.green : C.amber, marginBottom: 8 }}>
+          {done ? "CARE COMPLETED" : "CARE DISCONTINUED"} · {d.discharge_date}
+        </div>
+        <div style={{ color: C.text }}>
+          <div>
+            <b>Reason:</b> {labelFor(d.reason)}
+            {pending && (
+              <span style={{ color: C.amber, fontWeight: 700 }}>
+                {" — "}
+                {d.reason_status === "PENDING_OWNER_CONTACT" ? "owner not yet contacted" : "owner could not be reached"}
+              </span>
+            )}
+          </div>
+          {d.reason_note && <div><b>Note:</b> {d.reason_note}</div>}
+          <div>
+            <b>Reached:</b>{" "}
+            {d.week_reached != null
+              ? `week ${d.week_reached}${d.total_weeks ? ` of ${d.total_weeks}` : ""}`
+              : (d.total_weeks ? `not stated (of ${d.total_weeks} weeks)` : "not stated")}
+            {d.phase_reached ? ` · ${d.phase_reached}` : ""}
+            {d.visits_attended != null
+              ? ` · ${d.visits_attended} session${d.visits_attended === 1 ? "" : "s"} attended`
+              : ""}
+          </div>
+          <div>
+            <b>Clinical outcome:</b>{" "}
+            {d.clinical_outcome === "NOT_ASSESSED"
+              ? "not assessed"
+              : `${String(d.clinical_outcome).toLowerCase()} — ${d.outcome_measured_by}`}
+          </div>
+          <div>
+            <b>B.E.A.U. at Home:</b>{" "}
+            {d.handoff_id ? "handed off — the owner is continuing at home" : "no handoff issued"}
+          </div>
+          <div style={{ marginTop: 6, color: C.muted, fontSize: 11 }}>
+            Recorded at {d.clinic_name || `clinic ${d.clinic_id}`}
+            {d.reason_updated_at
+              ? ` · reason added ${String(d.reason_updated_at).slice(0, 10)}, after the discharge`
+              : ""}
+          </div>
+        </div>
+
+        {pending && (
+          <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${C.amber}33` }}>
+            <div style={lbl}>Owner contacted — record why care stopped</div>
+            <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
+              <select style={inp} value={reasonEdit} onChange={e => setReasonEdit(e.target.value)}>
+                <option value="">Select…</option>
+                {(vocab && vocab.reasons ? vocab.reasons : [])
+                  .filter(r => r.outcome === d.outcome && r.code !== "NOT_YET_KNOWN")
+                  .map(r => <option key={r.code} value={r.code}>{r.label}</option>)}
+              </select>
+              <button onClick={saveReason} disabled={!reasonEdit || busy}
+                style={{ padding: "8px 16px", border: "none", borderRadius: 4, whiteSpace: "nowrap",
+                         background: reasonEdit ? C.navy : "#e2e8f0", color: reasonEdit ? C.white : C.muted,
+                         cursor: reasonEdit ? "pointer" : "not-allowed", fontSize: 11, fontWeight: 700 }}>
+                SAVE REASON
+              </button>
+            </div>
+          </div>
+        )}
+        {error && <div style={{ marginTop: 8, color: C.red, fontSize: 11, fontWeight: 600 }}>{error}</div>}
+      </div>
+    );
+  }
+
+  // ── not discharged ───────────────────────────────────────────────────────
+  if (!open) {
+    return (
+      <button onClick={() => setOpen(true)} disabled={!patientId}
+        style={{ width: "100%", padding: "14px", border: "none", borderRadius: 6,
+                 background: patientId ? C.amber : "#e2e8f0", color: patientId ? C.white : C.muted,
+                 cursor: patientId ? "pointer" : "not-allowed",
+                 fontSize: 13, fontWeight: 700, letterSpacing: ".08em" }}>
+        END EPISODE OF CARE
+      </button>
+    );
+  }
+
+  return (
+    <div style={{ ...box, background: C.white, border: `1px solid ${C.border}` }}>
+      <div style={{ fontWeight: 700, color: C.navy, marginBottom: 10 }}>
+        End the episode of care{patientName ? ` — ${patientName}` : ""}
+      </div>
+
+      <div style={{ display: "grid", gap: 12 }}>
+        <div>
+          <div style={lbl}>How did care end?</div>
+          <select style={inp} value={form.outcome} onChange={e => set("outcome", e.target.value)}>
+            <option value="">Select…</option>
+            <option value="COMPLETED">Completed — the protocol ran its course</option>
+            <option value="DISCONTINUED">Discontinued — care stopped before the protocol finished</option>
+          </select>
+        </div>
+
+        {form.outcome && (
+          <div>
+            <div style={lbl}>Why</div>
+            <select style={inp} value={form.reason} onChange={e => set("reason", e.target.value)}>
+              <option value="">Select…</option>
+              {reasons.map(r => <option key={r.code} value={r.code}>{r.label}</option>)}
+            </select>
+          </div>
+        )}
+
+        {unknownPicked && (
+          <div>
+            <div style={lbl}>Owner contact</div>
+            <select style={inp} value={form.reasonStatus} onChange={e => set("reasonStatus", e.target.value)}>
+              <option value="PENDING_OWNER_CONTACT">Contacting the owner to find out</option>
+              <option value="OWNER_UNREACHABLE">Owner could not be reached</option>
+            </select>
+            <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>
+              Recorded as an unknown reason, not as a blank. The answer can be added
+              here once the owner has been reached.
+            </div>
+          </div>
+        )}
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          <div>
+            <div style={lbl}>Week reached (optional)</div>
+            <input style={inp} type="number" min="0" value={form.weekReached}
+              onChange={e => set("weekReached", e.target.value)} placeholder="e.g. 5"/>
+          </div>
+          <div>
+            <div style={lbl}>Phase reached (optional)</div>
+            <input style={inp} value={form.phaseReached}
+              onChange={e => set("phaseReached", e.target.value)} placeholder="e.g. Early Mobilization"/>
+          </div>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          <div>
+            <div style={lbl}>Clinical outcome</div>
+            <select style={inp} value={form.clinicalOutcome} onChange={e => set("clinicalOutcome", e.target.value)}>
+              <option value="NOT_ASSESSED">Not assessed</option>
+              <option value="IMPROVED">Improved</option>
+              <option value="UNCHANGED">Unchanged</option>
+              <option value="WORSE">Worse</option>
+            </select>
+          </div>
+          <div>
+            <div style={lbl}>Measured against {needsMeasure ? "(required)" : ""}</div>
+            <input style={{ ...inp, background: needsMeasure ? C.white : "#f1f5f9" }}
+              value={form.outcomeMeasuredBy} disabled={!needsMeasure}
+              onChange={e => set("outcomeMeasuredBy", e.target.value)}
+              placeholder="HCPI, lameness grade, ROM, observation…"/>
+          </div>
+        </div>
+        {needsMeasure && !form.outcomeMeasuredBy.trim() && (
+          <div style={{ fontSize: 11, color: C.amber }}>
+            A stated outcome has to say what it was judged against — otherwise it is an
+            opinion recorded as a finding.
+          </div>
+        )}
+
+        <div>
+          <div style={lbl}>Discharge summary / note (optional)</div>
+          <textarea style={{ ...inp, minHeight: 64, resize: "vertical" }} value={form.dischargeSummary}
+            onChange={e => set("dischargeSummary", e.target.value)}
+            placeholder="Instructions for the owner, follow-up, anything the list does not cover…"/>
+        </div>
+
+        {error && (
+          <div style={{ padding: "8px 12px", background: C.redLt, border: `1px solid ${C.red}44`,
+                        borderRadius: 4, color: C.red, fontSize: 11, fontWeight: 600 }}>
+            {error}
+          </div>
+        )}
+
+        <div style={{ display: "flex", gap: 10 }}>
+          <button onClick={handleDischarge} disabled={!ready || busy}
+            style={{ flex: 1, padding: "12px", border: "none", borderRadius: 6,
+                     background: ready && !busy ? C.amber : "#e2e8f0",
+                     color: ready && !busy ? C.white : C.muted,
+                     cursor: ready && !busy ? "pointer" : "not-allowed",
+                     fontSize: 12, fontWeight: 700, letterSpacing: ".06em" }}>
+            {busy ? "RECORDING…" : "RECORD DISCHARGE"}
+          </button>
+          <button onClick={() => { setOpen(false); setError(null); }} disabled={busy}
+            style={{ padding: "12px 20px", border: `1px solid ${C.border}`, borderRadius: 6,
+                     background: C.white, color: C.muted, cursor: "pointer", fontSize: 12, fontWeight: 700 }}>
+            CANCEL
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /**
  * THE PROTOCOL SUMMARY READS THE STORES, NOT THE BLOB.
  *
@@ -3139,8 +3503,6 @@ function ProtocolPanel({ patientName, patientData }) {
   const [copied,     setCopied]     = useState(false);
   const [complianceChecked, setComplianceChecked] = useState(false);
   const [exCount, setExCount] = useState(null);
-  const [discharging, setDischarging] = useState(false);
-  const [discharged,  setDischarged]  = useState(false);
 
   // Auto-populate Sign-Off Date on first open (no-op if already set).
   useEffect(() => {
@@ -3295,25 +3657,12 @@ EVIDENCE BASIS`;
 
   const copy = () => { navigator.clipboard?.writeText(protocol); setCopied(true); setTimeout(()=>setCopied(false), 2000); };
 
-  // ── Discharge patient (PUT /api/patients/:id status=discharged) ──
-  const handleDischarge = async () => {
-    if (!patientData?.id) return;
-    setDischarging(true);
-    try {
-      const apiBase = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
-      const token = localStorage.getItem("token");
-      await fetch(`${apiBase}/patients/${patientData.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({ status: "discharged" }),
-      });
-      setDischarged(true);
-    } catch { /* silent — button stays enabled for retry */ }
-    setDischarging(false);
-  };
+  // Discharge moved into <DischargeBlock/>, 2026-09-26.
+  //
+  // What stood here PUT { status: "discharged" } at a route that does not
+  // destructure it, onto a table with no such column, and set its success
+  // state without reading the response. See the component for the note.
+
 
   return <>
     {/* ══════════ 6-CARD SUMMARY GRID ══════════ */}
@@ -3553,36 +3902,29 @@ EVIDENCE BASIS`;
       ]}/>
       <F label="Discharge Summary" placeholder="Brief discharge summary, instructions for owner, follow-up notes..." rows={3}/>
 
-      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginTop:16 }}>
-        <button
-          disabled={!protocol}
-          style={{
-            padding:"14px", border:"none", borderRadius:6,
-            background: !protocol ? "#e2e8f0" : C.green,
-            color: !protocol ? C.muted : C.white,
-            cursor: !protocol ? "not-allowed" : "pointer",
-            fontSize:13, fontWeight:700, letterSpacing:".08em",
-          }}>
-          APPROVE PROTOCOL
-        </button>
-        <button
-          onClick={handleDischarge}
-          disabled={discharging || discharged || !patientData?.id}
-          style={{
-            padding:"14px", border:"none", borderRadius:6,
-            background: discharged ? C.greenLt : discharging ? C.amberLt : !patientData?.id ? "#e2e8f0" : C.amber,
-            color: discharged ? C.green : discharging ? C.amber : !patientData?.id ? C.muted : C.white,
-            cursor: discharging || discharged || !patientData?.id ? "not-allowed" : "pointer",
-            fontSize:13, fontWeight:700, letterSpacing:".08em",
-          }}>
-          {discharged ? "PATIENT DISCHARGED" : discharging ? "DISCHARGING..." : "DISCHARGE PATIENT"}
-        </button>
+      {/* APPROVE PROTOCOL is deliberately NOT wired here — 2026-09-26.
+          It had no onClick at all and did nothing. Wiring it to
+          POST /v2/versions/:id/approve would be WORSE than leaving it dead:
+          the dashboard's Generate produces TEXT through the V1
+          /api/generate-protocol path, not a stored protocol_version, so the
+          button would approve whichever version happened to exist rather
+          than what is on this screen — a signature attached to the wrong
+          document.
+          Approval needs the visit -> version -> approve chain that dashboard
+          intake does not yet enter. Flagged, not faked. */}
+      <div style={{ padding:"10px 14px", marginTop:16, background:C.blueLt,
+                    border:`1px solid ${C.blue}22`, borderRadius:6,
+                    fontSize:11, color:C.muted, lineHeight:1.6 }}>
+        <b style={{ color:C.navy }}>Approval is not available from this screen.</b>{" "}
+        A protocol is signed against a stored version, and this summary is
+        generated text. Until intake opens a visit, approve from the sessions
+        workflow.
       </div>
-      {discharged && (
-        <div style={{ marginTop:10, padding:"10px 14px", background:C.greenLt, border:`1px solid ${C.green}44`, borderRadius:6, fontSize:11, color:C.green, fontWeight:600, textAlign:"center" }}>
-          Patient discharged successfully. Record updated.
-        </div>
-      )}
+
+      <div style={{ marginTop:12 }}>
+        <DischargeBlock patientId={patientData?.id} patientName={patientName}/>
+      </div>
+
     </Sec>
 
     <ClinicalNotes/>
@@ -4997,6 +5339,25 @@ export default function DashboardView({ setView, currentUser, onLogout, patient,
                   textTransform:"uppercase", color: tone.fg }}>Stage</span>
                 <span style={{ fontSize:14, fontWeight:800, color: C.navy }}>{st.text}</span>
                 <span style={{ fontSize:11, color:C.muted }}>{blockState.stage.why}</span>
+
+                {/* WHERE. Sal, 2026-09-26: "WE SHOULD ALSO IDENTIFY WHICH
+                    CLINIC WE ARE IN SO IF WE DRIFT WE DONT HAVE TO HUNT
+                    LOCATION." The PATIENT'S clinic, served by block-state,
+                    not a name this screen resolves for itself. If the record
+                    names no clinic it says so — an invented one is how the
+                    wrong location gets trusted. */}
+                <span style={{ marginLeft:"auto", display:"flex", alignItems:"center", gap:6 }}>
+                  <span style={{ fontSize:10, fontWeight:800, letterSpacing:".09em",
+                    textTransform:"uppercase", color:C.muted }}>Clinic</span>
+                  <span style={{
+                    fontSize:11, fontWeight:700, padding:"3px 10px", borderRadius:99,
+                    background: blockState.clinic ? C.white : (C.amberLt || "#FFFBEB"),
+                    border:`1px solid ${blockState.clinic ? C.border : C.amber}`,
+                    color: blockState.clinic ? C.navy : C.amber,
+                  }}>
+                    {blockState.clinic ? blockState.clinic.name : "not set on this record"}
+                  </span>
+                </span>
               </div>
               <div style={{ marginTop:6, fontSize:12, color: outstanding.length ? C.navy : C.muted }}>
                 {outstanding.length ? (

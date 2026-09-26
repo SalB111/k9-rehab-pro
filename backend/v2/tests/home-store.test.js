@@ -56,7 +56,7 @@ async function freshDb() {
   await db.run(`PRAGMA foreign_keys = ON`);
   await db.run(`CREATE TABLE users (id INTEGER PRIMARY KEY, username TEXT, role TEXT)`);
   await db.run(`CREATE TABLE clinics (id INTEGER PRIMARY KEY, clinic_name TEXT)`);
-  await db.run(`CREATE TABLE patients (id INTEGER PRIMARY KEY, name TEXT)`);
+  await db.run(`CREATE TABLE patients (id INTEGER PRIMARY KEY, clinic_id INTEGER, name TEXT)`);
   await db.run(`INSERT INTO clinics (id, clinic_name) VALUES (1, 'Test')`);
   await db.run(`INSERT INTO patients (id, name) VALUES (100, 'Rex')`);
   for (const u of [VET, CCRT, TECH]) {

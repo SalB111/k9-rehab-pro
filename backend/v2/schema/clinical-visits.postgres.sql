@@ -21,9 +21,12 @@ CREATE TABLE IF NOT EXISTS v2_visits (
   clinician_username TEXT,
   clinician_role     TEXT,
   visit_notes        TEXT,
+  -- See the SQLite mirror: written at creation, never re-derived at read
+  -- time. Nullable because pre-2026-09-26 rows are backfilled separately.
+  clinic_id          BIGINT,
   created_at         TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   completed_at       TIMESTAMPTZ,
-  CONSTRAINT v2_visits_type_check CHECK (visit_type IN ('INITIAL','RECHECK','REASSESSMENT','DISCHARGE')),
+  CONSTRAINT v2_visits_type_check CHECK (visit_type IN ('INITIAL','ADMISSION','RECHECK','REASSESSMENT','DISCHARGE')),
   CONSTRAINT v2_visits_status_check CHECK (status IN ('OPEN','COMPLETED'))
 );
 

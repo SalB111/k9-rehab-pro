@@ -37,6 +37,7 @@ const crypto = require('crypto');
 const authority = require('./authority');
 const hepSelection = require('./hep-selection');
 const intakeProposal = require('./intake-proposal');
+const { clinicOfPatient } = require('./resolve-clinic');
 
 // ---------------------------------------------------------------------------
 // States and roles
@@ -208,9 +209,12 @@ async function createProtocol(db, { patientId, patientName, actor }) {
   requireActor(actor);
   if (!patientId) throw new ProtocolStoreError('patientId is required', ERR.INVALID);
 
+  // Inherited from the patient at creation. See resolve-clinic.clinicOfPatient.
+  const clinicId = await clinicOfPatient(db, patientId);
+
   const result = await db.run(
-    `INSERT INTO protocols (patient_id, patient_name, status, created_by) VALUES (?, ?, ?, ?)`,
-    [patientId, patientName ?? null, VERSION_STATUS.DRAFT, actor.id]
+    `INSERT INTO protocols (patient_id, clinic_id, patient_name, status, created_by) VALUES (?, ?, ?, ?, ?)`,
+    [patientId, clinicId, patientName ?? null, VERSION_STATUS.DRAFT, actor.id]
   );
   const protocolId = result.lastID;
 
@@ -1046,11 +1050,14 @@ async function handoffToBeau(db, { versionId, actor, home = null, goals = null }
   const payload = buildHepPayload(protocol, version, { home, goals });
   const payloadHash = hashContent(payload);
 
+  const handoffClinicId = await clinicOfPatient(db, protocol.patient_id);
+
   const result = await db.run(
     `INSERT INTO beau_handoffs
-       (protocol_id, version_id, patient_id, handoff_payload_json, payload_hash, status, handed_off_by)
-     VALUES (?, ?, ?, ?, ?, 'ACTIVE', ?)`,
-    [version.protocol_id, versionId, protocol.patient_id, JSON.stringify(payload), payloadHash, actor.id]
+       (protocol_id, version_id, patient_id, clinic_id, handoff_payload_json, payload_hash, status, handed_off_by)
+     VALUES (?, ?, ?, ?, ?, ?, 'ACTIVE', ?)`,
+    [version.protocol_id, versionId, protocol.patient_id, handoffClinicId,
+     JSON.stringify(payload), payloadHash, actor.id]
   );
 
   await db.run(`UPDATE protocol_versions SET status = 'HANDED_OFF' WHERE id = ?`, [versionId]);

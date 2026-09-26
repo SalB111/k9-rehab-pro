@@ -43,6 +43,7 @@ const V2 = (m) => require(path.join(BACKEND, 'v2', m));
 
 const protocolStore = V2('protocol-store');
 const visitStore = V2('visit-store');
+const dischargeStore = V2('discharge-store');
 const treatmentStore = V2('patient-treatment-store');
 const goalsStore = V2('patient-goals-store');
 const homeStore = V2('patient-home-store');
@@ -133,6 +134,14 @@ function wrap(raw) {
        'FABRICATED TEST RECORD — carprofen.']
     );
     patientId = reg.lastID;
+
+    // The same attribution POST /api/patients does. Sal, 2026-09-26: "WE
+    // SHOULD ALSO IDENTIFY WHICH CLINIC WE ARE IN SO IF WE DRIFT WE DONT HAVE
+    // TO HUNT LOCATION." Everything about this patient — visits, protocol,
+    // handoff, discharge — inherits it from here.
+    const regClinicId = await resolveClinicId(db, ACTOR);
+    if (regClinicId) await db.run('UPDATE patients SET clinic_id = ? WHERE id = ?', [regClinicId, patientId]);
+
     ok('register the patient', `id ${patientId}`);
 
     // Registration must NOT invent findings (fixed in 3516874).
@@ -324,6 +333,65 @@ function wrap(raw) {
       return { owner, clinical };
     }, (g) => `${g.owner.length} owner-facing, ${g.clinical.length} clinical`);
 
+    // ── the end of the episode ──────────────────────────────────────────
+    //
+    // Added 2026-09-26. Until then nothing recorded that care had ended,
+    // and VISIT_TYPE.DISCHARGE had existed unused since the visit store was
+    // written. Sal: a client may stop after one session, or three, "because
+    // may be financial constraints or has improved doing home exercises may
+    // be swants to continue with BEAU" — different endings that must not
+    // land in the record as the same row.
+
+    await attempt('every record now names its clinic', async () => {
+      const p = await db.get('SELECT clinic_id FROM patients WHERE id = ?', [patientId]);
+      const v = await db.get('SELECT clinic_id FROM visits WHERE patient_id = ? LIMIT 1', [patientId]);
+      if (!p || p.clinic_id == null) throw new Error('the patient names no clinic');
+      if (v && v.clinic_id == null) throw new Error('a visit names no clinic');
+      return p.clinic_id;
+    }, (id) => `clinic ${id}`);
+
+    await attempt('SAL\u2019S CASE: improved, care stopped early, kept apart from a completion', async () => {
+      const d = await dischargeStore.dischargePatient(db, {
+        patientId,
+        outcome: 'DISCONTINUED',
+        reason: 'IMPROVED_CONTINUING_AT_HOME',
+        weekReached: 5,
+        clinicalOutcome: 'IMPROVED',
+        outcomeMeasuredBy: 'FABRICATED test value — lameness grade 2 to 1',
+        actor: ACTOR,
+      });
+      if (d.outcome !== 'DISCONTINUED') throw new Error('recorded as the wrong outcome');
+      if (d.clinic_id == null) throw new Error('the discharge names no clinic');
+
+      // handoff_id is whatever beau_handoffs actually holds, and in THIS flow
+      // that is nothing. Steps 25-26 build the handoff PAYLOADS but nothing
+      // creates a protocol_version, so there is no approved version to hand
+      // off and no row to point at. That is the known gap — dashboard intake
+      // never enters the visit -> version -> approve -> handoff chain — and
+      // it is reported here rather than asserted away. discharge.test.js
+      // proves the link IS made when a handoff row exists.
+      const real = await db.get(
+        "SELECT COUNT(*) n FROM beau_handoffs WHERE patient_id = ?", [patientId]);
+      if (real.n > 0 && !d.handoff_id) throw new Error('a handoff exists and was not linked');
+      if (real.n === 0 && d.handoff_id) throw new Error('a handoff was claimed that does not exist');
+      return d;
+    }, (d) => `week ${d.week_reached} of ${d.total_weeks || '?'}, ${d.visits_attended} session(s), `
+      + (d.handoff_id ? `handoff ${d.handoff_id}` : 'no handoff in this flow — see the note'));
+
+    await attempt('a DISCHARGE visit exists and is completed', async () => {
+      const v = await db.get(
+        "SELECT * FROM visits WHERE patient_id = ? AND visit_type = 'DISCHARGE'", [patientId]);
+      if (!v) throw new Error('no DISCHARGE visit — the type is unused again');
+      if (v.status !== 'COMPLETED') throw new Error(`the discharge visit is ${v.status}`);
+      return v;
+    }, (v) => `visit ${v.id} on ${v.visit_date}`);
+
+    await attempt('the patient now reads as discharged', async () => {
+      const s = await dischargeStore.isDischarged(db, patientId);
+      if (!s.discharged) throw new Error('discharged patient does not read as discharged');
+      return s;
+    }, () => 'derived from the record, not a flag');
+
   } finally {
     // ── clean up ──────────────────────────────────────────────────────────
     if (patientId && !KEEP) {
@@ -332,7 +400,8 @@ function wrap(raw) {
       if (p && p.name === TEST_NAME) {
         for (const t of ['patient_goal_items', 'patient_goals', 'patient_home_environment',
           'patient_diagnostic_studies', 'patient_treatment_status', 'patient_procedures',
-          'patient_client_details', 'visit_measurements', 'visit_assessments']) {
+          'patient_client_details', 'visit_measurements', 'visit_assessments',
+          'patient_discharges']) {
           try { raw.prepare(`DELETE FROM ${t} WHERE patient_id = ?`).run(patientId); } catch { /* table may not exist */ }
         }
         try { raw.prepare('DELETE FROM visits WHERE patient_id = ?').run(patientId); } catch { /* none */ }

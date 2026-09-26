@@ -29,6 +29,7 @@
 
 const { ProtocolStoreError, ERR } = require('./protocol-store');
 const patientDiagnosticsStore = require('./patient-diagnostics-store');
+const { clinicOfPatient } = require('./resolve-clinic');
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -83,7 +84,7 @@ function requireActor(actor) {
   }
 }
 
-async function createVisit(db, { patientId, visitDate, visitType, actor, notes }) {
+async function createVisit(db, { patientId, visitDate, visitType, actor, notes, clinicId: givenClinicId }) {
   requireActor(actor);
   if (!patientId) throw new ProtocolStoreError('patientId is required', ERR.INVALID);
   if (!visitDate) throw new ProtocolStoreError('visitDate is required', ERR.INVALID);
@@ -93,10 +94,17 @@ async function createVisit(db, { patientId, visitDate, visitType, actor, notes }
     throw new ProtocolStoreError(`Unknown visit type '${type}'`, ERR.INVALID);
   }
 
+  // WHICH CLINIC. Inherited from the patient at creation — see
+  // resolve-clinic.clinicOfPatient. Before 2026-09-26 no visit named its
+  // clinic and the answer was recomputed at read time from whoever was
+  // logged in, which is how a record ends up reported against a clinic it
+  // did not happen in.
+  const clinicId = givenClinicId != null ? givenClinicId : await clinicOfPatient(db, patientId);
+
   const result = await db.run(
-    `INSERT INTO visits (patient_id, visit_date, visit_type, status, clinician_id, clinician_username, clinician_role, visit_notes)
-     VALUES (?, ?, ?, 'OPEN', ?, ?, ?, ?)`,
-    [patientId, visitDate, type, actor.id, actor.username, actor.role ?? null, notes ?? null]
+    `INSERT INTO visits (patient_id, clinic_id, visit_date, visit_type, status, clinician_id, clinician_username, clinician_role, visit_notes)
+     VALUES (?, ?, ?, ?, 'OPEN', ?, ?, ?, ?)`,
+    [patientId, clinicId, visitDate, type, actor.id, actor.username, actor.role ?? null, notes ?? null]
   );
   return getVisit(db, result.lastID);
 }

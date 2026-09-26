@@ -41,6 +41,7 @@ const PAIRS = [
   ['patient-diagnostics.sqlite.sql', 'patient-diagnostics.postgres.sql'],
   ['patient-client-details.sqlite.sql', 'patient-client-details.postgres.sql'],
   ['patient-treatment.sqlite.sql', 'patient-treatment.postgres.sql'],
+  ['patient-discharge.sqlite.sql', 'patient-discharge.postgres.sql'],
 ];
 
 const TABLE_RE = /CREATE TABLE IF NOT EXISTS (\w+) \(([\s\S]*?)\n\)/g;

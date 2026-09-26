@@ -28,6 +28,7 @@ const { all, get, run } = require("./db-provider");
 // Keeps the V1 clinical record and the V2 columns from drifting apart. Both
 // screens save through PUT /api/patients/:id, so both go through this.
 const recordSync = require("./v2/record-sync");
+const { resolveClinicId } = require("./v2/resolve-clinic");
 const authRoutes = require("./auth-routes");
 const requireAuth = require("./middleware/requireAuth");
 const { requireRole } = require("./auth");
@@ -257,6 +258,26 @@ app.post("/api/patients", requireAuth, async (req, res) => {
         client_email, client_phone, referring_vet
       ]
     );
+    // WHICH CLINIC ADMITTED THIS PATIENT.
+    //
+    // Sal, 2026-09-26: "WE SHOULD ALSO IDENTIFY WHICH CLINIC WE ARE IN SO IF
+    // WE DRIFT WE DONT HAVE TO HUNT LOCATION".
+    //
+    // The patient is where the clinic is recorded, and every record ABOUT the
+    // patient inherits it at creation (resolve-clinic.clinicOfPatient). Until
+    // today nothing named a clinic and it was recomputed on every read from
+    // whoever happened to be logged in.
+    //
+    // Set after the INSERT rather than inside it so a clinic that cannot be
+    // resolved leaves an honest NULL instead of failing the registration of a
+    // real patient. NULL means "not established", not "clinic 1".
+    try {
+      const clinicId = await resolveClinicId({ get, all, run }, req.user);
+      if (clinicId) await run("UPDATE patients SET clinic_id = ? WHERE id = ?", [clinicId, result.lastID]);
+    } catch (e) {
+      console.warn("[patients] could not attribute the new patient to a clinic:", e.message);
+    }
+
     const patient = await get("SELECT * FROM patients WHERE id = ?", [result.lastID]);
     res.status(201).json({ success: true, data: patient });
   } catch (err) {

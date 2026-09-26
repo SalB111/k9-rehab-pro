@@ -199,6 +199,14 @@ const CHECKS = [
   // TPLO was built as eight, compressing the progression into half its time.
   { name: 'K9 · protocol length',   cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/protocol-length.test.js'],
     ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
+  // Discharge. Until 2026-09-26 the DISCHARGE PATIENT button PUT
+  // {status:"discharged"} at a route that ignores it, onto a table with no
+  // such column, and never read the response — so the screen announced a
+  // discharge that was recorded nowhere. These also hold the line Sal drew
+  // between COMPLETED and DISCONTINUED, and assert every clinical record
+  // names the clinic it happened in.
+  { name: 'K9 · discharge',         cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/discharge.test.js'],
+    ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
   // One library, one identifier, one stated size. `all-exercises.js` is THE
   // library; the `exercises_v2` table is a different one with a disjoint id
   // scheme, and an endpoint keyed one by the other 404'd on every code the

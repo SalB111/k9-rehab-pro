@@ -129,7 +129,10 @@ async function realHandoff(stateOverrides = {}) {
   // owner-reported red flag reached production broken.
   await db.run(`PRAGMA foreign_keys = ON`);
   await db.run(`CREATE TABLE users (id INTEGER PRIMARY KEY, username TEXT, role TEXT)`);
-  await db.run(`CREATE TABLE patients (id INTEGER PRIMARY KEY, name TEXT)`);
+  await db.run(`CREATE TABLE patients (id INTEGER PRIMARY KEY, clinic_id INTEGER, name TEXT)`);
+  // visits, protocols and beau_handoffs carry a foreign key into `clinics`
+  // since 2026-09-26 — every clinical record names where it happened.
+  await db.run(`CREATE TABLE IF NOT EXISTS clinics (id INTEGER PRIMARY KEY, clinic_name TEXT)`);
   await db.run(`INSERT INTO users (id, username, role) VALUES (1, 'dr.zaslow', 'veterinarian')`);
   // With foreign keys enforced (as in production) a protocol cannot be created
   // for a patient row that does not exist.

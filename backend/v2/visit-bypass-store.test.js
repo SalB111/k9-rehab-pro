@@ -66,7 +66,10 @@ function wrap(raw) {
 function freshDb() {
   const raw = new DatabaseSync(':memory:');
   raw.exec('CREATE TABLE users (id INTEGER PRIMARY KEY, username TEXT)');
-  raw.exec('CREATE TABLE patients (id INTEGER PRIMARY KEY, name TEXT, client_name TEXT,'
+    // visits carry a foreign key into `clinics` since 2026-09-26 — every
+  // clinical record names where it happened.
+  raw.exec('CREATE TABLE IF NOT EXISTS clinics (id INTEGER PRIMARY KEY, clinic_name TEXT)');
+raw.exec('CREATE TABLE patients (id INTEGER PRIMARY KEY, clinic_id INTEGER, name TEXT, client_name TEXT,'
     + ' condition TEXT, dashboard_data TEXT, special_instructions TEXT,'
     + ' treatment_approach TEXT, affected_limbs TEXT, affected_region TEXT)');
   raw.exec('CREATE TABLE protocol_versions (id INTEGER PRIMARY KEY)');

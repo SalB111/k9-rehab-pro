@@ -35,6 +35,7 @@ const patientClientStore = require('../patient-client-store');
 const patientTreatmentStore = require('../patient-treatment-store');
 const patientBlockState = require('../patient-block-state');
 const visitBypassStore = require('../visit-bypass-store');
+const dischargeStore = require('../discharge-store');
 const ownerAuth = require('../owner-auth');
 const { requireRole, requireApprovalAuthority } = require('../middleware/require-role');
 const { route } = require('../http-errors');
@@ -185,7 +186,33 @@ function createV2Router(deps) {
     const blocks = await patientBlockState.getBlockState(
       db, patientId, patient, capabilities, stage
     );
-    res.json({ success: true, data: { patient_id: patientId, stage, blocks } });
+    // WHICH CLINIC THIS PATIENT IS IN.
+    //
+    // Sal, 2026-09-26: "WE SHOULD ALSO IDENTIFY WHICH CLINIC WE ARE IN SO IF
+    // WE DRIFT WE DONT HAVE TO HUNT LOCATION".
+    //
+    // The PATIENT'S clinic, not the reader's. They are the same thing today
+    // — one clinic — and the moment they are not, the banner must name where
+    // the record lives rather than where the person looking at it is sitting.
+    const patientClinicId = patient.clinic_id != null ? patient.clinic_id : clinicId;
+    const clinicRow = patientClinicId
+      ? await db.get('SELECT id, clinic_name FROM clinics WHERE id = ?', [patientClinicId])
+      : null;
+
+    res.json({
+      success: true,
+      data: {
+        patient_id: patientId,
+        stage,
+        blocks,
+        clinic: clinicRow
+          ? { id: clinicRow.id, name: clinicRow.clinic_name }
+          // Null rather than a placeholder name: "not established" is a
+          // different answer from any clinic, and a screen that invents one
+          // is how the wrong location gets trusted.
+          : null,
+      },
+    });
   }));
 
   // ── "Not needed today" ──────────────────────────────────────────────────
@@ -1167,6 +1194,68 @@ function createV2Router(deps) {
     res.json({ success: true, data: await ownerAuth.revokeAccess(db, {
       patientId: Number(req.params.id),
     }) });
+  }));
+
+  // ── Discharge — the end of an episode of care ─────────────────────────
+  //
+  // Until 2026-09-26 the DISCHARGE PATIENT button PUT {status:"discharged"}
+  // at a route that ignores it, onto a table with no such column, and never
+  // read the response. Nothing was recorded anywhere.
+  //
+  // The reason list is CLINICAL VOCABULARY and belongs to Sal. It is served
+  // from the store so the screen cannot invent an eleventh reason.
+
+  router.get('/discharge/reasons', route(async (_req, res) => {
+    res.json({
+      success: true,
+      data: {
+        outcomes: dischargeStore.OUTCOME,
+        reasonStatuses: dischargeStore.REASON_STATUS,
+        clinicalOutcomes: dischargeStore.CLINICAL_OUTCOME,
+        reasons: dischargeStore.REASONS,
+      },
+    });
+  }));
+
+  router.get('/patients/:id/discharge', route(async (req, res) => {
+    res.json({
+      success: true,
+      data: await dischargeStore.isDischarged(db, Number(req.params.id)),
+    });
+  }));
+
+  router.post('/patients/:id/discharge', route(async (req, res) => {
+    const discharge = await dischargeStore.dischargePatient(db, {
+      ...req.body,
+      patientId: Number(req.params.id),
+      // Resolved HERE, by the router's own injectable resolver, so a discharge
+      // is attributed by the same rule as everything else this app writes.
+      clinicId: await resolveClinicId(req, db),
+      actor: req.user,
+    });
+    res.status(201).json({ success: true, data: discharge });
+  }));
+
+  // The answer that arrives after the owner is called back.
+  router.post('/discharges/:id/reason', route(async (req, res) => {
+    const updated = await dischargeStore.updateReason(db, {
+      ...req.body,
+      dischargeId: Number(req.params.id),
+      actor: req.user,
+    });
+    res.json({ success: true, data: updated });
+  }));
+
+  router.get('/discharges', route(async (req, res) => {
+    const clinicId = await resolveClinicId(req, db);
+    res.json({
+      success: true,
+      data: await dischargeStore.listDischarges(db, {
+        clinicId,
+        limit: Number(req.query.limit) || 100,
+        offset: Number(req.query.offset) || 0,
+      }),
+    });
   }));
 
   /** Whether the current user may approve, and why not if they cannot. */

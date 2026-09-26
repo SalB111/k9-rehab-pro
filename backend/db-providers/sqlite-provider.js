@@ -402,6 +402,26 @@ async function createTables() {
     console.log("📦 Migration: added date_of_birth column to patients");
   } catch { /* column already exists */ }
 
+  // Migration: which clinic a patient belongs to.
+  //
+  // Sal, 2026-09-26: "WE SHOULD ALSO IDENTIFY WHICH CLINIC WE ARE IN SO IF WE
+  // DRIFT WE DONT HAVE TO HUNT LOCATION".
+  //
+  // No clinical record in this database named its clinic. Everything resolved
+  // it at READ time as "the first clinic by id" — correct with one clinic, and
+  // wrong the moment there are two. On 2026-09-26 that rule reported on a
+  // clinic that had never existed while the real answers sat on clinic 3, and
+  // the only way to establish which clinic a record belonged to was to reason
+  // about when it was created.
+  //
+  // Nullable on purpose: NULL means "not established", which is a different
+  // answer from any clinic id. Existing rows are backfilled by
+  // scripts/backfill-clinic-id.js rather than by a guess at boot.
+  try {
+    await run("ALTER TABLE patients ADD COLUMN clinic_id INTEGER");
+    console.log("📦 Migration: added clinic_id column to patients");
+  } catch { /* column already exists */ }
+
   console.log("📦 All tables created (V2 only)");
 }
 

@@ -422,6 +422,121 @@ The integration workspace map, and which copies are stale, is in
 `D:\BEAU-K9-INTEGRATION\CLAUDE.md`. Note that `01-SOURCE\K9-REHAB-PRO` there
 is a frozen archive months out of date — **this repo is the live code.**
 
+## Every clinical record names its clinic  `[Sal, 2026-09-26]`
+
+> "WE SHOULD ALSO IDENTIFY WHICH CLINIC WE ARE IN SO IF WE DRIFT WE DONT HAVE
+> TO HUNT LOCATION" — Sal
+
+**Measured before the change:** `visits`, `protocols`, `beau_handoffs` and
+`patients` carried **no clinic column at all**. Only `clinic_capabilities`
+did. Every other answer to "which clinic is this" was computed at READ time by
+`defaultResolveClinicId` — `req.user.clinic_id` if present, otherwise the
+**first clinic by id**, and `users` has no `clinic_id` column, so always the
+first.
+
+That is correct with one clinic and wrong with two. Earlier the same day a
+script asked about clinic 1 — which has never existed — got a plausible empty
+record back, and Sal was told his equipment had not saved. It had, on clinic 3.
+
+### The rule
+
+**The patient carries the clinic. Everything about that patient inherits it at
+creation** — `resolve-clinic.clinicOfPatient`, read once when the row is made
+and written down, never recomputed when it is read.
+
+| table | who sets it |
+|---|---|
+| `patients` | `POST /api/patients`, from the request's resolver |
+| `visits` | `createVisit`, inherited from the patient |
+| `protocols` | `createProtocol`, inherited from the patient |
+| `beau_handoffs` | `handoffToBeau`, inherited from the patient |
+| `patient_discharges` | the route's own resolver, passed down |
+
+Nullable throughout: **NULL means "not established"**, which is a different
+answer from any clinic id. Existing rows were backfilled to clinic 3 —
+confirmed by Sal, "YES BACKFILL TO 3" — by `scripts/backfill-clinic-id.js`,
+which **refuses to run** if more than one clinic exists unless `--clinic` names
+one, because at that point "the first one" is a coin toss.
+
+The dashboard's stage banner shows the **patient's** clinic, served by
+`GET /v2/patients/:id/block-state`, and says "not set on this record" rather
+than inventing a name.
+
+Also fixed while here: the Postgres `v2_visits` CHECK never learned about
+`ADMISSION`, so a Supabase deployment would have rejected every admission
+visit the dashboard creates.
+
+## Discharge — the end of an episode of care  `[Sal, 2026-09-26]`
+
+### What was there
+
+Nothing. The dashboard's DISCHARGE PATIENT button did this:
+
+    await fetch(`${apiBase}/patients/${patientData.id}`, {
+      method: "PUT", body: JSON.stringify({ status: "discharged" }),
+    });
+    setDischarged(true);
+
+`PUT /api/patients/:id` does not destructure `status`. `patients` has no
+`status` column. The response was never read. So the screen said **PATIENT
+DISCHARGED** and the claim survived until the next page load — no date, no
+clinician, no reason, nothing stored anywhere. `VISIT_TYPE.DISCHARGE` had
+existed since the visit store was written and **nothing had ever created one**.
+
+### Why the reason is the point
+
+> "in real life situation, a client may decide to stop after 1 session 3,3 or
+> even 4 sessions, because may be financial constraints or has improved doing
+> home exercises may be swants to continue with BEAU" — Sal
+
+Those are different clinical endings. Outcome Monitoring below wants outcome
+data feeding the audit trail for efficacy tracking, and efficacy cannot be read
+from a record in which "improved and went home" and "could not afford to
+continue" are the same row. One is a success, the other an interrupted course.
+
+### The shape
+
+`patient_discharges`, one row per episode, hung off a real **DISCHARGE visit** —
+care ending is a clinical event on a date with a clinician's name on it.
+
+- **`outcome` is `COMPLETED` or `DISCONTINUED`, kept apart** (Sal's decision).
+  Every reason belongs to exactly one outcome, so a dog that stopped at week 2
+  cannot be counted among the completions.
+- **`reason_status`** — `KNOWN` / `PENDING_OWNER_CONTACT` / `OWNER_UNREACHABLE`.
+  Sal: *"THEN WE CONTACT THE OWNER TO FIND OUT WHY?"* At the moment care stops
+  the clinic often does not know why. A blank and an unestablished reason look
+  identical on a screen and mean different things in a record, so
+  `NOT_YET_KNOWN` is a stated position and `reason_updated_at` shows when the
+  answer arrived.
+- **`clinical_outcome` must name its measure.** `IMPROVED` with nothing behind
+  it is an opinion wearing the clothes of a measurement — refused by the store
+  and by a CHECK constraint.
+- **`handoff_id` is read from `beau_handoffs`, never typed.** "Went home with
+  B.E.A.U." cannot be claimed for a handoff that did not happen. This is what
+  distinguishes Sal's improved-and-continuing case from giving up.
+- **`visits_attended` is counted, not typed** — Sal counts endings in sessions.
+- **There is deliberately NO `patients.status` column.** A discharged patient
+  can come back, and a flag would then be a stale lie. Active vs discharged is
+  DERIVED: the latest discharge with no visit after it.
+
+The reason list is **clinical vocabulary and Sal's to change** — it lives in
+`discharge-store.REASONS` and is served to the screen by
+`GET /v2/discharge/reasons`, so the form cannot offer an eleventh reason the
+record would refuse.
+
+Guarded by 27 tests in `backend/v2/discharge.test.js`, mutation-tested against
+11 ways of undoing it, plus 4 steps in `drive-flow`.
+
+> **APPROVE PROTOCOL on the dashboard is NOT wired, deliberately.** It had no
+> `onClick` at all. Wiring it to `POST /v2/versions/:id/approve` would be
+> WORSE: the dashboard's Generate produces TEXT through the V1
+> `/api/generate-protocol` path, not a stored `protocol_version`, so the button
+> would approve whichever version happened to exist rather than what is on the
+> screen — a signature attached to the wrong document. It now says approval is
+> not available from this screen. Real approval needs the
+> visit -> version -> approve chain that dashboard intake **still does not
+> enter**; that remains the open gap, and it is why `beau_handoffs` has 0 rows.
+
 ## Evidence Gating Policy
 
 - Protocols default to **Grade A (strong RCT)** and **Grade B (moderate evidence)** exercises
