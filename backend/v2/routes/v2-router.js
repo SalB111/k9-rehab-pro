@@ -177,10 +177,13 @@ function createV2Router(deps) {
     }
     const clinicId = await resolveClinicId(req, db);
     const capabilities = await clinicStore.getCapabilities(db, clinicId);
-    const [blocks, stage] = await Promise.all([
-      patientBlockState.getBlockState(db, patientId, patient, capabilities),
-      patientBlockState.stageOf(db, patientId),
-    ]);
+    // The stage FIRST: getBlockState needs it to say what each block is
+    // expected to hold. Running them in parallel would hand it an undefined
+    // stage and every block would come back "not yet".
+    const stage = await patientBlockState.stageOf(db, patientId);
+    const blocks = await patientBlockState.getBlockState(
+      db, patientId, patient, capabilities, stage
+    );
     res.json({ success: true, data: { patient_id: patientId, stage, blocks } });
   }));
   // -------------------------------------------------------------------------

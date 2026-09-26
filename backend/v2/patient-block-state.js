@@ -84,9 +84,68 @@ const PARTIAL_THRESHOLD = 3;
  * and expects nothing, so nothing is wrongly flagged.
  */
 const STAGE_REQUIREMENTS = {
-  INTAKE: { required: [], optional: [] },
-  ADMISSION: { required: [], optional: [] },
+  // Sal, 2026-09-26, verbatim: "intake is client and patient, clinical
+  // assessment, treatment and surgical status, diagnostics, at admission it
+  // would be BEAU Metrics, Goals Conditioning and home exercise program and
+  // petcare nutrition if the dog needs it".
+  INTAKE: {
+    required: ['client', 'assessment', 'treatment', 'diagnostics'],
+    optional: [],
+  },
+  ADMISSION: {
+    required: ['metrics', 'goals', 'conditioning', 'home'],
+    // "if the dog needs it" — so nutrition is offered, never chased.
+    optional: ['nutrition'],
+  },
 };
+
+/**
+ * ADMISSION also carries INTAKE's list.
+ *
+ * MY INFERENCE, NOT SAL'S WORDS. Admission follows intake in his flow, so a
+ * dog cannot be admitted on an assessment nobody did. Stated here rather than
+ * folded silently into the list above so it can be corrected in one line if
+ * a patient can in fact be admitted with an intake block still open.
+ */
+const STAGE_INHERITS = {
+  ADMISSION: ['INTAKE'],
+  // A patient already in the programme is past both gates, so both lists
+  // apply. Without this every block fell through to "not yet" for the four
+  // patients mid-programme — the dashboard would have told Sal that Winston,
+  // who is weeks into rehab, is not expected to have an assessment.
+  IN_PROGRAMME: ['ADMISSION', 'INTAKE'],
+};
+
+/** Blocks that belong to no stage, and why. */
+const NOT_STAGE_GATED = {
+  equipment: 'a property of the clinic, not of this patient',
+  protocol: 'the output of the workflow, not an input to it',
+  library: 'reference',
+  nutrition: null, // listed above as optional at admission
+};
+
+/** What the stage expects of one block: 'required', 'optional' or 'not_yet'. */
+function expectationFor(stage, block) {
+  // NO VISIT OPENED is read as INTAKE for this purpose only.
+  //
+  // ALSO MY INFERENCE. Somebody filling the dashboard with no visit row is
+  // doing an intake — that is exactly the state Haley and Louie are in. The
+  // alternative, expecting nothing until a visit exists, would make this
+  // feature invisible for the only patients who need it today. The BANNER
+  // still says "No visit opened", so nothing here hides that.
+  const effective = stage === STAGE.NONE ? STAGE.INTAKE : stage;
+
+  const stages = [effective, ...(STAGE_INHERITS[effective] || [])];
+  for (const s2 of stages) {
+    const req = STAGE_REQUIREMENTS[s2];
+    if (!req) continue;
+    if (req.required.includes(block)) return 'required';
+    if (req.optional.includes(block)) return 'optional';
+  }
+  if (Object.prototype.hasOwnProperty.call(NOT_STAGE_GATED, block)
+      && NOT_STAGE_GATED[block]) return 'not_gated';
+  return 'not_yet';
+}
 
 function blobCounts(patient) {
   const out = {};
@@ -118,7 +177,7 @@ function describe(source, filled, count) {
  * @param {object} [clinic]  capabilities from clinicStore.getCapabilities
  * @returns {Promise<object>} block id -> { source, status, filled, count }
  */
-async function getBlockState(db, patientId, patient, clinic) {
+async function getBlockState(db, patientId, patient, clinic, stage) {
   const counts = blobCounts(patient);
 
   // Every store is asked the same question and answers with the same flag.
@@ -171,6 +230,16 @@ async function getBlockState(db, patientId, patient, clinic) {
 
     const n = counts[block] || 0;
     out[block] = describe('blob', n > 0, n);
+  }
+
+  // What the stage asks of each block. `needs_attention` is the only thing
+  // the screen should ever nag about: required HERE, and not filled. A block
+  // that is not due yet is not a problem, which is the whole point — during
+  // an intake, Goals being empty is the workflow working.
+  const at = (stage && stage.stage) || STAGE.NONE;
+  for (const [block, state] of Object.entries(out)) {
+    state.expected = expectationFor(at, block);
+    state.needs_attention = state.expected === 'required' && state.status === 'empty';
   }
 
   return out;
@@ -231,6 +300,9 @@ module.exports = {
   PARTIAL_THRESHOLD,
   STAGE,
   STAGE_REQUIREMENTS,
+  STAGE_INHERITS,
+  NOT_STAGE_GATED,
+  expectationFor,
   getBlockState,
   stageOf,
 };

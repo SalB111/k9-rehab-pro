@@ -166,16 +166,81 @@ function open() {
       `unexpected stage ${s.stage}`);
   });
 
-  await test('the stage requirements are empty until a clinician writes them', () => {
-    // Deliberate. Which blocks an intake must capture before admission is a
-    // clinical judgement. While this is empty nothing is wrongly flagged;
-    // when Sal fills it, this test tells whoever reads it that it was HIS
-    // list and not one I invented.
-    for (const stage of ['INTAKE', 'ADMISSION']) {
-      const r = bs.STAGE_REQUIREMENTS[stage];
-      assert.ok(r, `${stage} has no entry`);
-      assert.ok(Array.isArray(r.required), `${stage}.required must be a list`);
+  await test("the stage requirements are Sal's list, not one I invented", () => {
+    // Sal, 2026-09-26, verbatim: "intake is client and patient, clinical
+    // assessment, treatment and surgical status, diagnostics, at admission
+    // it would be BEAU Metrics, Goals Conditioning and home exercise program
+    // and petcare nutrition if the dog needs it".
+    //
+    // Pinned so a later edit has to argue with his words rather than quietly
+    // drift. If the list changes it should change because HE changed it.
+    assert.deepStrictEqual(
+      [...bs.STAGE_REQUIREMENTS.INTAKE.required].sort(),
+      ['assessment', 'client', 'diagnostics', 'treatment'],
+      'the intake list no longer matches what Sal said an intake captures'
+    );
+    assert.deepStrictEqual(
+      [...bs.STAGE_REQUIREMENTS.ADMISSION.required].sort(),
+      ['conditioning', 'goals', 'home', 'metrics'],
+      'the admission list no longer matches what Sal said comes due at admission'
+    );
+    // "if the dog needs it" — offered, never chased.
+    assert.deepStrictEqual(
+      bs.STAGE_REQUIREMENTS.ADMISSION.optional, ['nutrition'],
+      'nutrition must stay OPTIONAL — Sal said "if the dog needs it", so a '
+      + 'patient without it is not an incomplete record'
+    );
+  });
+
+  await test('an intake does not chase admission blocks', () => {
+    // The thing Sal actually asked for: "during intake all these are not
+    // necessary to complete". An empty Goals block at intake is the workflow
+    // working, not a gap.
+    for (const block of ['metrics', 'goals', 'conditioning', 'home']) {
+      assert.strictEqual(
+        bs.expectationFor('INTAKE', block), 'not_yet',
+        `${block} is chased at intake, which is what this whole change exists to stop`
+      );
     }
+    for (const block of ['client', 'assessment', 'treatment', 'diagnostics']) {
+      assert.strictEqual(bs.expectationFor('INTAKE', block), 'required',
+        `${block} should be expected at intake`);
+    }
+  });
+
+  await test('admission and in-programme carry the intake list too', () => {
+    // My inference, not Sal's words: a dog cannot be admitted on an
+    // assessment nobody did. If that is wrong it is one line in
+    // STAGE_INHERITS, and this test is where it is written down.
+    for (const stage of ['ADMISSION', 'IN_PROGRAMME']) {
+      for (const block of ['client', 'assessment', 'treatment', 'diagnostics']) {
+        assert.strictEqual(bs.expectationFor(stage, block), 'required',
+          `${block} stopped being expected at ${stage}`);
+      }
+    }
+    // Without IN_PROGRAMME inheriting, every block fell through to "not yet"
+    // and the dashboard told us four mid-programme patients were expected to
+    // have nothing at all.
+    assert.strictEqual(bs.expectationFor('IN_PROGRAMME', 'metrics'), 'required');
+  });
+
+  await test('a required block that is empty is flagged, and nothing else is', () => {
+    // A check that never fires is worth nothing, and every real patient is
+    // currently complete for their stage — so this drives it synthetically.
+    const rows = {
+      assessment: { status: 'empty' },
+      client: { status: 'complete' },
+      metrics: { status: 'empty' },
+      nutrition: { status: 'empty' },
+    };
+    for (const [block, v] of Object.entries(rows)) {
+      v.expected = bs.expectationFor('INTAKE', block);
+      v.needs_attention = v.expected === 'required' && v.status === 'empty';
+    }
+    assert.strictEqual(rows.assessment.needs_attention, true, 'an empty required block must be flagged');
+    assert.strictEqual(rows.client.needs_attention, false, 'a filled block must not be flagged');
+    assert.strictEqual(rows.metrics.needs_attention, false, 'a block not yet due must not be flagged');
+    assert.strictEqual(rows.nutrition.needs_attention, false, 'an optional block must never be chased');
   });
 
   // ── the screen must actually use it ──────────────────────────────────────

@@ -5078,7 +5078,25 @@ export default function DashboardView({ setView, currentUser, onLogout, patient,
                 ? served.status
                 : (blockKeys.length >= 3 ? "complete" : blockKeys.length > 0 ? "partial" : "empty");
               const hasData = dataStatus === "complete" || dataStatus === "partial";
-              const dotColor = dataStatus === "complete" ? C.green
+
+              // ── WHAT THIS STAGE ACTUALLY ASKS FOR ────────────────────
+              //
+              // Sal: "during intake all these are not necessary to
+              // complete". An empty Goals block at an intake visit is the
+              // workflow working, not a gap, and an amber dot there is the
+              // dashboard reporting correct practice as an error.
+              //
+              // His lists, 2026-09-26: intake is Client, Assessment,
+              // Treatment and Diagnostics. Admission brings B.E.A.U.
+              // Metrics, Goals, Conditioning and the Home Exercise Program,
+              // with PetCare Nutrition "if the dog needs it" — so nutrition
+              // is offered and never chased.
+              const expected = served ? served.expected : null;
+              const notYetDue = expected === "not_yet";
+              const needsAttention = Boolean(served && served.needs_attention);
+
+              const dotColor = needsAttention ? C.amber
+                : dataStatus === "complete" ? C.green
                 : dataStatus === "partial" ? C.amber
                 : dataStatus === "unknown" ? C.muted
                 : null;
@@ -5086,7 +5104,11 @@ export default function DashboardView({ setView, currentUser, onLogout, patient,
               return (
               <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (()=>handleBlockClick(b.id))(e); } }} key={b.id} className="block-card"
                 onClick={()=>handleBlockClick(b.id)}
-                title={hasData ? "Block contains data — click to review" : ""}
+                title={
+                  needsAttention ? "Needed at this stage and still empty"
+                    : notYetDue && !hasData ? "Not needed yet at this stage"
+                    : hasData ? "Block contains data — click to review" : ""
+                }
                 style={{
                   background:C.white,
                   border: hasData ? `1.5px solid ${dotColor}99` : `1.5px solid ${C.border}`,
