@@ -5025,28 +5025,66 @@ export default function DashboardView({ setView, currentUser, onLogout, patient,
             Saying where we are is useful on its own; guessing what that
             demands of a clinician would not be. */}
         {blockState && blockState.stage && (() => {
+          // Sal, 2026-09-26: "it needs to read either intake in progress or
+          // admission in progress, so whom ever is performing the info can
+          // see where and what is going on and needed".
+          //
+          // So this is not a label, it is a worklist. Whoever is at the
+          // keyboard — vet, nurse, CCRT — should be able to read off what is
+          // still outstanding without opening every block to find out.
+          //
+          // Why it matters beyond convenience: everything these blocks
+          // capture is what B.E.A.U. reasons from when it selects
+          // evidence-graded exercises. A block left empty is not a blank on
+          // a form, it is a fact the protocol will be generated without.
           const STAGE_LABEL = {
-            NONE:         { text: "No visit opened",  tone: "warn" },
-            INTAKE:       { text: "Intake",           tone: "info" },
-            ADMISSION:    { text: "Admitted",         tone: "good" },
-            IN_PROGRAMME: { text: "In programme",     tone: "good" },
+            NONE:         { text: "Intake in progress",    tone: "info" },
+            INTAKE:       { text: "Intake in progress",    tone: "info" },
+            ADMISSION:    { text: "Admission in progress", tone: "info" },
+            IN_PROGRAMME: { text: "In programme",          tone: "good" },
           };
           const st = STAGE_LABEL[blockState.stage.stage] || { text: blockState.stage.stage, tone: "info" };
-          const tone = st.tone === "warn"
+
+          // What is still needed AT THIS STAGE, named the way the cards are.
+          const outstanding = BLOCKS
+            // `blocks` is guarded separately from `stage`: the banner renders
+            // on `stage` alone, and reaching into an absent `blocks` would
+            // throw inside render and take the whole dashboard down behind the
+            // error boundary. That happened once already today from a hook
+            // ordering mistake; it is not worth risking twice for one dot.
+            .filter(x => (blockState.blocks || {})[x.id] && blockState.blocks[x.id].needs_attention)
+            .map(x => t(`tiles.${x.id}.label`, { defaultValue: x.id }));
+
+          const tone = outstanding.length
             ? { fg: C.amber, bg: C.amberLt || "#FFFBEB", br: C.amber }
             : st.tone === "good"
               ? { fg: C.green, bg: C.greenLt, br: C.green }
               : { fg: C.teal, bg: C.tealLt, br: C.teal };
+
           return (
             <div style={{
-              display:"flex", alignItems:"center", gap:10, flexWrap:"wrap",
-              margin:"0 0 16px", padding:"10px 14px",
+              margin:"0 0 16px", padding:"12px 16px",
               background: tone.bg, border:`1px solid ${tone.br}44`, borderRadius:6,
             }}>
-              <span style={{ fontSize:10, fontWeight:800, letterSpacing:".09em",
-                textTransform:"uppercase", color: tone.fg }}>Stage</span>
-              <span style={{ fontSize:13, fontWeight:700, color: C.navy }}>{st.text}</span>
-              <span style={{ fontSize:11, color:C.muted }}>{blockState.stage.why}</span>
+              <div style={{ display:"flex", alignItems:"center", gap:10, flexWrap:"wrap" }}>
+                <span style={{ fontSize:10, fontWeight:800, letterSpacing:".09em",
+                  textTransform:"uppercase", color: tone.fg }}>Stage</span>
+                <span style={{ fontSize:14, fontWeight:800, color: C.navy }}>{st.text}</span>
+                <span style={{ fontSize:11, color:C.muted }}>{blockState.stage.why}</span>
+              </div>
+              <div style={{ marginTop:6, fontSize:12, color: outstanding.length ? C.navy : C.muted }}>
+                {outstanding.length ? (
+                  <>
+                    <span style={{ fontWeight:700 }}>Still needed: </span>
+                    {outstanding.join(" · ")}
+                  </>
+                ) : (
+                  // Deliberately modest. It says the blocks THIS STAGE asks
+                  // for are recorded — not that a protocol is ready, which
+                  // also needs the safety gates confirmed by a person.
+                  <>Every block this stage asks for has been recorded.</>
+                )}
+              </div>
             </div>
           );
         })()}

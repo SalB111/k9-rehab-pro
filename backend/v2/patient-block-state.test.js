@@ -345,17 +345,32 @@ function open() {
     const src = fs.readFileSync(DASHBOARD, 'utf8');
     const live = src.split('\n').filter((l) => !l.trim().startsWith('//')).join('\n');
     assert.ok(/STAGE_LABEL/.test(live), 'the dashboard shows no stage at all');
-    // NONE must not be dressed up as "Intake". A patient nobody has opened a
-    // visit for has not been taken in; saying so is the whole point, because
-    // that is the state Louie and Haley are actually in.
+
+    // Sal, 2026-09-26: "it needs to read either intake in progress or
+    // admission in progress, so whom ever is performing the info can see
+    // where and what is going on and needed".
     assert.ok(
-      /NONE:\s*\{\s*text:\s*"No visit opened"/.test(live),
-      'the no-visit state is labelled as something other than "No visit opened" '
-      + '— a patient with no visit must not read as if intake had happened'
+      /"Intake in progress"/.test(live) && /"Admission in progress"/.test(live),
+      'the stage no longer reads as work in progress, which is how whoever is '
+      + 'at the keyboard knows which part of the workflow they are in'
     );
+
+    // NONE reads as intake in progress, which is true — somebody filling the
+    // dashboard is doing an intake. But the fact that no visit row exists must
+    // NOT disappear: it is a real gap (Louie and Haley both), and it survives
+    // in the reason line rather than the label.
     assert.ok(
       /blockState\.stage\.why/.test(live),
-      'the stage is shown without its reason, so a clinician cannot tell why'
+      'the stage is shown without its reason, so "no visit has been opened" '
+      + 'would vanish from the screen entirely'
+    );
+
+    // The worklist. A stage label alone answers "where am I" but not "what is
+    // left", which is the half Sal actually asked for.
+    assert.ok(
+      /needs_attention/.test(live) && /Still needed/.test(live),
+      'the banner names no outstanding blocks, so a clinician has to open '
+      + 'every card to find out what the stage is still missing'
     );
   });
 
