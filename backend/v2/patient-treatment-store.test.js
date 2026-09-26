@@ -360,6 +360,104 @@ const ACTOR = { id: 1 };
       'an e-collar stopped being required because somebody recorded weight bearing');
   });
 
+  // ── one row per DATE, not one per save ──────────────────────────────────
+  //
+  // The panel saves each answer as it is given. Before 2026-09-26 that meant a
+  // row per FIELD: Haley accumulated SEVEN rows in one sitting — weight
+  // bearing, e-collar, crate rest, sling, restrictions — and the progression
+  // became a recording of somebody typing rather than a clinical series.
+  //
+  // The 33 tests above did not catch it. Every one of them recorded a status
+  // ONCE per date, which is how a test writes and not how a form is filled.
+
+  await test('filling the form field by field leaves ONE row for that date', async () => {
+    const db = freshDb();
+    // Exactly what the panel does: one save per answer.
+    await store.recordStatus(db, {
+      patientId: 7, effectiveDate: '2026-09-26',
+      status: { weight_bearing_status: 'Full weight bearing (FWB)' }, actor: ACTOR,
+    });
+    await store.recordStatus(db, {
+      patientId: 7, effectiveDate: '2026-09-26', status: { e_collar_required: false }, actor: ACTOR,
+    });
+    await store.recordStatus(db, {
+      patientId: 7, effectiveDate: '2026-09-26', status: { strict_crate_rest: false }, actor: ACTOR,
+    });
+    await store.recordStatus(db, {
+      patientId: 7, effectiveDate: '2026-09-26', status: { sling_assist_required: false }, actor: ACTOR,
+    });
+    const r = await store.recordStatus(db, {
+      patientId: 7, effectiveDate: '2026-09-26',
+      status: { activity_restrictions: 'leash only walks' }, actor: ACTOR,
+    });
+
+    assert.strictEqual(r.statusHistory.length, 1,
+      `five answers on one date produced ${r.statusHistory.length} rows. The `
+      + 'progression is meant to show NWB -> PWB -> FWB across weeks; entries '
+      + 'from one afternoon bury the change they exist to show.');
+
+    // And nothing was lost on the way.
+    assert.strictEqual(r.status.weight_bearing_status, 'Full weight bearing (FWB)');
+    assert.strictEqual(r.status.e_collar_required, 0);
+    assert.strictEqual(r.status.strict_crate_rest, 0);
+    assert.strictEqual(r.status.sling_assist_required, 0);
+    assert.strictEqual(r.status.activity_restrictions, 'leash only walks');
+  });
+
+  await test('a DIFFERENT date is still a new row — history is not editable', async () => {
+    // The invariant the whole block exists for. Coalescing must never reach
+    // backwards into a finding from another day.
+    const db = freshDb();
+    await store.recordStatus(db, {
+      patientId: 7, effectiveDate: '2026-03-25',
+      status: { weight_bearing_status: 'Non-weight bearing (NWB)' }, actor: ACTOR,
+    });
+    const r = await store.recordStatus(db, {
+      patientId: 7, effectiveDate: '2026-04-15',
+      status: { weight_bearing_status: 'Partial weight bearing (PWB)' }, actor: ACTOR,
+    });
+    assert.strictEqual(r.statusHistory.length, 2, 'the earlier finding was overwritten');
+    assert.strictEqual(r.statusHistory[1].weight_bearing_status, 'Non-weight bearing (NWB)',
+      'last month\'s state must survive untouched');
+  });
+
+  await test('a migrated row is never merged into', async () => {
+    // A migrated row carries a date nobody stated. Folding a clinician's real
+    // observation into it would give their finding the migration's date and
+    // launder the uncertainty away.
+    const db = freshDb();
+    await store.recordStatus(db, {
+      patientId: 7, effectiveDate: '2026-09-26', dateIsUnknown: true,
+      status: { weight_bearing_status: 'Partial weight bearing (PWB)' }, actor: ACTOR,
+    });
+    const r = await store.recordStatus(db, {
+      patientId: 7, effectiveDate: '2026-09-26',
+      status: { weight_bearing_status: 'Full weight bearing (FWB)' }, actor: ACTOR,
+    });
+    assert.strictEqual(r.statusHistory.length, 2,
+      'the clinician\'s observation was folded into the migrated row');
+    assert.strictEqual(r.status.effective_date_is_unknown, 0,
+      'the real observation must not inherit the migration\'s uncertainty');
+    assert.strictEqual(r.statusHistory[1].effective_date_is_unknown, 1,
+      'and the migrated row must keep its own marker');
+  });
+
+  await test('an edit on the same date corrects rather than appends', async () => {
+    // A clinician who mis-clicks and fixes it should leave one record, not a
+    // contradiction.
+    const db = freshDb();
+    await store.recordStatus(db, {
+      patientId: 7, effectiveDate: '2026-09-26',
+      status: { weight_bearing_status: 'Toe-touching (TTWB)' }, actor: ACTOR,
+    });
+    const r = await store.recordStatus(db, {
+      patientId: 7, effectiveDate: '2026-09-26',
+      status: { weight_bearing_status: 'Partial weight bearing (PWB)' }, actor: ACTOR,
+    });
+    assert.strictEqual(r.statusHistory.length, 1);
+    assert.strictEqual(r.status.weight_bearing_status, 'Partial weight bearing (PWB)');
+  });
+
   // ── a date nobody stated ────────────────────────────────────────────────
   await test('a migrated row can say its date is not a finding', async () => {
     // The V1 form stored a CURRENT state and never when it was observed, so

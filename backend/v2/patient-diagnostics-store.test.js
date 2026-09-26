@@ -187,12 +187,19 @@ const IMG = (over = {}) => ({
   await test('all thirteen migrated studies read from the table', async () => {
     const raw = new DatabaseSync(REAL_DB, { readOnly: true });
     const db = wrap(raw);
-    // SCOPED TO THE MIGRATED RECORDS — see home-environment.test.js for the
-    // reasoning. A patient registered after the migration has no studies to
-    // have migrated, and asserting over every row turned this red when Sal
-    // registered one mid-intake on 2026-09-25.
+    // SCOPED BY `source_field`, which is the only precise marker of a
+    // migrated study: it records WHICH blob field the row came from, and a
+    // study recorded through the V3 screen has none.
+    //
+    // Filtering on the blob was not enough. A clinician who fills the
+    // diagnostics block gets `diagnostics::` keys too, so Haley came straight
+    // back into the "migrated" set the moment Sal entered her imaging — and
+    // failed on "a migrated study must say which field it came from", which
+    // is exactly the property that distinguishes the two.
     const patients = raw.prepare(
-      "SELECT id, name FROM patients WHERE dashboard_data LIKE '%\"diagnostics::%' ORDER BY id"
+      "SELECT DISTINCT p.id, p.name FROM patients p"
+      + " JOIN patient_diagnostic_studies s ON s.patient_id = p.id"
+      + " WHERE s.source_field IS NOT NULL ORDER BY p.id"
     ).all();
 
     let total = 0;
@@ -216,7 +223,9 @@ const IMG = (over = {}) => ({
     const db = wrap(raw);
     let flagged = 0;
     for (const p of raw.prepare(
-      "SELECT id FROM patients WHERE dashboard_data LIKE '%\"diagnostics::%'"
+      "SELECT DISTINCT p.id FROM patients p"
+      + " JOIN patient_diagnostic_studies s ON s.patient_id = p.id"
+      + " WHERE s.source_field IS NOT NULL"
     ).all()) {
       const r = await store.getStudies(db, p.id);
       flagged += r.summary.describing_multiple_studies;
@@ -234,10 +243,8 @@ const IMG = (over = {}) => ({
     // broke it — which happened while Sal was driving an intake on 2026-09-25.
     const raw = new DatabaseSync(REAL_DB, { readOnly: true });
     const dated = raw.prepare(
-      "SELECT s.performed_on FROM patient_diagnostic_studies s"
-      + " JOIN patients p ON p.id = s.patient_id"
-      + " WHERE s.performed_on IS NOT NULL"
-      + " AND p.dashboard_data LIKE '%\"diagnostics::%'"
+      "SELECT performed_on FROM patient_diagnostic_studies"
+      + " WHERE performed_on IS NOT NULL AND source_field IS NOT NULL"
     ).all();
     assert.strictEqual(dated.length, 1,
       `exactly one MIGRATED study had a stated date, found ${dated.length}`);

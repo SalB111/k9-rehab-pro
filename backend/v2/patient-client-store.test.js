@@ -208,7 +208,19 @@ function freshDb() {
       withDetails += 1;
       fields += Object.keys(r.details).length;
     }
-    assert.strictEqual(withDetails, 5, `expected 5 migrated client records, found ${withDetails}`);
+  // A MIGRATION TEST MUST NOT ASSERT AN EXACT COUNT OF A LIVE TABLE.
+  //
+  // Three of these broke in one afternoon on 2026-09-25/26 as Sal worked
+  // through a real intake, each reporting a defect that did not exist. The
+  // table keeps growing because clinicians keep using the product; the
+  // migration does not.
+  //
+  // What still has to hold is a FLOOR and CORRECTNESS: the migrated records
+  // are all present, and each reads back with what it was given. If a migrated
+  // record ever vanishes or loses its fields, that is a real regression and
+  // this still catches it.
+    assert.ok(withDetails >= 5,
+      `expected at least the 5 migrated client records, found ${withDetails}`);
     assert.ok(fields >= 40, `expected the migrated fields, found ${fields}`);
   });
 

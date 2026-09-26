@@ -395,11 +395,51 @@ async function recordStatus(db, { patientId, status, effectiveDate, dateIsUnknow
   const dateUnknown = dateIsUnknown ? 1 : 0;
 
   const cols = [...STATUS_TEXT, ...STATUS_FLAGS];
-  await db.run(
-    `INSERT INTO ${STATUS} (patient_id, effective_date, ${cols.join(', ')}, ${DATE_UNKNOWN}, recorded_by)
-     VALUES (?, ?, ${cols.map(() => '?').join(', ')}, ?, ?)`,
-    [patientId, when, ...cols.map((c) => merged[c]), dateUnknown, actor.id]
-  );
+
+  // ONE ROW PER DATE, NOT ONE PER SAVE.
+  //
+  // The panel saves each answer as it is given, so filling the status in
+  // produced a row per FIELD. Haley got seven on 2026-09-26 — weight bearing,
+  // then the e-collar, then crate rest, then the sling, then the restrictions
+  // — and the "progression" became a recording of somebody typing.
+  //
+  // The series is meant to show NWB -> TTWB -> PWB -> FWB across weeks. Seven
+  // identical entries from one afternoon do not just add noise: they bury the
+  // real progression they were built to show.
+  //
+  // So a save on a date that already has a row UPDATES it. The row is the
+  // state as at that date, and a clinician filling it in over five minutes is
+  // recording one state, not five.
+  //
+  // TWO THINGS THIS DOES NOT DO:
+  //
+  //   It never touches a row on a DIFFERENT date. Last week's finding is
+  //   history and is not editable through this path — that is the invariant
+  //   the block exists for.
+  //
+  //   It never merges with a MIGRATED row. Those carry
+  //   `effective_date_is_unknown` and a date nobody stated; folding a
+  //   clinician's real observation into one would give their finding the
+  //   migration's date and silently launder the uncertainty away.
+  const sameDay = current
+    && current.effective_date === when
+    && !current[DATE_UNKNOWN]
+    && !dateUnknown;
+
+  if (sameDay) {
+    await db.run(
+      `UPDATE ${STATUS}
+          SET ${cols.map((c) => `${c} = ?`).join(', ')}, recorded_by = ?
+        WHERE id = ?`,
+      [...cols.map((c) => merged[c]), actor.id, current.id]
+    );
+  } else {
+    await db.run(
+      `INSERT INTO ${STATUS} (patient_id, effective_date, ${cols.join(', ')}, ${DATE_UNKNOWN}, recorded_by)
+       VALUES (?, ?, ${cols.map(() => '?').join(', ')}, ?, ?)`,
+      [patientId, when, ...cols.map((c) => merged[c]), dateUnknown, actor.id]
+    );
+  }
   return getTreatment(db, patientId);
 }
 
