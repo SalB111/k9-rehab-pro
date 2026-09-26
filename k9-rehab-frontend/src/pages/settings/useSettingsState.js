@@ -23,19 +23,23 @@ export function useSettingsState(setBrand, toast) {
     license_state: "", npi: "", board_certs: [],
   });
 
-  // ── Equipment & facility (client-side) ──
-  const [equipment, setEquipment] = useState({
-    underwater_treadmill: false, therapeutic_pool: false,
-    land_treadmill: false, cavaletti_rails: true,
-    balance_discs: true, wobble_boards: true, physio_balls: true,
-    rocker_boards: false, ramps_stairs: true,
-    nmes: false, tens: false, pemf: false,
-    therapeutic_ultrasound: false,
-    class_iii_laser: false, class_iv_laser: false,
-    cryotherapy: true, thermotherapy: true,
-    harness: true, sling: true,
-    resistance_bands: true, weight_vests: false,
-  });
+  // ── Equipment is NOT held here any more, 2026-09-26 ──
+  //
+  // It was a client-side object with its own vocabulary — underwater_treadmill,
+  // therapeutic_pool, class_iv_laser — that shared NOT ONE KEY with the
+  // engine's (aquatic_access, modality_uwtm, modality_laser, ...), and nothing
+  // ever saved it anywhere. Every toggle was a no-op while the tab displayed
+  // "Equipment settings gate protocol generation — exercises requiring
+  // unavailable equipment will be excluded automatically".
+  //
+  // Measured the day it was removed: the clinic had 10 of 10 capabilities
+  // unstated, so every gated therapy was being withheld from every protocol
+  // for every patient, and the one screen a clinician would open to fix that
+  // was connected to nothing.
+  //
+  // TabEquipment now reads and writes /v2/clinic/capabilities directly, which
+  // is the store the protocol engine actually reads. A copy here would make it
+  // two stores for one fact again.
 
   // ── Protocol defaults (client-side) ──
   const [protocolDefaults, setProtocolDefaults] = useState({
@@ -134,8 +138,8 @@ export function useSettingsState(setBrand, toast) {
     activeTab, setActiveTab,
     // Clinician
     clinician, setClinician,
-    // Equipment
-    equipment, setEquipment,
+    // Equipment is not here: TabEquipment owns it and talks to
+    // /v2/clinic/capabilities directly. See the note above.
     // Protocol defaults
     protocolDefaults, setProtocolDefaults,
     // Documentation

@@ -56,7 +56,6 @@ const BLOCK_SOURCE = {
   metrics: 'store',
   home: 'store',
   goals: 'store',
-  equipment: 'clinic',
   assessment: 'blob',
   conditioning: 'blob',
   protocol: 'blob',
@@ -224,11 +223,10 @@ async function getBlockState(db, patientId, patient, clinic, stage) {
       continue;
     }
 
-    if (source === 'clinic') {
-      const configured = Boolean(clinic && clinic.configured);
-      out[block] = describe('clinic', configured, configured ? 1 : 0);
-      continue;
-    }
+    // The 'clinic' source is gone with the equipment block (2026-09-26).
+    // Clinic capabilities are a property of the practice, set once in
+    // Settings, and were never a per-patient question. patient-gaps still
+    // reports unstated capabilities as WITHHOLDS, which is where that belongs.
 
     const n = counts[block] || 0;
     out[block] = describe('blob', n > 0, n);

@@ -43,6 +43,11 @@ const db = new DatabaseSync(DB_PATH, { readOnly: true });
 
 /** block -> the tables that own it. Empty means not migrated. */
 const TABLES = {
+  // Still listed although the dashboard block was removed on 2026-09-26:
+  // clinic_capabilities is a real V3 table and equipment is a real merged
+  // fact. It is simply CLINIC-scoped, not patient-scoped, and is now set in
+  // Settings. "no panel" in the row below is the correct reading, not a gap.
+  // clinic-scoped since 2026-09-26.
   equipment: ['clinic_capabilities'],
   metrics: ['visit_measurements'],
   client: ['patient_client_details'],

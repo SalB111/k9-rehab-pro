@@ -2456,136 +2456,15 @@ function MetricsPanel() {
  * by the API rather than held here, so there is no second copy of the list to
  * drift from the map that turns items into engine capabilities.
  */
-function EquipmentPanel() {
-  const apiBase = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
-  const [state, setState] = useState({ loading: true, error: null, shape: [], equipment: {}, gating: [] });
-  const [saving, setSaving] = useState(null);
+// EquipmentPanel REMOVED 2026-09-26. Clinic equipment is a property of the
+// CLINIC, not of a patient, so asking for it on every chart was asking the
+// wrong question in the wrong place. It now lives in Settings > Equipment,
+// which is reachable from the side menu before anyone opens a patient.
+//
+// The move was not a deletion: that tab had its own client-side vocabulary
+// and saved nothing, so this panel was the ONLY working path to
+// clinic_capabilities. Its implementation moved across intact.
 
-  const authHeaders = () => {
-    const token = localStorage.getItem("token");
-    return { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) };
-  };
-
-  useEffect(() => {
-    let live = true;
-    fetch(`${apiBase}/v2/clinic/capabilities`, { headers: authHeaders() })
-      .then(r => r.json())
-      .then(j => {
-        if (!live) return;
-        const d = j.data || {};
-        setState({ loading: false, error: null, shape: d.checklistShape || [], equipment: d.equipment || {}, gating: d.gatingItems || [] });
-      })
-      .catch(e => live && setState(s => ({ ...s, loading: false, error: e.message })));
-    return () => { live = false; };
-  }, [apiBase]);
-
-  // Optimistic, because a checklist that lags a click feels broken — but the
-  // server's answer is what is kept, and a failure puts the tick back.
-  async function toggle(item, next) {
-    const before = state.equipment[item];
-    setState(s => ({ ...s, equipment: { ...s.equipment, [item]: next } }));
-    setSaving(item);
-    try {
-      const res = await fetch(`${apiBase}/v2/clinic/capabilities`, {
-        method: "PUT",
-        headers: authHeaders(),
-        body: JSON.stringify({ equipment: { [item]: next } }),
-      });
-      const j = await res.json();
-      if (!res.ok || !j.success) throw new Error(j.error || `HTTP ${res.status}`);
-      setState(s => ({ ...s, equipment: j.data.equipment || s.equipment, error: null }));
-    } catch (e) {
-      setState(s => ({ ...s, equipment: { ...s.equipment, [item]: before }, error: e.message }));
-    } finally {
-      setSaving(null);
-    }
-  }
-
-  if (state.loading) return <div style={{ fontSize:12, color:C.muted, padding:14 }}>Loading the clinic's equipment…</div>;
-
-  const unanswered = state.shape.flatMap(g => g.items).filter(i => state.equipment[i] === undefined || state.equipment[i] === null).length;
-
-  return <>
-    <div style={{ fontSize:11, color:C.muted, marginBottom:16, padding:"10px 14px", background:C.blueLt, borderRadius:6, border:`1px solid ${C.blue}33` }}>
-      This is the equipment at <strong>this clinic</strong>, not this patient. It is shared with the
-      clinical workflow&rsquo;s access screen and it is what B.E.A.U. prescribes from — only equipment
-      recorded here is offered.
-      {unanswered > 0 && (
-        <div style={{ marginTop:6 }}>
-          <strong>{unanswered} of {state.shape.flatMap(g => g.items).length} not yet answered.</strong>{" "}
-          An unanswered modality is treated as unavailable, so it is withheld from every protocol
-          until somebody says.
-        </div>
-      )}
-    </div>
-
-    {state.error && (
-      <div style={{ fontSize:11.5, color:C.red, marginBottom:12, padding:"8px 12px", background:"#FEF2F2", borderRadius:6 }}>
-        {state.error}
-      </div>
-    )}
-
-    {state.shape.map((grp, gi) => (
-      <Sec key={grp.category} title={grp.category} color={C.teal} colorLt={C.tealLt} collapsible defaultOpen={gi === 0}>
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:7 }}>
-          {grp.items.map(item => {
-            const checked = state.equipment[item] === true;
-            const gates = state.gating.includes(item);
-            const busy = saving === item;
-            return (
-              <div
-                role="button" tabIndex={0} key={item}
-                className={`cb-row${checked ? " active" : ""}`}
-                style={{ opacity: busy ? 0.55 : 1 }}
-                onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(item, !checked); } }}
-                onClick={() => toggle(item, !checked)}
-              >
-                <input type="checkbox" checked={checked} readOnly style={{ width:15, height:15, accentColor:C.teal, flexShrink:0 }}/>
-                <span style={{ fontSize:11, color: checked ? C.teal : C.text }}>
-                  {item}
-                  {/* The ten that actually gate a therapy, marked so a clinician
-                      can see which ticks change what gets prescribed. */}
-                  {gates && <span title="Enables a therapy in the protocol engine" style={{ marginLeft:5, fontSize:9, color:C.teal, opacity:0.8 }}>◆</span>}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      </Sec>
-    ))}
-
-    <Sec title="Other Equipment" color={C.teal} colorLt={C.tealLt} collapsible defaultOpen={true}>
-      <F label="Describe any additional equipment not listed above" placeholder="Additional equipment, brand names, unique modalities…" rows={2}/>
-    </Sec>
-    <ClinicalNotes/>
-  </>;
-}
-
-// ── HOME PROGRAM ──────────────────────────────────────────────────────────────
-/**
- * HOME PROGRAM — this patient's home environment
- *
- * V3. Reads and writes `patient_home_environment` through the V2 API. That
- * table is the source of truth for the block; `patients.dashboard_data` is no
- * longer read for it by anything except the one-time migration.
- *
- * Until 24 Sep 2026 every answer here landed in that blob, keyed by the field's
- * LABEL — so renaming a label stranded the data, nothing could query it, and
- * the same fact living in two places is why `record-sync` had to exist.
- *
- * TWO DEFECTS THIS ALSO FIXES
- *
- *   1. "Exercise Location" was React state initialised to "". It gated both
- *      environment sections and was never loaded or saved, so a patient with a
- *      recorded home opened to an EMPTY panel until somebody re-picked a
- *      location — and the answer itself was never part of the record.
- *   2. Four fields this panel offered — outdoor surface, steps, safety and
- *      items — had nowhere to be stored at all.
- *
- * The questions, their options and their grouping are SERVED by the API rather
- * than held here, so the form and the normalisers cannot drift into reading
- * different vocabularies.
- */
 function HomePanel() {
   const { patientId } = useContext(DashFormContext);
   const apiBase = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
@@ -4487,7 +4366,6 @@ const BLOCKS = [
   { id:"assessment",   icon:"🐕", color:C.amber,   colorLt:C.amberLt  },
   { id:"treatment",    icon:"🩺", color:"#F59E0B", colorLt:"#FFFBEB"  },
   { id:"metrics",      icon:"🦮", color:C.green,   colorLt:C.greenLt  },
-  { id:"equipment",    icon:"🐕‍🦺", color:C.teal,    colorLt:C.tealLt   },
   { id:"home",         icon:"🏡", color:C.blue,    colorLt:C.blueLt   },
   { id:"goals",        icon:"🏆", color:"#BE185D", colorLt:"#FDF2F8"  },
   { id:"conditioning", icon:"🐺", color:"#0D9488", colorLt:"#F0FDFB"  },
@@ -4506,7 +4384,7 @@ const SIDEBAR_NAV = [
   { id:"hipaa",      icon:"🔒" },
 ];
 
-const BLOCK_COMPS   = { client:ClientPanel, diagnostics:DiagnosticsPanel, assessment:AssessmentPanel, treatment:TreatmentPanel, metrics:MetricsPanel, equipment:EquipmentPanel, home:HomePanel, goals:GoalsPanel, conditioning:ConditioningPanel, protocol:ProtocolPanel, library:LibraryPanel, nutrition:PetCareNutritionPanel, "coming-soon":ComingSoonPanel };
+const BLOCK_COMPS   = { client:ClientPanel, diagnostics:DiagnosticsPanel, assessment:AssessmentPanel, treatment:TreatmentPanel, metrics:MetricsPanel, home:HomePanel, goals:GoalsPanel, conditioning:ConditioningPanel, protocol:ProtocolPanel, library:LibraryPanel, nutrition:PetCareNutritionPanel, "coming-soon":ComingSoonPanel };
 const SIDEBAR_COMPS = { how:HowToUse, ask:AskBeau, helsinki:HelsinkiPanel, about:AboutPanel, disclaimer:DisclaimerPanel, hipaa:HipaaPanel };
 
 // ── CONTEXTUAL B.E.A.U. PROMPTS ──────────────────────────────────────────────

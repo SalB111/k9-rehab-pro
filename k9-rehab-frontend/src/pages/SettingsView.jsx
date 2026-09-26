@@ -75,7 +75,7 @@ function SettingsView({ setBrand }) {
         <TabClinician clinician={state.clinician} setClinician={state.setClinician} {...shared} />
       )}
       {state.activeTab === "equipment" && (
-        <TabEquipment equipment={state.equipment} setEquipment={state.setEquipment} {...shared} />
+        <TabEquipment {...shared} />
       )}
       {state.activeTab === "protocols" && (
         <TabProtocols protocolDefaults={state.protocolDefaults} setProtocolDefaults={state.setProtocolDefaults} {...shared} />

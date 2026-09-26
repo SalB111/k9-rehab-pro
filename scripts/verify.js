@@ -182,6 +182,12 @@ const CHECKS = [
   // bypass lets a protocol be GENERATED with gaps, never SIGNED with them.
   { name: 'K9 · block bypass',      cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/visit-bypass-store.test.js'],
     ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
+  // Clinic equipment lives in Settings, and that tab used to save NOTHING:
+  // its own vocabulary, no server call, while displaying "Equipment settings
+  // gate protocol generation". 10 of 10 capabilities were unstated, so every
+  // gated therapy was withheld from every protocol, silently.
+  { name: 'K9 · equipment home',    cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/clinic-equipment-home.test.js'],
+    ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
   // One library, one identifier, one stated size. `all-exercises.js` is THE
   // library; the `exercises_v2` table is a different one with a disjoint id
   // scheme, and an endpoint keyed one by the other 404'd on every code the
