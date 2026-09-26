@@ -149,6 +149,12 @@ const CHECKS = [
   // reaches nothing, which is worse than the drift it replaced.
   { name: 'K9 · restrictions home',  cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/activity-restrictions-home.test.js'],
     ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
+  // A clinical finding is never fabricated. Fixed twice now: 3516874 took
+  // the defaults out of the INSERT in server.js, and the patients DDL still
+  // had DEFAULT 0 / 5 / 5 / 'Moderate' behind it, so any insert that merely
+  // OMITTED a column got one invented. Found by scripts/drive-flow.js.
+  { name: 'K9 · no fabricated findings', cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/no-fabricated-findings.test.js'],
+    ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
   // One library, one identifier, one stated size. `all-exercises.js` is THE
   // library; the `exercises_v2` table is a different one with a disjoint id
   // scheme, and an endpoint keyed one by the other 404'd on every code the

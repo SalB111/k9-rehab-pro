@@ -803,11 +803,14 @@ function createV2Router(deps) {
     const handoff = await store.handoffToBeau(db, {
       versionId: Number(req.params.id), actor: req.user,
       // The home B.E.A.U. is permitted to adapt to, and the goals it is
-      // working toward. Read here rather than in the store: both live in V1's
-      // `patients.dashboard_data`, and this router is the V1-aware layer. Read
-      // straight through, never copied into a V2 table — the dashboard form is
-      // still where a clinician types them, and a second copy would drift the
-      // moment one side was edited alone.
+      // working toward.
+      //
+      // CORRECTED 2026-09-26. This comment used to say both live in V1's
+      // `patients.dashboard_data` and are read straight through. They do not,
+      // and have not since the home and goals blocks were migrated —
+      // readHandoffContext above reads `patient_home_environment` and
+      // `patient_goals` / `patient_goal_items`, and says so in its own header.
+      // The two descriptions had been contradicting each other.
       ...(await readHandoffContext(db, Number(req.params.id))),
     });
     res.status(201).json({ success: true, data: handoff });

@@ -100,10 +100,34 @@ async function createTables() {
       condition TEXT NOT NULL,
       affected_region TEXT,
       surgery_date TEXT,
-      lameness_grade INTEGER DEFAULT 0,
-      body_condition_score INTEGER DEFAULT 5,
-      pain_level INTEGER DEFAULT 5,
-      mobility_level TEXT DEFAULT 'Moderate',
+      -- NO DEFAULTS ON A CLINICAL FINDING.
+      --
+      -- These read `DEFAULT 0`, `DEFAULT 5`, `DEFAULT 5` and
+      -- `DEFAULT 'Moderate'` until 2026-09-26. Every one is a real finding
+      -- about a real animal, and all four are ENGINE INPUTS, so a row
+      -- inserted without them described a patient nobody had examined:
+      --
+      --   lameness 0     "sound"
+      --   BCS 5          "ideal"
+      --   pain 5/10      moderate pain
+      --   mobility       "Moderate"
+      --
+      -- Commit 3516874 removed the same four defaults from the INSERT in
+      -- server.js. It did not remove THESE, so the fabrication survived one
+      -- layer down: any insert that simply omits the columns gets them back.
+      -- Found 2026-09-26 by scripts/drive-flow.js, whose registration step
+      -- names only the columns it means to set — which is exactly the shape
+      -- of a future insert path that would have reintroduced the bug
+      -- silently.
+      --
+      -- NULL is not a gap here, it is the truth: nobody has assessed it.
+      -- patient-gaps reports all four, intake-proposal recovers them from
+      -- the clinical record, and the safety gates fall to their cautious
+      -- defaults. A fabricated 5 defeats all three without saying so.
+      lameness_grade INTEGER,
+      body_condition_score INTEGER,
+      pain_level INTEGER,
+      mobility_level TEXT,
       current_medications TEXT,
       medical_history TEXT,
       special_instructions TEXT,
