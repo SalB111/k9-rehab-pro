@@ -210,12 +210,26 @@ export function ClinicalBackground({ values, onChange }) {
         <textarea style={area} rows={3} value={values.medical_history ?? ""}
           onChange={set("medical_history")} />
       </Field>
+      {/* ── "Special instructions" MOVED, 2026-09-26 ──────────────────────
+          It was a second place to write the same fact. Activity orders live
+          in the Treatment block, in patient_treatment_status.activity_
+          restrictions, which is what the engine reads;
+          patients.special_instructions is now only a MIRROR of that, written
+          by the treatment store.
+
+          Winston, Charlie and Luna each ended up holding orders on one side
+          that the other was missing — Charlie's heated bedding and 4-weekly
+          HCPI reassessment in one, his walk dosing in the other. Leaving this
+          box here after the engine moved would not have preserved that split,
+          it would have made it worse: anything typed here would no longer
+          reach the protocol at all. */}
       <Field
-        label="Special instructions"
-        hint="Anything a protocol must respect that the fields above do not carry."
+        label="Activity restrictions"
+        hint="Recorded in the Treatment block, not here — leash, stairs, crate rest, impact limits."
       >
-        <textarea style={area} rows={2} value={values.special_instructions ?? ""}
-          onChange={set("special_instructions")} />
+        <div style={{ ...area, color: "#64748B", fontStyle: "italic", background: "#F8FAFC" }}>
+          Open the patient's Treatment block to record or change activity restrictions.
+        </div>
       </Field>
     </div>
   );

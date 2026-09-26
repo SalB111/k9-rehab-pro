@@ -149,7 +149,11 @@ function reconcile({ existing = {}, updates = {}, incomingBlob } = {}) {
     ['affected_region', 'affectedRegion'],
     ['medical_history', 'medicalHistory'],
     ['current_medications', 'currentMedications'],
-    ['special_instructions', 'specialInstructions'],
+    // REMOVED 2026-09-26: ['special_instructions', 'specialInstructions'].
+    // That column is now a MIRROR of patient_treatment_status.activity_
+    // restrictions, written by the treatment store. Filling it from the blob
+    // as well would make it a second writer, which is exactly the two-copies
+    // problem this change exists to end.
     ['pain_level', 'painScore', true],
     ['lameness_grade', 'lamenessGrade', true],
     ['mobility_level', 'mobilityLevel'],

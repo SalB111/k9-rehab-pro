@@ -65,7 +65,9 @@ export default function EditPatient({ patient, activeProtocol, onSave, onCancel,
     body_condition_score: str(patient.body_condition_score),
     current_medications: str(patient.current_medications),
     medical_history: str(patient.medical_history),
-    special_instructions: str(patient.special_instructions),
+    // special_instructions is NOT here. It is a mirror of the treatment
+    // store's activity_restrictions since 2026-09-26 — edited in the
+    // Treatment block, never from this form.
   }));
 
   const set = (k) => (e) => setF((p) => ({ ...p, [k]: e.target.value }));
@@ -98,7 +100,9 @@ export default function EditPatient({ patient, activeProtocol, onSave, onCancel,
       body_condition_score: str(patient.body_condition_score),
       current_medications: str(patient.current_medications),
       medical_history: str(patient.medical_history),
-      special_instructions: str(patient.special_instructions),
+      // Deliberately absent — see the form state above. Including it here
+      // would put it back in the PUT body the moment the mirror changed
+      // underneath an open form, stamping a stale value over the store's.
     };
     for (const [k, was] of Object.entries(compare)) {
       const now = String(f[k] ?? "").trim();

@@ -213,6 +213,12 @@ function readTreatment(treatment) {
     if (s.strict_crate_rest !== null && s.strict_crate_rest !== undefined) {
       put('crateRestRequired', Boolean(s.strict_crate_rest), 'treatment status: crate rest');
     }
+    // The activity orders. THE STORE IS THE HOME for these as of 2026-09-26;
+    // patients.special_instructions is a mirror of this field, written by
+    // recordStatus. The engine reads the home rather than the mirror so that
+    // a stale mirror can never be what a protocol is reasoned from.
+    put('specialInstructions', s.activity_restrictions,
+      'treatment status: activity restrictions');
   }
 
   // The most recent DATED procedure. An undated one cannot place a patient in
@@ -390,6 +396,12 @@ function proposeEngineInputs({
   // column holds one date and a patient can have several operations, which is
   // why patient_procedures exists. Verified against all five patients on
   // 2026-09-25 — the two agree everywhere, so this changes no current case.
+  // The store outranks the column for the fields it owns — see the header
+  // above. Activity orders are one of them since 2026-09-26.
+  if (tx.values.specialInstructions) {
+    effective.special_instructions = tx.values.specialInstructions;
+  }
+
   if (tx.values.surgeryDate) {
     effective.surgery_date = tx.values.surgeryDate;
     why.surgeryDate = `From the recorded ${tx.provenance.surgeryDate.key}.`;

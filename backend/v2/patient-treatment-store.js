@@ -451,7 +451,33 @@ async function recordStatus(db, { patientId, status, effectiveDate, dateIsUnknow
       [patientId, when, ...cols.map((c) => merged[c]), dateUnknown, actor.id]
     );
   }
-  return getTreatment(db, patientId);
+  // ── THE MIRROR ──────────────────────────────────────────────────────────
+  //
+  // `activity_restrictions` is THE home for a patient's activity orders as of
+  // 2026-09-26. `patients.special_instructions` is kept only as a mirror of
+  // it, because three readers still take it from there:
+  //
+  //   PatientDetailView.jsx:145   displays it
+  //   engine-adapter.js:191       feeds the generator on the visit path
+  //   patient-gaps.js:96          reports it missing
+  //
+  // One writer keeps all three correct without repointing each of them.
+  //
+  // WHY THIS MIRRORS `getTreatment().status` AND NOT THE LOCAL `merged`:
+  // a clinician may record a status for an EARLIER date. That row is written,
+  // but it is not the current one — and mirroring `merged` would stamp a
+  // superseded set of orders over the column. getTreatment already resolves
+  // "current" as effective_date DESC, id DESC, so reading it back is the only
+  // way to mirror the row that actually governs.
+  //
+  // Until this existed the two drifted apart: Winston, Charlie and Luna each
+  // ended up holding orders on one side that the other was missing.
+  const out = await getTreatment(db, patientId);
+  await db.run(
+    'UPDATE patients SET special_instructions = ? WHERE id = ?',
+    [(out.status && out.status.activity_restrictions) || '', patientId]
+  );
+  return out;
 }
 
 module.exports = {

@@ -326,6 +326,62 @@ It does **not** fire for the five current patients — their diagnoses route on
 their own — and it fires the moment `affected_region` is empty and the blob
 fills it.
 
+### Activity restrictions have ONE home  `[2026-09-26]`
+
+**`patient_treatment_status.activity_restrictions` is the home.**
+`patients.special_instructions` is a **mirror** of it, written by
+`recordStatus` and by nothing else. They are one fact, owned by the
+Treatment block — Sal's decision, 2026-09-26.
+
+They used to be two live copies and they did not drift as stale copies of one
+another. They drifted into **half-records**, each holding orders the other was
+missing:
+
+| | only in the column | only in the store |
+|---|---|---|
+| Charlie | heated orthopedic bedding, weight loss to BCS 5/9, reassess HCPI 4-weekly | leash walks 20-30 min 2x/day, no repetitive fetch, no stairs when reluctant |
+| Luna | reassess drawer + TCT at 8w, TPLO indicated if progression | no off-leash, controlled walks 15-20 min 3x/day |
+| Winston | weight management critical (BCS 6/9) | — |
+| Haley | — | **everything — her column was empty, so the engine had never seen her restrictions at all** |
+
+Merged from Sal's own wording, confirmed by him verbatim, then the cause was
+fixed:
+
+- `recordStatus` mirrors the **current** row into the column. It reads
+  `getTreatment().status` rather than its local `merged`, because a clinician
+  may record a status for an EARLIER date — mirroring `merged` would put a
+  backdated crate-rest order back on a freely exercising dog.
+- `readTreatment` maps it, and it outranks the column, the way `surgery_date`
+  already did.
+- `record-sync`'s `ONE_WAY` entry was **removed**: a mirror with two writers
+  is the problem all over again.
+- **The Special instructions box is gone from New/Edit Patient.** This is the
+  load-bearing part. With the engine reading the store, a box still writing
+  the column would not recreate the old drift — it would mean what a
+  clinician types reaches NOTHING.
+
+The column stays because three readers take it from there:
+`PatientDetailView.jsx:145`, `engine-adapter.js:191`, `patient-gaps.js:96`.
+
+Guarded by 8 tests in `backend/v2/activity-restrictions-home.test.js`,
+mutation-tested against all seven ways of undoing it.
+
+> **AND THEY DRIVE NO EXERCISE EXCLUSION — they did not before this either.**
+> `getExcludedCodes` (protocol-generator.js:867) keyword-scans
+> `specialInstructions`, but all 18 `CONTRAINDICATION_MAP` keywords are
+> comorbidity terms — `cardiac`, `seizure`, `cancer`, `pregnant`,
+> `implant`, `non-ambulatory`. Probed 2026-09-26: `"no stairs"`,
+> `"no jumping"`, `"crate rest"`, `"harness only"` and
+> `"no impact exercises"` match **nothing**.
+>
+> So writing "no impact exercises" does not remove impact exercises from a
+> protocol. Impact and jumping appear only as advisory prose on each protocol
+> definition, never as logic. Not a safety hole — every protocol carries its
+> contraindication text and none is valid without clinician sign-off — but it
+> is a gap between what the field implies and what the engine does.
+> **Adding activity-based exclusion rules is clinical authorship and is
+> Sal's to write.**
+
 ### Treatment answers the engine never sees
 
 `treatment::E-Collar Required` and `treatment::Strict Crate Rest` are collected

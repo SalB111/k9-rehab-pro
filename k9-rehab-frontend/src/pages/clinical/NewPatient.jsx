@@ -29,7 +29,9 @@ export default function NewPatient({ onCreate, onCancel, busy }) {
     sex: "", condition: "", affected_region: "", surgery_date: "",
     client_name: "",
     // Engine inputs, optional at registration. See ClinicalBackground.
-    current_medications: "", medical_history: "", special_instructions: "",
+    // special_instructions is omitted on purpose: activity restrictions are
+    // recorded in the Treatment block, which owns them. See PatientForm.jsx.
+    current_medications: "", medical_history: "",
   });
   const set = (k) => (e) => setF((p) => ({ ...p, [k]: e.target.value }));
   const patch = (p2) => setF((p) => ({ ...p, ...p2 }));

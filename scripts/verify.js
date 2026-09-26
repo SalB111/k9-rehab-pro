@@ -137,6 +137,18 @@ const CHECKS = [
   // in this suite is that fourth test.
   { name: 'K9 · protocol summary',   cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/protocol-summary.test.js'],
     ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
+  // ONE HOME for activity restrictions. They lived in patients.special_
+  // instructions AND patient_treatment_status.activity_restrictions, and
+  // the two drifted into half-records: Charlie kept his heated bedding and
+  // HCPI reassessment in one and his walk dosing in the other, and Haley’s
+  // column was empty outright, so the engine never saw her restrictions.
+  //
+  // The store is now the home and the column a mirror. The load-bearing
+  // check is that NO FORM FIELD writes the mirror — with the engine on the
+  // store, a box that still writes the column means what a clinician types
+  // reaches nothing, which is worse than the drift it replaced.
+  { name: 'K9 · restrictions home',  cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/activity-restrictions-home.test.js'],
+    ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
   // One library, one identifier, one stated size. `all-exercises.js` is THE
   // library; the `exercises_v2` table is a different one with a disjoint id
   // scheme, and an endpoint keyed one by the other 404'd on every code the

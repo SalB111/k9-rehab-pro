@@ -73,9 +73,14 @@ const SCHEMA = fs.readFileSync(
 function freshDb() {
   const raw = new DatabaseSync(':memory:');
   raw.exec('CREATE TABLE users (id INTEGER PRIMARY KEY, username TEXT)');
+  // special_instructions is here because recordStatus MIRRORS the current
+  // activity_restrictions into it (2026-09-26). Omitting it made every write
+  // test fail with "no such column" — which is the fixture being wrong, not
+  // the mirror: production has always had this column, and a missing one
+  // means something is badly broken, so the store should fail loudly.
   raw.exec(`CREATE TABLE patients (
     id INTEGER PRIMARY KEY, name TEXT, condition TEXT, affected_region TEXT,
-    treatment_approach TEXT, affected_limbs TEXT
+    treatment_approach TEXT, affected_limbs TEXT, special_instructions TEXT
   )`);
   // Strip comments the way schema.js does, then apply.
   const sql = SCHEMA.split('\n').filter((l) => !l.trim().startsWith('--')).join('\n');
