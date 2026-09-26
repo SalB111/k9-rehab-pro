@@ -138,3 +138,24 @@ CREATE POLICY v2_vpv_select ON v2_visit_protocol_versions
   FOR SELECT TO authenticated USING (true);
 CREATE POLICY v2_vpv_insert ON v2_visit_protocol_versions
   FOR INSERT TO authenticated WITH CHECK (true);
+
+-- visit_block_bypasses — see the SQLite mirror for why this exists.
+CREATE TABLE IF NOT EXISTS v2_visit_block_bypasses (
+  id          BIGSERIAL PRIMARY KEY,
+  visit_id    BIGINT NOT NULL REFERENCES v2_visits(id),
+  patient_id  BIGINT NOT NULL,
+  block_id    TEXT NOT NULL,
+  bypassed_by BIGINT REFERENCES users(id),
+  bypassed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (visit_id, block_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_v2_vbb_visit_id ON v2_visit_block_bypasses(visit_id);
+CREATE INDEX IF NOT EXISTS idx_v2_vbb_patient_id ON v2_visit_block_bypasses(patient_id);
+
+ALTER TABLE v2_visit_block_bypasses ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY v2_vbb_select ON v2_visit_block_bypasses
+  FOR SELECT TO authenticated USING (true);
+CREATE POLICY v2_vbb_write ON v2_visit_block_bypasses
+  FOR ALL TO authenticated USING (true) WITH CHECK (true);

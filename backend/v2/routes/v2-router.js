@@ -34,6 +34,7 @@ const patientDiagnosticsStore = require('../patient-diagnostics-store');
 const patientClientStore = require('../patient-client-store');
 const patientTreatmentStore = require('../patient-treatment-store');
 const patientBlockState = require('../patient-block-state');
+const visitBypassStore = require('../visit-bypass-store');
 const ownerAuth = require('../owner-auth');
 const { requireRole, requireApprovalAuthority } = require('../middleware/require-role');
 const { route } = require('../http-errors');
@@ -185,6 +186,39 @@ function createV2Router(deps) {
       db, patientId, patient, capabilities, stage
     );
     res.json({ success: true, data: { patient_id: patientId, stage, blocks } });
+  }));
+
+  // ── "Not needed today" ──────────────────────────────────────────────────
+  //
+  // Sal: a busy vet "cant or dont need that info right away", but must still
+  // be able to generate from the criteria they do have. Ticking a block here
+  // records that decision against the visit — who, and when.
+  //
+  // It loosens NOTHING. The safety gates behind a skipped block stay
+  // unproposed and approval still refuses until a clinician confirms them.
+  // A bypass lets a protocol be GENERATED with gaps, never SIGNED with them.
+  //
+  // POST opens a visit if the patient has none, which is the only place in
+  // the app that does so — see visit-bypass-store.ensureOpenVisit for why
+  // ticking a box is a defensible moment to start a clinical record and
+  // merely opening the dashboard is not.
+
+  router.post('/patients/:id/blocks/:blockId/bypass', route(async (req, res) => {
+    const data = await visitBypassStore.setBypass(db, {
+      patientId: Number(req.params.id),
+      blockId: req.params.blockId,
+      actor: req.user,
+    });
+    res.status(201).json({ success: true, data });
+  }));
+
+  router.delete('/patients/:id/blocks/:blockId/bypass', route(async (req, res) => {
+    const data = await visitBypassStore.clearBypass(db, {
+      patientId: Number(req.params.id),
+      blockId: req.params.blockId,
+      actor: req.user,
+    });
+    res.json({ success: true, data });
   }));
   // -------------------------------------------------------------------------
   // Home environment — V3: this table is the source of truth for the block

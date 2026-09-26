@@ -374,6 +374,68 @@ function open() {
     );
   });
 
+  await test('the "not needed today" box does not open the block it skips', () => {
+    // The whole card is a role="button". Without stopPropagation on BOTH the
+    // label and the input, every tick would also open the block the clinician
+    // just said they did not need — which is the exact opposite of saving them
+    // time, and the kind of thing a build cannot see.
+    const src = fs.readFileSync(DASHBOARD, 'utf8');
+
+    // Anchor on the JSX EXPRESSION, not the words. The first occurrence of
+    // "Not needed today" in this file is a comment header 650 lines above the
+    // control, and the first version of this test grabbed that instead and
+    // failed against correct code. Third time today a test has been confused
+    // by its own prose.
+    const i = src.indexOf('{bypassed ? "Skipped today" : "Not needed today"}');
+    assert.ok(i > 0, 'the bypass checkbox is gone from the block card');
+
+    // NOT A COUNT. The first version asserted ">= 3 stopPropagation calls in
+    // the surrounding window", and deleting the one on the label still left
+    // three, so a real regression sailed through. Each element that can
+    // receive the click is now named.
+    const around = src.slice(Math.max(0, i - 1400), i + 200);
+    const label = around.slice(around.lastIndexOf('<label'), around.indexOf('<input'));
+    const input = around.slice(around.indexOf('<input'));
+
+    assert.ok(
+      /onClick=\{\(e\) => e\.stopPropagation\(\)\}/.test(label),
+      'the LABEL does not stop the click, so clicking the words "Not needed '
+      + 'today" would open the block the clinician just said they did not need'
+    );
+    assert.ok(
+      /onClick=\{\(e\) => e\.stopPropagation\(\)\}/.test(input),
+      'the CHECKBOX does not stop the click, so ticking it would open the block'
+    );
+    assert.ok(
+      /toggleBypass\(b\.id, e\.target\.checked\)/.test(src),
+      'the checkbox does not call toggleBypass with the block and the new state'
+    );
+  });
+
+  await test('a skipped block is named on the banner, not silently hidden', () => {
+    const src = fs.readFileSync(DASHBOARD, 'utf8');
+    const live = src.split('\n').filter((l) => !l.trim().startsWith('//')).join('\n');
+    assert.ok(
+      /Skipped today/.test(live),
+      'the banner does not name skipped blocks. A silent skip is as misleading '
+      + 'as a false amber dot: the next clinician cannot tell "nobody did it" '
+      + 'from "somebody decided to go without it"'
+    );
+    assert.ok(
+      /\.bypassed\)/.test(live),
+      'nothing on the screen reads the bypassed flag'
+    );
+  });
+
+  await test('a bypassed card does not look like a completed one', () => {
+    const src = fs.readFileSync(DASHBOARD, 'utf8');
+    assert.ok(
+      /opacity: bypassed && !hasData/.test(src),
+      'a skipped empty block renders identically to a filled one. Skipped is '
+      + 'not done, and the card must not imply otherwise.'
+    );
+  });
+
   if (failures.length) {
     console.error(`\nFAILED ${failures.length} of ${passed + failures.length}\n`);
     process.exit(1);

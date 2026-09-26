@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS visits (
   id                INTEGER PRIMARY KEY AUTOINCREMENT,
   patient_id        INTEGER NOT NULL,
   visit_date        DATE NOT NULL,
-  visit_type        TEXT NOT NULL DEFAULT 'RECHECK',   -- INITIAL | RECHECK | REASSESSMENT | DISCHARGE
+  visit_type        TEXT NOT NULL DEFAULT 'RECHECK',   -- INITIAL | ADMISSION | RECHECK | REASSESSMENT | DISCHARGE
   status            TEXT NOT NULL DEFAULT 'OPEN',      -- OPEN | COMPLETED
   clinician_id      INTEGER,
   clinician_username TEXT,
@@ -179,3 +179,39 @@ CREATE TABLE IF NOT EXISTS visit_protocol_versions (
 );
 
 CREATE INDEX IF NOT EXISTS idx_vpv_visit_id ON visit_protocol_versions(visit_id);
+
+-- ---------------------------------------------------------------------------
+-- visit_block_bypasses — "not needed today", said out loud.
+--
+-- Sal, 2026-09-26: "a check box in each block that the clinician can check to
+-- bypass that block if it is not needed at that time, because when a vet is
+-- busy they cant or dont need that info right away".
+--
+-- THIS IS NOT THE SAME FACT AS "the stage does not ask for it yet". The stage
+-- is a workflow default; a bypass is a named person deciding to proceed
+-- without something. That is a clinical decision, so it is recorded with who
+-- and when rather than just hidden from the screen.
+--
+-- Keyed on visit_id, which is what makes it clear at the next visit for free:
+-- a skip made on a busy Tuesday does not quietly persist for months.
+--
+-- It changes NO safety gate. The gates behind a skipped block stay unproposed
+-- and fall to their cautious defaults, and approval still refuses until a
+-- clinician confirms them. Bypassing lets a protocol be GENERATED with gaps;
+-- it does not let one be SIGNED with them.
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS visit_block_bypasses (
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  visit_id     INTEGER NOT NULL,
+  patient_id   INTEGER NOT NULL,
+  block_id     TEXT NOT NULL,
+  bypassed_by  INTEGER,
+  bypassed_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE (visit_id, block_id),
+  FOREIGN KEY (visit_id) REFERENCES visits(id),
+  FOREIGN KEY (patient_id) REFERENCES patients(id),
+  FOREIGN KEY (bypassed_by) REFERENCES users(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_vbb_visit_id ON visit_block_bypasses(visit_id);
+CREATE INDEX IF NOT EXISTS idx_vbb_patient_id ON visit_block_bypasses(patient_id);

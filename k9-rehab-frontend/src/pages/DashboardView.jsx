@@ -4588,6 +4588,46 @@ export default function DashboardView({ setView, currentUser, onLogout, patient,
       // for the blocks that never moved.
       .catch(() => setBlockState(null));
   }, [patient?.id, saved]);
+
+  // ── "Not needed today" ──────────────────────────────────────────────────
+  //
+  // Sal: a busy vet "cant or dont need that info right away", but must still
+  // be able to generate from the criteria they DO have. Ticking a block records
+  // that decision against today's visit — who, and when — and stops the
+  // dashboard chasing it.
+  //
+  // It is a note about the WORKFLOW, never about the animal. The safety gates
+  // behind a skipped block stay unproposed and approval still refuses until a
+  // clinician confirms them, so this cannot turn a missing finding into a
+  // satisfied one.
+  const [bypassBusy, setBypassBusy] = useState(null);
+  const toggleBypass = React.useCallback(async (blockId, nextOn) => {
+    if (!patient?.id) return;
+    setBypassBusy(blockId);
+    const base = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch(`${base}/v2/patients/${patient.id}/blocks/${blockId}/bypass`, {
+        method: nextOn ? "POST" : "DELETE",
+        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      });
+      const j = await res.json();
+      if (!res.ok || !j.success) throw new Error(j.error || `HTTP ${res.status}`);
+      // Re-read rather than patch local state: ticking a box can OPEN A VISIT,
+      // which changes the stage and therefore what every other block is
+      // expected to hold. Guessing that locally would drift from the server.
+      const r = await fetch(`${base}/v2/patients/${patient.id}/block-state`, {
+        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      });
+      const fresh = await r.json();
+      if (fresh && fresh.data) setBlockState(fresh.data);
+    } catch (e) {
+      setUpdateToast({ type: "error", message: `Could not update "not needed today": ${e.message}` });
+      setTimeout(() => setUpdateToast(null), 4000);
+    } finally {
+      setBypassBusy(null);
+    }
+  }, [patient?.id]);
   // ── Form state — persists across block opens, keyed by "blockId::label"
   const [dashData, setDashData] = useState({});
   // ── Ask B.E.A.U. per block
@@ -5046,6 +5086,14 @@ export default function DashboardView({ setView, currentUser, onLogout, patient,
           const st = STAGE_LABEL[blockState.stage.stage] || { text: blockState.stage.stage, tone: "info" };
 
           // What is still needed AT THIS STAGE, named the way the cards are.
+          // Skipped ON PURPOSE, today. Named rather than counted, and kept
+          // separate from "still needed" — a clinician reading this should be
+          // able to tell "nobody has done it" from "I decided to go without
+          // it". A silent skip fails that as badly as a false amber dot.
+          const skipped = BLOCKS
+            .filter(x => (blockState.blocks || {})[x.id] && blockState.blocks[x.id].bypassed)
+            .map(x => t(`tiles.${x.id}.label`, { defaultValue: x.id }));
+
           const outstanding = BLOCKS
             // `blocks` is guarded separately from `stage`: the banner renders
             // on `stage` alone, and reaching into an absent `blocks` would
@@ -5085,6 +5133,13 @@ export default function DashboardView({ setView, currentUser, onLogout, patient,
                   <>Every block this stage asks for has been recorded.</>
                 )}
               </div>
+              {skipped.length > 0 && (
+                <div style={{ marginTop:4, fontSize:11, color:C.muted }}>
+                  <span style={{ fontWeight:700 }}>Skipped today: </span>
+                  {skipped.join(" · ")}
+                  <span style={{ fontStyle:"italic" }}> — recorded on the protocol.</span>
+                </div>
+              )}
             </div>
           );
         })()}
@@ -5132,6 +5187,11 @@ export default function DashboardView({ setView, currentUser, onLogout, patient,
               const expected = served ? served.expected : null;
               const notYetDue = expected === "not_yet";
               const needsAttention = Boolean(served && served.needs_attention);
+              const bypassed = Boolean(served && served.bypassed);
+              // Only worth offering on a block the stage actually asks for.
+              // "Not needed today" on something already not due reads as noise.
+              const canBypass = Boolean(patient?.id && served
+                && (expected === "required" || expected === "optional"));
 
               const dotColor = needsAttention ? C.amber
                 : dataStatus === "complete" ? C.green
@@ -5143,18 +5203,47 @@ export default function DashboardView({ setView, currentUser, onLogout, patient,
               <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (()=>handleBlockClick(b.id))(e); } }} key={b.id} className="block-card"
                 onClick={()=>handleBlockClick(b.id)}
                 title={
-                  needsAttention ? "Needed at this stage and still empty"
+                  bypassed ? "Marked not needed today — still empty, and the record says so"
+                    : needsAttention ? "Needed at this stage and still empty"
                     : notYetDue && !hasData ? "Not needed yet at this stage"
                     : hasData ? "Block contains data — click to review" : ""
                 }
                 style={{
                   background:C.white,
+                  // Set aside, not filled in. A skipped block must not look
+                  // like a finished one — "skipped" is not "done".
+                  opacity: bypassed && !hasData ? 0.62 : 1,
                   border: hasData ? `1.5px solid ${dotColor}99` : `1.5px solid ${C.border}`,
                   borderRadius:9, padding:"22px 20px", position:"relative", overflow:"hidden",
                   boxShadow: hasData ? `0 1px 6px rgba(26,39,68,.10), 0 0 10px ${dotColor}33` : "0 1px 6px rgba(26,39,68,.06)",
                   animationDelay:`${i*.04}s`, animation:"fadeUp .3s ease both",
                 }}>
                 <div style={{ position:"absolute", top:0, left:0, right:0, height:4, background:b.color }}/>
+                {/* "Not needed today". stopPropagation on BOTH the label and
+                    the input: the whole card is a button, so without it every
+                    tick would also open the block the clinician just said they
+                    did not need. */}
+                {canBypass && (
+                  <label
+                    onClick={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => e.stopPropagation()}
+                    title="Skip this block for today's visit. It stays empty, and the protocol records that it was skipped."
+                    style={{
+                      position:"absolute", bottom:8, left:12, display:"flex",
+                      alignItems:"center", gap:5, fontSize:10, color: bypassed ? C.navy : C.muted,
+                      fontWeight: bypassed ? 700 : 500, cursor:"pointer", zIndex:2,
+                    }}>
+                    <input
+                      type="checkbox"
+                      checked={bypassed}
+                      disabled={bypassBusy === b.id}
+                      onClick={(e) => e.stopPropagation()}
+                      onChange={(e) => { e.stopPropagation(); toggleBypass(b.id, e.target.checked); }}
+                      style={{ cursor:"pointer", width:13, height:13 }}
+                    />
+                    {bypassed ? "Skipped today" : "Not needed today"}
+                  </label>
+                )}
                 {/* ── Data indicator dot — top right ── */}
                 {hasData && (
                   <div

@@ -175,6 +175,13 @@ const CHECKS = [
   // one wrong dot costs a clinician trust in every dot on the page.
   { name: 'K9 · block state',       cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/patient-block-state.test.js'],
     ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
+  // "Not needed today". Two claims hold this up and both are easy to lose:
+  // a bypass is PER VISIT (a skip on a busy Tuesday must not become the
+  // patient's permanent shape), and it LOOSENS NO SAFETY GATE — the gates
+  // behind a skipped block stay unproposed and approval still refuses. A
+  // bypass lets a protocol be GENERATED with gaps, never SIGNED with them.
+  { name: 'K9 · block bypass',      cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/visit-bypass-store.test.js'],
+    ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
   // One library, one identifier, one stated size. `all-exercises.js` is THE
   // library; the `exercises_v2` table is a different one with a disjoint id
   // scheme, and an endpoint keyed one by the other 404'd on every code the

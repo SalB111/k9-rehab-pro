@@ -38,6 +38,8 @@ const patientGoalsStore = require('./patient-goals-store');
 const patientTreatmentStore = require('./patient-treatment-store');
 const patientDiagnosticsStore = require('./patient-diagnostics-store');
 const patientClientStore = require('./patient-client-store');
+// Required lazily inside getBlockState: visit-bypass-store requires THIS
+// module for BLOCK_SOURCE, and a top-level require here would be circular.
 
 /**
  * Where each block's truth lives.
@@ -232,14 +234,32 @@ async function getBlockState(db, patientId, patient, clinic, stage) {
     out[block] = describe('blob', n > 0, n);
   }
 
+  // What the clinician has chosen to go without at THIS visit.
+  //
+  // Lazy require: visit-bypass-store imports BLOCK_SOURCE from this file, so a
+  // top-level require would be a cycle. Failing soft is deliberate — if the
+  // bypass table cannot be read, the correct answer is "nothing is bypassed",
+  // which nags slightly too much rather than hiding a gap.
+  let bypassed = new Set();
+  try {
+    const bypassStore = require('./visit-bypass-store');
+    const current = await bypassStore.currentFor(db, patientId);
+    bypassed = new Set((current.blocks || []).map((b) => b.block_id));
+  } catch { bypassed = new Set(); }
+
   // What the stage asks of each block. `needs_attention` is the only thing
-  // the screen should ever nag about: required HERE, and not filled. A block
-  // that is not due yet is not a problem, which is the whole point — during
-  // an intake, Goals being empty is the workflow working.
+  // the screen should ever nag about: required HERE, not filled, and not
+  // deliberately skipped. A block that is not due yet is not a problem —
+  // during an intake, Goals being empty is the workflow working — and a block
+  // the clinician has ticked off is not a problem either, which is the whole
+  // of what Sal asked for.
   const at = (stage && stage.stage) || STAGE.NONE;
   for (const [block, state] of Object.entries(out)) {
     state.expected = expectationFor(at, block);
-    state.needs_attention = state.expected === 'required' && state.status === 'empty';
+    state.bypassed = bypassed.has(block);
+    state.needs_attention = state.expected === 'required'
+      && state.status === 'empty'
+      && !state.bypassed;
   }
 
   return out;

@@ -34,8 +34,14 @@ const patientDiagnosticsStore = require('./patient-diagnostics-store');
 // Constants
 // ---------------------------------------------------------------------------
 
+// ADMISSION added 2026-09-26. Sal's flow has two distinct clinical events —
+// the intake visit (exam, vitals, diagnosis, surgical/non-surgical call) and
+// admission the following week, when B.E.A.U.'s metrics are added. Without a
+// type for the second one the dashboard could never say which of the two a
+// patient was in.
 const VISIT_TYPE = {
   INITIAL: 'INITIAL',
+  ADMISSION: 'ADMISSION',
   RECHECK: 'RECHECK',
   REASSESSMENT: 'REASSESSMENT',
   DISCHARGE: 'DISCHARGE',
