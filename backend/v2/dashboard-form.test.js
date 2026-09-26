@@ -39,6 +39,8 @@ const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
+const gaps = require('./patient-gaps');
+const { getProtocolType, diagnosisRecognised } = require('../protocol-generator');
 
 const DASHBOARD = path.join(
   __dirname, '..', '..', 'k9-rehab-frontend', 'src', 'pages', 'DashboardView.jsx'
@@ -221,6 +223,101 @@ test('callBeau exists and surfaces the exercise-validation warnings', () => {
   assert.ok(/evt\.type === "error"/.test(src),
     'callBeau ignores the error event, so a failed request would look like an '
     + 'empty answer rather than a failure');
+});
+
+// ── 3. the dashboard save inventing clinical values ────────────────────────
+//
+// handleSave built the CREATE body with four literal fallbacks:
+//
+//   parseFloat(...) || 0        weight
+//   parseInt(...) || 0          age
+//   || "Mixed Breed"            breed
+//   || "Rehabilitation"         condition
+//
+// Each writes a value nobody entered into a column the engine reads. The
+// condition is the one that does real damage AND hides itself, so it gets a
+// test of its own that runs the engine rather than asserting a shape.
+
+const HANDLE_SAVE = (() => {
+  const i = src.indexOf('const handleSave = async () => {');
+  assert.ok(i > 0, 'handleSave could not be found — has it been renamed?');
+  // COMMENTS STRIPPED. The comment above these fallbacks names the literals it
+  // removed, and the first run of this test failed on its own prose. A test
+  // for what the code DOES must not read what the code SAYS.
+  return src.slice(i, i + 6000)
+    .split('\n').filter((l) => !l.trim().startsWith('//')).join('\n');
+})();
+
+test('the dashboard save invents no condition', () => {
+  assert.ok(
+    !/\|\|\s*"Rehabilitation"/.test(HANDLE_SAVE),
+    'handleSave writes the literal "Rehabilitation" when no diagnosis was '
+    + 'entered. That is not a diagnosis, and it is worse than an empty '
+    + 'column — see the next test.'
+  );
+  assert.ok(
+    /condition:[^,]*\|\|\s*null/.test(HANDLE_SAVE),
+    'the condition must fall through to null, so the record says plainly '
+    + 'that nobody has named a diagnosis'
+  );
+});
+
+test('an invented condition is worse than an empty one — run the engine', () => {
+  // Not asserted from memory. This is what the two values actually do.
+  assert.strictEqual(
+    diagnosisRecognised('Rehabilitation'), false,
+    'the whole problem: it matches no routing rule'
+  );
+  assert.strictEqual(
+    getProtocolType('Rehabilitation', ''), 'oa',
+    'so the protocol is chosen by FALLTHROUGH, not by match — an '
+    + 'osteoarthritis protocol for a dog whose diagnosis nobody recorded'
+  );
+
+  // And the check that should catch it cannot, because a FILLED column is not
+  // a gap. That is why the literal had to go rather than be reported.
+  const withLiteral = gaps.findGaps(
+    { id: 1, name: 'X', client_name: 'Y', condition: 'Rehabilitation' }, { unstated: [] }
+  );
+  assert.ok(
+    !withLiteral.gaps.some((g) => g.label === 'Condition'),
+    'if patient-gaps ever learns to report this, the assertion above can relax'
+  );
+  const empty = gaps.findGaps(
+    { id: 1, name: 'X', client_name: 'Y', condition: null }, { unstated: [] }
+  );
+  assert.strictEqual(
+    empty.gaps.find((g) => g.label === 'Condition').severity, 'BLOCKS',
+    'an empty condition is reported to the clinician and blocks generation. '
+    + 'That is the behaviour the literal was suppressing.'
+  );
+});
+
+test('the dashboard save invents no breed, age or weight', () => {
+  assert.ok(
+    !/\|\|\s*"Mixed Breed"/.test(HANDLE_SAVE),
+    'handleSave writes "Mixed Breed" for a blank breed. It is also a real '
+    + 'option in the dropdown, so the record cannot be told apart from an '
+    + 'answer a clinician chose.'
+  );
+  assert.ok(
+    /const weight = Number\.isFinite\(weightRaw\) \? weightRaw : null/.test(HANDLE_SAVE),
+    'a blank weight must be null, not 0'
+  );
+  assert.ok(
+    /const age = Number\.isFinite\(ageRaw\) \? ageRaw : null/.test(HANDLE_SAVE),
+    'a blank age must be null, not 0 — a live record held age 0 on a '
+    + 'ten-year-old Australian Shepherd'
+  );
+
+  // 0 is not a neutral placeholder for either. patient-gaps reports both as
+  // missing, which is only reachable once the save stops writing them.
+  const r = gaps.findGaps(
+    { id: 1, name: 'X', client_name: 'Y', condition: 'OA', age: 0, weight: 0 },
+    { unstated: [] }
+  );
+  assert.ok(r.gaps.some((g) => g.label === 'Age'), 'age 0 must be a gap');
+  assert.ok(r.gaps.some((g) => g.label === 'Weight'), 'weight 0 must be a gap');
 });
 
 if (failures.length) {

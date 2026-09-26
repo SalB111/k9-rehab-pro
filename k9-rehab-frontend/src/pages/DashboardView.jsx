@@ -4609,8 +4609,35 @@ export default function DashboardView({ setView, currentUser, onLogout, patient,
     const clientName = [dashData["client::Client First Name"], dashData["client::Client Last Name"]].filter(s => s && s.trim()).join(" ").trim();
     const clientPhone = dashData["client::Phone"] || null;
     const clientEmail = dashData["client::Email"] || null;
-    const weight = parseFloat(dashData["client::Weight (lbs)"]) || 0;
-    const breed = dashData["client::Breed"] || "Mixed Breed";
+    // AN UNSTATED VALUE IS NULL, NOT AN INVENTED ONE.
+    //
+    // This read `parseFloat(...) || 0` and `|| "Mixed Breed"` until
+    // 2026-09-25, and the create body below added `|| 0` for age and
+    // `|| "Rehabilitation"` for the condition. Saving the dashboard with any
+    // of those four blank wrote a value nobody entered:
+    //
+    //   weight 0        an impossible weight
+    //   age 0           found on a live record, a ten-year-old Australian
+    //                   Shepherd stored as aged 0
+    //   Mixed Breed     also a real option in the breed dropdown, so the
+    //                   record cannot be told apart from a chosen answer
+    //   Rehabilitation  not a diagnosis. It matches no rule in
+    //                   getProtocolType, so the protocol is picked by
+    //                   fallthrough to osteoarthritis while the real
+    //                   diagnosis sits in the clinical record unread
+    //
+    // The last one is the worst, because a non-empty column is not a gap:
+    // patient-gaps reports a missing condition as BLOCKS and calls the record
+    // ready once something is there. "Rehabilitation" silenced the one check
+    // that would have said so.
+    //
+    // The backend stopped inventing these on 2026-09-26 (server.js POST
+    // /api/patients). This is the same fix on the screen that calls it.
+    const weightRaw = parseFloat(dashData["client::Weight (lbs)"]);
+    const weight = Number.isFinite(weightRaw) ? weightRaw : null;
+    const ageRaw = parseInt(dashData["client::Age (years)"], 10);
+    const age = Number.isFinite(ageRaw) ? ageRaw : null;
+    const breed = dashData["client::Breed"] || null;
 
     // Guard: must have at least patient name + client name to save
     if (!patientName || !clientName) {
@@ -4638,10 +4665,10 @@ export default function DashboardView({ setView, currentUser, onLogout, patient,
             name: patientName,
             species: speciesNormalized,
             breed,
-            age: parseInt(dashData["client::Age (years)"], 10) || 0,
+            age,
             weight,
             sex: dashData["client::Sex"] || null,
-            condition: dashData["client::Diagnosis"] || dashData["assessment::Primary Diagnosis"] || "Rehabilitation",
+            condition: dashData["client::Diagnosis"] || dashData["assessment::Primary Diagnosis"] || null,
             client_name: clientName,
             client_email: clientEmail,
             client_phone: clientPhone,
