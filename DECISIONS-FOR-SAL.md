@@ -186,10 +186,23 @@ that my own explanatory comment satisfied; one could not tell the primary code
 path from its fallback. Both were caught by mutation testing, not by running
 them. Every guard I added this session has been mutation-tested since.
 
-### What is not verified
+### Verified by Sal, 2026-09-26
 
-I could not open the app. It requires a login, the seeded test accounts have
-no usable password by design, and I would not fabricate a credential to look
-at my own work. **The stage banner and the corrected block dots have not been
-seen by a human.** The build passes and the assertions read the real JSX, but
-someone should look.
+Both UI changes have now been looked at by a person and both are correct:
+Haley's **Home and Goals dots are green** (they showed nothing at all
+before, as if the blocks were untouched), and the **banner reads "No visit
+opened"**.
+
+That gap cost something first, and it is worth recording why. I could not
+open the app — it needs a login, the seeded test accounts have no usable
+password by design, and I would not fabricate a credential to look at my own
+work. So I shipped the block-state effect referencing `saved` before it was
+declared, which threw on mount and took the whole dashboard down behind the
+error boundary. `vite build` passed, because a temporal dead zone violation
+only fails at run time and this frontend has no linter. **Sal found it by
+pressing Enter.**
+
+There is now a check for that class — every `useState` name used in a hook
+dependency array must be declared before it, scoped per function — but the
+general point stands: a build passing says nothing about whether the page
+runs, and I had no way to find that out myself.
