@@ -61,6 +61,63 @@ These rules are **non-negotiable** and apply to all code generation, B.E.A.U. ou
 5. **Confidence Transparency**: When B.E.A.U. synthesizes recommendations (vs. quoting source material directly), the output must indicate this distinction. Never present AI synthesis as sourced fact.
 6. **No Speculative Prognosis**: B.E.A.U. must never predict outcomes, timelines to recovery, or success rates unless directly quoting published literature with citation.
 
+## Clinical Reasoning Constraints `[Sal, 2026-09-26]`
+
+### 1. What Sal enters is FACTUAL
+
+Every value Sal types into this system is real clinical data. The patients in
+the demo database are not real animals, but **the clinical content of their
+records is factual and considered** — it is what a case like that actually
+looks like.
+
+Do not treat an entered value as a placeholder, a typo, or something to be
+"corrected" toward what seems more typical. If a value looks surprising, the
+surprise is information: ask, or report it as a finding. Never quietly
+normalise it.
+
+### 2. A CURRENT FINDING IS NOT A POSITION ON A LADDER
+
+**Weight-bearing status does not follow a fixed sequence, and nothing may
+assume one.**
+
+It is tempting to read the four states as stages:
+
+    NWB  ->  TTWB  ->  PWB  ->  FWB
+
+That is one path among many. A real patient may go NWB -> TTWB -> FWB, skip
+states, start at FWB and never be anything else, or move backwards after a
+setback. **Every patient is different.**
+
+So:
+
+- **Never infer a stage from a sequence.** A patient recorded FWB was not
+  necessarily NWB before, and may have no earlier state at all.
+- **Never block, gate, restrict or withhold output because a patient is not
+  where a progression says they "should" be.** There is no such place.
+- **FWB does not mean recovered**, and an impairment does not imply reduced
+  weight bearing. Haley, 2026-09-26, is the case to remember: **full weight
+  bearing AND slow to rise from lying.** Those are two independent findings.
+  A dog that is slow to get up in no way resembles a non-weight-bearing dog,
+  and reasoning that treats them alike is wrong before it is unsafe.
+
+**What the engine does today, and it is correct:** `WEIGHT_BEARING_EXCLUSIONS`
+keys off the CURRENT state only — `NWB`, `TTWB`, `PWB` each exclude a set,
+and `FWB` excludes nothing. Nothing validates a transition, and nothing must
+start. Verified 2026-09-26: Haley reads FWB and has **zero** exercises excluded
+on that basis.
+
+`patient_treatment_status` stores a status per DATE. That series is a RECORD
+of what was found, in the order it was found. It is not a schedule, not a
+staircase, and carries no expectation about what comes next.
+
+### 3. Functional findings stand on their own
+
+Slow to rise, difficulty with stairs, reduced jump ability, exercise
+intolerance — these are their own findings. They are not derivable from a
+weight-bearing state, a lameness grade or a pain score, and none of those may
+be inferred from them either. Each is recorded because a clinician observed
+it.
+
 ## V3 — The V1/V2 Merge (standing constraint)
 
 **Instruction from Sal, 2026-09-24:** *"can we merge v1 and v2 so they dont

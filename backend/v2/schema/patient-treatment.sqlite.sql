@@ -27,11 +27,16 @@
 --      same reason.
 --
 --   2. POST-OPERATIVE STATUS CHANGES OVER TIME.    -> patient_treatment_status
---      Weight bearing goes NWB -> TTWB -> PWB -> FWB. An incision goes from
---      fresh to healed. Those are the things a rehabilitation clinician
---      actually tracks, and as single overwritable strings the progression is
---      invisible — you can see where the patient is and never where they were.
---      Rows with an `effective_date`; the latest is current.
+--      Weight bearing and incision status are re-observed as a case goes on,
+--      and as single overwritable strings the record is flat — you can see
+--      where the patient is and never where they were. Rows with an
+--      `effective_date`; the latest is current.
+--
+--      THIS IS A RECORD, NOT A STAIRCASE. An earlier version of this comment
+--      said "weight bearing goes NWB -> TTWB -> PWB -> FWB", which states one
+--      path as though it were the path. Sal, 2026-09-26: a patient may skip
+--      states, start at FWB, or move backwards. Nothing may infer a state from
+--      a sequence. See CLAUDE.md, Clinical Reasoning Constraints.
 --
 --   3. THE CASE ITSELF DOES NOT CHANGE.            -> columns on `patients`
 --      Treatment approach and affected limb belong to the patient, not to a

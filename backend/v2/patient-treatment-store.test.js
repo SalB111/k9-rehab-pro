@@ -13,10 +13,19 @@
  * So the tests below care most about the three ways this store could lose or
  * invent a clinical fact:
  *
- *   1. A STATUS ROW MUST NEVER BE UPDATED IN PLACE. Weight bearing goes
- *      NWB -> TTWB -> PWB -> FWB and the progression IS the clinical record.
- *      An UPDATE leaves a chart that says where a patient is and never where
- *      they were.
+ *   1. A ROW ON AN EARLIER DATE MUST NEVER BE OVERWRITTEN. Weight bearing and
+ *      incision status are re-observed as a case goes on, and the SERIES of
+ *      those observations is the clinical record. Overwriting leaves a chart
+ *      that says where a patient is and never where they were.
+ *
+ *      A save on the SAME date does update, because a clinician filling the
+ *      form in over five minutes is recording one state, not five.
+ *
+ *      The series is a record, NOT a staircase. An earlier version of this
+ *      said "weight bearing goes NWB -> TTWB -> PWB -> FWB", stating one path
+ *      as though it were the path. Sal, 2026-09-26: a patient may skip states,
+ *      start at FWB, or move backwards. Nothing may infer a state from a
+ *      sequence. See CLAUDE.md, Clinical Reasoning Constraints.
  *
  *   2. TRI-STATE MUST SURVIVE. NULL is "nobody answered", 0 is "a clinician
  *      said no". The e-collar and crate-rest gates DEFAULT TO REQUIRED in the
@@ -456,6 +465,87 @@ const ACTOR = { id: 1 };
     });
     assert.strictEqual(r.statusHistory.length, 1);
     assert.strictEqual(r.status.weight_bearing_status, 'Partial weight bearing (PWB)');
+  });
+
+  // ── no state is a position on a ladder ──────────────────────────────────
+  //
+  // Sal, 2026-09-26: "not every patient is NWB and the progression is not
+  // always NWB -> TTWB -> PWB -> FWB ... every patient is different so you
+  // cant block outputs because your reasoning is wrong on progression."
+  //
+  // The case in point: Haley is FULL WEIGHT BEARING and slow to rise from
+  // lying. Two independent findings. A dog slow to get up in no way resembles
+  // a non-weight-bearing dog.
+  //
+  // These lock the store against ever acquiring an opinion about sequence.
+
+  await test('any weight-bearing state can be recorded first', async () => {
+    // A patient who has never been anything but FWB is ordinary. Requiring a
+    // prior state, or a "starting" one, would refuse a real presentation.
+    for (const first of ['Full weight bearing (FWB)', 'Partial weight bearing (PWB)',
+                         'Toe-touching (TTWB)', 'Non-weight bearing (NWB)']) {
+      const db = freshDb();
+      const r = await store.recordStatus(db, {
+        patientId: 7, status: { weight_bearing_status: first }, actor: ACTOR,
+      });
+      assert.strictEqual(r.status.weight_bearing_status, first,
+        `"${first}" was refused as a first recorded state`);
+    }
+  });
+
+  await test('states may be skipped', async () => {
+    // NWB -> TTWB -> FWB, with no PWB. A real path, and not the tidy one.
+    const db = freshDb();
+    await store.recordStatus(db, {
+      patientId: 7, effectiveDate: '2026-01-10',
+      status: { weight_bearing_status: 'Non-weight bearing (NWB)' }, actor: ACTOR,
+    });
+    await store.recordStatus(db, {
+      patientId: 7, effectiveDate: '2026-02-14',
+      status: { weight_bearing_status: 'Toe-touching (TTWB)' }, actor: ACTOR,
+    });
+    const r = await store.recordStatus(db, {
+      patientId: 7, effectiveDate: '2026-03-20',
+      status: { weight_bearing_status: 'Full weight bearing (FWB)' }, actor: ACTOR,
+    });
+    assert.strictEqual(r.statusHistory.length, 3, 'a skipped state was refused or merged');
+    assert.strictEqual(r.status.weight_bearing_status, 'Full weight bearing (FWB)');
+  });
+
+  await test('a state may move BACKWARDS after a setback', async () => {
+    // A dog that was full weight bearing and is now toe-touching is a patient
+    // who got worse. Refusing that, or "correcting" it, would lose the single
+    // most clinically important thing in the series.
+    const db = freshDb();
+    await store.recordStatus(db, {
+      patientId: 7, effectiveDate: '2026-03-20',
+      status: { weight_bearing_status: 'Full weight bearing (FWB)' }, actor: ACTOR,
+    });
+    const r = await store.recordStatus(db, {
+      patientId: 7, effectiveDate: '2026-04-02',
+      status: { weight_bearing_status: 'Toe-touching (TTWB)' }, actor: ACTOR,
+    });
+    assert.strictEqual(r.status.weight_bearing_status, 'Toe-touching (TTWB)',
+      'a deterioration was refused, reordered or discarded');
+    assert.strictEqual(r.statusHistory.length, 2);
+    assert.strictEqual(r.statusHistory[1].weight_bearing_status, 'Full weight bearing (FWB)',
+      'and the better earlier state must remain in the record');
+  });
+
+  await test('full weight bearing alongside a functional deficit is storable', async () => {
+    // Haley exactly: FWB, and restrictions recorded because she is slow to
+    // rise. Nothing may treat those as contradictory.
+    const db = freshDb();
+    const r = await store.recordStatus(db, {
+      patientId: 7,
+      status: {
+        weight_bearing_status: 'Full weight bearing (FWB)',
+        activity_restrictions: 'leash only walks, no impact exercises',
+      },
+      actor: ACTOR,
+    });
+    assert.strictEqual(r.status.weight_bearing_status, 'Full weight bearing (FWB)');
+    assert.strictEqual(r.status.activity_restrictions, 'leash only walks, no impact exercises');
   });
 
   // ── a date nobody stated ────────────────────────────────────────────────

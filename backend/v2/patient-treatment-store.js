@@ -21,6 +21,10 @@
  *
  *   A PROCEDURE is an event with a date        -> patient_procedures
  *   STATUS changes over time                   -> patient_treatment_status
+ *
+ * "Changes over time" means RECORDED WHEN OBSERVED, not advanced through
+ * stages. There is no expected sequence — see CLAUDE.md, Clinical Reasoning
+ * Constraints.
  *   THE CASE does not change                   -> columns on `patients`
  *
  * See patient-treatment.sqlite.sql for the reasoning behind each.
@@ -403,9 +407,16 @@ async function recordStatus(db, { patientId, status, effectiveDate, dateIsUnknow
   // then the e-collar, then crate rest, then the sling, then the restrictions
   // — and the "progression" became a recording of somebody typing.
   //
-  // The series is meant to show NWB -> TTWB -> PWB -> FWB across weeks. Seven
-  // identical entries from one afternoon do not just add noise: they bury the
-  // real progression they were built to show.
+  // The series is a RECORD of what was found, in the order it was found,
+  // across weeks. Seven identical entries from one afternoon do not just add
+  // noise: they bury the change they were built to show.
+  //
+  // It is NOT a staircase. An earlier version of this comment described the
+  // series as "NWB -> TTWB -> PWB -> FWB", which is one path among many and
+  // reads as though it were the path. Sal, 2026-09-26: a patient may go
+  // NWB -> TTWB -> FWB, skip states, start at FWB, or move backwards after a
+  // setback. Nothing here may infer a state from a sequence or expect one.
+  // See "Clinical Reasoning Constraints" in CLAUDE.md.
   //
   // So a save on a date that already has a row UPDATES it. The row is the
   // state as at that date, and a clinician filling it in over five minutes is
