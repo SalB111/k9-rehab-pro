@@ -54,15 +54,37 @@ function SettingsView({ setBrand }) {
         ))}
       </div>
 
-      {/* ── Save confirmation ── */}
+      {/* ── Save confirmation ──────────────────────────────────────────────
+          FIXED AND CENTRED, 2026-09-26.
+
+          This used to render in the normal flow at the top of the page, above
+          the tab content. The clinic form is longer than the viewport, so by
+          the time you reached Save you had scrolled past where the message
+          would appear — it fired, off-screen, every time.
+
+          Sal: "THE REASON I CLICKED SAVE MULTIPLE TIMES WAS THAT I DIDNT SEE
+          THE POP SAVE SUCCESSFUKKY". Three clicks, and a separate bug meant
+          each one CREATED a clinic. That bug is fixed; this is the reason he
+          pressed the button three times in the first place.
+
+          Centred near the top rather than mid-screen: impossible to miss,
+          without covering the form just filled in. pointerEvents none so it
+          can never swallow a click. */}
       {state.saved && (
-        <div style={{
-          padding: "10px 20px", marginBottom: 12, borderRadius: 8,
-          background: C.greenBg, border: `1px solid ${C.green}`,
-          display: "flex", alignItems: "center", gap: 8,
-          fontSize: 13, fontWeight: 600, color: C.green,
-        }}>
-          <FiCheckCircle size={16} /> {tr("Settings saved successfully")}
+        <div
+          role="status"
+          aria-live="polite"
+          style={{
+            position: "fixed", top: 90, left: "50%", transform: "translateX(-50%)",
+            zIndex: 600, pointerEvents: "none",
+            padding: "14px 26px", borderRadius: 10,
+            background: C.greenBg, border: `1.5px solid ${C.green}`,
+            boxShadow: "0 8px 28px rgba(16,185,129,0.28)",
+            display: "flex", alignItems: "center", gap: 10,
+            fontSize: 15, fontWeight: 700, color: C.green,
+          }}
+        >
+          <FiCheckCircle size={19} /> {tr("Settings saved successfully")}
         </div>
       )}
 
