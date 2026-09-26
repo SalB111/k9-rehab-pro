@@ -33,6 +33,7 @@ const patientGoalsStore = require('../patient-goals-store');
 const patientDiagnosticsStore = require('../patient-diagnostics-store');
 const patientClientStore = require('../patient-client-store');
 const patientTreatmentStore = require('../patient-treatment-store');
+const patientBlockState = require('../patient-block-state');
 const ownerAuth = require('../owner-auth');
 const { requireRole, requireApprovalAuthority } = require('../middleware/require-role');
 const { route } = require('../http-errors');
@@ -154,6 +155,34 @@ function createV2Router(deps) {
     });
   }));
 
+  // -------------------------------------------------------------------------
+  // Block state — what the dashboard dots should say
+  //
+  // The dots were computed inside the screen by counting `dashboard_data`
+  // keys. Six blocks have their own tables now and the dot never followed,
+  // so Haley's Home and Goals cards read as UNTOUCHED while both stores held
+  // her record. This answers the same question from wherever each block’s
+  // truth actually lives.
+  //
+  // It answers "is there anything here", NOT "is this clinically complete".
+  // What a block must hold before a patient can be admitted is a clinical
+  // judgement — see STAGE_REQUIREMENTS, which is empty and waiting for Sal.
+  // -------------------------------------------------------------------------
+
+  router.get('/patients/:id/block-state', route(async (req, res) => {
+    const patientId = Number(req.params.id);
+    const patient = await getPatient(db, patientId);
+    if (!patient) {
+      return res.status(404).json({ success: false, error: 'Patient not found', code: 'NOT_FOUND' });
+    }
+    const clinicId = await resolveClinicId(req, db);
+    const capabilities = await clinicStore.getCapabilities(db, clinicId);
+    const [blocks, stage] = await Promise.all([
+      patientBlockState.getBlockState(db, patientId, patient, capabilities),
+      patientBlockState.stageOf(db, patientId),
+    ]);
+    res.json({ success: true, data: { patient_id: patientId, stage, blocks } });
+  }));
   // -------------------------------------------------------------------------
   // Home environment — V3: this table is the source of truth for the block
   //

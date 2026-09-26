@@ -155,6 +155,12 @@ const CHECKS = [
   // OMITTED a column got one invented. Found by scripts/drive-flow.js.
   { name: 'K9 · no fabricated findings', cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/no-fabricated-findings.test.js'],
     ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
+  // The dots on the block cards. They counted dashboard_data keys, so a
+  // block that had moved to its own table read as UNTOUCHED: Haley’s Home
+  // and Goals showed no dot at all while both stores held her record, and
+  // one wrong dot costs a clinician trust in every dot on the page.
+  { name: 'K9 · block state',       cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/patient-block-state.test.js'],
+    ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
   // One library, one identifier, one stated size. `all-exercises.js` is THE
   // library; the `exercises_v2` table is a different one with a disjoint id
   // scheme, and an endpoint keyed one by the other 404'd on every code the

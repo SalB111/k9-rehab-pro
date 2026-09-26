@@ -4525,6 +4525,40 @@ const BEAU_BLOCK_CONTEXTS = {
 };
 
 export default function DashboardView({ setView, currentUser, onLogout, patient, setSelectedPatient }) {
+  // ── WHAT EACH BLOCK ACTUALLY HOLDS ──────────────────────────────────────
+  //
+  // The dot on each block card used to be computed right here by counting
+  // `dashboard_data` keys:
+  //
+  //     blockKeys.length >= 3 ? "complete" : blockKeys.length > 0 ? "partial"
+  //
+  // Six blocks have their own tables now and the dot never followed.
+  // Measured on Haley, 2026-09-26: her Home and Goals cards showed NO DOT AT
+  // ALL, reading as untouched, while patient_home_environment held her home
+  // and patient_goal_items held "able to hike in the mountains within the
+  // next 6 months". A clinician cannot answer "what still needs doing" from
+  // dots that are wrong, and one wrong dot costs you trust in all of them.
+  //
+  // GET /v2/patients/:id/block-state answers the same question from wherever
+  // each block's truth actually lives. Blocks with no table of their own are
+  // still counted out of the blob by that endpoint — that part was never
+  // wrong, it was only wrong for the blocks that had moved.
+  const [blockState, setBlockState] = useState(null);
+  useEffect(() => {
+    if (!patient?.id) { setBlockState(null); return; }
+    const base = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+    const token = localStorage.getItem("token");
+    fetch(`${base}/v2/patients/${patient.id}/block-state`, {
+      headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    })
+      .then(r => r.json())
+      .then(j => setBlockState(j && j.data ? j.data : null))
+      // A failed fetch must not blank every dot. Null falls back to the blob
+      // count below, which is what the screen did before and is still right
+      // for the blocks that never moved.
+      .catch(() => setBlockState(null));
+  }, [patient?.id, saved]);
+
   const { t, i18n: i18nInst } = useTranslation();
   const beauVoice = useBeauVoice(i18nInst.language || "en");
   const [openBlock,   setOpenBlock]   = useState(() => {
@@ -4977,11 +5011,18 @@ export default function DashboardView({ setView, currentUser, onLogout, patient,
           <div style={{ display:"grid", gridTemplateColumns:"repeat(3, 1fr)", gap:16 }}>
             {BLOCKS.map((b,i)=>{
               // ── Block data indicator ──
+              // The server's answer where we have one, the old blob count
+              // where we do not (no patient selected, or the fetch failed).
+              const served = blockState && blockState.blocks && blockState.blocks[b.id];
               const blockKeys = Object.keys(dashData).filter(k => k.startsWith(b.id + "::") && dashData[k] && String(dashData[k]).trim());
-              const hasData = blockKeys.length > 0;
-              // Count expected fields (rough estimate: 3+ = complete, 1-2 = partial)
-              const dataStatus = blockKeys.length >= 3 ? "complete" : blockKeys.length > 0 ? "partial" : "empty";
-              const dotColor = dataStatus === "complete" ? C.green : dataStatus === "partial" ? C.amber : null;
+              const dataStatus = served
+                ? served.status
+                : (blockKeys.length >= 3 ? "complete" : blockKeys.length > 0 ? "partial" : "empty");
+              const hasData = dataStatus === "complete" || dataStatus === "partial";
+              const dotColor = dataStatus === "complete" ? C.green
+                : dataStatus === "partial" ? C.amber
+                : dataStatus === "unknown" ? C.muted
+                : null;
 
               return (
               <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (()=>handleBlockClick(b.id))(e); } }} key={b.id} className="block-card"
