@@ -54,6 +54,12 @@ const intakeProposal = V2('intake-proposal');
 const patientGaps = V2('patient-gaps');
 const adapter = V2('engine-adapter');
 const generator = require(path.join(BACKEND, 'protocol-generator'));
+// Resolve the clinic the way the APP does. Three call sites here used to
+// pass a hardcoded 1; there is no clinic 1, and getCapabilities answers for
+// an unknown clinic with a plausible empty record, so this script spent a
+// day reporting that every therapy was withheld from a clinic that did not
+// exist.
+const { resolveClinicId } = V2('resolve-clinic');
 
 // ── the test patient ───────────────────────────────────────────────────────
 // Named so nobody mistakes it for a real animal, in the list or in a chart.
@@ -138,7 +144,7 @@ function wrap(raw) {
 
     // ── 2. the gap check should say the record is not ready ───────────────
     await attempt('gap check reports what is missing', async () => {
-      const caps = await clinicStore.getCapabilities(db, 1);
+      const caps = await clinicStore.getCapabilities(db, await resolveClinicId(db));
       const g = patientGaps.findGaps(fresh, caps);
       if (!g.gaps.length) throw new Error('a brand new record reported no gaps at all');
       return g;
@@ -229,7 +235,7 @@ function wrap(raw) {
     const proposal = await attempt('build the intake proposal', async () => {
       const p = await db.get('SELECT * FROM patients WHERE id = ?', [patientId]);
       const treatment = await treatmentStore.getTreatment(db, patientId);
-      const caps = await clinicStore.getCapabilities(db, 1);
+      const caps = await clinicStore.getCapabilities(db, await resolveClinicId(db));
       return intakeProposal.proposeEngineInputs({
         patient: p, treatment, clinicInputs: clinicStore.toEngineInputs(caps),
       });
@@ -259,7 +265,7 @@ function wrap(raw) {
     // ── 8. generate the protocol ──────────────────────────────────────────
     const formData = await attempt('build the engine form data', async () => {
       const p = await db.get('SELECT * FROM patients WHERE id = ?', [patientId]);
-      const caps = await clinicStore.getCapabilities(db, 1);
+      const caps = await clinicStore.getCapabilities(db, await resolveClinicId(db));
       const visitRow = visitId ? await visitStore.getVisit(db, visitId) : {};
       const fd = adapter.toEngineFormData({
         patient: p, visit: visitRow || {}, protocol: {}, clinic: clinicStore.toClinicState(caps),

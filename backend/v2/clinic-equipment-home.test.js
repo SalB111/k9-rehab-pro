@@ -39,6 +39,8 @@ const path = require('path');
 const { DatabaseSync } = require('node:sqlite');
 
 const clinicStore = require('./clinic-store');
+// The clinic the app would resolve, not a guess. There is no clinic 1.
+const { resolveClinicId } = require('./resolve-clinic');
 const blockState = require('./patient-block-state');
 
 const ROOT = path.join(__dirname, '..', '..');
@@ -171,7 +173,7 @@ function test(name, fn) {
       all: async (sql, p = []) => raw.prepare(sql).all(...p),
       run: async () => { throw new Error('read-only'); },
     };
-    const caps = await clinicStore.getCapabilities(db, 1);
+    const caps = await clinicStore.getCapabilities(db, await resolveClinicId(db));
     raw.close();
 
     const served = (caps.checklistShape || []).flatMap((g) => g.items || []);
@@ -184,6 +186,65 @@ function test(name, fn) {
       unreachable, [],
       'the engine gates on equipment the Settings screen never offers, so it '
       + `can never be answered and stays withheld: ${unreachable.join(', ')}`
+    );
+  });
+
+  await test('nothing asks for a clinic by a hardcoded number', async () => {
+    // THE MISTAKE THIS EXISTS FOR, 2026-09-26. Scripts and tests passed a
+    // literal `1` to getCapabilities. There is no clinic 1 — the table holds
+    // ids 3 and 5 — and getCapabilities answers for an unknown clinic with a
+    // perfectly plausible EMPTY RECORD rather than an error.
+    //
+    // So the audit, drive-flow and three suites spent a day reporting
+    // "10 of 10 capabilities unstated, every gated therapy withheld" about a
+    // clinic that had never existed, and I told Sal his equipment had not
+    // saved when it had.
+    const files = [
+      path.join(ROOT, 'scripts', 'drive-flow.js'),
+      path.join(ROOT, 'scripts', 'audit.js'),
+      __filename,
+      path.join(__dirname, 'patient-block-state.test.js'),
+    ].filter((p) => fs.existsSync(p));
+
+    const offenders = [];
+    for (const f of files) {
+      const src = live(f);
+      const m = src.match(/getCapabilities\(\s*db\s*,\s*\d+\s*\)/g);
+      if (m) offenders.push(`${path.basename(f)}: ${m.join(', ')}`);
+    }
+    assert.deepStrictEqual(
+      offenders, [],
+      'a clinic is being asked for by number instead of resolved the way the app '
+      + `resolves it:\n      ${offenders.join('\n      ')}`
+    );
+  });
+
+  await test('[KNOWN] an unknown clinic reads as "nothing configured"', async () => {
+    // Documented rather than changed. The HTTP path always resolves a real
+    // clinic, so this never bites the app — but it is why a hardcoded id in a
+    // script produced a confident, wrong finding rather than an error.
+    //
+    // If this ever starts throwing, that is an improvement: delete this test.
+    if (!fs.existsSync(REAL_DB)) { console.log('      (no live database — skipped)'); return; }
+    const raw = new DatabaseSync(REAL_DB, { readOnly: true });
+    const db = {
+      get: async (sql, p = []) => raw.prepare(sql).get(...p),
+      all: async (sql, p = []) => raw.prepare(sql).all(...p),
+      run: async () => { throw new Error('read-only'); },
+    };
+    // Named, not a literal: the guard above forbids asking for a clinic by
+    // number, and it is right to. This one is deliberate.
+    const GHOST_CLINIC = 999999;
+    const ghost = await clinicStore.getCapabilities(db, GHOST_CLINIC);
+    raw.close();
+    assert.strictEqual(
+      ghost.configured, false,
+      'an unknown clinic now reports as configured, which would be worse'
+    );
+    assert.strictEqual(
+      (ghost.unstated || []).length, clinicStore.CAPABILITY_KEYS.length,
+      'a clinic that does not exist reports every capability unstated — '
+      + 'indistinguishable from a real clinic nobody has set up'
     );
   });
 

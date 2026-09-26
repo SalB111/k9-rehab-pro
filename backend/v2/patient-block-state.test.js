@@ -28,6 +28,8 @@ const { DatabaseSync } = require('node:sqlite');
 
 const bs = require('./patient-block-state');
 const clinicStore = require('./clinic-store');
+// The clinic the app would resolve, not a guess. There is no clinic 1.
+const { resolveClinicId } = require('./resolve-clinic');
 
 const REAL_DB = path.join(__dirname, '..', 'k9rehab.db');
 const DASHBOARD = path.join(
@@ -77,7 +79,7 @@ function open() {
       if (!row) continue;
       checked += 1;
       const patient = await db.get('SELECT * FROM patients WHERE id = ?', [row.patient_id]);
-      const caps = await clinicStore.getCapabilities(db, 1);
+      const caps = await clinicStore.getCapabilities(db, await resolveClinicId(db));
       const state = await bs.getBlockState(db, row.patient_id, patient, caps);
       if (!state[block] || state[block].status === 'empty') {
         wrong.push(`${block}: has rows in ${table} but reports ${state[block] && state[block].status}`);
@@ -91,7 +93,7 @@ function open() {
   await test('a store block is read from the store, never from the blob', async () => {
     const { raw, db } = open();
     const patient = await db.get('SELECT * FROM patients ORDER BY id LIMIT 1');
-    const caps = await clinicStore.getCapabilities(db, 1);
+    const caps = await clinicStore.getCapabilities(db, await resolveClinicId(db));
     const state = await bs.getBlockState(db, patient.id, patient, caps);
     raw.close();
     for (const [block, source] of Object.entries(bs.BLOCK_SOURCE)) {
@@ -110,7 +112,7 @@ function open() {
       "SELECT * FROM patients WHERE dashboard_data LIKE '%assessment::%' LIMIT 1"
     );
     if (!patient) { raw.close(); return; }
-    const caps = await clinicStore.getCapabilities(db, 1);
+    const caps = await clinicStore.getCapabilities(db, await resolveClinicId(db));
     const state = await bs.getBlockState(db, patient.id, patient, caps);
     raw.close();
     assert.strictEqual(state.assessment.source, 'blob');
