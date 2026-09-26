@@ -97,15 +97,33 @@ export function useSettingsState(setBrand, toast) {
   const isOpen = (id) => expanded[id] !== false;
 
   // ── Load clinic data ──
+  //
+  // THE ENVELOPE. Every endpoint in this app answers `{ success, data }`, so
+  // `r.data` is the envelope and `r.data[0]` is undefined — always. This read
+  // `r.data?.[0]`, so `clinicId` was NEVER set, so saveClinic below always
+  // took its "create" branch.
+  //
+  // Sal pressed Save three times on 2026-09-26 and got clinics 6, 7 and 8,
+  // three seconds apart. Worse than duplicates: the app resolves the FIRST
+  // clinic by id, so his equipment sat on clinic 3 while everything he typed
+  // went to rows the app would never read again.
+  //
+  // The `.catch` that swallowed everything is gone too. A clinic profile that
+  // cannot load is worth saying out loud — silently falling back to defaults
+  // is how a screen ends up quietly detached from its record.
   useEffect(() => {
     api.get(`/clinics`).then(r => {
-      const clinic = r.data?.[0];
+      const body = r.data;
+      const list = Array.isArray(body) ? body : (body && body.data);
+      const clinic = Array.isArray(list) ? list[0] : null;
       if (clinic) {
         setClinicId(clinic.id);
         setForm(prev => ({ ...prev, ...clinic }));
         setBrand(b => ({ ...b, clinicName: clinic.clinic_name, accent: clinic.primary_color }));
       }
-    }).catch(() => { /* Endpoint not yet configured — form uses defaults */ });
+    }).catch((e) => {
+      console.error("[settings] could not load the clinic profile:", e.message);
+    });
   }, [setBrand]);
 
   // ── Save clinic profile ──
@@ -115,8 +133,14 @@ export function useSettingsState(setBrand, toast) {
       if (clinicId) {
         await api.put(`/clinics/${clinicId}`, form);
       } else {
-        const { data } = await api.post(`/clinics`, form);
-        setClinicId(data.id);
+        // Same envelope, same trap: POST answers `{ success, data: clinic }`,
+        // so `data.id` was the envelope's id — undefined. Even the create
+        // branch failed to remember what it had just created, which is why
+        // THREE saves produced THREE clinics instead of one.
+        const res = await api.post(`/clinics`, form);
+        const created = (res.data && res.data.data) || res.data;
+        if (created && created.id) setClinicId(created.id);
+        else throw new Error("the server did not return the clinic it created");
       }
       setBrand(b => ({ ...b, clinicName: form.clinic_name, accent: form.primary_color }));
       setSaved(true);

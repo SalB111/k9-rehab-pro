@@ -248,6 +248,67 @@ function test(name, fn) {
     );
   });
 
+  await test('saving the clinic profile UPDATES it, never creates another', () => {
+    // Sal pressed Save three times on 2026-09-26 and got clinics 6, 7 and 8,
+    // three seconds apart.
+    //
+    // Every endpoint in this app answers `{ success, data }`. The loader read
+    // `r.data?.[0]` — the envelope, not the list — so `clinicId` was never
+    // set and saveClinic always took its "create" branch. The create branch
+    // then read `data.id` off the envelope too, so it could not even remember
+    // what it had just made.
+    //
+    // WORSE THAN DUPLICATES: the app resolves the FIRST clinic by id, so his
+    // equipment sat on clinic 3 while everything he typed went to rows the app
+    // would never read again — the same split this migration exists to close,
+    // in a new place.
+    const src = live(SETTINGS_STATE);
+    assert.ok(
+      !/r\.data\?\.\[0\]/.test(src),
+      'the clinic loader reads r.data[0] again. Responses are enveloped, so '
+      + 'that is always undefined and every save will create a new clinic.'
+    );
+    // TWO assertions, not one alternation. The first version accepted either
+    // the loader OR the creator unwrapping the envelope, so a mutation that
+    // broke the loader passed on the creator's strength. Fourth time today a
+    // loose assertion has let a real regression through.
+    assert.ok(
+      /Array\.isArray\(body\) \? body : \(body && body\.data\)/.test(src),
+      'the LOADER does not unwrap the { success, data } envelope, so clinicId '
+      + 'is never set and every save creates a new clinic'
+    );
+    assert.ok(
+      /\(res\.data && res\.data\.data\) \|\| res\.data/.test(src),
+      'the CREATOR does not unwrap the envelope, so it cannot remember the '
+      + 'clinic it just created and the next save makes another one'
+    );
+    assert.ok(
+      !/\.catch\(\(\) => \{ \/\* Endpoint not yet configured/.test(src),
+      'a failed clinic load is being swallowed again. Falling back to defaults '
+      + 'in silence is how a settings screen ends up detached from its record.'
+    );
+  });
+
+  await test('the equipment tab confirms a save, and only after the server answers', () => {
+    // Sal: "mave be we need a save button". Everything HAD saved — each tick
+    // writes immediately — but nothing said so, so a working save was
+    // indistinguishable from a silent failure.
+    //
+    // The confirmation must follow the SERVER's answer. Confirming on click
+    // would say "saved" for a request that later failed, which is worse than
+    // saying nothing.
+    const src = live(TAB);
+    assert.ok(/setSavedAt/.test(src), 'the equipment tab acknowledges nothing when it saves');
+    const idx = src.indexOf('setSavedAt(new Date())');
+    assert.ok(idx > 0, 'the save confirmation is never set');
+    const before = src.slice(0, idx);
+    assert.ok(
+      before.lastIndexOf('await res.json()') > before.lastIndexOf('setSaving(item)'),
+      'the confirmation is set before the server has answered, so a failed '
+      + 'write would still report "Saved"'
+    );
+  });
+
   await test('every gating key maps to an engine input', () => {
     for (const key of clinicStore.CAPABILITY_KEYS) {
       assert.ok(

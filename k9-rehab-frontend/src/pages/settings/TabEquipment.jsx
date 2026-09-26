@@ -39,6 +39,19 @@ export function TabEquipment({ isOpen, toggleSection }) {
   });
   const [saving, setSaving] = useState(null);
 
+  // ── "maybe we need a save button" ───────────────────────────────────────
+  //
+  // Sal, 2026-09-26, after ticking everything: "mave be we need a save button".
+  // Everything HAD saved — each tick writes immediately — but nothing on the
+  // screen said so, so there was no way to tell a working save from a silent
+  // failure. He was right to doubt it.
+  //
+  // A Save button would be the wrong fix: it would imply nothing persists
+  // until pressed, which is not how this screen works and would be its own
+  // kind of lie. What was missing is the acknowledgement, not the button.
+  const [savedAt, setSavedAt] = useState(null);
+  const [savedCount, setSavedCount] = useState(0);
+
   const authHeaders = () => {
     const token = localStorage.getItem("token");
     return {
@@ -84,6 +97,10 @@ export function TabEquipment({ isOpen, toggleSection }) {
         shape: d.checklistShape || s.shape,
         gating: d.gatingItems || s.gating,
       }));
+      // Only after the SERVER has answered. Confirming on click would say
+      // "saved" for a request that later failed, which is worse than silence.
+      setSavedAt(new Date());
+      setSavedCount((n) => n + 1);
     } catch (e) {
       setState((s) => ({ ...s, error: e.message }));
     } finally {
@@ -122,6 +139,21 @@ export function TabEquipment({ isOpen, toggleSection }) {
           )}
         </div>
       </div>
+
+      {savedAt && !state.error && (
+        <div style={{
+          fontSize: 11.5, color: C.green, marginBottom: 12, padding: "8px 12px",
+          background: "#ECFDF5", border: "1px solid rgba(16,185,129,0.35)", borderRadius: 6,
+          display: "flex", alignItems: "center", gap: 7,
+        }}>
+          <span style={{ fontWeight: 800 }}>&#10003; Saved</span>
+          <span style={{ color: C.muted }}>
+            {savedCount === 1 ? "1 change" : `${savedCount} changes`} written to this clinic&rsquo;s
+            record at {savedAt.toLocaleTimeString()}. There is no Save button &mdash; every tick
+            saves as you make it.
+          </span>
+        </div>
+      )}
 
       {state.error && (
         <div style={{
