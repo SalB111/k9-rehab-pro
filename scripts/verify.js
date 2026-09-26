@@ -188,6 +188,11 @@ const CHECKS = [
   // gated therapy was withheld from every protocol, silently.
   { name: 'K9 · equipment home',    cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/clinic-equipment-home.test.js'],
     ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
+  // WHO MAY APPROVE. The screen and the gate must give the same answer:
+  // a roster claiming someone can sign off when resolveApprovalAuthority
+  // would refuse is a confident wrong answer about who may prescribe.
+  { name: 'K9 · clinician credentials', cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/clinician-credentials-home.test.js'],
+    ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
   // One library, one identifier, one stated size. `all-exercises.js` is THE
   // library; the `exercises_v2` table is a different one with a disjoint id
   // scheme, and an endpoint keyed one by the other 404'd on every code the

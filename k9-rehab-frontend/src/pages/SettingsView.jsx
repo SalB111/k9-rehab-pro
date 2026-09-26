@@ -94,7 +94,7 @@ function SettingsView({ setBrand }) {
           saving={state.saving} saveClinic={state.saveClinic} {...shared} />
       )}
       {state.activeTab === "clinician" && (
-        <TabClinician clinician={state.clinician} setClinician={state.setClinician} {...shared} />
+        <TabClinician {...shared} />
       )}
       {state.activeTab === "equipment" && (
         <TabEquipment {...shared} />

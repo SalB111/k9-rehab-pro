@@ -18,10 +18,13 @@ export function useSettingsState(setBrand, toast) {
   const [activeTab, setActiveTab] = useState("clinic");
 
   // ── Clinician credentials (client-side) ──
-  const [clinician, setClinician] = useState({
-    name: "", title: "DVM", credentials: [], license_number: "",
-    license_state: "", npi: "", board_certs: [],
-  });
+  // Clinician identity is NOT held here any more, 2026-09-26.
+  //
+  // It was one free-text form in React state describing the person typing,
+  // and it saved nothing. The real question is which of the CLINIC'S
+  // clinicians may approve a protocol, and that is decided by
+  // clinician_credentials in the database via resolveApprovalAuthority.
+  // TabClinician reads and writes that through /v2/users and /v2/credentials.
 
   // ── Equipment is NOT held here any more, 2026-09-26 ──
   //
@@ -161,7 +164,8 @@ export function useSettingsState(setBrand, toast) {
     // Tab
     activeTab, setActiveTab,
     // Clinician
-    clinician, setClinician,
+    // clinician is not here: TabClinician owns the roster and talks to
+  // /v2/users and /v2/credentials directly. See the note above.
     // Equipment is not here: TabEquipment owns it and talks to
     // /v2/clinic/capabilities directly. See the note above.
     // Protocol defaults
