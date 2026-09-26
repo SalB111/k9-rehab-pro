@@ -9,6 +9,53 @@ Ordered by what unblocks the most.
 
 ---
 
+## 0. NEXT FEATURE — the Handoff block  `[Sal, 2026-09-26]`
+
+His words: *"we need to create a handoff block this way we have a block that
+saves all patients that have been handed off to B.E.A.U. at Home that can
+generate the hospital code"*.
+
+**Most of this already exists and is unused.** It is a screen over working
+backend, not a build from scratch:
+
+| what is needed | what is already there |
+|---|---|
+| every handed-off patient | `beau_handoffs` — payload, hash, status, who, when |
+| generate the hospital code | `ownerAuth.issueAccessCode()`, routed at v2-router.js:1099 |
+| show / revoke a code | `getAccessStatus`, `revokeAccess`, routed alongside |
+| the code itself | `home_access` — hashed, with a hint, ACTIVE/REVOKED, `last_used_at` |
+
+The code is stored **hashed with a hint** and carries a revocation path. That
+is the right design and should not be re-invented.
+
+Both tables are empty for one reason: **no patient has ever been handed off.**
+`beau_handoffs` has 0 rows.
+
+### What actually blocks it
+
+The handoff chain lives in **Clinical Workflow**, not the dashboard:
+
+> visit → assessment → measurements → generate recommendation → approve → handoff
+
+The dashboard's Protocol Summary **Generate** button does something different:
+it asks B.E.A.U. for a written protocol and streams it to the screen. Exercise
+names ARE cross-checked against the 260-library, so that guardrail holds — but
+it creates **no protocol row, no version, nothing approvable and nothing that
+can be handed off.** It produces a document, not a clinical artifact.
+
+So a full dashboard intake — like Haley's — never enters the chain. She has
+**zero** `visits` rows, and without a visit there is no version to approve or
+hand off.
+
+**The real gap is the bridge**: two screens over one record, and the workflow
+screen does not read what the dashboard blocks already captured, so a
+clinician re-enters the assessment to get a protocol they can approve.
+
+Decide the shape before anything is built: does the dashboard open the visit
+and feed the workflow, or does the Handoff block drive the chain itself?
+
+---
+
 ## 1. Which blocks does an INTAKE actually require?  **clinical**
 
 `backend/v2/patient-block-state.js` → `STAGE_REQUIREMENTS`, present and
