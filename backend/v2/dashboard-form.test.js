@@ -41,6 +41,7 @@ const path = require('path');
 const vm = require('vm');
 const gaps = require('./patient-gaps');
 const { getProtocolType, diagnosisRecognised } = require('../protocol-generator');
+const { DatabaseSync } = require('node:sqlite');
 
 const DASHBOARD = path.join(
   __dirname, '..', '..', 'k9-rehab-frontend', 'src', 'pages', 'DashboardView.jsx'
@@ -256,9 +257,9 @@ test('the dashboard save invents no condition', () => {
     + 'column — see the next test.'
   );
   assert.ok(
-    /condition:[^,]*\|\|\s*null/.test(HANDLE_SAVE),
-    'the condition must fall through to null, so the record says plainly '
-    + 'that nobody has named a diagnosis'
+    /condition:\s*resolveDiagnosis\([^)]*\)\s*\|\|\s*""/.test(HANDLE_SAVE),
+    'the condition must come from resolveDiagnosis and fall through to the '
+    + 'empty string — see the NOT NULL test below for why it is not null'
   );
 });
 
@@ -295,19 +296,21 @@ test('an invented condition is worse than an empty one — run the engine', () =
 
 test('the dashboard save invents no breed, age or weight', () => {
   assert.ok(
-    !/\|\|\s*"Mixed Breed"/.test(HANDLE_SAVE),
+    !/\|\|\s*"Mixed Breed"/.test(HANDLE_SAVE) && /const breed = dashData\["client::Breed"\] \|\| ""/.test(HANDLE_SAVE),
     'handleSave writes "Mixed Breed" for a blank breed. It is also a real '
     + 'option in the dropdown, so the record cannot be told apart from an '
     + 'answer a clinician chose.'
   );
   assert.ok(
-    /const weight = Number\.isFinite\(weightRaw\) \? weightRaw : null/.test(HANDLE_SAVE),
-    'a blank weight must be null, not 0'
+    /const weight = Number\.isFinite\(weightRaw\) \? weightRaw : 0/.test(HANDLE_SAVE),
+    'a blank weight must be 0, which patient-gaps reports as missing — NOT a '
+    + 'parsed NaN and not a number carried over from somewhere else'
   );
   assert.ok(
-    /const age = Number\.isFinite\(ageRaw\) \? ageRaw : null/.test(HANDLE_SAVE),
-    'a blank age must be null, not 0 — a live record held age 0 on a '
-    + 'ten-year-old Australian Shepherd'
+    /const age = Number\.isFinite\(ageRaw\) \? ageRaw : 0/.test(HANDLE_SAVE),
+    'a blank age must be 0, which patient-gaps reports as missing. A live '
+    + 'record held age 0 on a ten-year-old Australian Shepherd — the defect '
+    + 'there was the WRONG value going unreported, not the 0 itself'
   );
 
   // 0 is not a neutral placeholder for either. patient-gaps reports both as
@@ -318,6 +321,164 @@ test('the dashboard save invents no breed, age or weight', () => {
   );
   assert.ok(r.gaps.some((g) => g.label === 'Age'), 'age 0 must be a gap');
   assert.ok(r.gaps.some((g) => g.label === 'Weight'), 'weight 0 must be a gap');
+});
+
+// ── 4. the diagnosis the clinician actually recorded ───────────────────────
+//
+// The form has TWO "Primary Diagnosis" controls — free text in
+// AssessmentPanel, a dropdown in TreatmentPanel — and three readers disagreed
+// about which keys to look at. handleSave read `client::Diagnosis`, which no
+// control writes, and `assessment::Primary Diagnosis`. It never read the
+// dropdown.
+//
+// Haley, id 33, 2026-09-25: Sal chose "Geriatric Mobility Decline" from that
+// dropdown. handleSave found nothing and wrote "Rehabilitation".
+
+/** resolveDiagnosis, extracted from the real file and run. */
+const resolveDiagnosis = (() => {
+  const i = src.indexOf('function resolveDiagnosis(');
+  assert.ok(i > 0, 'resolveDiagnosis is gone — the three readers have diverged again');
+  const end = src.indexOf('\n}', i);
+  assert.ok(end > i, 'resolveDiagnosis could not be delimited');
+  const ctx = { module: { exports: {} } };
+  vm.createContext(ctx);
+  vm.runInContext(src.slice(i, end + 2) + '\nmodule.exports = resolveDiagnosis;', ctx);
+  return ctx.module.exports;
+})();
+
+test('the treatment dropdown is a place a diagnosis can be recorded', () => {
+  // The exact keys off Haley's record. The assessment field is empty; the
+  // dropdown holds her answer.
+  const haley = {
+    'treatment::Primary Diagnosis': 'Geriatric Mobility Decline',
+    'assessment::Chief Complaint': 'hard time to get up fromm laying position. hind limb weakness',
+  };
+  assert.strictEqual(
+    resolveDiagnosis(haley, null), 'Geriatric Mobility Decline',
+    'the dropdown answer must be found — it was the only diagnosis she had'
+  );
+});
+
+test('the assessment free text wins when both are filled', () => {
+  const both = {
+    'assessment::Primary Diagnosis': 'L stifle partial CCL tear',
+    'treatment::Primary Diagnosis': 'Osteoarthritis — Mild',
+  };
+  assert.strictEqual(
+    resolveDiagnosis(both, null), 'L stifle partial CCL tear',
+    'free text typed for this patient beats the controlled fallback'
+  );
+});
+
+test('the stored column is the last resort, never the first', () => {
+  assert.strictEqual(
+    resolveDiagnosis({ 'treatment::Primary Diagnosis': 'Spondylosis' }, { condition: 'stale' }),
+    'Spondylosis',
+    'what is on screen now beats what was saved before'
+  );
+  assert.strictEqual(
+    resolveDiagnosis({}, { condition: 'Hip Dysplasia — Moderate' }),
+    'Hip Dysplasia — Moderate',
+    'and with nothing on screen the column answers'
+  );
+  assert.strictEqual(resolveDiagnosis({}, null), '', 'nothing anywhere is empty, not invented');
+});
+
+test('every reader resolves the diagnosis the same way', () => {
+  // The defect was three call sites with three different key lists. This fails
+  // if a fourth reader starts reading the keys directly again.
+  const calls = (src.match(/resolveDiagnosis\(/g) || []).length;
+  assert.ok(calls >= 4, `expected the definition plus 3 call sites, found ${calls}`);
+
+  for (const dead of ['client::Diagnosis', 'assessment::Diagnosis']) {
+    assert.ok(
+      !src.includes(`"${dead}"`),
+      `${dead} is read somewhere but no control in this form writes it — `
+      + 'that is how the treatment dropdown got missed'
+    );
+  }
+});
+
+test('his answer and the invented one are different protocols — run the engine', () => {
+  assert.strictEqual(
+    diagnosisRecognised('Geriatric Mobility Decline'), true,
+    'the dropdown offers it, so the engine had better know it'
+  );
+  assert.strictEqual(
+    getProtocolType('Geriatric Mobility Decline', 'Both hindlimbs'), 'geriatric'
+  );
+  assert.strictEqual(
+    getProtocolType('Rehabilitation', 'Both hindlimbs'), 'oa',
+    'which is what she was getting: a different protocol, from a string '
+    + 'nobody entered, because her real answer was never read'
+  );
+});
+
+// ── 5. the empty form must actually INSERT ─────────────────────────────────
+//
+// THE TEST THAT WAS MISSING. Commit 5855174 changed all four fallbacks to
+// `null` and shipped: the JSX assertions passed, the frontend build passed,
+// and nothing anywhere ran the INSERT. name, breed, age, weight and condition
+// are ALL `NOT NULL` in the patients table, so saving a form with a blank
+// breed would have failed patient creation outright with a 500.
+//
+// So this does not assert a shape. It takes the real expressions out of
+// handleSave, evaluates them against an EMPTY form, and puts the result
+// through the real schema.
+
+test('an empty form produces values the patients table accepts', () => {
+  // The real DDL, from the provider that creates it.
+  const providerSrc = fs.readFileSync(
+    path.join(__dirname, '..', 'db-providers', 'sqlite-provider.js'), 'utf8'
+  );
+  const ddl = /CREATE TABLE IF NOT EXISTS patients \([\s\S]*?\n    \)/.exec(providerSrc);
+  assert.ok(ddl, 'the patients DDL could not be found in sqlite-provider.js');
+  assert.ok(/condition TEXT NOT NULL/.test(ddl[0]),
+    'condition is no longer NOT NULL — if the schema was deliberately relaxed, '
+    + 'this test and the encoding in handleSave can both move to null');
+
+  // The real expressions, from the real file, run against an empty form.
+  const vars = /const weightRaw = parseFloat[\s\S]*?const breed = dashData\["client::Breed"\][^;]*;/
+    .exec(src);
+  assert.ok(vars, 'the weight/age/breed block could not be found in handleSave');
+  const condExpr = /condition:\s*(resolveDiagnosis\([^)]*\)\s*\|\|\s*[^,]+),/.exec(HANDLE_SAVE);
+  assert.ok(condExpr, 'the condition expression could not be found in the create body');
+
+  const ctx = { dashData: {}, resolveDiagnosis, module: { exports: {} } };
+  vm.createContext(ctx);
+  vm.runInContext(
+    vars[0] + '\nmodule.exports = { breed, age, weight, condition: ' + condExpr[1] + ' };',
+    ctx
+  );
+  const v = ctx.module.exports;
+
+  const db = new DatabaseSync(':memory:');
+  db.exec(ddl[0] + ';');
+  db.prepare(
+    'INSERT INTO patients (name, species, breed, age, weight, condition) VALUES (?,?,?,?,?,?)'
+  ).run('Unnamed', 'canine', v.breed, v.age, v.weight, v.condition);
+
+  const row = db.prepare('SELECT * FROM patients WHERE id = 1').get();
+  db.close();
+
+  // It inserted. Now the values must still read as unstated to the gap check,
+  // or the insert has simply moved the fabrication somewhere quieter.
+  const r = gaps.findGaps(
+    { id: 1, name: 'Unnamed', client_name: 'Owner', ...row }, { unstated: [] }
+  );
+  const labels = r.gaps.map((g) => g.label);
+  for (const label of ['Condition', 'Age', 'Weight']) {
+    assert.ok(
+      labels.includes(label),
+      `${label} inserted as ${JSON.stringify(row[label.toLowerCase()])} and `
+      + 'patient-gaps did NOT report it — an empty value that reads as an '
+      + 'answer is the whole defect this file is about'
+    );
+  }
+  assert.strictEqual(
+    r.gaps.find((g) => g.label === 'Condition').severity, 'BLOCKS',
+    'and an unnamed diagnosis must still stop generation'
+  );
 });
 
 if (failures.length) {

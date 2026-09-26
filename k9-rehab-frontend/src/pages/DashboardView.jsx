@@ -262,6 +262,45 @@ const Lbl = ({ children, range }) => {
  * mangle a number somebody needs to ring. An 11-digit string starting with 1
  * is treated as a US number with its country code and keeps the leading 1.
  */
+/**
+ * The diagnosis, from wherever the clinician actually recorded it.
+ *
+ * THE FORM HAS TWO "Primary Diagnosis" CONTROLS and three readers disagreed
+ * about which ones to look at:
+ *
+ *   AssessmentPanel  free text     -> assessment::Primary Diagnosis
+ *   TreatmentPanel   dropdown      -> treatment::Primary Diagnosis
+ *
+ *   ProtocolPanel    read both, then the column          — correct
+ *   PetCareNutrition read assessment::Primary Diagnosis
+ *                    and assessment::Diagnosis           — no control writes
+ *                                                          the second, and it
+ *                                                          missed treatment
+ *   handleSave       read client::Diagnosis and
+ *                    assessment::Primary Diagnosis       — no control writes
+ *                                                          the first, and it
+ *                                                          missed treatment
+ *
+ * Found on Haley, id 33, on 2026-09-25. Sal chose "Geriatric Mobility Decline"
+ * from the TreatmentPanel dropdown — a controlled option the platform offered
+ * him — and handleSave, looking only at the two keys above, found nothing and
+ * wrote the literal "Rehabilitation" into her condition column. The engine
+ * does not recognise that string, so it routed her to the osteoarthritis
+ * protocol by fallthrough. Her own answer routes to GERIATRIC. The platform
+ * offered the answer, took it, and then ignored it.
+ *
+ * ONE resolution order, used by all three. Assessment first because it is free
+ * text a clinician typed for this patient; the dropdown is the controlled
+ * fallback; the stored column is last because it is the least fresh.
+ */
+function resolveDiagnosis(data, patientData) {
+  const d = data || {};
+  return d["assessment::Primary Diagnosis"]
+      || d["treatment::Primary Diagnosis"]
+      || (patientData && patientData.condition)
+      || "";
+}
+
 function formatPhone(input) {
   const raw = String(input ?? "");
   if (/[^0-9()\-.\s]/.test(raw)) return raw;        // letters, +, x — leave alone
@@ -3207,7 +3246,7 @@ function ProtocolPanel({ patientName, patientData }) {
   const liveWeight = data["client::Weight (lbs)"] || patientData?.weight || "";
   const liveSex = data["client::Sex"] || patientData?.sex || "";
 
-  const liveDiagnosis = data["assessment::Primary Diagnosis"] || data["treatment::Primary Diagnosis"] || patientData?.condition || "";
+  const liveDiagnosis = resolveDiagnosis(data, patientData);
   const liveChiefComplaint = data["assessment::Chief Complaint"] || "";
   const liveLameness = data["assessment::Lameness Grade"] || "";
   const livePain = data["assessment::CSU Acute Pain Score (0–4)"] || "";
@@ -3843,9 +3882,7 @@ function PetCareNutritionPanel() {
   const bcs = data["metrics::BCS (1–9)"]
            || data["assessment::Body Condition Score (1–9)"]
            || "";
-  const diagnosis = data["assessment::Primary Diagnosis"]
-                 || data["assessment::Diagnosis"]
-                 || "";
+  const diagnosis = resolveDiagnosis(data, null);
   const sex = data["client::Sex"] || "";
   const clientName = [data["client::Client First Name"], data["client::Client Last Name"]].filter(Boolean).join(" ");
   const addrLine1 = data["client::Street Address"] || "";
@@ -4609,35 +4646,41 @@ export default function DashboardView({ setView, currentUser, onLogout, patient,
     const clientName = [dashData["client::Client First Name"], dashData["client::Client Last Name"]].filter(s => s && s.trim()).join(" ").trim();
     const clientPhone = dashData["client::Phone"] || null;
     const clientEmail = dashData["client::Email"] || null;
-    // AN UNSTATED VALUE IS NULL, NOT AN INVENTED ONE.
+    // AN UNSTATED VALUE MUST NOT BECOME AN INVENTED ONE.
     //
-    // This read `parseFloat(...) || 0` and `|| "Mixed Breed"` until
-    // 2026-09-25, and the create body below added `|| 0` for age and
-    // `|| "Rehabilitation"` for the condition. Saving the dashboard with any
-    // of those four blank wrote a value nobody entered:
+    // handleSave built the CREATE body with a literal for each of these:
     //
-    //   weight 0        an impossible weight
-    //   age 0           found on a live record, a ten-year-old Australian
-    //                   Shepherd stored as aged 0
-    //   Mixed Breed     also a real option in the breed dropdown, so the
-    //                   record cannot be told apart from a chosen answer
-    //   Rehabilitation  not a diagnosis. It matches no rule in
-    //                   getProtocolType, so the protocol is picked by
-    //                   fallthrough to osteoarthritis while the real
-    //                   diagnosis sits in the clinical record unread
+    //   `|| "Rehabilitation"`  condition — the one that does real damage.
+    //                          getProtocolType matches no rule against it, so
+    //                          the protocol is picked by FALLTHROUGH to
+    //                          osteoarthritis. Worse, a FILLED column is not a
+    //                          gap, so patient-gaps reported the record ready
+    //                          and the check built to catch this said nothing.
+    //   `|| "Mixed Breed"`     breed — also a real option in the dropdown, so
+    //                          the record cannot be told apart from an answer.
     //
-    // The last one is the worst, because a non-empty column is not a gap:
-    // patient-gaps reports a missing condition as BLOCKS and calls the record
-    // ready once something is there. "Rehabilitation" silenced the one check
-    // that would have said so.
+    // WHY THESE ARE "" AND 0 RATHER THAN null: name, breed, age, weight and
+    // condition are all NOT NULL in the patients table. Sending null fails the
+    // INSERT outright, so the empty encoding has to be a value the column
+    // accepts, and the job of reporting it falls to patient-gaps — which is
+    // written for exactly this and treats all four as missing:
     //
-    // The backend stopped inventing these on 2026-09-26 (server.js POST
-    // /api/patients). This is the same fix on the screen that calls it.
+    //   condition ""   missing() -> String(v).trim() === ""      BLOCKS
+    //   age 0          isMissing -> Number(v) <= 0               DEGRADES
+    //   weight 0       isMissing -> Number(v) <= 0               DEGRADES
+    //
+    // So 0 is not a fabricated age here, it is this schema's way of spelling
+    // "nobody has said" — and unlike a fabricated 5/10 pain score it is
+    // reported to the clinician rather than read as a finding.
+    //
+    // The backend stopped inventing clinical findings in 3516874 (lameness 0,
+    // BCS 5, pain 5/10, mobility "Moderate"). This is the same fix on the
+    // screen that calls it.
     const weightRaw = parseFloat(dashData["client::Weight (lbs)"]);
-    const weight = Number.isFinite(weightRaw) ? weightRaw : null;
+    const weight = Number.isFinite(weightRaw) ? weightRaw : 0;
     const ageRaw = parseInt(dashData["client::Age (years)"], 10);
-    const age = Number.isFinite(ageRaw) ? ageRaw : null;
-    const breed = dashData["client::Breed"] || null;
+    const age = Number.isFinite(ageRaw) ? ageRaw : 0;
+    const breed = dashData["client::Breed"] || "";
 
     // Guard: must have at least patient name + client name to save
     if (!patientName || !clientName) {
@@ -4668,7 +4711,7 @@ export default function DashboardView({ setView, currentUser, onLogout, patient,
             age,
             weight,
             sex: dashData["client::Sex"] || null,
-            condition: dashData["client::Diagnosis"] || dashData["assessment::Primary Diagnosis"] || null,
+            condition: resolveDiagnosis(dashData, null) || "",
             client_name: clientName,
             client_email: clientEmail,
             client_phone: clientPhone,
