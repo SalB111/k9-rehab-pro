@@ -113,6 +113,27 @@ function freshDb() {
   return wrap(raw);
 }
 
+/**
+ * The same patient, with a 16-week protocol they were actually on.
+ *
+ * Separate from freshDb because the ABSENCE of a protocol is itself the
+ * subject of two tests — "you cannot complete a protocol that does not
+ * exist". A fixture that always seeded one would make those two unwritable.
+ */
+async function dbWithApprovedProtocol(status = 'APPROVED') {
+  const db = freshDb();
+  await db.run(
+    `INSERT INTO protocols (id, patient_id, status, created_by) VALUES (1, 7, ?, 1)`,
+    [status]
+  );
+  await db.run(
+    `INSERT INTO protocol_versions (id, protocol_id, version_number, status, engine_input_json, derived_flags_json, total_weeks)
+     VALUES (1, 1, 1, ?, '{}', '{}', 16)`,
+    [status]
+  );
+  return db;
+}
+
 const ACTOR = { id: 1, username: 'sal', role: 'admin' };
 
 /** A minimal valid discharge, for tests that vary one field. */
@@ -129,7 +150,7 @@ const COMPLETION = {
   // ── the two outcomes stay apart ─────────────────────────────────────────
 
   await test('a completion is recorded as COMPLETED', async () => {
-    const db = freshDb();
+    const db = await dbWithApprovedProtocol();
     const d = await store.dischargePatient(db, COMPLETION);
     assert.strictEqual(d.outcome, 'COMPLETED');
     assert.strictEqual(d.reason, 'PROTOCOL_COMPLETED');
@@ -155,6 +176,45 @@ const COMPLETION = {
       }),
       /COMPLETED reason/
     );
+  });
+
+  // ── a completion must have a protocol behind it ─────────────────────────
+
+  await test('SAL: you cannot complete a protocol that does not exist', async () => {
+    // Haley, 2026-09-26 23:03, discharged as "Completed the full protocol"
+    // with no protocols row, no version and total_weeks NULL. The dashboard's
+    // Generate produces text and stores nothing, so the protocol was real on
+    // screen and absent from the record.
+    const db = freshDb();
+    await assert.rejects(
+      store.dischargePatient(db, COMPLETION),
+      /no approved protocol/,
+      'a completion was recorded against a protocol that does not exist — the '
+      + 'one outcome that feeds efficacy tracking, and unfalsifiable'
+    );
+  });
+
+  await test('a DRAFT protocol is not something you can have completed', async () => {
+    // CLAUDE.md: no protocol output is valid without veterinarian approval.
+    const db = await dbWithApprovedProtocol('DRAFT');
+    await assert.rejects(store.dischargePatient(db, COMPLETION), /no approved protocol/);
+  });
+
+  await test('with an APPROVED protocol, a completion is recorded', async () => {
+    const db = await dbWithApprovedProtocol();
+    const d = await store.dischargePatient(db, COMPLETION);
+    assert.strictEqual(d.outcome, 'COMPLETED');
+    assert.strictEqual(d.total_weeks, 16, 'the protocol length was not read from the record');
+  });
+
+  await test('DISCONTINUED is NOT gated — most reasons precede any protocol', async () => {
+    // A dog can stop after one session, before anything was generated. Gating
+    // this would make the honest answer unrecordable.
+    const db = freshDb();
+    const d = await store.dischargePatient(db, {
+      patientId: 7, outcome: 'DISCONTINUED', reason: 'FINANCIAL', actor: ACTOR,
+    });
+    assert.strictEqual(d.outcome, 'DISCONTINUED');
   });
 
   await test('every reason in the list belongs to exactly one outcome', async () => {
@@ -254,7 +314,7 @@ const COMPLETION = {
   });
 
   await test('"IMPROVED" with a measure is recorded', async () => {
-    const db = freshDb();
+    const db = await dbWithApprovedProtocol();
     const d = await store.dischargePatient(db, {
       ...COMPLETION, clinicalOutcome: 'IMPROVED', outcomeMeasuredBy: 'HCPI 28 -> 11',
     });
@@ -264,7 +324,7 @@ const COMPLETION = {
 
   await test('an unjudged outcome defaults to NOT_ASSESSED, not to "unchanged"', async () => {
     // "Unchanged" is a judgement. Defaulting to it would invent one.
-    const db = freshDb();
+    const db = await dbWithApprovedProtocol();
     const d = await store.dischargePatient(db, COMPLETION);
     assert.strictEqual(d.clinical_outcome, 'NOT_ASSESSED');
   });
@@ -315,7 +375,7 @@ const COMPLETION = {
   // ── where they got to ───────────────────────────────────────────────────
 
   await test('visits_attended is counted from the record, not typed', async () => {
-    const db = freshDb();
+    const db = await dbWithApprovedProtocol();
     for (const date of ['2026-09-01', '2026-09-08', '2026-09-15']) {
       const v = await visitStore.createVisit(db, {
         patientId: 7, visitDate: date, visitType: 'RECHECK', actor: ACTOR,
@@ -334,14 +394,14 @@ const COMPLETION = {
   // ── the clinic is on the record ─────────────────────────────────────────
 
   await test('SAL\'S POINT — the discharge names the clinic it happened in', async () => {
-    const db = freshDb();
+    const db = await dbWithApprovedProtocol();
     const d = await store.dischargePatient(db, COMPLETION);
     assert.strictEqual(d.clinic_id, 3, 'the discharge does not name its clinic');
     assert.strictEqual(d.clinic_name, 'TEST Clinic 3');
   });
 
   await test('the DISCHARGE visit it creates names the clinic too', async () => {
-    const db = freshDb();
+    const db = await dbWithApprovedProtocol();
     await store.dischargePatient(db, COMPLETION);
     const v = await db.get(`SELECT * FROM visits WHERE visit_type = 'DISCHARGE'`);
     assert.ok(v, 'no DISCHARGE visit was created — VISIT_TYPE.DISCHARGE is unused again');
@@ -364,7 +424,7 @@ const COMPLETION = {
   // ── discharged is derived, not flagged ──────────────────────────────────
 
   await test('a discharged patient reads as discharged', async () => {
-    const db = freshDb();
+    const db = await dbWithApprovedProtocol();
     await store.dischargePatient(db, COMPLETION);
     const state = await store.isDischarged(db, 7);
     assert.strictEqual(state.discharged, true);
@@ -373,7 +433,7 @@ const COMPLETION = {
   await test('THE STALE-FLAG ONE — a patient who comes back reads as active again', async () => {
     // There is deliberately no patients.status column. A stored flag would be
     // a lie the moment a discharged patient returns and nobody cleared it.
-    const db = freshDb();
+    const db = await dbWithApprovedProtocol();
     await store.dischargePatient(db, COMPLETION);
     await new Promise((r) => setTimeout(r, 1100)); // CURRENT_TIMESTAMP is 1s resolution
     await visitStore.createVisit(db, {
@@ -388,7 +448,7 @@ const COMPLETION = {
   });
 
   await test('discharging twice without a visit in between is refused', async () => {
-    const db = freshDb();
+    const db = await dbWithApprovedProtocol();
     await store.dischargePatient(db, COMPLETION);
     await assert.rejects(
       store.dischargePatient(db, COMPLETION),

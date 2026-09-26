@@ -265,6 +265,26 @@ async function activeHandoff(db, patientId) {
   );
 }
 
+/**
+ * A protocol this patient was actually on, or null.
+ *
+ * APPROVED or HANDED_OFF only. A DRAFT was never valid for clinical use —
+ * CLAUDE.md: "No protocol output is valid without licensed veterinarian
+ * review and approval" — so it is not something a patient can have completed.
+ */
+async function approvedProtocolVersion(db, patientId) {
+  return db.get(
+    `SELECT pv.id, pv.status, pv.total_weeks
+       FROM protocol_versions pv
+       JOIN protocols p ON p.id = pv.protocol_id
+      WHERE p.patient_id = ?
+        AND pv.status IN ('APPROVED', 'HANDED_OFF')
+      ORDER BY pv.created_at DESC, pv.id DESC
+      LIMIT 1`,
+    [patientId]
+  );
+}
+
 /** How long the protocol they were on was meant to run. */
 async function currentProtocolWeeks(db, patientId) {
   const row = await db.get(
@@ -397,6 +417,34 @@ async function dischargePatient(db, {
   // The route hands this down from its own injectable resolver so a discharge
   // is attributed by the same rule as every other write. Scripts and tests
   // that have no request fall back to the same rule directly.
+  // YOU CANNOT COMPLETE A PROTOCOL THAT WAS NEVER APPROVED.  `[Sal, 2026-09-26]`
+  //
+  // Haley was discharged at 23:03 as "Completed the full protocol" while the
+  // database held no protocol for her at all — no `protocols` row, no version,
+  // total_weeks NULL. Not a mistake by the clinician: the dashboard's Generate
+  // produces TEXT through the V1 path and stores nothing, so a protocol had
+  // genuinely been read on screen and genuinely did not exist as a record.
+  //
+  // A completion is a claim ABOUT a protocol. With nothing to point at it is
+  // unfalsifiable, and it is the one outcome that feeds efficacy tracking, so
+  // an unbacked one corrupts exactly the number this table exists to produce.
+  //
+  // Only COMPLETED is gated. A patient can stop before any protocol was
+  // generated — that is most of the DISCONTINUED list, and gating those would
+  // make the honest answer unrecordable.
+  if (checked.outcome === OUTCOME.COMPLETED) {
+    const version = await approvedProtocolVersion(db, patientId);
+    if (!version) {
+      throw new ProtocolStoreError(
+        `${patient.name} has no approved protocol, so there is nothing to have `
+        + 'completed. A protocol generated on the dashboard is text and is not '
+        + 'stored — build and approve one in Clinical Workflow first, or record '
+        + 'this as DISCONTINUED with the reason care actually ended.',
+        ERR.INVALID
+      );
+    }
+  }
+
   const clinicId = givenClinicId != null ? givenClinicId : await resolveClinicId(db, actor);
   const handoff = await activeHandoff(db, patientId);
   const totalWeeks = await currentProtocolWeeks(db, patientId);
