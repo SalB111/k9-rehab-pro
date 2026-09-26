@@ -151,7 +151,15 @@ const FIELDS = [
   {
     column: 'body_condition_score', engine: 'bodyConditionScore', label: 'Body condition score',
     severity: SEVERITY.DEGRADES,
-    why: 'Carried into the protocol and into weight-management advice.',
+    // The first version of this said "carried into the protocol and into
+    // weight-management advice". HALF OF THAT WAS FALSE and it is worth
+    // recording which half: checked 2026-09-26, NOTHING in the backend
+    // consumes `bodyConditionScore`. The bridge maps it and this check reports
+    // it; the protocol engine never reads it. The nutrition panel does, in the
+    // frontend, falling back from `metrics::BCS (1–9)` to the assessment key.
+    why: 'Read by the PetCare Nutrition panel for diet and weight-management '
+       + 'advice. NOT currently read by the protocol engine — nothing in the '
+       + 'backend consumes it, so an absent score does not change a protocol.',
   },
 ];
 

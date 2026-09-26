@@ -959,6 +959,36 @@ test('every gate the map claims to supply is a gate the engine actually has', ()
   }
 });
 
+test('a labelled clinical scale is read, not discarded', () => {
+  // The dashboard's scale dropdowns store the number AND its meaning, because
+  // a clinician choosing a body condition is choosing "ideal", not "5". The
+  // plain numeric reader could not parse that, so Sal's entry of "5 — Ideal"
+  // for Haley on 2026-09-26 came back unmapped and the engine saw nothing.
+  //
+  // Read out of the REAL option list, so a relabelled scale is caught here
+  // rather than by a clinician noticing the value vanished.
+  const options = optionsFor('Body Condition Score (1–9)');
+  assert.ok(options.length >= 9,
+    `expected the 9-point scale, found ${options.length} options`);
+  for (const option of options) {
+    const r = bridge.readDashboard({
+      dashboard_data: JSON.stringify({ 'assessment::Body Condition Score (1–9)': option }),
+    });
+    assert.ok(Number.isFinite(r.values.bodyConditionScore),
+      `"${option}" was not readable as a number — a clinician can choose it `
+      + 'and the engine never sees it');
+  }
+});
+
+test('the scale reader takes the LEADING number only', () => {
+  // "6 — Overweight" is a 6. It must not find a number anywhere else in the
+  // label, and it must refuse prose outright rather than guessing.
+  assert.strictEqual(bridge.scaleNumber('6 — Overweight'), 6);
+  assert.strictEqual(bridge.scaleNumber('not assessed'), null);
+  assert.strictEqual(bridge.scaleNumber(''), null);
+  assert.strictEqual(bridge.scaleNumber(null), null);
+});
+
 if (failures.length) {
   console.error(`\nFAILED ${failures.length} of ${passed + failures.length}\n`);
   for (const f of failures) console.error(`  ✗ ${f.name}\n    ${f.message}\n`);

@@ -268,6 +268,33 @@ function number(value) {
 }
 
 /**
+ * A point on a LABELLED clinical scale — "5 — Ideal" -> 5.
+ *
+ * The dashboard's scale dropdowns store the number AND its meaning, because a
+ * clinician choosing a body condition score is choosing "ideal", not "5".
+ * `number()` cannot read that: Number("5 — Ideal") is NaN, so it returned null.
+ *
+ * Found on a live record 2026-09-26. Sal recorded Haley's body condition as
+ * "5 — Ideal" in the assessment and the engine went on seeing nothing. It came
+ * back in `unmapped`, which is the module working as designed — but nobody
+ * reads `unmapped`, and the value looked entered on the screen.
+ *
+ * The other labelled scales already had their own readers — `gradeNumber` for
+ * "Grade 3 — Moderate…", `painScore` for a range like "4-5". Body condition
+ * was the one left on the plain numeric reader.
+ *
+ * Takes the LEADING number only. "5 — Ideal" is 5; it never digs a number out
+ * of the label, because "6 — Overweight" must not be read as 6 from the 6 and
+ * then confirmed by something else in the prose.
+ */
+function scaleNumber(value) {
+  const m = /^\s*(\d+(?:\.\d+)?)/.exec(String(value === null || value === undefined ? '' : value));
+  if (!m) return null;
+  const n = Number(m[1]);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+/**
  * THE MAP.
  *
  * `keys` lists every BLOCK::LABEL this field has been stored under, newest
@@ -294,8 +321,14 @@ const MAP = [
   // the V1 record already holds.
   { keys: ['client::Age (years)'], to: 'age', via: number },
   { keys: ['client::Weight (lbs)'], to: 'weight', via: number },
+  // A LABELLED scale, so it needs the labelled reader — see scaleNumber.
+  // The dashboard stores "5 — Ideal", and `number` read that as nothing.
+  //
+  // Note the first key has had NO control since the BCS section was removed
+  // from the metrics panel. It stays because a stored value under it must
+  // still be readable; the assessment control is where it is entered now.
   { keys: ['metrics::BCS (1–9)', 'assessment::Body Condition Score (1–9)'],
-    to: 'bodyConditionScore', via: number },
+    to: 'bodyConditionScore', via: scaleNumber },
   { keys: ['client::Breed'], to: 'breed', via: text },
   { keys: ['client::Sex'], to: 'sex', via: text },
 
@@ -651,6 +684,7 @@ module.exports = {
   CONTEXT_KEYS,
   // exported for tests — each is a documented clinical mapping in its own right
   weightBearing,
+  scaleNumber,
   incisionStatus,
   deepPain,
   painScore,
