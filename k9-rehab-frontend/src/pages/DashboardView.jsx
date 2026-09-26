@@ -4544,20 +4544,6 @@ export default function DashboardView({ setView, currentUser, onLogout, patient,
   // still counted out of the blob by that endpoint — that part was never
   // wrong, it was only wrong for the blocks that had moved.
   const [blockState, setBlockState] = useState(null);
-  useEffect(() => {
-    if (!patient?.id) { setBlockState(null); return; }
-    const base = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
-    const token = localStorage.getItem("token");
-    fetch(`${base}/v2/patients/${patient.id}/block-state`, {
-      headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-    })
-      .then(r => r.json())
-      .then(j => setBlockState(j && j.data ? j.data : null))
-      // A failed fetch must not blank every dot. Null falls back to the blob
-      // count below, which is what the screen did before and is still right
-      // for the blocks that never moved.
-      .catch(() => setBlockState(null));
-  }, [patient?.id, saved]);
 
   const { t, i18n: i18nInst } = useTranslation();
   const beauVoice = useBeauVoice(i18nInst.language || "en");
@@ -4575,6 +4561,33 @@ export default function DashboardView({ setView, currentUser, onLogout, patient,
   });
   const [openSidebar, setOpenSidebar] = useState(null);
   const [saved,       setSaved]       = useState(false);
+
+  // MUST SIT BELOW `saved`, NOT ABOVE IT.
+  //
+  // This effect refetches the block state after a save, so `saved` is in
+  // its dependency array. It was originally placed at the top of the
+  // component, above the `useState` that declares `saved` — which threw
+  // "Cannot access 'saved' before initialization" and took the whole
+  // dashboard down with an error boundary the moment a patient was opened.
+  //
+  // A temporal dead zone reference, and the build could not see it: Vite
+  // compiles it happily because it is only a problem at run time. It was
+  // found by Sal pressing Enter on a patient, which is the thing I could
+  // not do myself.
+  useEffect(() => {
+    if (!patient?.id) { setBlockState(null); return; }
+    const base = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+    const token = localStorage.getItem("token");
+    fetch(`${base}/v2/patients/${patient.id}/block-state`, {
+      headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    })
+      .then(r => r.json())
+      .then(j => setBlockState(j && j.data ? j.data : null))
+      // A failed fetch must not blank every dot. Null falls back to the blob
+      // count below, which is what the screen did before and is still right
+      // for the blocks that never moved.
+      .catch(() => setBlockState(null));
+  }, [patient?.id, saved]);
   // ── Form state — persists across block opens, keyed by "blockId::label"
   const [dashData, setDashData] = useState({});
   // ── Ask B.E.A.U. per block

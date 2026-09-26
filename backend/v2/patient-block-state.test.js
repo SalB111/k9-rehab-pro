@@ -212,6 +212,70 @@ function open() {
     );
   });
 
+  await test('no hook depends on state declared below it', () => {
+    // THE BUG THIS EXISTS FOR, 2026-09-26.
+    //
+    // The block-state effect was placed at the top of DashboardView and had
+    // `saved` in its dependency array — but `const [saved] = useState(false)`
+    // is declared 300 lines further down. That is a temporal dead zone
+    // reference: it throws "Cannot access 'saved' before initialization" and
+    // the error boundary swallows the entire dashboard the moment a patient
+    // is opened.
+    //
+    // VITE BUILT IT WITHOUT COMPLAINT. A TDZ violation is only a problem at
+    // run time, so `npx vite build` passing proves nothing about it, and
+    // there is no linter configured for this frontend. Sal found it by
+    // pressing Enter on a patient — the one thing I could not do.
+    //
+    // So this checks the whole file, not just my hook: every useState name
+    // used in a hook dependency array must be declared before that array.
+    // PER FUNCTION, not per file. The first version compared positions across
+    // the whole file and reported a false positive immediately: two different
+    // components each have a `species`, one a plain const in ClientPanel and
+    // one a useState in LibraryPanelLegacy 2,600 lines later. A check that
+    // cries wolf on correct code gets deleted, so it has to respect scope.
+    const src = fs.readFileSync(DASHBOARD, 'utf8');
+    const lineOf = (i) => src.slice(0, i).split('\n').length;
+
+    const bounds = [];
+    const fnRe = /\nfunction ([A-Za-z_$][\w$]*)\s*\(|\nexport default function ([A-Za-z_$][\w$]*)\s*\(/g;
+    let f;
+    while ((f = fnRe.exec(src)) !== null) bounds.push({ name: f[1] || f[2], at: f.index });
+    assert.ok(bounds.length > 5, 'could not split the file into functions');
+
+    const offenders = [];
+    for (let i = 0; i < bounds.length; i += 1) {
+      const start = bounds[i].at;
+      const end = i + 1 < bounds.length ? bounds[i + 1].at : src.length;
+      const body = src.slice(start, end);
+
+      const declaredAt = new Map();
+      const decl = /const\s*\[\s*([A-Za-z_$][\w$]*)\s*,\s*set[\w$]*\s*\]\s*=\s*useState/g;
+      let m;
+      while ((m = decl.exec(body)) !== null) {
+        if (!declaredAt.has(m[1])) declaredAt.set(m[1], m.index);
+      }
+
+      const deps = /\}\s*,\s*\[([^\]]*)\]\s*\)/g;
+      while ((m = deps.exec(body)) !== null) {
+        const at = m.index;
+        for (const raw of m[1].split(',')) {
+          const name = raw.trim().replace(/\?\..*$/, '').replace(/\..*$/, '');
+          if (!name || !declaredAt.has(name)) continue;
+          if (declaredAt.get(name) > at) {
+            offenders.push(`${bounds[i].name}: line ${lineOf(start + at)} depends on `
+              + `"${name}", declared on line ${lineOf(start + declaredAt.get(name))}`);
+          }
+        }
+      }
+    }
+    assert.deepStrictEqual(
+      offenders, [],
+      'a hook reads state declared below it. This throws at run time and the '
+      + `error boundary eats the whole page:\n      ${offenders.join('\n      ')}`
+    );
+  });
+
   await test('the dashboard states the stage, and states it honestly', () => {
     const src = fs.readFileSync(DASHBOARD, 'utf8');
     const live = src.split('\n').filter((l) => !l.trim().startsWith('//')).join('\n');
