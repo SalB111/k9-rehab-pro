@@ -34,6 +34,20 @@ const BEAU = 'C:/Users/User/beauaihome';
 const V2_TESTS = path.join(K9, 'backend', 'v2', 'tests');
 
 const CHECKS = [
+  // FIRST, because nothing below means anything if the tree does not parse.
+  //
+  // On 2026-09-26 a comment added to the patients DDL contained backticks.
+  // The DDL lives inside a JS template literal, so the first backtick ended
+  // the string and sqlite-provider.js stopped parsing — the backend would
+  // not boot. THIS SUITE REPORTED 30/30 AND IT WAS COMMITTED, because
+  // nothing here loads that module: the one test that touches it reads the
+  // file as text, which works fine on a file Node cannot parse.
+  //
+  // A green verify is supposed to mean the thing runs. `node --check` on
+  // every file is the cheapest floor under that. It parses without
+  // executing, so modules that bind a port are safe to check.
+  { name: 'K9 · syntax',            cwd: K9, cmd: 'node', args: ['scripts/syntax-check.js'],
+    ok: (out) => /files parse/.test(out) },
   { name: 'K9 · V2 clinical suite',    cwd: V2_TESTS, cmd: 'node', args: ['run-all.js'],
     ok: (out) => /All suites passed/.test(out) && !/suite\(s\) FAILED/.test(out) },
   { name: 'K9 · intake proposal',      cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/intake-proposal.test.js'],

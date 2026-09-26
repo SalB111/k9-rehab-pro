@@ -102,8 +102,8 @@ async function createTables() {
       surgery_date TEXT,
       -- NO DEFAULTS ON A CLINICAL FINDING.
       --
-      -- These read `DEFAULT 0`, `DEFAULT 5`, `DEFAULT 5` and
-      -- `DEFAULT 'Moderate'` until 2026-09-26. Every one is a real finding
+      -- These read DEFAULT 0, DEFAULT 5, DEFAULT 5 and DEFAULT 'Moderate'
+      -- until 2026-09-26. Every one is a real finding
       -- about a real animal, and all four are ENGINE INPUTS, so a row
       -- inserted without them described a patient nobody had examined:
       --
