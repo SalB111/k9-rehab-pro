@@ -4992,6 +4992,52 @@ export default function DashboardView({ setView, currentUser, onLogout, patient,
 
         {/* ── BLOCK GRID ── */}
         <div style={{ padding:22 }}>
+        {/* ── WHERE THIS PATIENT IS IN THE WORKFLOW ──────────────────────
+
+            Sal's flow: a client comes in because the dog is getting older,
+            the vet examines, the nurse takes vitals, the vet diagnoses and
+            calls surgical or non-surgical. The patient may not be ADMITTED
+            until the following week, and B.E.A.U.'s metrics are added then.
+
+            So "which blocks still need filling" depends entirely on where
+            the patient is, and until now the dashboard had no idea. It
+            never opened a visit at all: Louie and Haley have ZERO rows in
+            `visits` despite complete workups, which is the audit line
+            "5 patients have a form assessment recorded at no visit".
+
+            This states the stage and nothing more. It does NOT yet hide or
+            require any field by stage — which blocks an intake must capture
+            before admission is a clinical judgement and is Sal’s to write
+            (patient-block-state.js STAGE_REQUIREMENTS, deliberately empty).
+            Saying where we are is useful on its own; guessing what that
+            demands of a clinician would not be. */}
+        {blockState && blockState.stage && (() => {
+          const STAGE_LABEL = {
+            NONE:         { text: "No visit opened",  tone: "warn" },
+            INTAKE:       { text: "Intake",           tone: "info" },
+            ADMISSION:    { text: "Admitted",         tone: "good" },
+            IN_PROGRAMME: { text: "In programme",     tone: "good" },
+          };
+          const st = STAGE_LABEL[blockState.stage.stage] || { text: blockState.stage.stage, tone: "info" };
+          const tone = st.tone === "warn"
+            ? { fg: C.amber, bg: C.amberLt || "#FFFBEB", br: C.amber }
+            : st.tone === "good"
+              ? { fg: C.green, bg: C.greenLt, br: C.green }
+              : { fg: C.teal, bg: C.tealLt, br: C.teal };
+          return (
+            <div style={{
+              display:"flex", alignItems:"center", gap:10, flexWrap:"wrap",
+              margin:"0 0 16px", padding:"10px 14px",
+              background: tone.bg, border:`1px solid ${tone.br}44`, borderRadius:6,
+            }}>
+              <span style={{ fontSize:10, fontWeight:800, letterSpacing:".09em",
+                textTransform:"uppercase", color: tone.fg }}>Stage</span>
+              <span style={{ fontSize:13, fontWeight:700, color: C.navy }}>{st.text}</span>
+              <span style={{ fontSize:11, color:C.muted }}>{blockState.stage.why}</span>
+            </div>
+          );
+        })()}
+
           {/* ── UPDATE PATIENT RECORD success/error toast ── */}
           {updateToast && (
             <div style={{

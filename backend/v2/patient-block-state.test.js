@@ -212,6 +212,24 @@ function open() {
     );
   });
 
+  await test('the dashboard states the stage, and states it honestly', () => {
+    const src = fs.readFileSync(DASHBOARD, 'utf8');
+    const live = src.split('\n').filter((l) => !l.trim().startsWith('//')).join('\n');
+    assert.ok(/STAGE_LABEL/.test(live), 'the dashboard shows no stage at all');
+    // NONE must not be dressed up as "Intake". A patient nobody has opened a
+    // visit for has not been taken in; saying so is the whole point, because
+    // that is the state Louie and Haley are actually in.
+    assert.ok(
+      /NONE:\s*\{\s*text:\s*"No visit opened"/.test(live),
+      'the no-visit state is labelled as something other than "No visit opened" '
+      + '— a patient with no visit must not read as if intake had happened'
+    );
+    assert.ok(
+      /blockState\.stage\.why/.test(live),
+      'the stage is shown without its reason, so a clinician cannot tell why'
+    );
+  });
+
   if (failures.length) {
     console.error(`\nFAILED ${failures.length} of ${passed + failures.length}\n`);
     process.exit(1);
