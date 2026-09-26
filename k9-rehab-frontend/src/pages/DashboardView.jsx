@@ -5427,9 +5427,21 @@ export default function DashboardView({ setView, currentUser, onLogout, patient,
               const notYetDue = expected === "not_yet";
               const needsAttention = Boolean(served && served.needs_attention);
               const bypassed = Boolean(served && served.bypassed);
-              // Only worth offering on a block the stage actually asks for.
-              // "Not needed today" on something already not due reads as noise.
+              // Only worth offering on a block the stage actually asks for —
+              // "Not needed today" on something not yet due reads as noise —
+              // AND only where the server says the block may be skipped at all.
+              //
+              // Sal, 2026-09-26: "ON THE NOT NEEDED CHECK BOXES CLIENT AND
+              // PATIENT ARE NEEDED". Client & Patient is who the record is
+              // about: four engine inputs come from it and every protocol is
+              // addressed to a named dog and a named owner. So it carries no
+              // checkbox, and visit-bypass-store refuses the write besides.
+              //
+              // The served "bypassable" flag rather than a list repeated
+              // here: a second copy of the rule is a second rule, and this
+              // one would drift into offering a skip the store then rejects.
               const canBypass = Boolean(patient?.id && served
+                && served.bypassable !== false
                 && (expected === "required" || expected === "optional"));
 
               const dotColor = needsAttention ? C.amber

@@ -27,7 +27,7 @@
  */
 
 const visitStore = require('./visit-store');
-const { BLOCK_SOURCE } = require('./patient-block-state');
+const { BLOCK_SOURCE, NEVER_BYPASSABLE } = require('./patient-block-state');
 const { ProtocolStoreError, ERR } = require('./protocol-store');
 
 const TABLE = 'visit_block_bypasses';
@@ -37,6 +37,25 @@ function assertBlock(blockId) {
   if (!blockId || !Object.prototype.hasOwnProperty.call(BLOCK_SOURCE, blockId)) {
     throw new ProtocolStoreError(
       `Unknown block "${blockId}". The block list is patient-block-state.BLOCK_SOURCE.`,
+      ERR.INVALID
+    );
+  }
+}
+
+/**
+ * Some blocks are not skippable at all.
+ *
+ * Sal, 2026-09-26: "ON THE NOT NEEDED CHECK BOXES CLIENT AND PATIENT ARE
+ * NEEDED". Refused HERE and not only on the card, because a rule enforced
+ * only by a hidden checkbox is enforced by nothing — a stale tab, a replayed
+ * request or the next screen to be written would all walk straight past it.
+ */
+function assertBypassable(blockId) {
+  if (NEVER_BYPASSABLE.has(blockId)) {
+    throw new ProtocolStoreError(
+      `The ${blockId} block cannot be skipped. It is who the record is about — `
+      + 'the patient, the owner, and four of the engine inputs. A protocol '
+      + 'generated without it is addressed to nobody.',
       ERR.INVALID
     );
   }
@@ -101,6 +120,7 @@ async function assertVisitEditable(db, visitId) {
 /** Mark a block as not needed at this visit. Idempotent. */
 async function setBypass(db, { patientId, blockId, actor }) {
   assertBlock(blockId);
+  assertBypassable(blockId);
   assertActor(actor);
   const visit = await ensureOpenVisit(db, { patientId, actor });
   await assertVisitEditable(db, visit.id);

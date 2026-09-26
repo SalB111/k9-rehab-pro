@@ -266,6 +266,51 @@ raw.exec('CREATE TABLE patients (id INTEGER PRIMARY KEY, clinic_id INTEGER, name
     raw.close();
   });
 
+  // ── blocks that cannot be skipped at all ────────────────────────────────
+  //
+  // Sal, 2026-09-26: "ON THE NOT NEEDED CHECK BOXES CLIENT AND PATIENT ARE
+  // NEEDED." Client & Patient is who the record is about — four engine inputs
+  // come from it and every protocol is addressed to a named dog and a named
+  // owner. Enforced in three places; these check all three, because a rule
+  // held only by a hidden checkbox is held by nothing.
+
+  await test('SAL: Client & Patient CANNOT be skipped', async () => {
+    const { raw, db } = freshDb();
+    await assert.rejects(
+      store.setBypass(db, { patientId: 1, blockId: 'client', actor: ACTOR }),
+      /cannot be skipped/,
+      'the store accepted a bypass on the block that identifies the patient'
+    );
+    const rows = await db.all('SELECT * FROM visit_block_bypasses');
+    assert.strictEqual(rows.length, 0, 'it was refused and stored anyway');
+    raw.close();
+  });
+
+  await test('...and it is not merely hidden: the server says so in the state', async () => {
+    const { raw, db } = freshDb();
+    const patient = await db.get('SELECT * FROM patients WHERE id = 1');
+    const state = await blockState.getBlockState(
+      db, 1, patient, { configured: true }, { stage: 'INTAKE' }
+    );
+    assert.strictEqual(state.client.bypassable, false,
+      'block-state does not tell the screen that client cannot be skipped');
+    assert.strictEqual(state.assessment.bypassable, true,
+      'a clinical block lost its bypass — the accommodation Sal asked for is gone');
+    raw.close();
+  });
+
+  await test('the card offers no checkbox where the server says it cannot be skipped', async () => {
+    const jsx = fs.readFileSync(
+      path.join(__dirname, '..', '..', 'k9-rehab-frontend', 'src', 'pages', 'DashboardView.jsx'),
+      'utf8'
+    );
+    assert.ok(
+      /served\.bypassable\s*!==\s*false/.test(jsx),
+      'the card decides for itself which blocks may be skipped instead of '
+      + 'reading the served flag, so the screen can offer a skip the store refuses'
+    );
+  });
+
   if (failures.length) {
     console.error(`\nFAILED ${failures.length} of ${passed + failures.length}\n`);
     process.exit(1);

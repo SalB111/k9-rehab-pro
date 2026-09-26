@@ -64,6 +64,27 @@ const BLOCK_SOURCE = {
   'coming-soon': 'none',
 };
 
+/**
+ * BLOCKS THAT CANNOT BE SKIPPED, EVER.
+ *
+ * Sal, 2026-09-26: "ON THE NOT NEEDED CHECK BOXES CLIENT AND PATIENT ARE
+ * NEEDED".
+ *
+ * The bypass exists because a busy vet "cant or dont need that info right
+ * away" — a real and correct accommodation for CLINICAL blocks. It is not a
+ * licence to skip identifying the animal.
+ *
+ * Client & Patient is who the record is ABOUT. Four engine inputs come from
+ * it — age, breed, sex, weight — and every protocol, handoff and owner-facing
+ * instruction is addressed to a named dog and a named owner. A record with
+ * that block skipped is not a thinner record; it is a protocol for nobody.
+ *
+ * Enforced in THREE places on purpose: here, in visit-bypass-store.setBypass
+ * which refuses the write, and on the card, which never offers the checkbox.
+ * A rule that lives only in the UI is a suggestion.
+ */
+const NEVER_BYPASSABLE = new Set(['client']);
+
 /** How many blob keys count as "more than a toe in the water". */
 const PARTIAL_THRESHOLD = 3;
 
@@ -254,6 +275,11 @@ async function getBlockState(db, patientId, patient, clinic, stage) {
   const at = (stage && stage.stage) || STAGE.NONE;
   for (const [block, state] of Object.entries(out)) {
     state.expected = expectationFor(at, block);
+    // SERVED, not decided by the screen. The dashboard had its own rule for
+    // when to show the checkbox; a second copy of a rule is a second rule,
+    // and this one must not be able to drift into offering a skip the store
+    // will refuse.
+    state.bypassable = !NEVER_BYPASSABLE.has(block);
     state.bypassed = bypassed.has(block);
     state.needs_attention = state.expected === 'required'
       && state.status === 'empty'
@@ -315,6 +341,7 @@ async function stageOf(db, patientId) {
 
 module.exports = {
   BLOCK_SOURCE,
+  NEVER_BYPASSABLE,
   PARTIAL_THRESHOLD,
   STAGE,
   STAGE_REQUIREMENTS,
