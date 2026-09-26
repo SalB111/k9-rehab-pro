@@ -45,6 +45,13 @@ const COMPLETE = {
   medical_history: 'R CCL rupture, TPLO 2026-03-21.',
   current_medications: 'None',
   special_instructions: 'Leash-only x 8 weeks.',
+  // Added 2026-09-26. These four became reportable gaps when patient
+  // registration stopped inventing them (lameness 0, BCS 5, pain 5/10,
+  // mobility "Moderate"), so a record without them is no longer complete —
+  // which is the point of the change. A fixture may carry invented values; a
+  // patient record may not.
+  pain_level: 3, lameness_grade: 2,
+  mobility_level: 'Moderate', body_condition_score: 5,
 };
 
 // ---------------------------------------------------------------------------

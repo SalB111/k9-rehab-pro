@@ -226,9 +226,33 @@ app.post("/api/patients", requireAuth, async (req, res) => {
         special_instructions, client_name, client_email, client_phone, referring_vet
       ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
       [
+        // AN UNSTATED CLINICAL FINDING IS NULL, NOT A NUMBER.
+        //
+        // This read `lameness_grade || 0, body_condition_score || 5,
+        // pain_level || 5, mobility_level || "Moderate"` until 2026-09-26.
+        // Every one of those is a real finding, and all four are ENGINE
+        // INPUTS — so registering a patient invented a clinical picture for an
+        // animal nobody had examined:
+        //
+        //   lameness 0        "sound"
+        //   BCS 5             "ideal"
+        //   pain 5/10         moderate pain
+        //   mobility Moderate
+        //
+        // Found on a live record: Sal registered Haley, recorded NRS 2 in her
+        // assessment, and the engine went on reading 5 because the column was
+        // filled by this default and the record only ever answers an EMPTY
+        // column. The screen said 2 and the protocol was built on 5.
+        //
+        // NULL is not a gap here, it is the truth: nobody has assessed it. It
+        // also makes the rest of the system work as designed — intake-proposal
+        // recovers the value from the clinical record, patient-gaps reports it
+        // to the clinician, and the safety gates fall to their cautious
+        // defaults. A fabricated 5 defeats all three silently.
         name, species || "canine", breed, age, weight, sex, condition, affected_region,
-        surgery_date, lameness_grade || 0, body_condition_score || 5,
-        pain_level || 5, mobility_level || "Moderate", current_medications,
+        surgery_date,
+        lameness_grade ?? null, body_condition_score ?? null,
+        pain_level ?? null, mobility_level || null, current_medications,
         medical_history, special_instructions, client_name,
         client_email, client_phone, referring_vet
       ]

@@ -110,6 +110,49 @@ const FIELDS = [
     why: 'Carried into the protocol and the clinical record.',
     isMissing: (v) => !Number.isFinite(Number(v)) || Number(v) <= 0,
   },
+
+  // ── The four that could not be missing until 2026-09-26 ──────────────────
+  //
+  // Patient registration DEFAULTED these: lameness 0, BCS 5, pain 5/10,
+  // mobility "Moderate". Every one is a real clinical finding, so the column
+  // was never empty and there was never a gap to report — the invented value
+  // stood in for the assessment and nothing said so.
+  //
+  // Worse, the record could not correct it. intake-proposal fills a column
+  // from the clinical record only when the column is EMPTY, so a registered
+  // patient whose assessment said NRS 2 went on being read as 5.
+  //
+  // With the defaults gone these are genuinely absent until somebody assesses
+  // them, which is what they should have been all along, and a clinician is
+  // now told rather than shown a number nobody produced.
+  //
+  // NOTE the default `missing()` is used deliberately for all four: ZERO IS A
+  // REAL FINDING here. Lameness 0 is a sound dog and pain 0 is a comfortable
+  // one — neither is an absence, and the numeric `isMissing` used for weight
+  // and age above would wrongly report both as unrecorded.
+  {
+    column: 'pain_level', engine: 'painScore', label: 'Pain score',
+    severity: SEVERITY.DEGRADES,
+    why: 'Drives restriction in the engine — 8 or above forces comfort-focused '
+       + 'care and a phase lock. An unstated pain score is not a comfortable dog.',
+  },
+  {
+    column: 'lameness_grade', engine: 'lamenessGrade', label: 'Lameness grade',
+    severity: SEVERITY.DEGRADES,
+    why: 'Grade 5 applies the non-weight-bearing exclusions on its own. '
+       + 'Unstated is not the same as sound.',
+  },
+  {
+    column: 'mobility_level', engine: 'mobilityLevel', label: 'Mobility level',
+    severity: SEVERITY.DEGRADES,
+    why: 'Read for the weight-bearing gate and for which safety gates apply at '
+       + 'all — a non-ambulatory patient is asked the whole neurological set.',
+  },
+  {
+    column: 'body_condition_score', engine: 'bodyConditionScore', label: 'Body condition score',
+    severity: SEVERITY.DEGRADES,
+    why: 'Carried into the protocol and into weight-management advice.',
+  },
 ];
 
 /** Does this record describe something post-operative? */
