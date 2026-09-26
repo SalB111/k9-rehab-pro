@@ -643,10 +643,37 @@ function createV2Router(deps) {
       }
     }
 
+    // The clinic record, for its default protocol length. Read here rather
+    // than inside the adapter: the adapter is given state, it does not query.
+    //
+    // SELECT * AND A CATCH, deliberately. `default_protocol_weeks` is added by
+    // an additive migration, so naming it in the SELECT throws anywhere the
+    // migration has not run — including every test fixture that builds
+    // `clinics` from the schema files.
+    //
+    // That is not hypothetical: naming the column broke twelve authorization
+    // tests, which generate a protocol and then approve it. Generation threw,
+    // `version` came back undefined, and the failure surfaced as "Cannot read
+    // properties of undefined (reading 'id')" three steps away from the cause.
+    //
+    // A clinic with no such column simply has no house standard, which is the
+    // same as not having set one.
+    let clinicRow = null;
+    try {
+      clinicRow = await db.get('SELECT * FROM clinics WHERE id = ?', [clinicId]);
+    } catch { clinicRow = null; }
+
     const state = visitStore.toV2State(db, {
       patient,
       visit,
-      clinic: clinicStore.toClinicState(capabilities),
+      // toClinicState returns EXACTLY the ten capability keys and strips
+      // everything else, so the house standard for protocol length has to be
+      // added here. It is a property of the clinic record, not of its
+      // equipment, and resolveProtocolWeeks reads it as step 2 of the chain.
+      clinic: {
+        ...clinicStore.toClinicState(capabilities),
+        default_protocol_weeks: (clinicRow && clinicRow.default_protocol_weeks) || null,
+      },
       protocolParams: {
         length_weeks: req.body.protocol_length_weeks,
         frequency: req.body.frequency,

@@ -1,124 +1,107 @@
 import React from "react";
-import { FiActivity, FiClock, FiAlertTriangle, FiFileText } from "react-icons/fi";
+import { FiClock, FiAlertTriangle } from "react-icons/fi";
 import C from "../../constants/colors";
-import S from "../../constants/styles";
-import { sty } from "./constants";
-import { SettingsToggle, SettingsSection } from "./SettingsShared";
+import { SettingsSection } from "./SettingsShared";
 
-export function TabProtocols({ protocolDefaults, setProtocolDefaults, flashSave, isOpen, toggleSection }) {
+/**
+ * THE ONE PROTOCOL DEFAULT THAT DOES ANYTHING.
+ *
+ * This tab used to offer nine: progression_philosophy, session_duration,
+ * sessions_per_week, pain_threshold_hold, weight_bearing_threshold,
+ * include_hep, default_outcome_measure, auto_progression_gates,
+ * recheck_interval_weeks.
+ *
+ * NONE OF THEM WAS READ ANYWHERE IN THE BACKEND. They were controls that
+ * looked like settings and changed nothing — the same state the equipment tab
+ * was in. They are removed rather than hidden: anything genuinely wanted can
+ * come back once something consumes it.
+ *
+ * What replaces them is the default that was missing while nine fakes sat
+ * here. Until 2026-09-26 EVERY protocol was generated at 8 weeks, because the
+ * frontend hardcoded `protocolLength: "8"` and the adapter fell back to 8 —
+ * while tplo/ivdd/oa/geriatric had each declared 16/12/16/16 that nothing
+ * read. A sixteen-week TPLO came out as eight, with the whole progression
+ * compressed into half its time.
+ *
+ * Leaving this blank is the RIGHT answer for most practices: each condition
+ * then gets the length its own protocol documents. A number here overrides all
+ * four at once, which is why the consequence is spelled out on screen rather
+ * than left to be discovered.
+ */
+export function TabProtocols({ form, setForm, isOpen, toggleSection }) {
+  const value = form.default_protocol_weeks ?? "";
+
   return (
     <div>
-      <SettingsSection id="proto_philosophy" open={isOpen("proto_philosophy")} onToggle={toggleSection} icon={FiActivity} title="Clinical Progression Philosophy">
-        <div style={sty.fieldRow}>
-          <label style={sty.fieldLabel}>Progression Philosophy</label>
-          <div style={{ display: "flex", gap: 10, marginTop: 6 }}>
-            {[
-              ["conservative", "Conservative", "Slower advancement, extended phase durations, prioritize safety"],
-              ["moderate", "Moderate (Recommended)", "Balanced approach per Millis & Levine guidelines"],
-              ["progressive", "Progressive", "Accelerated timelines for athletic or high-demand patients"],
-            ].map(([val, label, desc]) => (
-              <div role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); (() => setProtocolDefaults({ ...protocolDefaults, progression_philosophy: val }))(e); } }} key={val} onClick={() => setProtocolDefaults({ ...protocolDefaults, progression_philosophy: val })}
-                style={{
-                  flex: 1, padding: "14px 16px", borderRadius: 8, cursor: "pointer",
-                  background: protocolDefaults.progression_philosophy === val ? C.teal : C.bg,
-                  color: protocolDefaults.progression_philosophy === val ? "#fff" : C.text,
-                  border: protocolDefaults.progression_philosophy === val ? `2px solid ${C.teal}` : `1px solid ${C.border}`,
-                  transition: "all 0.15s",
-                }}>
-                <div style={{ fontSize: 13, fontWeight: 700 }}>{label}</div>
-                <div style={{ fontSize: 11, marginTop: 4, opacity: 0.7 }}>{desc}</div>
-              </div>
+      <div style={{
+        padding: "12px 16px", marginBottom: 12, borderRadius: 8,
+        background: "rgba(14,165,233,0.08)", border: "1px solid rgba(14,165,233,0.35)",
+        fontSize: 12, color: C.navy,
+      }}>
+        A clinician can always set a different length for an individual patient.
+        This is only what B.E.A.U. uses when nobody has.
+      </div>
+
+      <SettingsSection
+        id="proto_length" icon={FiClock} title="Default protocol length"
+        open={isOpen("proto_length")} onToggle={toggleSection}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+          <select
+            value={value}
+            onChange={(e) => setForm((p) => ({
+              ...p,
+              default_protocol_weeks: e.target.value === "" ? null : Number(e.target.value),
+            }))}
+            style={{
+              fontSize: 13, padding: "7px 10px", borderRadius: 6,
+              border: `1px solid ${C.border}`, minWidth: 320,
+            }}
+          >
+            <option value="">Use each protocol&rsquo;s own length (recommended)</option>
+            {[8, 10, 12, 14, 16, 20, 24].map((w) => (
+              <option key={w} value={w}>{w} weeks — for every condition</option>
             ))}
-          </div>
-        </div>
-      </SettingsSection>
-
-      <SettingsSection id="proto_session" open={isOpen("proto_session")} onToggle={toggleSection} icon={FiClock} title="Session Configuration">
-        <div style={S.grid(3)}>
-          <div style={sty.fieldRow}>
-            <label style={sty.fieldLabel}>Default Session Duration</label>
-            <select style={{ ...S.select, width: "100%" }} value={protocolDefaults.session_duration}
-              onChange={e => setProtocolDefaults({ ...protocolDefaults, session_duration: +e.target.value })}>
-              <option value={30}>30 minutes</option>
-              <option value={45}>45 minutes (Recommended)</option>
-              <option value={60}>60 minutes</option>
-              <option value={90}>90 minutes (Extended)</option>
-            </select>
-          </div>
-          <div style={sty.fieldRow}>
-            <label style={sty.fieldLabel}>Sessions Per Week</label>
-            <select style={{ ...S.select, width: "100%" }} value={protocolDefaults.sessions_per_week}
-              onChange={e => setProtocolDefaults({ ...protocolDefaults, sessions_per_week: +e.target.value })}>
-              <option value={1}>1× per week</option>
-              <option value={2}>2× per week</option>
-              <option value={3}>3× per week (Recommended)</option>
-              <option value={5}>5× per week (Intensive)</option>
-            </select>
-          </div>
-          <div style={sty.fieldRow}>
-            <label style={sty.fieldLabel}>Recheck Interval</label>
-            <select style={{ ...S.select, width: "100%" }} value={protocolDefaults.recheck_interval_weeks}
-              onChange={e => setProtocolDefaults({ ...protocolDefaults, recheck_interval_weeks: +e.target.value })}>
-              <option value={1}>Every 1 week</option>
-              <option value={2}>Every 2 weeks (Recommended)</option>
-              <option value={4}>Every 4 weeks</option>
-            </select>
-          </div>
-        </div>
-      </SettingsSection>
-
-      <SettingsSection id="proto_thresholds" open={isOpen("proto_thresholds")} onToggle={toggleSection} icon={FiAlertTriangle} title="Safety Thresholds & Gating">
-        <div style={S.grid(2)}>
-          <div style={sty.fieldRow}>
-            <label style={sty.fieldLabel}>Pain Score Threshold for Progression Hold</label>
-            <select style={{ ...S.select, width: "100%" }} value={protocolDefaults.pain_threshold_hold}
-              onChange={e => setProtocolDefaults({ ...protocolDefaults, pain_threshold_hold: +e.target.value })}>
-              {[2,3,4,5,6].map(n => (
-                <option key={n} value={n}>VAS {n}/10 {n === 4 ? "(Recommended)" : ""}</option>
-              ))}
-            </select>
-            <div style={sty.fieldHint}>Progression is held when pain score reaches or exceeds this level</div>
-          </div>
-          <div style={sty.fieldRow}>
-            <label style={sty.fieldLabel}>Weight-Bearing Requirement</label>
-            <select style={{ ...S.select, width: "100%" }} value={protocolDefaults.weight_bearing_threshold}
-              onChange={e => setProtocolDefaults({ ...protocolDefaults, weight_bearing_threshold: e.target.value })}>
-              <option value="non_weight_bearing">Non-Weight-Bearing (NWB)</option>
-              <option value="toe_touch">Toe-Touch Weight Bearing (TTWB)</option>
-              <option value="partial">Partial Weight Bearing (PWB) — Default</option>
-              <option value="full">Full Weight Bearing (FWB)</option>
-            </select>
-            <div style={sty.fieldHint}>Minimum weight-bearing status before advancing to next phase</div>
-          </div>
-        </div>
-
-        <SettingsToggle value={protocolDefaults.auto_progression_gates}
-          onChange={v => setProtocolDefaults({ ...protocolDefaults, auto_progression_gates: v })}
-          label="Automatic Progression Gates"
-          desc="Require explicit clinician approval before advancing between protocol phases" />
-      </SettingsSection>
-
-      <SettingsSection id="proto_output" open={isOpen("proto_output")} onToggle={toggleSection} icon={FiFileText} title="Protocol Output Preferences">
-        <div style={sty.fieldRow}>
-          <label style={sty.fieldLabel}>Default Outcome Measure</label>
-          <select style={{ ...S.select, width: "100%" }} value={protocolDefaults.default_outcome_measure}
-            onChange={e => setProtocolDefaults({ ...protocolDefaults, default_outcome_measure: e.target.value })}>
-            <option value="cbpi">CBPI — Canine Brief Pain Inventory (Brown et al. 2008)</option>
-            <option value="load">LOAD — Liverpool Osteoarthritis in Dogs</option>
-            <option value="csu">CSU — Colorado State University Pain Scale</option>
-            <option value="hcpi">HCPI — Helsinki Chronic Pain Index</option>
           </select>
-          <div style={sty.fieldHint}>Validated instrument used for longitudinal outcome tracking</div>
+          <span style={{ fontSize: 11, color: C.muted }}>
+            saved with the clinic profile
+          </span>
         </div>
 
-        <SettingsToggle value={protocolDefaults.include_hep}
-          onChange={v => setProtocolDefaults({ ...protocolDefaults, include_hep: v })}
-          label="Include Home Exercise Program (HEP)"
-          desc="Auto-generate a client-safe take-home exercise sheet with each protocol" />
+        {/* What "the protocol's own length" actually means, by name. A blank
+            dropdown tells a clinician nothing about what they are choosing. */}
+        <div style={{ marginTop: 12, fontSize: 11.5, color: C.text }}>
+          <div style={{ fontWeight: 700, marginBottom: 4 }}>
+            Each protocol&rsquo;s documented length:
+          </div>
+          <div style={{ display: "flex", gap: 14, flexWrap: "wrap", color: C.muted }}>
+            <span>TPLO <strong style={{ color: C.navy }}>16</strong></span>
+            <span>IVDD <strong style={{ color: C.navy }}>12</strong></span>
+            <span>Osteoarthritis <strong style={{ color: C.navy }}>16</strong></span>
+            <span>Geriatric <strong style={{ color: C.navy }}>16</strong></span>
+          </div>
+        </div>
+
+        {value !== "" && (
+          <div style={{
+            marginTop: 12, padding: "9px 13px", borderRadius: 6, fontSize: 11.5,
+            background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.4)",
+            color: C.amber, display: "flex", alignItems: "flex-start", gap: 7,
+          }}>
+            <FiAlertTriangle size={14} style={{ marginTop: 1, flexShrink: 0 }} />
+            <span>
+              <strong>{value} weeks will be used for every condition</strong>, overriding all
+              four documented lengths above. Leave this blank unless the practice has a
+              reason to run every protocol to the same length.
+            </span>
+          </div>
+        )}
       </SettingsSection>
 
-      <div style={sty.saveBar}>
-        <button style={S.btn("dark")} onClick={flashSave}>Save Protocol Defaults</button>
+      <div style={{ marginTop: 12, fontSize: 10.5, color: C.muted, fontStyle: "italic" }}>
+        A length set for an individual patient always wins over this. A protocol
+        length is the clinical arc of the programme, not a commitment to attend —
+        an owner who stops early continues at home through B.E.A.U.
       </div>
     </div>
   );

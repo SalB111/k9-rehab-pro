@@ -142,6 +142,69 @@ function splitClientName(value) {
  * @param {object} [state.protocol] Protocol parameters (length, frequency).
  * @returns {object} flat camelCase formData carrying all 36 engine inputs.
  */
+/**
+ * HOW LONG IS THIS PROTOCOL?
+ *
+ * Until 2026-09-26 the answer was `parseInt(formData.protocolLength, 10) || 8`
+ * and the frontend hardcoded "8". So EVERY protocol was eight weeks —
+ * including a TPLO the system documents as sixteen, which compressed the whole
+ * progression into half its time and had a dog reaching "Return to Function"
+ * around week six instead of week twelve.
+ *
+ * Meanwhile each protocol had declared its own length all along:
+ *
+ *   tplo 16 · ivdd 12 · oa 16 · geriatric 16
+ *
+ * `PROTOCOL_DEFINITIONS[type].defaultWeeks`, matching CLAUDE.md exactly, and
+ * read by NOTHING except the knowledge engine's text ingestor, which merely
+ * described it to B.E.A.U. in prose.
+ *
+ * One chain decides now, most specific first:
+ *
+ *   1. the length a clinician chose FOR THIS PATIENT
+ *   2. this practice's house standard, if it set one
+ *   3. the condition's own documented length
+ *   4. 8, and only for a diagnosis that routes nowhere
+ *
+ * Step 4 is not a default any more, it is a floor — and it says so out loud,
+ * because a protocol whose length nobody chose should be visible rather than
+ * assumed.
+ *
+ * @param {object} formData  must carry diagnosis and affectedRegion
+ * @param {object} engine    the generator, for getProtocolType/PROTOCOL_DEFINITIONS
+ * @returns {{weeks:number, source:string}}
+ */
+function resolveProtocolWeeks(formData, engine) {
+  const asWeeks = (v) => {
+    const n = parseInt(v, 10);
+    return Number.isInteger(n) && n >= 1 && n <= 52 ? n : null;
+  };
+
+  const forPatient = asWeeks(formData && formData.protocolLength);
+  if (forPatient) return { weeks: forPatient, source: 'this patient' };
+
+  const forClinic = asWeeks(formData && formData.clinicDefaultProtocolWeeks);
+  if (forClinic) return { weeks: forClinic, source: 'clinic default' };
+
+  try {
+    const type = engine.getProtocolType(
+      (formData && formData.diagnosis) || '',
+      (formData && formData.affectedRegion) || ''
+    );
+    const declared = engine.PROTOCOL_DEFINITIONS
+      && engine.PROTOCOL_DEFINITIONS[type]
+      && asWeeks(engine.PROTOCOL_DEFINITIONS[type].defaultWeeks);
+    if (declared) return { weeks: declared, source: `${type} protocol definition` };
+  } catch { /* fall through to the floor */ }
+
+  console.warn(
+    '[engine-adapter] no protocol length from the patient, the clinic or the '
+    + 'protocol definition — falling back to 8 weeks. This protocol\'s length '
+    + 'was not chosen by anybody.'
+  );
+  return { weeks: 8, source: 'fallback — nobody chose' };
+}
+
 function toEngineFormData(state) {
   const patient = (state && state.patient) || {};
   const visit = (state && state.visit) || {};
@@ -236,6 +299,12 @@ function toEngineFormData(state) {
 
     // ── Route-level inputs (consumed by the generation loop, not the engine) ─
     protocolLength: pick(protocol.length_weeks, protocol.protocolLength),
+    // The practice's house standard, used only when nobody chose a length for
+    // this patient. NOT an engine input the generator reads — it feeds
+    // resolveProtocolWeeks, which decides before the generator is called.
+    clinicDefaultProtocolWeeks: pick(
+      clinic.default_protocol_weeks, clinic.defaultProtocolWeeks
+    ),
     frequency: pick(protocol.frequency),
     species: pick(patient.species),
     breed: pick(patient.breed),
@@ -350,7 +419,8 @@ function runEngine(formData, engine, allExercises) {
   }
 
   // STEP 2 — generate, passing THE SAME object reference. Do not clone.
-  const totalWeeks = parseInt(formData.protocolLength, 10) || 8;
+  const chosen = resolveProtocolWeeks(formData, engine);
+  const totalWeeks = chosen.weeks;
   const weeks = [];
   for (let w = 1; w <= totalWeeks; w++) {
     const exercises = engine.selectExercisesForWeek(w, totalWeeks, allExercises, formData);
@@ -371,6 +441,7 @@ function runEngine(formData, engine, allExercises) {
 }
 
 module.exports = {
+  resolveProtocolWeeks,
   ENGINE_INPUTS,
   splitClientName,
   DERIVED_FLAGS,

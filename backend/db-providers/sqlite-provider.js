@@ -361,6 +361,18 @@ async function createTables() {
   await run(`CREATE INDEX IF NOT EXISTS idx_safety_events_created_at ON safety_events(created_at)`);
   await run(`CREATE INDEX IF NOT EXISTS idx_safety_events_patient_id ON safety_events(patient_id)`);
 
+  // Migration: the clinic's house standard for protocol length.
+  //
+  // NULL means "use each protocol's own documented length" — which is a
+  // different answer from any number, so the column must stay nullable. Until
+  // 2026-09-26 there was no answer at all: every protocol was generated at 8
+  // weeks because the frontend hardcoded it, while tplo/ivdd/oa/geriatric had
+  // declared 16/12/16/16 that nothing read.
+  try {
+    await run('ALTER TABLE clinics ADD COLUMN default_protocol_weeks INTEGER');
+    console.log('📦 Migration: added default_protocol_weeks column to clinics');
+  } catch { /* column already exists */ }
+
   // Migration: add species column to existing patients table
   try {
     await run("ALTER TABLE patients ADD COLUMN species TEXT NOT NULL DEFAULT 'canine'");

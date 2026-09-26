@@ -44,18 +44,15 @@ export function useSettingsState(setBrand, toast) {
   // is the store the protocol engine actually reads. A copy here would make it
   // two stores for one fact again.
 
-  // ── Protocol defaults (client-side) ──
-  const [protocolDefaults, setProtocolDefaults] = useState({
-    progression_philosophy: "moderate",
-    session_duration: 45,
-    sessions_per_week: 3,
-    pain_threshold_hold: 4,
-    weight_bearing_threshold: "partial",
-    include_hep: true,
-    default_outcome_measure: "cbpi",
-    auto_progression_gates: true,
-    recheck_interval_weeks: 2,
-  });
+  // ── Protocol defaults are NOT held here any more, 2026-09-26 ──
+  //
+  // Nine fields lived here — progression_philosophy, sessions_per_week,
+  // pain_threshold_hold and the rest — and NOT ONE was read anywhere in the
+  // backend. Controls that looked like settings and changed nothing.
+  //
+  // The one default that does anything is the protocol length, and it is a
+  // property of the CLINIC, so it lives on the clinic record in `form` and
+  // saves with the rest of the profile. See TabProtocols.
 
   // ── Documentation & reports (client-side) ──
   const [docSettings, setDocSettings] = useState({
@@ -169,7 +166,7 @@ export function useSettingsState(setBrand, toast) {
     // Equipment is not here: TabEquipment owns it and talks to
     // /v2/clinic/capabilities directly. See the note above.
     // Protocol defaults
-    protocolDefaults, setProtocolDefaults,
+    // protocolDefaults is gone: the only real one is form.default_protocol_weeks.
     // Documentation
     docSettings, setDocSettings,
     // Notifications

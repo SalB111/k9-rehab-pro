@@ -77,7 +77,13 @@ function SessionsView() {
   const getCurrentPhase = (protocol) => {
     const pd = protocol.protocol_data;
     if (!pd) return null;
-    const totalWeeks = pd.protocol_length_weeks || 16;
+    // A screen must not invent a protocol length. This read `|| 16` while the
+    // engine fell back to 8 and the intake form hardcoded 8, so three places
+    // held three different answers about how long the same protocol was.
+    // The generated protocol carries its own length; if it does not, the phase
+    // is unknown and saying so beats guessing one.
+    const totalWeeks = pd.protocol_length_weeks || pd.total_weeks;
+    if (!totalWeeks) return null;
     const weeksPerPhase = Math.ceil(totalWeeks / 4);
     const generatedAt = new Date(pd.generated_at || protocol.created_at);
     const daysSince = Math.max(0, (Date.now() - generatedAt.getTime()) / (1000 * 60 * 60 * 24));

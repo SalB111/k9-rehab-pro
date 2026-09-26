@@ -669,16 +669,36 @@ app.put("/api/clinics/:id", requireAuth, async (req, res) => {
   try {
     const {
       clinic_name, contact_email, phone, address,
-      website, license_number, primary_color, secondary_color
+      website, license_number, primary_color, secondary_color,
+      default_protocol_weeks
     } = req.body;
+
+    // NULL is a real answer here: "use each protocol's own documented length",
+    // which is not the same as any number. An empty string from a <select>
+    // must therefore become NULL rather than 0 — a protocol of zero weeks is
+    // not a protocol.
+    const weeks = (default_protocol_weeks === '' || default_protocol_weeks === undefined
+      || default_protocol_weeks === null)
+      ? null
+      : Number(default_protocol_weeks);
+    if (weeks !== null && (!Number.isInteger(weeks) || weeks < 1 || weeks > 52)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Default protocol length must be a whole number of weeks between 1 and 52, or blank to use each protocol\'s own length.',
+        code: 'INVALID',
+      });
+    }
+
     await run(
       `UPDATE clinics SET
         clinic_name=?, contact_email=?, phone=?, address=?,
         website=?, license_number=?, primary_color=?, secondary_color=?,
+        default_protocol_weeks=?,
         updated_at=CURRENT_TIMESTAMP
       WHERE id=?`,
       [clinic_name, contact_email, phone, address,
-       website, license_number, primary_color, secondary_color, req.params.id]
+       website, license_number, primary_color, secondary_color,
+       weeks, req.params.id]
     );
     const clinic = await get("SELECT * FROM clinics WHERE id = ?", [req.params.id]);
     res.json({ success: true, data: clinic });

@@ -193,6 +193,12 @@ const CHECKS = [
   // would refuse is a confident wrong answer about who may prescribe.
   { name: 'K9 · clinician credentials', cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/clinician-credentials-home.test.js'],
     ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
+  // HOW LONG IS A PROTOCOL. Every one was generated at 8 weeks: the adapter
+  // fell back to 8 and the intake form hardcoded 8, while tplo/ivdd/oa/
+  // geriatric had each declared 16/12/16/16 that nothing read. A sixteen-week
+  // TPLO was built as eight, compressing the progression into half its time.
+  { name: 'K9 · protocol length',   cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/protocol-length.test.js'],
+    ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
   // One library, one identifier, one stated size. `all-exercises.js` is THE
   // library; the `exercises_v2` table is a different one with a disjoint id
   // scheme, and an endpoint keyed one by the other 404'd on every code the

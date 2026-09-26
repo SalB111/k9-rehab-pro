@@ -100,7 +100,7 @@ function SettingsView({ setBrand }) {
         <TabEquipment {...shared} />
       )}
       {state.activeTab === "protocols" && (
-        <TabProtocols protocolDefaults={state.protocolDefaults} setProtocolDefaults={state.setProtocolDefaults} {...shared} />
+        <TabProtocols form={state.form} setForm={state.setForm} {...shared} />
       )}
       {state.activeTab === "documentation" && (
         <TabDocumentation docSettings={state.docSettings} setDocSettings={state.setDocSettings} {...shared} />
