@@ -987,8 +987,14 @@ const CATEGORY_ACCENTS = {
 
 function extractFrameTitle(text) {
   if (!text) return 'Exercise Step';
-  // Try natural break: first clause before comma, dash, period, or semicolon
-  const breakMatch = text.match(/^([^,.\-—;:]+)/);
+  // First clause, breaking on punctuation that ends one.
+  //
+  // A bare hyphen used to be in this set, and it cut inside numbers and
+  // words: "Apply warm pack to hip flexor region for 2-3 minutes" became the
+  // frame title "Apply Warm Pack To Hip Flexor Region For 2". Only a SPACED
+  // dash separates clauses; one between digits is a range and one inside a
+  // word is part of it.
+  const breakMatch = text.match(/^([^,.;:—]+?)(?=\s[-–—]\s|[,.;:—]|$)/);
   let title = breakMatch ? breakMatch[1].trim() : text.substring(0, 45).trim();
   // Remove leading filler words
   title = title.replace(/^(slowly|gently|carefully|gradually|then|next|now|and)\s+/i, '');
@@ -1114,12 +1120,31 @@ function generateAutoStoryboard(exercise) {
     frame_number: i + 1,
     frame_title: rf.title,
     frame_description: rf.desc,
+    // WHO IS DOING WHAT.  [Sal, 2026-09-26]
+    //
+    // These were the wrong way round. `steps` in the exercise library are
+    // instructions to the PERSON performing the exercise — "Stabilize pelvis
+    // with one hand", "Grasp femur proximal to stifle", "Hold at end-range
+    // extension for 15-30 seconds". They were written into `dog_action`, so
+    // STRETCH_ILIO frame 2 read "The dog: Apply warm pack to hip flexor
+    // region for 2-3 minutes", while handler_action got the filler "Follow
+    // step instructions. Maintain proper technique throughout."
+    //
+    // That text is read TWICE, which is why it matters: the owner reads it
+    // beside the drawing in B.E.A.U. at Home, and the image prompt is built
+    // from it — so a dog was about to be drawn applying a heat pack to
+    // itself, and the owner told that is what the dog does.
+    //
+    // dog_action is NULL on a movement frame because the step does not say
+    // what the animal does, and writing a plausible sentence there would be
+    // the fabrication the Anti-Hallucination Rules exist to stop. The setup
+    // frame keeps its dog_action: `setup` DOES state the animal's position.
     dog_action: rf.isSetup
       ? `${breed} (${breedWeight} lbs, ${breedBuild}) positioned as described. Patient is ${breedTemperament} — relaxed and comfortable.`
-      : rf.desc,
+      : null,
     handler_action: rf.isSetup
       ? `${rf.desc} Note: ${breed} patients are ${breedBuild} with ${breedTemperament} temperament — adjust hand placement for ${breedSize} frame.`
-      : 'Follow step instructions. Maintain proper technique throughout.',
+      : rf.desc,
     clinical_cues: goodForm[i] || goodForm[0] || 'Monitor patient comfort and response throughout.',
     safety_notes: redFlags[i] || redFlags[0] || 'Stop if patient shows signs of pain or distress.',
     duration_seconds: rf.isSetup ? 5 : 6,

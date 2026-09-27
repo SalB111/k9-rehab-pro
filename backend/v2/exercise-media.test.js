@@ -238,6 +238,66 @@ const BARE = 'WATER_WALKING';
     }
   });
 
+  await test('SAL: the STEPS are the handler\'s, and the dog is not made to do them', async () => {
+    // Sal, 2026-09-26, reading the STRETCH_ILIO pack: the frame text was
+    // wrong. `steps` in the exercise library are instructions to the PERSON
+    // — "Stabilize pelvis with one hand", "Grasp femur proximal to stifle" —
+    // and they were being written into dog_action, so frame 2 read "The dog:
+    // Apply warm pack to hip flexor region for 2-3 minutes".
+    //
+    // It is read twice: the owner reads it beside the drawing, and the image
+    // prompt is built from it. A dog was about to be drawn applying a heat
+    // pack to itself.
+    const storyboards = require('../storyboard-references');
+    const sb = storyboards.getOrGenerateStoryboard('STRETCH_ILIO', media.libraryRecord('STRETCH_ILIO'));
+    assert.ok(sb && sb.frames.length >= 6, 'STRETCH_ILIO lost its storyboard');
+
+    const movement = sb.frames.filter((f) => f.frame_number > 1);
+    for (const f of movement) {
+      assert.ok(
+        f.handler_action && !/^Follow step instructions/.test(f.handler_action),
+        `frame ${f.frame_number} still has filler where the instruction belongs`
+      );
+      assert.strictEqual(
+        f.dog_action, null,
+        `frame ${f.frame_number} states what the dog does. The step does not say, `
+        + 'and a plausible sentence there is a fabricated clinical instruction.'
+      );
+    }
+
+    // The real steps reached the frames.
+    const record = media.libraryRecord('STRETCH_ILIO');
+    assert.ok(
+      movement.some((f) => f.handler_action === record.steps[1]),
+      'the library steps are not reaching handler_action'
+    );
+
+    // And the image prompt no longer narrates the dog doing them.
+    const gen = require('../storyboard-image-gen');
+    const prompt = gen.buildRefPrompt(sb, movement[0], 'French Bulldog', 'CANINE', 'STRETCH_ILIO');
+    assert.ok(
+      !/The dog: Apply warm pack/.test(prompt),
+      'the prompt still tells the model the dog applies the warm pack'
+    );
+  });
+
+  await test('a frame title is not cut inside a number', async () => {
+    // "Apply warm pack to hip flexor region for 2-3 minutes" became the title
+    // "Apply Warm Pack To Hip Flexor Region For 2" — the clause splitter
+    // treated the hyphen in a range as punctuation.
+    const storyboards = require('../storyboard-references');
+    const sb = storyboards.getOrGenerateStoryboard('STRETCH_ILIO', media.libraryRecord('STRETCH_ILIO'));
+    const titles = sb.frames.map((f) => f.frame_title);
+    assert.ok(
+      !titles.some((t) => /\bfor 2$/i.test(t)),
+      `a title is cut mid-number: ${JSON.stringify(titles)}`
+    );
+    assert.ok(
+      titles.some((t) => /15-30/.test(t)),
+      'the "Hold at end-range extension for 15-30 seconds" title lost its range'
+    );
+  });
+
   // ── the hand-drawing route, because credits ran out ─────────────────────
   //
   // Sal, 2026-09-26: "rather not add credits at all". The missing frames get
