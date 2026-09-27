@@ -188,6 +188,56 @@ const BARE = 'WATER_WALKING';
     );
   });
 
+  // ── what the drawings show ──────────────────────────────────────────────
+
+  await test('SAL: the drawings show HANDS AND FOREARMS, not a whole person', async () => {
+    // Sal on the first batch, 2026-09-26: "PICS ARE NOT GREAT ALSO I FEEL
+    // ONLY HANDS ARMS OF THE ASSISTANT AND FOCUS ON THE DOG AND EXERCISE".
+    //
+    // The prompt said "A person gently assisting", which draws a whole human.
+    // The figure competes with the animal for the eye, and a full body is
+    // where this class of model fails worst — faces and bodies are most of
+    // why the first batch looked wrong.
+    const gen = require('../storyboard-image-gen');
+    const storyboards = require('../storyboard-references');
+    const sb = storyboards.getOrGenerateStoryboard(ILLUSTRATED, media.libraryRecord(ILLUSTRATED));
+    assert.ok(sb, 'no storyboard to build a prompt from');
+
+    const frame = sb.frames.find((f) => f.handler_action) || sb.frames[0];
+    for (const prompt of [
+      gen.buildPrompt(sb, frame, 'French Bulldog', 'CANINE', ILLUSTRATED),
+      gen.buildRefPrompt(sb, frame, 'French Bulldog', 'CANINE', ILLUSTRATED),
+    ]) {
+      assert.ok(
+        /HANDS AND FOREARMS/.test(prompt),
+        'the prompt no longer restricts the assistant to hands and forearms'
+      );
+      assert.ok(
+        /NO full human figure/i.test(prompt),
+        'the prompt does not exclude a full human figure'
+      );
+      assert.ok(
+        !/A person gently assisting/.test(prompt),
+        'the whole-person phrasing is back — that is the exact wording Sal '
+        + 'rejected, and it draws a human that competes with the animal'
+      );
+      assert.ok(
+        /the animal is the clear subject/.test(prompt),
+        'nothing tells the model the animal is the subject of the picture'
+      );
+      // The handler_action sentences describe a whole body ("Kneeling at the
+      // patient's side"). Unqualified they contradict the rule above inside
+      // one prompt, and a prompt that argues with itself gets half a person.
+      if (frame.handler_action) {
+        assert.ok(
+          /ignoring any body position this sentence mentions/.test(prompt),
+          'the clinician-written handler action is fed in unqualified, so it '
+          + 'contradicts the hands-only rule in the same breath'
+        );
+      }
+    }
+  });
+
   // ── the owner route is scoped to this patient's own program ─────────────
 
   await test('AN OWNER TOKEN IS NOT A LIBRARY CARD — the route checks the program', async () => {
