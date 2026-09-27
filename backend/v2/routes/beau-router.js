@@ -16,6 +16,7 @@
 'use strict';
 
 const ownerAuth = require('../owner-auth');
+const exerciseMedia = require('../exercise-media');
 const homeStore = require('../home-store');
 const { route } = require('../http-errors');
 
@@ -164,6 +165,57 @@ function createBeauRouter({ db, express, jwt, secret, requireAuth }) {
         video_requests: videos,
       },
     });
+  }));
+
+  /**
+   * How to perform ONE prescribed exercise — the drawings and the words.
+   *
+   * Sal, 2026-09-26: the owner app showed "Passive Range of Motion - Stifle,
+   * 10-15 reps" and nothing else, while the pencil storyboards sat in the
+   * clinician app unused. An owner asked to perform a clinical movement from
+   * its name alone will invent the movement.
+   *
+   * SCOPED TO THIS PATIENT'S OWN PROGRAM. A code the dog was not prescribed
+   * is 404, not a library lookup — an owner token that can enumerate all 260
+   * exercises is not patient-scoped, whatever the JWT claims say.
+   *
+   * An exercise with no drawing answers `has_illustration: false` and an
+   * empty list. It never substitutes another exercise's frames.
+   */
+  router.get('/exercises/:code/storyboard', guard, route(async (req, res) => {
+    const patientId = ownerAuth.patientIdFor(req);
+    if (!patientId) {
+      return res.status(400).json({ success: false, code: 'INVALID', error: 'No patient in scope' });
+    }
+
+    const code = exerciseMedia.safeCode(req.params.code);
+    if (!code) {
+      return res.status(400).json({ success: false, code: 'INVALID', error: 'Not an exercise code' });
+    }
+
+    const handoff = await db.get(
+      `SELECT handoff_payload_json FROM beau_handoffs
+        WHERE patient_id = ? AND status = 'ACTIVE'
+        ORDER BY handed_off_at DESC LIMIT 1`,
+      [patientId]
+    );
+    if (!handoff) {
+      return res.status(404).json({
+        success: false, code: 'NOT_FOUND',
+        error: 'There is no home program for this patient yet.',
+      });
+    }
+
+    const payload = JSON.parse(handoff.handoff_payload_json);
+    const prescribed = (payload.exercises || []).find((e) => e.exercise_code === code);
+    if (!prescribed) {
+      return res.status(404).json({
+        success: false, code: 'NOT_FOUND',
+        error: 'That exercise is not part of this program.',
+      });
+    }
+
+    res.json({ success: true, data: exerciseMedia.storyboardFor(code) });
   }));
 
   router.post('/engagement', guard, route(async (req, res) => {

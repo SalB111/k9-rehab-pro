@@ -1124,6 +1124,39 @@ app.get("/api/safety-reports", requireAuth, requireRole("admin"), async (req, re
 
 app.use(express.static(path.join(__dirname, "public")));
 
+// ── Exercise storyboard frames, for B.E.A.U. at Home ──────────────────────
+//
+// Sal, 2026-09-26: the owner app showed an exercise NAME and a rep count and
+// nothing else, while the pencil drawings sat in the clinician app unused.
+//
+// UNAUTHENTICATED, DELIBERATELY. A frame is a drawing of an anonymous model
+// dog performing a named exercise: no patient, no owner, no clinic, no
+// finding. The clinician app already serves these identical files from its
+// own public directory. WHICH exercises a given dog was prescribed is the
+// confidential part and stays behind the owner token in /v2/beau/my-program.
+//
+// One copy, read from where the batch renderer writes. Copying them into the
+// owner app would make two, and the stale one would be whichever nobody
+// remembered to re-render.
+//
+// NOTE, unfixed: these are ~2 MB PNGs. Six of them is 12 MB for one exercise,
+// which is not a reasonable thing to send to a phone on clinic wifi. They
+// need web derivatives; `sharp` is not installed and adding it is a decision,
+// not a detail. Cached hard in the meantime — the files are content-addressed
+// by the renderer, so a year is safe.
+app.use(
+  "/assets/storyboard",
+  express.static(
+    path.join(__dirname, "..", "k9-rehab-frontend", "public", "assets", "storyboard"),
+    // fallthrough:false so a frame that is not there is a 404 and not the
+    // SPA's index.html with a 200. Measured before the change: a request for
+    // a missing frame returned 2 KB of HTML, which an <img> renders as a
+    // broken image — a picture that failed silently rather than an absence
+    // the app can say out loud.
+    { maxAge: "365d", immutable: true, fallthrough: false }
+  )
+);
+
 app.use((req, res, next) => {
   if (req.method !== "GET") return next();
   if (req.path.startsWith("/api/")) return next();

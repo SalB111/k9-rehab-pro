@@ -207,6 +207,13 @@ const CHECKS = [
   // names the clinic it happened in.
   { name: 'K9 · discharge',         cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/discharge.test.js'],
     ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
+  // Exercise media. The owner app showed a name and a rep count while the
+  // pencil drawings sat in the clinician app unused. These hold the two
+  // things that must not slip: an exercise with no drawing never borrows
+  // another one's, and an owner token cannot enumerate the 260-exercise
+  // library through the storyboard route.
+  { name: 'K9 · exercise media',    cwd: path.join(K9, 'backend'), cmd: 'node', args: ['v2/exercise-media.test.js'],
+    ok: (out) => /passed/.test(out) && !/FAILED/.test(out) },
   // One library, one identifier, one stated size. `all-exercises.js` is THE
   // library; the `exercises_v2` table is a different one with a disjoint id
   // scheme, and an endpoint keyed one by the other 404'd on every code the
