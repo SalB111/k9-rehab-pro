@@ -238,6 +238,80 @@ const BARE = 'WATER_WALKING';
     }
   });
 
+  // ── the hand-drawing route, because credits ran out ─────────────────────
+  //
+  // Sal, 2026-09-26: "rather not add credits at all". The missing frames get
+  // drawn in ChatGPT from packs export-prompts.js writes, and filed by
+  // import-frames.js. Both are useless if they drift from the pipeline.
+
+  await test('a WebP or JPEG frame counts, not only PNG', async () => {
+    // A ChatGPT download is whatever that app chose to hand over, frequently
+    // WebP. Renaming it .png would make the file lie about its own format.
+    const os = require('os');
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'k9-ext-'));
+    const dir = path.join(root, 'HAND_DRAWN');
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(path.join(dir, 'frame-1.webp'), 'x');
+    fs.writeFileSync(path.join(dir, 'frame-2.jpg'), 'x');
+    fs.writeFileSync(path.join(dir, 'frame-3.png'), 'x');
+    fs.writeFileSync(path.join(dir, 'notes.txt'), 'x');
+
+    const found = media.framesOnDisk('HAND_DRAWN', root);
+    fs.rmSync(root, { recursive: true, force: true });
+    assert.deepStrictEqual(
+      found.map((f) => f.file),
+      ['frame-1.webp', 'frame-2.jpg', 'frame-3.png'],
+      'hand-placed frames in a format other than PNG were ignored'
+    );
+  });
+
+  await test('one frame number cannot appear twice in two formats', async () => {
+    // A leftover frame-2.webp beside a newer frame-2.png would otherwise show
+    // the same step twice, out of order.
+    const os = require('os');
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'k9-dup-'));
+    const dir = path.join(root, 'DUP');
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(path.join(dir, 'frame-2.webp'), 'x');
+    fs.writeFileSync(path.join(dir, 'frame-2.png'), 'x');
+
+    const found = media.framesOnDisk('DUP', root);
+    fs.rmSync(root, { recursive: true, force: true });
+    assert.strictEqual(found.length, 1, 'the same step was offered twice');
+    assert.strictEqual(found[0].file, 'frame-2.png', 'the rendered PNG should win over a leftover');
+  });
+
+  await test('the two hand-drawing scripts exist and refuse to write by default', async () => {
+    const root = path.join(__dirname, '..', '..', 'scripts');
+    for (const name of ['export-prompts.js', 'import-frames.js']) {
+      const p = path.join(root, name);
+      assert.ok(fs.existsSync(p), `${name} is missing`);
+    }
+    const imp = fs.readFileSync(path.join(root, 'import-frames.js'), 'utf8');
+    assert.ok(
+      /const APPLY = args\.includes\('--apply'\)/.test(imp),
+      'import-frames writes without an explicit --apply; guessing which download '
+      + 'is which frame is exactly what needs confirming before anything lands'
+    );
+    assert.ok(
+      /--force to replace/.test(imp),
+      'import-frames overwrites an existing drawing without asking'
+    );
+  });
+
+  await test('the exported prompts ARE the pipeline prompts, not a paraphrase', async () => {
+    // A friendlier rewrite here would be a second source of truth for what
+    // the drawings show, and hand-drawn frames would drift from rendered ones.
+    const exp = fs.readFileSync(
+      path.join(__dirname, '..', '..', 'scripts', 'export-prompts.js'), 'utf8'
+    );
+    assert.ok(
+      /gen\.buildPrompt\(sb, frame, breed, species, code\)/.test(exp)
+      && /gen\.buildRefPrompt\(sb, frame, breed, species, code\)/.test(exp),
+      'export-prompts builds its own prompt text instead of using the generator'
+    );
+  });
+
   // ── the owner route is scoped to this patient's own program ─────────────
 
   await test('AN OWNER TOKEN IS NOT A LIBRARY CARD — the route checks the program', async () => {

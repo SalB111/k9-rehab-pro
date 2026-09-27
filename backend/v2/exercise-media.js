@@ -53,8 +53,24 @@ const FRAME_ROOT = path.resolve(
   __dirname, '..', '..', 'k9-rehab-frontend', 'public', 'assets', 'storyboard'
 );
 
+/**
+ * Which file types count as a frame.
+ *
+ * PNG is what the API renderer writes. The others are here because Sal is
+ * drawing the missing frames by hand in ChatGPT rather than adding API
+ * credits, and a browser download comes back as whatever that app chose —
+ * frequently WebP. Renaming a WebP to .png would make the file lie about its
+ * own format; accepting the real extension costs one regex.
+ */
+const FRAME_EXTENSIONS = ['png', 'webp', 'jpg', 'jpeg'];
+// `\\d` and `\\.`, not `\d` and `\.`: inside a template literal a backslash
+// before a non-special character is dropped, which silently produced
+// /^frame-(d+).(png|webp)$/ and matched nothing. Every exercise came back
+// with zero frames and the app said "no illustration" for all 260.
+const FRAME_RE = new RegExp(`^frame-(\\d+)\\.(${FRAME_EXTENSIONS.join('|')})$`, 'i');
+
 /** Public path for a frame. Served statically — see the header. */
-const framePath = (code, n) => `/assets/storyboard/${code}/frame-${n}.png`;
+const framePath = (code, file) => `/assets/storyboard/${code}/${file}`;
 
 /** Only ever a bare exercise code. Nothing user-supplied reaches the disk. */
 function safeCode(code) {
@@ -75,11 +91,21 @@ function framesOnDisk(code, root = FRAME_ROOT) {
   const dir = path.join(root, code);
   let names;
   try { names = fs.readdirSync(dir); } catch { return []; }
-  return names
-    .map((f) => /^frame-(\d+)\.png$/.exec(f))
-    .filter(Boolean)
-    .map((m) => Number(m[1]))
-    .sort((a, b) => a - b);
+
+  // Keyed by number so a leftover frame-2.webp beside a newer frame-2.png
+  // cannot produce the same step twice. PNG wins, being what the renderer
+  // writes; anything else is a hand-placed file.
+  const byNumber = new Map();
+  for (const name of names) {
+    const m = FRAME_RE.exec(name);
+    if (!m) continue;
+    const n = Number(m[1]);
+    const isPng = m[2].toLowerCase() === 'png';
+    if (!byNumber.has(n) || isPng) byNumber.set(n, name);
+  }
+  return [...byNumber.entries()]
+    .sort((a, b) => a[0] - b[0])
+    .map(([number, file]) => ({ number, file }));
 }
 
 /**
@@ -134,11 +160,11 @@ function storyboardFor(code, { root = FRAME_ROOT } = {}) {
     manifest = JSON.parse(fs.readFileSync(path.join(root, clean, 'manifest.json'), 'utf8'));
   } catch { manifest = {}; }
 
-  const frames = numbers.map((n) => {
+  const frames = numbers.map(({ number: n, file }) => {
     const f = byNumber.get(n) || {};
     return {
       number: n,
-      url: framePath(clean, n),
+      url: framePath(clean, file),
       title: f.frame_title || null,
       description: f.frame_description || null,
       // What the handler does. This is the instruction an owner acts on, and
@@ -167,4 +193,7 @@ function storyboardFor(code, { root = FRAME_ROOT } = {}) {
   };
 }
 
-module.exports = { storyboardFor, framesOnDisk, framePath, FRAME_ROOT, safeCode, libraryRecord };
+module.exports = {
+  storyboardFor, framesOnDisk, framePath, FRAME_ROOT, safeCode, libraryRecord,
+  FRAME_EXTENSIONS, FRAME_RE,
+};
