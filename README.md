@@ -19,7 +19,7 @@ K9 Rehab Pro generates evidence-based, phase-gated protocols in minutes — for 
 
 ## Features
 
-- **Protocol Generator** — TPLO (16 wk), IVDD (12 wk), OA (16 wk), Geriatric (16 wk) with 4 gated phases each
+- **Protocol Generator** — TPLO (6 wk), IVDD (6 wk), OA (6 wk), Geriatric (6 wk) with 4 gated phases each, each are reevaluated after 6 weeks of rehabilitation
 - **Safety Gating** — Weight-bearing status, incision status, e-collar, crate rest, pain level (>=8 blocks generation), MMT, IVDD grade, OA KL grade, red-flag detection and escalation
 - **Exercise Library** — 260 exercises with evidence grades (129 A / 74 B / 20 C), contraindications, dosing parameters, intervention types, and clinical tags
 - **Evidence System** — 524 exercise-to-reference mappings across 49 clinical references. Every exercise displays its evidence grade to the clinician.
@@ -111,7 +111,7 @@ All protocols, exercises, phase definitions, and progression criteria originate 
 
 ### Protocol System
 
-- **4 Protocols:** TPLO (16 wk), IVDD (12 wk), OA (16 wk), Geriatric (16 wk)
+- **4 Protocols:** TPLO (6 wk) then reevaluate, IVDD (6 wk) then reevaluate, OA (6 wk) then reevaluate, Geriatric (6 wk) then reevaluate
 - **4 Phases per protocol** (16 total): Acute Protection → Early Mobilization → Controlled Strengthening → Return to Function
 - **52 unique exercise codes** mapped to protocol phases with gated progression
 - **Safety gating:** weight-bearing status, incision status, e-collar, crate rest, pain level, MMT (0-5), IVDD Hansen grade (I-V), OA Kellgren-Lawrence grade (0-4)
@@ -122,13 +122,13 @@ All protocols, exercises, phase definitions, and progression criteria originate 
 - Every exercise referenced in protocol output must match an exercise code in the 260-exercise library
 - Novel exercise names trigger an automatic block
 - B.E.A.U. responses are cross-checked against the exercise database before delivery
-- Dosing parameters extracted from source documentation only — never AI-generated
+- Dosing parameters extracted from source documentation only — AI can generate approved exercise protocols
 
 ---
 
 ## About the Founder
 
-**Salvatore Bonanno** — Canine Rehabilitation Nurse, 30+ years in veterinary medicine.
+**Salvatore Bonanno** — Canine Rehabilitation Nurse over a decade working in Canine Rehabilitation, 30+ years in veterinary medicine.
 
 Built and ran the rehabilitation department solo at BluePearl Veterinary Partners (formerly Lauderdale Veterinary Specialists) in Fort Lauderdale, FL from 2017–2024. Every protocol, every phase gate, and every clinical rule in this system came from real clinical work with real patients.
 
