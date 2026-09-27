@@ -157,7 +157,7 @@ function packFor(code) {
 
   fs.mkdirSync(OUT_DIR, { recursive: true });
 
-  let written = 0, skipped = 0, frames = 0;
+  let written = 0, skipped = 0, frames = 0, todo = 0;
   const index = ['# Prompt packs', '', 'Draw these in ChatGPT and file them with `import-frames.js`.', ''];
 
   for (const code of codes) {
@@ -172,14 +172,22 @@ function packFor(code) {
     const have = media.framesOnDisk(code).length;
     console.log(`  ok    ${code.padEnd(20)} ${String(pack.frames).padStart(2)} frame(s)  ${pack.breed}`
       + (have ? `   (${have} already drawn)` : ''));
-    index.push(`- [${code}](./${code}.md) — ${pack.frames} frames, ${pack.breed}`);
+    const gap = Math.max(0, pack.frames - have);
+    index.push(`- [${code}](./${code}.md) — ${pack.frames} frames, ${pack.breed}`
+      + (gap ? `, **${gap} still to draw**` : ', complete'));
     written += 1;
     frames += pack.frames;
+    todo += gap;
   }
 
   fs.writeFileSync(path.join(OUT_DIR, 'README.md'), index.join('\n') + '\n');
 
   rule('=');
-  console.log(`\n  ${written} pack(s), ${frames} frame(s) to draw${skipped ? `, ${skipped} skipped` : ''}`);
+  // `frames` is every frame in every pack; `todo` is what has no drawing yet.
+  // The first version printed `frames` under the words "to draw", which read
+  // as 70 when 63 of them were already done. A count that overstates the work
+  // tenfold is worse than no count.
+  console.log(`\n  ${written} pack(s), ${frames} frame(s) total, `
+    + `${todo} STILL TO DRAW${skipped ? `, ${skipped} skipped` : ''}`);
   console.log(`  ${OUT_DIR}\n`);
 })();
